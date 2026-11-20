@@ -195,9 +195,12 @@ namespace Sim.Core.Land
 
         public bool Builders { get { return Owner == 1; } }
 
+        /// <summary>A family house made pucca (spec 024 §3.7, US-152): it lets at the pucca rent.</summary>
+        public bool Pucca { get; internal set; }
+
         internal Building Clone()
         {
-            return new Building { Id = Id, Def = Def, TileId = TileId, Cost = Cost, Depreciated = Depreciated, SeasonsDepreciated = SeasonsDepreciated, Owner = Owner };
+            return new Building { Id = Id, Def = Def, TileId = TileId, Cost = Cost, Depreciated = Depreciated, SeasonsDepreciated = SeasonsDepreciated, Owner = Owner, Pucca = Pucca };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -209,6 +212,7 @@ namespace Sim.Core.Land
             h.WriteLong(Depreciated);
             h.WriteInt(SeasonsDepreciated);
             if (h.Hashing ? Owner != 0 : !(h is SaveWriter w && w.Schema < 20)) h.WriteInt(Owner); // schema 20; hashed once a builder's
+            if (h.Hashing ? Pucca : !(h is SaveWriter p && p.Schema < MapMigration.RingSchema)) h.WriteBool(Pucca); // schema 21; hashed once a house is pucca
         }
 
         internal static Building ReadFrom(SaveReader r)
@@ -219,6 +223,7 @@ namespace Sim.Core.Land
                 SeasonsDepreciated = r.ReadInt(),
             };
             if (r.Schema >= 20) b.Owner = r.ReadInt();
+            if (r.Schema >= MapMigration.RingSchema) b.Pucca = r.ReadBool();
             return b;
         }
     }
@@ -307,7 +312,10 @@ namespace Sim.Core.Land
             int n = r.ReadCount();
             // Schema 5 (spec 010 §3.4): an old save's 8 × 6 map moves into the 16 × 12 map; the new land starts from content.
             r.OldMap = r.Schema < MapMigration.Schema && n == MapMigration.OldTiles && map.Tiles.Count != n;
-            if (n != map.Tiles.Count && !r.OldMap) throw new SaveContentException("the map has " + map.Tiles.Count + " tiles, the save " + n);
+            r.SavedTiles = n;
+            // Schema 21 (spec 025 §3.4): a save before the ring holds the map's first 192 tiles; the ring's start from content, locked.
+            bool beforeRing = r.Schema < MapMigration.RingSchema && n == map.LegacyTiles && map.LegacyTiles != 0;
+            if (n != map.Tiles.Count && !r.OldMap && !beforeRing) throw new SaveContentException("the map has " + map.Tiles.Count + " tiles, the save " + n);
             var tiles = new Tile[map.Tiles.Count];
             for (int i = 0; i < n; i++)
             {
@@ -321,7 +329,7 @@ namespace Sim.Core.Land
             s.Tiles.AddRange(tiles);
             n = r.ReadCount();
             // Schema 8 (ADR 0064) added the cattle acre's parcel: an older save has fewer, and the new one starts unowned.
-            if (n != map.Parcels.Count && !r.OldMap && !(r.Schema < Saves.CattleAcreMigration.Schema && n < map.Parcels.Count)) throw new SaveContentException("the map has " + map.Parcels.Count + " parcels, the save " + n);
+            if (n != map.Parcels.Count && !r.OldMap && !((r.Schema < Saves.CattleAcreMigration.Schema || r.Schema < MapMigration.RingSchema) && n < map.Parcels.Count)) throw new SaveContentException("the map has " + map.Parcels.Count + " parcels, the save " + n);
             var parcels = new Parcel[map.Parcels.Count];
             for (int i = 0; i < n; i++)
             {

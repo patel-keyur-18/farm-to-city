@@ -43,6 +43,14 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             CivicDef d = CivicRules.Def(sim, i);
             CivicPost p = CivicRules.Post(sim, i);
+            if (!p.Built && ConstructionRules.On(sim) && ConstructionRules.OfWork(sim, d.Work) is BuildProject site) // being built (spec 025 §3.2)
+            {
+                vm.Icon = "place_" + Ids[i] + "_plot";
+                vm.Title = s.Get(K(i, "title"));
+                vm.Subtitle = s.Get("build.civicSub");
+                BuildingSheet.Site(ctx, vm, site);
+                return;
+            }
             if (!p.Built) { Plot(ctx, vm, i, d); return; }
             vm.Icon = Ids[i] == "watchman" ? "watchman_post" : Ids[i] == "hall" ? "community_hall" : "playground";
             vm.Title = s.Get(K(i, "title"));
@@ -201,6 +209,14 @@ namespace Sim.View.Views
             {
                 case CivicSheet.Cost:
                     vm = New(ctx, "why.civic.cost.title", Money(ctx, CivicRules.Cost(sim, i)));
+                    if (ConstructionRules.On(sim) && ConstructionRules.Def(sim).KindOfWork(d.Work) != null) // from the Township: materials and masons (spec 025 §3.2)
+                    {
+                        BuildQuote q = ConstructionRules.Quote(sim, ConstructionRules.Def(sim).KindOfWork(d.Work).Id, BuildProject.Town, 1);
+                        Row(vm, ctx, "why.civic.cost.materials", Money(ctx, q.Materials));
+                        Row(vm, ctx, q.Gang ? "why.civic.cost.gang" : "why.civic.cost.masons", Money(ctx, q.MasonPay));
+                        Text(vm, ctx, "why.civic.cost.textBuilt");
+                        return vm;
+                    }
                     Row(vm, ctx, "why.civic.cost.base", Money(ctx, BaseOf(sim, d.Work)));
                     Row(vm, ctx, "why.price.index", Effect(ctx, sim.State.Market.PriceIndex));
                     Text(vm, ctx, "why.civic.cost.text");

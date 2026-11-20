@@ -163,25 +163,27 @@ namespace Sim.Core.Business
 
         private static int? WorkOutMiddle(Simulation sim)
         {
-            int width = sim.Config.Game.Map.Width;
+            Definitions.MapDef map = sim.Config.Game.Map;
             long x = 0, y = 0, n = 0;
             if (sim.State.Citizens != null)
                 foreach (People.Household h in sim.State.Citizens.Households)
                 {
                     Land.Building home = sim.State.Land.Buildings.Find(b => b.Id == h.HomeId);
                     if (home == null) continue;
-                    x += home.TileId % width;
-                    y += home.TileId / width;
+                    x += map.X(home.TileId);
+                    y += map.Y(home.TileId);
                     n++;
                 }
-            return n == 0 ? (int?)null : (int)(y / n) * width + (int)(x / n);
+            if (n == 0) return null;
+            int middle = map.TileAt((int)(x / n), (int)(y / n));
+            return middle < 0 ? (int?)null : middle;
         }
 
         /// <summary>Metres between two tiles: an acre is 100 m, Manhattan.</summary>
         public static int Between(Simulation sim, int from, int to)
         {
-            int width = sim.Config.Game.Map.Width;
-            return (System.Math.Abs(from % width - to % width) + System.Math.Abs(from / width - to / width)) * Defs(sim).MetresPerAcre;
+            Definitions.MapDef map = sim.Config.Game.Map;
+            return (System.Math.Abs(map.X(from) - map.X(to)) + System.Math.Abs(map.Y(from) - map.Y(to))) * Defs(sim).MetresPerAcre;
         }
 
         public static int Centre(Simulation sim, ShopGroup g) { return g == ShopGroup.Town ? TownCentre(sim) : Defs(sim).SquareTile; }
@@ -571,7 +573,7 @@ namespace Sim.Core.Business
         // ---- quality and stars (§3.5, ADR 0092) ----
 
         /// <summary>Whether a business earns stars: the shops and the mill (the bakery and dairy sell at the morning round, chosen by nobody).</summary>
-        public static bool Rated(BusinessTypeDef t) { return t.IsShop || !t.ByRecipe; }
+        public static bool Rated(BusinessTypeDef t) { return !t.IsKiln && (t.IsShop || !t.ByRecipe); }
 
         /// <summary>Whether it keeps nothing overnight: good quality at the vegetable stall and the sweet shop.</summary>
         public static bool Fresh(BusinessTypeDef t, Business b) { return b.Quality == 2 && t.GoodFresh; }

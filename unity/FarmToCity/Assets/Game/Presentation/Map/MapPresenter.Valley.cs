@@ -78,7 +78,7 @@ namespace Game.Presentation.Map
         {
             foreach (TileVm tv in map.Tiles)
             {
-                string key = tv.Kind != TileKind.Unowned ? "" : tv.Neighbour + ":" + tv.TubeWell + ":" + tv.Haystack;
+                string key = tv.Kind == TileKind.Hill || tv.Kind == TileKind.Scrub ? "ring" : tv.Meadow ? "meadow" : tv.Kind != TileKind.Unowned ? "" : tv.Locked ? "closed" : tv.Neighbour + ":" + tv.TubeWell + ":" + tv.Haystack;
                 _valleyKey.TryGetValue(tv.Id, out string was);
                 if (key != (was ?? ""))
                 {
@@ -94,8 +94,19 @@ namespace Game.Presentation.Map
         private List<SpriteRenderer> Pieces(TileVm tv)
         {
             var list = new List<SpriteRenderer>();
-            if (tv.Kind != TileKind.Unowned) return list;
             var pieces = new List<Piece>();
+            // The ring's hills and scrub (spec 025 §3.4): a mound, or a bush and a tree; and closed land waiting for the Township is plain scrub.
+            // A mound on one hill acre in three, as the valley's edge does: the render statistics showed a mound on every acre doubled the triangles.
+            if (tv.Kind == TileKind.Hill) { if ((tv.X + tv.Y * 2) % 3 == 0) list.Add(PieceOn(tv.Id, new Piece("hill_" + (tv.Id % 3), 0f, 0f))); return list; }
+            if (tv.Kind == TileKind.Scrub || tv.Kind == TileKind.Unowned && tv.Locked)
+            {
+                pieces.Add(new Piece("scrub", 0.2f, -0.12f));
+                if (tv.Draw % 2 == 0 || tv.Kind == TileKind.Scrub) pieces.Add(new Piece("tree_babul", -0.12f, -0.18f));
+                foreach (Piece q in pieces) list.Add(PieceOn(tv.Id, q));
+                return list;
+            }
+            if (tv.Kind != TileKind.Unowned) return list;
+            if (tv.Meadow) { if (tv.Draw % 4 == 0) list.Add(PieceOn(tv.Id, new Piece("scrub", 0.2f, -0.12f))); return list; } // the ring's meadow: a bush on one acre in four (the render statistics)
             switch (tv.Neighbour)
             {
                 case NeighbourLand.Farmstead: pieces.AddRange(Farmsteads[tv.Draw % Farmsteads.Length]); break;
@@ -183,7 +194,7 @@ namespace Game.Presentation.Map
             DrawCanal(map);
         }
 
-        private TileVm At(MapVm map, int x, int y) { return x >= 0 && y >= 0 && x < _width && y < _height ? map.Tiles[y * _width + x] : null; }
+        private TileVm At(MapVm map, int x, int y) { return map.At(x, y); }
 
         /// <summary>One edge of your field: nothing to your yard, quarters or cattle acre; a fresh bund to your next field (drawn once, from the field behind); the hedge to anything else.</summary>
         private void Edge(MapVm map, int tile, int nx, int ny, string axis, Vector2 edge, int order, bool front)
@@ -203,7 +214,7 @@ namespace Game.Presentation.Map
         /// <summary>A corner stone where your land's corner meets land that isn't yours (once a corner).</summary>
         private void Stone(MapVm map, HashSet<int> stones, int tile, int vx, int vy, int dx, int dy, Vector2 corner)
         {
-            int x = tile % _width, y = tile / _width;
+            int x = TX(tile), y = TY(tile);
             TileVm a = At(map, x + dx, y), b = At(map, x, y + dy), c = At(map, x + dx, y + dy);
             bool inside = a != null && Yours(a.Kind) && b != null && Yours(b.Kind) && c != null && Yours(c.Kind);
             if (inside || !stones.Add(vx * 1000 + vy)) return;

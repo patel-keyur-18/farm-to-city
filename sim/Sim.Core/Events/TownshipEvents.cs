@@ -164,6 +164,42 @@ namespace Sim.Core.Events
         protected override string Describe() { return "CivicBuilt " + Civic; }
     }
 
+    /// <summary>A utility now stands (spec 025 §3.1, US-144): <see cref="Utility"/> is an index of <c>UtilityDef</c>.</summary>
+    public sealed class UtilityBuilt : SimEvent
+    {
+        public int Utility { get; }
+
+        public UtilityBuilt(long simTime, int utility) : base(simTime) { Utility = utility; }
+
+        protected override string Describe() { return "UtilityBuilt " + Utility; }
+    }
+
+    /// <summary>The grid replaced a standing generator: it is switched off and its upkeep and smoke stop (spec 025 §3.1).</summary>
+    public sealed class GridConnected : SimEvent
+    {
+        public GridConnected(long simTime) : base(simTime) { }
+
+        protected override string Describe() { return "GridConnected"; }
+    }
+
+    /// <summary>The treasury built a section of a ring lane (spec 025 §3.4): <see cref="Section"/> is an index of the map's lanes.</summary>
+    public sealed class LaneBuilt : SimEvent
+    {
+        public int Section { get; }
+
+        public LaneBuilt(long simTime, int section) : base(simTime) { Section = section; }
+
+        protected override string Describe() { return "LaneBuilt " + Section; }
+    }
+
+    /// <summary>The Township opened the ring (spec 025 §3.4): the land past the village can be bought and built on.</summary>
+    public sealed class RingOpened : SimEvent
+    {
+        public RingOpened(long simTime) : base(simTime) { }
+
+        protected override string Describe() { return "RingOpened"; }
+    }
+
     /// <summary>A post was advertised; a villager takes it at <see cref="At"/> (spec 023 §3.7).</summary>
     public sealed class PostAdvertised : SimEvent
     {
@@ -208,5 +244,48 @@ namespace Sim.Core.Events
         public PostVacated(long simTime, int civic, int name, bool unpaid) : base(simTime) { Civic = civic; Name = name; Unpaid = unpaid; }
 
         protected override string Describe() { return "PostVacated " + Civic + (Unpaid ? " unpaid" : " let go"); }
+    }
+}
+
+namespace Sim.Core.Events
+{
+    /// <summary>A building began (spec 025 §3.2): <see cref="Owner"/> 0 yours, 1 the treasury's, 2 the builders'.</summary>
+    public sealed class BuildStarted : SimEvent
+    {
+        public long ProjectId { get; }
+        public string Kind { get; }
+        public int Owner { get; }
+        public int TileId { get; }
+
+        public BuildStarted(long simTime, long projectId, string kind, int owner, int tileId) : base(simTime) { ProjectId = projectId; Kind = kind; Owner = owner; TileId = tileId; }
+
+        protected override string Describe() { return "BuildStarted(" + ProjectId + ", " + Kind + ", owner=" + Owner + ", tile=" + TileId + ")"; }
+    }
+
+    /// <summary>A building is held: it is waiting for <see cref="Good"/> (0 bricks, 1 cement, 2 timber); raised once for each building (spec 025 §3.2).</summary>
+    public sealed class BuildHeld : SimEvent
+    {
+        public long ProjectId { get; }
+        public string Kind { get; }
+        public int Owner { get; }
+        public int TileId { get; }
+        public int Good { get; }
+
+        public BuildHeld(long simTime, long projectId, string kind, int owner, int tileId, int good) : base(simTime) { ProjectId = projectId; Kind = kind; Owner = owner; TileId = tileId; Good = good; }
+
+        protected override string Describe() { return "BuildHeld(" + ProjectId + ", " + Kind + ", good=" + Good + ")"; }
+    }
+
+    /// <summary>A building is finished and its masons are paid (spec 025 §3.2).</summary>
+    public sealed class BuildFinished : SimEvent
+    {
+        public long ProjectId { get; }
+        public string Kind { get; }
+        public int Owner { get; }
+        public int TileId { get; }
+
+        public BuildFinished(long simTime, long projectId, string kind, int owner, int tileId) : base(simTime) { ProjectId = projectId; Kind = kind; Owner = owner; TileId = tileId; }
+
+        protected override string Describe() { return "BuildFinished(" + ProjectId + ", " + Kind + ", owner=" + Owner + ", tile=" + TileId + ")"; }
     }
 }

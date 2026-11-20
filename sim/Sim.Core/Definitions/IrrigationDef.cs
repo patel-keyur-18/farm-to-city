@@ -32,6 +32,10 @@ namespace Sim.Core.Definitions
 
         /// <summary>Money a season for each acre on its list, paid at the close.</summary>
         public long PowerPerAcreSeason { get; set; }
+
+        /// <summary>A solar panel for this source (US-257, ADR 0138): its price (× index), and the share of its power it takes off.</summary>
+        public long SolarCost { get; set; }
+        public Fixed SolarCut { get; set; }
     }
 
     public sealed class CanalDef

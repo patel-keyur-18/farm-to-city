@@ -92,6 +92,7 @@ namespace Sim.View.Views
                 Row(vm, ctx, "why.householdRent.season", Money(ctx, x.LeaseRent));
                 Row(vm, ctx, "why.householdRent.market", Money(ctx, LeaseRules.MarketRentFor(sim, x)));
                 Text(vm, ctx, "why.householdRent.parts", "parts", LeaseViews.Parts(ctx, x));
+                if (sim.State.Land.Buildings.Find(b => b.Id == x.HomeId)?.Pucca == true) Text(vm, ctx, "why.householdRent.pucca"); // US-152
                 Text(vm, ctx, LeaseRules.SeasonsLeft(sim, x) <= 1 ? "why.householdRent.lease" : "why.householdRent.leaseMany", "n", ctx.Fmt.Integer(LeaseRules.SeasonsLeft(sim, x)),
                     "cap", ctx.Fmt.Integer(sim.Config.Game.Population.MaxRise.MulRatio(100, 1).RoundToLong()), "pct", ctx.Fmt.Integer(sim.Config.Game.Population.BurdenLimit.MulRatio(100, 1).RoundToLong()));
                 Text(vm, ctx, "why.householdRent.how");

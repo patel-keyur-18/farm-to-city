@@ -23,12 +23,16 @@ namespace Sim.Core.Land
         public bool CanalUnpaid { get; internal set; }
         public bool DripUnpaid { get; internal set; }
 
+        /// <summary>What a solar panel cost for the pump and for the borewell (US-257, ADR 0138), or 0 with none: kept at cost, never depreciated. Schema 21.</summary>
+        public long PumpSolar { get; internal set; }
+        public long BorewellSolar { get; internal set; }
+
         /// <summary>Drip acres laid with the subsidy so far (the first few only, PMKSY).</summary>
         public int SubsidisedDripAcres { get; internal set; }
 
         internal IrrigationState Clone()
         {
-            var copy = new IrrigationState { PumpUnpaid = PumpUnpaid, BorewellUnpaid = BorewellUnpaid, CanalUnpaid = CanalUnpaid, DripUnpaid = DripUnpaid, SubsidisedDripAcres = SubsidisedDripAcres };
+            var copy = new IrrigationState { PumpUnpaid = PumpUnpaid, BorewellUnpaid = BorewellUnpaid, CanalUnpaid = CanalUnpaid, DripUnpaid = DripUnpaid, SubsidisedDripAcres = SubsidisedDripAcres, PumpSolar = PumpSolar, BorewellSolar = BorewellSolar };
             copy.PumpAcres.AddRange(PumpAcres);
             copy.BorewellAcres.AddRange(BorewellAcres);
             return copy;
@@ -43,6 +47,7 @@ namespace Sim.Core.Land
             h.WriteBool(CanalUnpaid);
             h.WriteBool(DripUnpaid);
             h.WriteInt(SubsidisedDripAcres);
+            if (h.Hashing ? PumpSolar != 0 || BorewellSolar != 0 : !(h is SaveWriter sw && sw.Schema < MapMigration.RingSchema)) { h.WriteLong(PumpSolar); h.WriteLong(BorewellSolar); } // schema 21; hashed once a panel is fitted
         }
 
         private static void Write(IStateWriter h, List<int> tiles)
@@ -62,6 +67,12 @@ namespace Sim.Core.Land
             s.DripUnpaid = r.ReadBool();
             s.SubsidisedDripAcres = r.ReadInt();
             if (s.SubsidisedDripAcres < 0) throw new SaveFormatException("negative subsidised drip acres");
+            if (r.Schema >= MapMigration.RingSchema)
+            {
+                s.PumpSolar = r.ReadLong();
+                s.BorewellSolar = r.ReadLong();
+                if (s.PumpSolar < 0 || s.BorewellSolar < 0) throw new SaveFormatException("a negative solar panel cost");
+            }
             return s;
         }
 

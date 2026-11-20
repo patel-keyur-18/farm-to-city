@@ -80,7 +80,7 @@ namespace Sim.Core.Progress
             e.UnlockedAt = sim.State.Clock.SimTime;
             sim.Emit(new EraUnlocked(sim.State.Clock.SimTime, eras[e.Current].Id));
             Town.TreasuryRules.OnEra(sim); // spec 021 §3.1: the treasury opens once, when the era reaches the Township
-            if (eras[e.Current].TownshipGate || eras[e.Current].Id == "township") Town.CohortRules.Join(sim); // spec 023 §3.4: then the old village joins
+            if (eras[e.Current].TownshipGate || eras[e.Current].Id == "township") { if (sim.Config.Game.Map.LegacyTiles != 0) sim.Emit(new Events.RingOpened(sim.State.Clock.SimTime)); Town.CohortRules.Join(sim); } // spec 023 §3.4: then the old village joins
             return true;
         }
 

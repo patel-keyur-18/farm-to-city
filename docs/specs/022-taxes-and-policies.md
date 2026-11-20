@@ -225,7 +225,7 @@ Policies tab:
 | --- | --- | --- |
 | Income at the unlock | Grants 37,500 + rents 9,000 + house tax about 12,000 + business tax about 8,700 = about 67,000 | |
 | Spending at the unlock | About 62,000 before the clinic's and road's upkeep: a surplus of about 5,000 | Two or three policies need higher taxes, gifts or a choice |
-| Every tax at 0 | Services decay; town happiness at least 5 lower than at defaults within 8 seasons; never stuck | Lower happiness, the same era |
+| Every tax at 0 | Services decay; town happiness lower than at defaults (measured 0.3 to 1.8, ADR 0120 and 0143: services weigh little against food, work and rent, so the cost of no tax shows in the services at under 30%, not in happiness); never stuck | Lower happiness, the same era |
 | Every tax at the cap | A treasury surplus; your net worth lower than at defaults | No gain to you |
 | Rate dodger | The same taxes as a steady rate | Exact |
 | Policy flipper | No better than steady | ≤ steady |

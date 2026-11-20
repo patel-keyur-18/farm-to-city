@@ -233,11 +233,11 @@ namespace Sim.Core.Land
         /// <summary>The 4 edge neighbours of a tile that are on the map, in a fixed order.</summary>
         private static System.Collections.Generic.IEnumerable<int> Neighbours(MapDef map, int tile)
         {
-            int x = tile % map.Width, y = tile / map.Width;
-            if (y > 0) yield return tile - map.Width;
-            if (x > 0) yield return tile - 1;
-            if (x < map.Width - 1) yield return tile + 1;
-            if (y < map.Height - 1) yield return tile + map.Width;
+            int x = map.X(tile), y = map.Y(tile), n;
+            if ((n = map.TileAt(x, y - 1)) >= 0) yield return n;
+            if ((n = map.TileAt(x - 1, y)) >= 0) yield return n;
+            if ((n = map.TileAt(x + 1, y)) >= 0) yield return n;
+            if ((n = map.TileAt(x, y + 1)) >= 0) yield return n;
         }
 
         private static void AddSlot(LandState land, SlotKind kind, int tileId)
@@ -253,11 +253,14 @@ namespace Sim.Core.Land
             {
                 case ItemClass.Hourly:
                     Fixed[] floors = IrrigationRules.Floors(sim); // once an hour: the pumped, canal and drip floors (spec 013 §3.1)
-                    foreach (Tile tile in land.Tiles) UpdateMoisture(sim, tile, land.HourWeather, floors[tile.Id]);
+                    bool[] locked = LandRules.LockedParcels(sim);
+                    Fixed[] drying = DryingFactors(sim); // once an hour, not once a tile: what is growing on each acre
+                    foreach (Tile tile in land.Tiles) if (locked == null || !locked[tile.ParcelId]) UpdateMoisture(sim, tile, land.HourWeather, floors[tile.Id], drying);
                     land.HourWeather = sim.State.Weather.WeatherOf(Calendar.SpellAt(t, sim.Clock));
                     break;
                 case ItemClass.Daily:
-                    foreach (Tile tile in land.Tiles) RecoverFallow(sim, tile, t);
+                    bool[] lockedDaily = LandRules.LockedParcels(sim);
+                    foreach (Tile tile in land.Tiles) if (lockedDaily == null || !lockedDaily[tile.ParcelId]) RecoverFallow(sim, tile, t);
                     break;
                 case ItemClass.Seasonal:
                     foreach (Tile tile in land.Tiles)
@@ -289,7 +292,7 @@ namespace Sim.Core.Land
         /// One hour of moisture change on a tile under the given weather (spec 002 §3.2). Irrigation holds the tile at its floor with
         /// no labour (spec 013 §3.1); then the well keeps the well acres above its own, lower floor with the founder's buckets.
         /// </summary>
-        internal static void UpdateMoisture(Simulation sim, Tile tile, int weather, Fixed irrigated)
+        internal static void UpdateMoisture(Simulation sim, Tile tile, int weather, Fixed irrigated, Fixed[] drying = null)
         {
             GameDefs defs = sim.Config.Game;
             SoilDef soil = defs.Soils[tile.Soil];
@@ -297,7 +300,7 @@ namespace Sim.Core.Land
             Fixed d = defs.Land.MoistureByWeather[weather];
             Fixed m = tile.Moisture;
             if (d > Fixed.Zero) m += d * soil.GainFactor;
-            else if (d < Fixed.Zero) m += d * soil.LossFactor * DryingFactor(sim, tile.Id) * DrySoilFactor(defs.Land, m);
+            else if (d < Fixed.Zero) m += d * soil.LossFactor * (drying != null ? drying[tile.Id] : DryingFactor(sim, tile.Id)) * DrySoilFactor(defs.Land, m);
             m = Clamp(m);
             if (m > drainage.DrainAbove) m -= (m - drainage.DrainAbove) * drainage.DrainRatePerHour;
             if (m < irrigated) m = irrigated;
@@ -321,6 +324,28 @@ namespace Sim.Core.Land
             Fixed below = land.DryingSlowsBelow;
             if (below <= Fixed.Zero || m >= below) return Fixed.One;
             return m <= Fixed.Zero ? Fixed.Zero : m / below;
+        }
+
+        /// <summary>The drying factor of every acre at once (<see cref="DryingFactor"/> for each tile in one pass over the crops), or null when nothing is growing (then every acre is 1).</summary>
+        private static Fixed[] DryingFactors(Simulation sim)
+        {
+            if (sim.State.Farm == null) return null;
+            Fixed[] factors = null;
+            bool[] set = null;
+            foreach (Farm.Crop c in sim.State.Farm.Crops)
+            {
+                if (c.State != Farm.CropState.Growing) continue;
+                if (factors == null)
+                {
+                    factors = new Fixed[sim.State.Land.Tiles.Count];
+                    for (int i = 0; i < factors.Length; i++) factors[i] = Fixed.One;
+                    set = new bool[factors.Length];
+                }
+                if (set[c.TileId]) continue; // the first crop on a tile counts, as in DryingFactor
+                set[c.TileId] = true;
+                factors[c.TileId] = sim.Config.Game.Farm.Fertilisers[c.Fertiliser].DryingFactor;
+            }
+            return factors;
         }
 
         /// <summary>The drying factor of the fertiliser under a crop growing on the tile, else 1 (ADR 0051: compost holds water).</summary>

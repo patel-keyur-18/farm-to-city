@@ -50,6 +50,9 @@ namespace Sim.View.Views
         public int Happiness { get; internal set; }
 
         /// <summary>The supermarket's orders (spec 011 §7): shown once orders have begun; the badge counts open orders.</summary>
+        /// <summary>The Overlays button (US-153): from the Township, when land value exists to show.</summary>
+        public bool OverlaysAvailable { get; internal set; }
+
         public bool HasOrders { get; internal set; }
         public int OrdersBadge { get; internal set; }
     }
@@ -89,6 +92,7 @@ namespace Sim.View.Views
                 HasTown = sim.State.Citizens != null && sim.State.Citizens.Population > 0,
                 Population = sim.State.Citizens?.Population ?? 0,
                 Happiness = sim.State.Citizens == null ? 0 : (int)Sim.Core.People.HappinessRules.Town(sim).RoundToLong(),
+                OverlaysAvailable = OverlayView.Available(sim),
                 HasOrders = Supermarket.Started(sim) || sim.State.Market.SupermarketOrders.Count > 0,
                 OrdersBadge = OrdersSheet.OpenCount(sim),
             };

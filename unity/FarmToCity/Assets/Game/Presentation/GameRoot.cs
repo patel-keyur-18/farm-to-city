@@ -87,6 +87,7 @@ namespace Game.Presentation
         private void Awake()
         {
             Application.targetFrameRate = 60;
+            Simulation.SystemFailed = (system, pass, e) => Debug.LogError("System " + system.GetType().Name + " failed in the " + pass + " pass; the others carried on: " + e); // ADR 0143
             WeatherSet weather = ContentLoader.LoadWeather(ContentSource.Read("weather.json"));
             GameDefs game = ContentLoader.LoadGame(ContentSource.Read, weather);
             bool dev = Debug.isDebugBuild || Application.isEditor; // development builds and the Editor only (ADR 0038)
@@ -141,6 +142,7 @@ namespace Game.Presentation
             _map = MapPresenter.Create(transform, _tweens, _ui);
             _map.Refresh(_mapVm, false);
             _input = MapInput.Create(gameObject, _camera, _map, _document, OnTap);
+            _input.ApplyRing(_mapVm);
             _input.Focus(_mapVm.HomeX, _mapVm.HomeY); // the yard (spec 010 §3.5)
 
             _sounds = new Sounds(gameObject);
@@ -235,7 +237,9 @@ namespace Game.Presentation
             _ctx.LocalNow = DateTime.Now;
             _mapVm = MapView.Build(_ctx);
             _map.Refresh(_mapVm, animate);
+            if (_input != null) _input.ApplyRing(_mapVm); // the Township opens the ring (spec 025 §3.4)
             _hud.Refresh(HudView.Build(_ctx), animate);
+            RefreshOverlay();
             if (_open.HasValue && _sheet.IsOpen) ShowCurrentSheet(refreshOnly: true);
         }
 
@@ -333,6 +337,7 @@ namespace Game.Presentation
         private void OnTap(Vector2 screen)
         {
             if (_sheet.IsOpen) { _sheet.Close(); return; }
+            if (_overlay != OverlayKind.None || _overlayUi.ChooserOpen) { OnOverlayTap(screen); return; } // an overlay's tap opens a small card, not the sheet (spec 024 §3.8)
             Hit hit = _map.Pick(_input.ScreenToWorld(screen));
             if (hit.Kind == HitKind.None) return;
             _selected = hit;
@@ -406,6 +411,7 @@ namespace Game.Presentation
 
         private void Display(SheetRequest request)
         {
+            EndOverlay(); // a sheet ends the overlay (spec 024 §3.8); a Why? from its card is not a sheet
             if (request.Kind == "ShowTile")
             {
                 // From the Menu's land list: pan to the parcel and open its sheet.
@@ -613,7 +619,7 @@ namespace Game.Presentation
             HutPlaceVm first = places.Find(p => p.Allowed) ?? (places.Count > 0 ? places[0] : null);
             if (first == null) return;
             if (kind != PlaceKind.Hut) _map.LightPlaces(places.FindAll(p => p.Allowed).ConvertAll(p => p.TileId));
-            _input.Placing = w => { int tile = _map.Grid.Pick(w.x, w.y); if (tile >= 0) MoveGhost(tile); };
+            _input.Placing = w => { int tile = _map.TileOfCell(_map.Grid.Pick(w.x, w.y)); if (tile >= 0) MoveGhost(tile); };
             MoveGhost(first.TileId);
             _input.Reveal(_map.WorldOf(new Hit(HitKind.Tile, first.TileId)));
         }
@@ -624,7 +630,11 @@ namespace Game.Presentation
                 : _placing == PlaceKind.Shed ? ShedPlacement.ReasonFor(_ctx, tile) : HutPlacement.ReasonFor(_ctx, tile);
             if (tile == _ghostTile && _placeBar != null) return;
             _ghostTile = tile;
-            if (_placing == PlaceKind.Business) _map.ShowBusinessGhost(tile, reason == null, Sim.Config.Game.Businesses.Types[_placeType].Id);
+            if (_placing == PlaceKind.Business)
+            {
+                _map.ShowBusinessGhost(tile, reason == null, Sim.Config.Game.Businesses.Types[_placeType].Id);
+                _map.ShowSmoke(BusinessPlacement.SmokeTiles(_ctx, _placeType, tile)); // a kiln's red footprint (US-243); none for the others
+            }
             else if (_placing == PlaceKind.Shed) _map.ShowShedGhost(tile, reason == null);
             else if (_placingHouse)
                 _map.ShowHouseGhost(tile, reason == null, global::Sim.Core.People.HouseRules.HousesOn(Sim, tile), Sim.State.Land.Tiles[tile].Terrain == global::Sim.Core.Definitions.Terrain.Quarters);
@@ -644,7 +654,9 @@ namespace Game.Presentation
             string what = _placingHouse ? "place.house" : _placing == PlaceKind.Business ? "place.business" : _placing == PlaceKind.Shed ? "place.shed" : "place.";
             text.Add(UiKit.Heading1(_strings.Get(what + (what == "place." ? "title" : "Title"), "name",
                 _placing == PlaceKind.Business ? BusinessWords.InSentence(_ctx, Sim.Config.Game.Businesses.Types[_placeType]) : ""), 40));
-            text.Add(UiKit.Text(reason ?? _strings.Get(what + (what == "place." ? "hint" : "Hint")), 28, reason == null ? UiKit.Wood : UiKit.Warn, UiKit.Body));
+            string hint = reason ?? _strings.Get(what + (what == "place." ? "hint" : "Hint"));
+            if (reason == null && _placing == PlaceKind.Business && BusinessPlacement.SmokeTiles(_ctx, _placeType, tile).Count > 0) hint += " " + _strings.Get("place.kilnSmoke"); // the red acres (US-243)
+            text.Add(UiKit.Text(hint, 28, reason == null ? UiKit.Wood : UiKit.Warn, UiKit.Body));
             _placeBar.Add(text);
             ActionVm build = _placingHouse ? HousePlacement.Confirm(_ctx, tile) : _placing == PlaceKind.Shed ? ShedPlacement.Confirm(_ctx, tile)
                 : _placing == PlaceKind.Business ? BusinessPlacement.Confirm(_ctx, tile, _placeType, BusinessWords.Self(_placeArg), BusinessWords.Loan(_placeArg)) : HutPlacement.Confirm(_ctx, tile);

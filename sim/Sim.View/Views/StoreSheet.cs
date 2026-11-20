@@ -38,6 +38,9 @@ namespace Sim.View.Views
             // Grain storage in the mandi town, from the Hamlet (spec 013 §3.4, ADR 0087).
             if (GodownRules.Unlocked(sim))
                 buttons.Add(Shortcut("godown", s.Get("store.godown"), GodownSheet.ShortcutNote(ctx), new SheetRequest(GodownSheet.Kind, 0), "granary", 0));
+            // Cold storage in the mandi town, from the Township (spec 025 §3.6, US-242).
+            if (ColdStoreRules.On(sim))
+                buttons.Add(Shortcut("coldStore", s.Get("store.cold"), ColdStoreSheet.ShortcutNote(ctx), new SheetRequest(ColdStoreSheet.Kind, 0), "cold_store", 0));
             // Two to a row once there are four, so each keeps room for its words (Sprint 16, the godown's button).
             int perRow = buttons.Count > 3 ? 2 : buttons.Count;
             for (int i = 0; i < buttons.Count; i += perRow)
@@ -107,6 +110,8 @@ namespace Sim.View.Views
             var line = new LineVm(ctx.Strings.Get(good.NameKey), value, "price", g) { Icon = good.Id, Opens = new SheetRequest("Good", g) };
             long[] dry = GodownRules.Dry(sim); // where the stock is kept: part of it may be in the godown in town (ADR 0087)
             if (dry != null && dry[g] > 0) line.Note = ctx.Strings.Get("store.inTown", "kg", ctx.Fmt.Kg(Store.WeightGrams(good, dry[g])));
+            long[] cold = ColdStoreRules.Cold(sim); // part of it may be in the cold store in town (US-242)
+            if (cold != null && cold[g] > 0) line.Note = ctx.Strings.Get("store.inCold", "kg", ctx.Fmt.Kg(Store.WeightGrams(good, cold[g])));
             string id = good.Id;
             // The button sits on the good's own row, so the list reads as one row per good (owner feedback, device run 2).
             // Everything on offer at the market (a hand's order puts a harvest there): the way out is to take it back.

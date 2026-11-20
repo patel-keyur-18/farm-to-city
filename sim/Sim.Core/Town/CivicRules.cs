@@ -46,6 +46,7 @@ namespace Sim.Core.Town
 
         public static long Cost(Simulation sim, int i)
         {
+            if (ConstructionRules.On(sim)) { Definitions.BuildKindDef k = ConstructionRules.Def(sim).KindOfWork(Def(sim, i).Work); if (k != null) return ConstructionRules.Quote(sim, k.Id, BuildProject.Town, 1).Total; }
             foreach (TownWorkDef w in TreasuryRules.Def(sim).Works) if (w.Id == Def(sim, i).Work) return Market.MarketRules.Indexed(sim, w.Cost);
             return 0;
         }
@@ -145,7 +146,7 @@ namespace Sim.Core.Town
         public static Commands.RejectReason CanCommission(Simulation sim, string workId)
         {
             int i = OfWork(sim, workId);
-            return i >= 0 && Post(sim, i).Built ? Commands.RejectReason.PlotTaken : Commands.RejectReason.None;
+            return i >= 0 && (Post(sim, i).Built || ConstructionRules.Pending(sim, workId)) ? Commands.RejectReason.PlotTaken : Commands.RejectReason.None;
         }
 
         internal static void OnCommissioned(Simulation sim, string workId, long cost)

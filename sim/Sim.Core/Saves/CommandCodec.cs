@@ -50,6 +50,13 @@ namespace Sim.Core.Saves
             PostCivicJob, DismissStaff,
             ListParcel, CancelSale, ZoneParcel, UnzoneParcel,
             LeaseOutLand, EndLease,
+            CommissionWorksGift,
+            UpgradeHouse,
+            RentColdStore,
+            SetKeepHeifers,
+            BuildSilagePit, BuyChaffCutter,
+            SetHireOut,
+            FitSolarPanel,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -170,7 +177,15 @@ namespace Sim.Core.Saves
                 case CoverFromSavings c: At(c, Tag.CoverFromSavings); break;
                 case TakeBackSavingsCover c: At(c, Tag.TakeBackSavingsCover); break;
                 case RenewLease c: At(c, Tag.RenewLease); w.WriteLong(c.HouseholdId); w.WriteInt((int)c.Choice); break;
+                case UpgradeHouse c: At(c, Tag.UpgradeHouse); w.WriteLong(c.BuildingId); break;
+                case RentColdStore c: At(c, Tag.RentColdStore); w.WriteInt(c.Tonnes); break;
+                case SetKeepHeifers c: At(c, Tag.SetKeepHeifers); w.WriteBool(c.On); break;
+                case SetHireOut c: At(c, Tag.SetHireOut); w.WriteLong(c.MachineId); w.WriteBool(c.On); break;
+                case FitSolarPanel c: At(c, Tag.FitSolarPanel); w.WriteInt(c.Source); break;
+                case BuildSilagePit c: At(c, Tag.BuildSilagePit); break;
+                case BuyChaffCutter c: At(c, Tag.BuyChaffCutter); break;
                 case GiveToTreasury c: At(c, Tag.GiveToTreasury); w.WriteLong(c.Amount); break;
+                case CommissionWorks c when c.Gift > 0: At(c, Tag.CommissionWorksGift); w.WriteString(c.WorkId); w.WriteLong(c.Gift); break;
                 case CommissionWorks c: At(c, Tag.CommissionWorks); w.WriteString(c.WorkId); break;
                 case PostCivicJob c: At(c, Tag.PostCivicJob); w.WriteInt(c.Civic); break;
                 case DismissStaff c: At(c, Tag.DismissStaff); w.WriteInt(c.Civic); break;
@@ -336,8 +351,16 @@ namespace Sim.Core.Saves
                 case Tag.CoverFromSavings: return new CoverFromSavings(at);
                 case Tag.TakeBackSavingsCover: return new TakeBackSavingsCover(at);
                 case Tag.RenewLease: return new RenewLease(at, r.ReadLong(), (LeaseChoice)r.ReadInt());
+                case Tag.UpgradeHouse: return new UpgradeHouse(at, r.ReadLong());
+                case Tag.RentColdStore: return new RentColdStore(at, r.ReadInt());
+                case Tag.SetKeepHeifers: return new SetKeepHeifers(at, r.ReadBool());
+                case Tag.SetHireOut: return new SetHireOut(at, r.ReadLong(), r.ReadBool());
+                case Tag.FitSolarPanel: return new FitSolarPanel(at, r.ReadInt());
+                case Tag.BuildSilagePit: return new BuildSilagePit(at);
+                case Tag.BuyChaffCutter: return new BuyChaffCutter(at);
                 case Tag.GiveToTreasury: return new GiveToTreasury(at, r.ReadLong());
                 case Tag.CommissionWorks: return new CommissionWorks(at, r.ReadString());
+                case Tag.CommissionWorksGift: return new CommissionWorks(at, r.ReadString(), r.ReadLong());
                 case Tag.PostCivicJob: return new PostCivicJob(at, r.ReadInt());
                 case Tag.DismissStaff: return new DismissStaff(at, r.ReadInt());
                 case Tag.ListParcel: return new ListParcel(at, r.ReadString());

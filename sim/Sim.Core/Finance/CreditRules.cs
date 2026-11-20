@@ -75,7 +75,7 @@ namespace Sim.Core.Finance
             long sum = extra;
             if (sim.State.Livestock == null) return sum;
             foreach (Livestock.Animal a in sim.State.Livestock.Animals)
-                if (a.Id != excludeAnimal)
+                if (a.Id != excludeAnimal && a.Stage != Livestock.AnimalStage.Heifer) // a growing heifer secures nothing (ADR 0135)
                     sum += Money.MulRate(Market.MarketRules.Indexed(sim, sim.Config.Game.Livestock.Animals[a.Kind].Price), a.Health);
             return sum;
         }

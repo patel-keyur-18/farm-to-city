@@ -41,7 +41,7 @@ namespace Sim.View.Tests
             sim.Execute(new BuildChannel(sim.State.Clock.SimTime, 85));
             ctx = ViewKit2.Context(sim);
             Assert.That(Irrigation(FieldSheets.ForTile(ctx, 86)), Is.EqualTo("The pump"));
-            Assert.That(Buttons(FieldSheets.ForTile(ctx, 86)), Is.EqualTo(new[] { "pumpOff", "buildChannel" }));
+            Assert.That(Buttons(FieldSheets.ForTile(ctx, 86)), Is.EqualTo(new[] { "pumpOff", "solarPump", "buildChannel" }));
             ActionVm on = FieldSheets.ForTile(ctx, 84).Lines.Where(l => l.Buttons != null).SelectMany(l => l.Buttons).Single(b => b.Id == "pumpOn");
             Assert.That(on.Detail, Is.EqualTo("Waters 2 of 4 acres"));
             Assert.That(sim.Execute(on.Create(sim.State.Clock.SimTime)).Accepted, Is.True);
@@ -53,7 +53,7 @@ namespace Sim.View.Tests
             for (int i = 0; i < eras.Count; i++) if (eras[i].Id == "village") sim.State.Era.Current = i;
             ctx = ViewKit2.Context(sim);
             SheetVm well = FieldSheets.ForTile(ctx, 86);
-            Assert.That(Buttons(well), Is.EqualTo(new[] { "pumpOff", "drillBorewell", "buildChannel", "layDrip" }));
+            Assert.That(Buttons(well), Is.EqualTo(new[] { "pumpOff", "drillBorewell", "solarPump", "buildChannel", "layDrip" }));
             Assert.That(well.Lines.Where(l => l.Buttons != null).SelectMany(l => l.Buttons).Single(b => b.Id == "layDrip").Detail, Is.EqualTo("20,000 coins · half paid by the government"));
             ActionVm drip = FieldSheets.ForTile(ctx, 101).Lines.Where(l => l.Buttons != null).SelectMany(l => l.Buttons).Single(b => b.Id == "layDrip");
             Assert.That(drip.Enabled, Is.False);
@@ -78,7 +78,7 @@ namespace Sim.View.Tests
             Simulation sim = Game("hamlet");
             sim.Execute(new BuildChannel(sim.State.Clock.SimTime, 85));
             MapVm spring = MapView.Build(ViewKit2.Context(sim));
-            Assert.That(spring.CanalRow, Is.EqualTo(4));
+            Assert.That(spring.CanalRow, Is.EqualTo(7)); // row 4 of the 16 × 12 map, in the 24 × 18 grid
             Assert.That((spring.CanalDry, spring.Tiles[85].ChannelDry, spring.Tiles[84].ChannelDry), Is.EqualTo((false, false, false)));
             sim.AdvanceTo((sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason); // Summer: closed for repairs
             MapVm summer = MapView.Build(ViewKit2.Context(sim));

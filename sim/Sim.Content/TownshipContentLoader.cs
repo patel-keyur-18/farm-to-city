@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Linq;
 using Sim.Core.Definitions;
+using Sim.Core.Maths;
 using static Sim.Content.JsonFields;
 
 namespace Sim.Content
@@ -10,11 +11,11 @@ namespace Sim.Content
         /// <c>township.json</c> (spec 023 §4): the paved link road's petition, share, build days and tier; the clinic, the doctor's quarters and the
         /// doctor (US-148), on the map's <c>clinic_plot</c> and <c>quarters_plot</c>.
         /// </summary>
-        public static TownshipDef LoadTownship(string json, RegionDef region, MapDef map, System.Collections.Generic.IReadOnlyList<BuildingDef> buildings, OnboardingDefs onboarding, TreasuryDef treasury)
+        public static TownshipDef LoadTownship(string json, RegionDef region, MapDef map, System.Collections.Generic.IReadOnlyList<BuildingDef> buildings, OnboardingDefs onboarding, TreasuryDef treasury, MarketDefs market = null)
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke", "utilities", "upgrade", "coldStore");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -113,7 +114,148 @@ namespace Sim.Content
                 };
                 civic.Add(def);
             }
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root));
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root), Utilities = LoadUtilities(o, root, treasury, map), Upgrade = LoadUpgrade(o, root), ColdStore = LoadColdStore(o, root, market) };
+        }
+
+        /// <summary>The utilities (spec 025 §3.1): each step's plot, work, lines, reach and capacity, and what going without costs.</summary>
+        private static UtilitiesDef LoadUtilities(JObject o, string root, TreasuryDef treasury, MapDef map)
+        {
+            string p = Join(root, "utilities");
+            JObject j = Object(Required(o, root, "utilities"), p);
+            var fields = new System.Collections.Generic.List<string>(UtilityIds) { "minCondition", "townSize", "giftRound", "waterHealth", "drainsHealth", "drainsHealthCap", "drainsLandValue", "wasteBelonging", "powerLeisure", "eveningHours" };
+            OnlyFields(j, p, fields.ToArray());
+            var steps = new System.Collections.Generic.List<UtilityDef>();
+            for (int i = 0; i < UtilityIds.Length; i++)
+            {
+                string ip = Join(p, UtilityIds[i]);
+                JObject b = Object(Required(j, p, UtilityIds[i]), ip);
+                OnlyFields(b, ip, "place", "work", "upkeepLine", "extraLine", "reach", "capacity");
+                string work = String(Required(b, ip, "work"), Join(ip, "work"));
+                bool known = false;
+                foreach (TownWorkDef w in treasury.Works) if (w.Id == work) known = true;
+                if (!known) throw new ContentException(Join(ip, "work"), "unknown work '" + work + "' (treasury.json works)");
+                steps.Add(new UtilityDef
+                {
+                    Index = i, Id = UtilityIds[i], Tile = PlotTile(b, ip, UtilityIds[i] + "_plot", map), Work = work,
+                    Reach = BoundedInt(b, ip, "reach", 100, 1000000), Capacity = BoundedInt(b, ip, "capacity", 1, 1000000),
+                    UpkeepLine = UtilityLine(treasury, b, ip, "upkeepLine", i, true), ExtraLine = UtilityLine(treasury, b, ip, "extraLine", i, false),
+                });
+            }
+            return new UtilitiesDef
+            {
+                Steps = steps.AsReadOnly(), MinCondition = Bounded(j, p, "minCondition", "0", "1"), TownSize = BoundedInt(j, p, "townSize", 0, 100000), GiftRound = Money(Required(j, p, "giftRound"), Join(p, "giftRound")),
+                WaterHealth = Bounded(j, p, "waterHealth", "0", "1"), DrainsHealth = Bounded(j, p, "drainsHealth", "0", "1"), DrainsHealthCap = Bounded(j, p, "drainsHealthCap", "0", "1"),
+                DrainsLandValue = Bounded(j, p, "drainsLandValue", "0", "1"), WasteBelonging = Bounded(j, p, "wasteBelonging", "0", "1"), PowerLeisure = Bounded(j, p, "powerLeisure", "0", "1"),
+                EveningHours = BoundedInt(j, p, "eveningHours", 0, 6),
+            };
+        }
+
+        private static int UtilityLine(TreasuryDef treasury, JObject b, string path, string field, int utility, bool required)
+        {
+            if (b[field] == null)
+            {
+                if (required) throw new ContentException(Join(path, field), "required");
+                return -1;
+            }
+            string id = String(b[field], Join(path, field));
+            for (int i = 0; i < treasury.Lines.Count; i++)
+            {
+                LineDef l = treasury.Lines[i];
+                if (l.Id != id) continue;
+                if (l.Requires != LineRequires.UtilityBuilt || l.Utility != utility) throw new ContentException(Join(path, field), "line '" + id + "' doesn't open with this utility");
+                return i;
+            }
+            throw new ContentException(Join(path, field), "unknown line '" + id + "'");
+        }
+
+        /// <summary>Smoke (spec 025 §3.3, §3.4): each source's reach, land value and health, and the cap on an acre's total.</summary>
+        private static SmokeDef LoadSmoke(JObject o, string root)
+        {
+            string p = Join(root, "smoke");
+            JObject j = Object(Required(o, root, "smoke"), p);
+            OnlyFields(j, p, "landValueCap", "healthCap", "sources");
+            JObject src = Object(Required(j, p, "sources"), Join(p, "sources"));
+            var list = new System.Collections.Generic.List<SmokeSource>();
+            foreach (JProperty prop in src.Properties())
+            {
+                string sp = Join(Join(p, "sources"), prop.Name);
+                JObject x = Object(prop.Value, sp);
+                OnlyFields(x, sp, "reach", "landValue", "health");
+                list.Add(new SmokeSource { Id = prop.Name, Reach = BoundedInt(x, sp, "reach", 0, 5000), LandValue = Bounded(x, sp, "landValue", "0", "1"), Health = Bounded(x, sp, "health", "0", "1") });
+            }
+            return new SmokeDef { Sources = list.AsReadOnly(), LandValueCap = Bounded(j, p, "landValueCap", "0", "1"), HealthCap = Bounded(j, p, "healthCap", "0", "1") };
+        }
+
+        /// <summary>Construction from the Township (spec 025 §3.2): daily limits, prices, masons and the buildings' materials, mason-days and hours.</summary>
+        private static ConstructionDef LoadConstruction(JObject o, string root, TreasuryDef treasury)
+        {
+            string p = Join(root, "construction");
+            JObject j = Object(Required(o, root, "construction"), p);
+            OnlyFields(j, p, "daily", "price", "masonDay", "gangPrice", "gangHours", "maxMasons", "restockHour", "masonShare", "kinds");
+            string dp = Join(p, "daily");
+            JObject d = Object(Required(j, p, "daily"), dp);
+            OnlyFields(d, dp, "bricks", "cement", "timber");
+            string pp = Join(p, "price");
+            JObject pr = Object(Required(j, p, "price"), pp);
+            OnlyFields(pr, pp, "brick", "cement", "timber");
+            var kinds = new System.Collections.Generic.List<BuildKindDef>();
+            string kp = Join(p, "kinds");
+            var ka = Array(Required(j, p, "kinds"), kp);
+            for (int i = 0; i < ka.Count; i++)
+            {
+                string ip = Join(kp, i.ToString());
+                JObject k = Object(ka[i], ip);
+                OnlyFields(k, ip, "id", "work", "bricks", "cement", "timber", "masonDays", "hours");
+                string work = k["work"] == null ? null : String(k["work"], Join(ip, "work"));
+                if (work != null)
+                {
+                    bool known = false;
+                    foreach (TownWorkDef w in treasury.Works) if (w.Id == work) known = true;
+                    if (!known) throw new ContentException(Join(ip, "work"), "unknown work '" + work + "' (treasury.json works)");
+                }
+                kinds.Add(new BuildKindDef
+                {
+                    Id = String(Required(k, ip, "id"), Join(ip, "id")), Work = work, Bricks = BoundedInt(k, ip, "bricks", 0, 100000), Cement = BoundedInt(k, ip, "cement", 0, 10000),
+                    Timber = BoundedInt(k, ip, "timber", 0, 10000), MasonDays = BoundedInt(k, ip, "masonDays", 1, 1000), Hours = BoundedInt(k, ip, "hours", 1, 24 * 30),
+                });
+            }
+            return new ConstructionDef
+            {
+                DailyBricks = BoundedInt(d, dp, "bricks", 1, 1000000), DailyCement = BoundedInt(d, dp, "cement", 1, 100000), DailyTimber = BoundedInt(d, dp, "timber", 1, 100000),
+                BrickPrice = Money(Required(pr, pp, "brick"), Join(pp, "brick")), CementPrice = Money(Required(pr, pp, "cement"), Join(pp, "cement")), TimberPrice = Money(Required(pr, pp, "timber"), Join(pp, "timber")),
+                MasonDay = Money(Required(j, p, "masonDay"), Join(p, "masonDay")), GangPrice = Bounded(j, p, "gangPrice", "1", "3"), GangHours = Bounded(j, p, "gangHours", "1", "3"),
+                MaxMasons = BoundedInt(j, p, "maxMasons", 1, 10), RestockHour = BoundedInt(j, p, "restockHour", 0, 23), MasonShare = BoundedInt(j, p, "masonShare", 0, 100), Kinds = kinds,
+            };
+        }
+
+        /// <summary>Pucca upgrades (spec 024 §3.7): the land value that offers one and the pucca rent; its materials are the <c>pucca_upgrade</c> construction kind.</summary>
+        private static UpgradeDef LoadUpgrade(JObject o, string root)
+        {
+            string p = Join(root, "upgrade");
+            JObject j = Object(Required(o, root, "upgrade"), p);
+            OnlyFields(j, p, "puccaMinLandValue", "puccaRent");
+            return new UpgradeDef { PuccaMinLandValue = Bounded(j, p, "puccaMinLandValue", "1", "3"), PuccaRent = Money(Required(j, p, "puccaRent"), Join(p, "puccaRent")) };
+        }
+
+        /// <summary>The cold store (spec 025 §3.6): the rent, the cap and each kept good's share of its spoilage.</summary>
+        private static ColdStoreDef LoadColdStore(JObject o, string root, MarketDefs market)
+        {
+            string p = Join(root, "coldStore");
+            JObject j = Object(Required(o, root, "coldStore"), p);
+            OnlyFields(j, p, "rentPerKgSeason", "maxRentTonnes", "goods");
+            JObject goods = Object(Required(j, p, "goods"), Join(p, "goods"));
+            var factor = new Fixed[market == null ? 0 : market.Goods.Count];
+            foreach (JProperty g in goods.Properties())
+            {
+                string gp = Join(Join(p, "goods"), g.Name);
+                int i = market == null ? -1 : market.IndexOf(g.Name);
+                if (i < 0) throw new ContentException(gp, "unknown good '" + g.Name + "'");
+                if (market.Goods[i].Place != GoodPlace.Store) throw new ContentException(gp, "only goods kept in the hut store go to the cold store");
+                Fixed f = Bounded(goods, Join(p, "goods"), g.Name, "0.01", "1");
+                factor[i] = f;
+            }
+            if (goods.Count == 0) throw new ContentException(Join(p, "goods"), "at least one good");
+            return new ColdStoreDef { RentPerKgSeason = Money(Required(j, p, "rentPerKgSeason"), Join(p, "rentPerKgSeason")), MaxRentTonnes = BoundedInt(j, p, "maxRentTonnes", 1, 1000), Factor = factor };
         }
 
         private static ZoningDef LoadZoning(JObject o, string root)

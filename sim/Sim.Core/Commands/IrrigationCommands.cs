@@ -195,4 +195,32 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>
+    /// Fits a solar panel to the pump (1) or the borewell (2) (US-257, ADR 0138): once for each, the source built, paid at once and
+    /// capitalised to Buildings at cost; it takes <c>solarCut</c> off that source's power.
+    /// </summary>
+    public sealed class FitSolarPanel : TimedCommand
+    {
+        public int Source { get; }
+
+        public FitSolarPanel(long at, int source) : base(at) { Source = source; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (!IrrigationRules.On(sim) || Source < 1 || Source > 2) return CommandResult.Reject(RejectReason.InvalidArgument);
+            PumpedDef d = Source == 1 ? IrrigationRules.Def(sim).Pump : IrrigationRules.Def(sim).Borewell;
+            if (!IrrigationRules.Unlocked(sim, d.UnlockEra)) return CommandResult.Reject(RejectReason.EraLocked);
+            if ((Source == 1 ? IrrigationRules.Pump(sim) : IrrigationRules.Borewell(sim)) == null) return CommandResult.Reject(RejectReason.NoWaterSource);
+            if (IrrigationRules.Solar(sim, Source)) return CommandResult.Reject(RejectReason.AlreadyBuilt);
+            long cost = IrrigationRules.PanelCost(sim, Source);
+            if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            long t = sim.State.Clock.SimTime;
+            sim.State.Ledger.Post(t, sim.Period, "ledger.solarPanel", Source == 1 ? "solar:pump" : "solar:borewell", new Posting(Account.Buildings, cost), new Posting(Account.Cash, -cost));
+            if (Source == 1) sim.State.Irrigation.PumpSolar = cost;
+            else sim.State.Irrigation.BorewellSolar = cost;
+            sim.Emit(new SolarPanelFitted(t, Source, cost));
+            return CommandResult.Ok;
+        }
+    }
 }

@@ -127,6 +127,7 @@ namespace Sim.Core.People
                 raised += book;
                 Household x = sim.State.Citizens.Households.Find(h => h.HomeId == b.Id);
                 if (x != null) Evict(sim, x, LeaveReason.LandTaken);
+                Town.UpgradeRules.Cancel(sim, b.Id);
                 land.Buildings.Remove(b);
                 LandSystem.SetOccupied(sim, b.TileId, false);
             }
@@ -135,7 +136,8 @@ namespace Sim.Core.People
                 if (land.Tiles[c.TileId].ParcelId != parcelId) continue;
                 sim.State.Ledger.Post(t, period, "ledger.houseSeized", "construction:" + c.Id, new Posting(Account.Cash, c.Cost), new Posting(Account.Buildings, -c.Cost));
                 raised += c.Cost;
-                sim.CompleteJob(sim.State.Jobs.Find(c.JobId));
+                if (Town.ConstructionRules.On(sim) && sim.State.Township.Projects.Exists(x => x.House == c.Id && !x.Upgrade)) Town.ConstructionRules.Cancel(sim, c.Id);
+                else sim.CompleteJob(sim.State.Jobs.Find(c.JobId));
                 sim.State.Citizens.Constructions.Remove(c);
                 LandSystem.SetOccupied(sim, c.TileId, false);
             }

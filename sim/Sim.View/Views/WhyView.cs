@@ -55,7 +55,7 @@ namespace Sim.View.Views
         {
             // Land and crops (specs 002, 003).
             { "fertility", Fertility }, { "moisture", Moisture }, { "irrigation", Irrigation }, { "soil", Soil }, { "timeLeft", TimeLeft }, { "care", Care },
-            { "water", Water }, { "weather", Weather }, { "yield", Yield }, { "spoils", Spoils }, { "landPrice", LandPrice }, { "landTotal", LandTotal }, { "landLoans", LandLoans }, { "landValue", (c, id) => LandValueViews.Why(c, (int)id) }, { ZoningViews.WaitingWhy, ZoningViews.Why }, { LandLeaseViews.RentWhy, LandLeaseViews.Why },
+            { "water", Water }, { "weather", Weather }, { "yield", Yield }, { "spoils", Spoils }, { "landPrice", LandPrice }, { "landTotal", LandTotal }, { "landLoans", LandLoans }, { "landValue", (c, id) => LandValueViews.Why(c, (int)id) }, { OverlayView.CoverageWhyKey, OverlayView.CoverageWhy }, { OverlayView.HappinessWhyKey, OverlayView.HappinessWhy }, { ZoningViews.WaitingWhy, ZoningViews.Why }, { LandLeaseViews.RentWhy, LandLeaseViews.Why },
             { "resale", Resale }, { "pests", Pests }, { SowSheet.PerHourWhy, SowPerHour },
             // The crop calendar's crop page (spec 020 §3.6b), by crop index.
             { CropCalendar.GrowsWhy, CropGrows }, { CropCalendar.WaterWhy, CropWater }, { CropCalendar.LabourWhy, CropLabour },
@@ -69,7 +69,7 @@ namespace Sim.View.Views
             // Money and the market (specs 004, 005).
             { "cash", Cash }, { "store", StoreFill }, { "price", Price }, { "marketPrice", MarketPrice }, { "traderPrice", TraderPrice },
             { "traderRoom", TraderRoom }, { "spoilage", Spoilage }, { "input", Input }, { "inputPrice", InputPrice }, { "mandi", Mandi },
-            { "godown", Godown }, { "godownLet", GodownLet }, { "warehouse", Warehouse }, { "godownGood", GodownGood },
+            { "godown", Godown }, { "godownLet", GodownLet }, { "warehouse", Warehouse }, { "coldRent", ColdRent }, { "coldGood", ColdGood }, { "coldWorth", ColdWorth }, { "godownGood", GodownGood },
             { "netWorth", NetWorth }, { "creditLimit", CreditLimitWhy }, { "loan", LoanWhy }, { "borrow", BorrowWhy },
             { "season", SeasonWhy },
             // The truck and supermarket orders (spec 011).
@@ -93,7 +93,7 @@ namespace Sim.View.Views
             { "era", EraWhy },
             // The dairy co-op (spec 012, ADR 0061).
             { "milkPrice", MilkPrice }, { "milkToday", MilkToday }, { "shedCost", ShedCost }, { "animalMilk", AnimalMilk }, { "animalFed", AnimalFed },
-            { "animalHealth", AnimalHealth }, { "animalMoney", AnimalMoney }, { "animalSell", AnimalSell }, { "animalBuy", AnimalBuy }, { "greenFodder", GreenFodder },
+            { "animalHealth", AnimalHealth }, { "animalMoney", AnimalMoney }, { "animalSell", AnimalSell }, { "animalBuy", AnimalBuy }, { "heiferKeep", HeiferKeep }, { "heiferRaise", HeiferRaise }, { "silagePit", SilagePit }, { "shedLimit", ShedLimit }, { "chaffCutter", ChaffCutter }, { "heiferGrowing", HeiferGrowing }, { "heiferWorth", HeiferWorth }, { "greenFodder", GreenFodder },
             { "feedStock", FeedStock }, { "animalWork", AnimalWork }, { "fodderCut", FodderCut },
             // Your people (spec 014 §7).
             { "townHappiness", TownHappiness }, { "employment", Employment }, { "household.income", HouseholdIncome }, { "household.budget", HouseholdBudget },
@@ -107,7 +107,7 @@ namespace Sim.View.Views
             { "planWheat", (c, i) => PlanLine(c, i, "wheat") }, { "planPower", (c, i) => PlanLine(c, i, "power") }, { "planRepairs", (c, i) => PlanLine(c, i, "repairs") },
             { "planDepreciation", (c, i) => PlanLine(c, i, "depreciation") }, { "planWage", (c, i) => PlanLine(c, i, "wage") },
             { "planProfit", (c, i) => PlanLine(c, i, "profit") }, { "planCash", (c, i) => PlanLine(c, i, "cash") }, { "planPayback", (c, i) => PlanLine(c, i, "payback") },
-            { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
+            { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planMonsoon", (c, i) => PlanLine(c, i, "monsoon") }, { "kiln", KilnWhy }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
             { "businessOverdraft", BusinessOverdraft }, { "businessClose", BusinessClose },
             { "businessPeople", BusinessPeople }, { "recipeShops", RecipeShops }, { "recipeInput", RecipeInput }, { "recipeMade", RecipeMade },
             { "recipeStock", RecipeStock }, { "recipeMix", RecipeMix }, { "dairyMilk", DairyMilk }, { "dairyNeighbours", DairyNeighbours },
@@ -117,7 +117,7 @@ namespace Sim.View.Views
             { "shopReference", ShopReference }, { "shopPrice", ShopPrice }, { "shopExpected", ShopExpected }, { "pitchRent", PitchRent }, { "shopPutOut", ShopPutOut },
             { "shopMilk", ShopMilk }, { "planRent", (c, i) => PlanLine(c, i, "rent") }, { "shopStars", ShopStars }, { "shopQuality", ShopQuality },
             // The school (spec 018).
-            { "road", RoadWhy }, { "clinic", ClinicWhy }, { "civic", CivicWhy }, { "cohort", CohortWhyView },
+            { "road", RoadWhy }, { "clinic", ClinicWhy }, { "civic", CivicWhy }, { "utility", UtilityWhy }, { UpgradeSheet.Why, UpgradeHouseWhy }, { "utilityTown", UtilityTownWhy }, { "lane", LaneWhy }, { "build", BuildWhy }, { "cohort", CohortWhyView },
             { "schoolCost", SchoolCost }, { "schoolUpkeep", SchoolUpkeep }, { "schoolPupils", SchoolPupils },
             { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "codex", Codex },
             // The town treasury (spec 021).
@@ -125,7 +125,7 @@ namespace Sim.View.Views
             { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryWindow", TreasuryWindow }, { "policy", PolicyWhy }, { "taxHouse", TaxHouseWhy }, { "taxBusiness", TaxBusinessWhy }, { "taxCollected", TaxCollectedWhy }, { "treasuryAccount", TreasuryAccount },
             { "treasuryFund", TreasuryFund },
             // Equipment (spec 013 §3.2).
-            { "machine", Machine }, { "machineValue", MachineValue }, { "fieldTools", FieldTools },
+            { "machine", Machine }, { "machineValue", MachineValue }, { "hireFee", HireFee }, { "hireCost", HireCost }, { "hirePays", HirePays }, { "fieldTools", FieldTools },
         };
 
         /// <summary>True when <paramref name="key"/> has a Why? source (report lines are "report.&lt;line&gt;").</summary>

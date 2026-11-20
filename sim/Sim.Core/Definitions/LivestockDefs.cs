@@ -44,6 +44,9 @@ namespace Sim.Core.Definitions
         /// <summary>Selling her at the fair gives price × this × her health.</summary>
         public Fixed SellShare { get; }
 
+        /// <summary>Seasons a kept heifer grows before her first calving (spec 025 §3.8, ADR 0135); 0 for a draught animal.</summary>
+        public int GrowSeasons { get; }
+
         /// <summary>A draught animal (the bullock, spec 013 §3.2): no milk, no calves, bought and sold with its machine, kept in the second shed.</summary>
         public bool Draught { get; }
 
@@ -52,8 +55,9 @@ namespace Sim.Core.Definitions
 
         public AnimalDef(string id, string nameKey, long price, Fixed milkPerDay, Fixed fatPercent, IReadOnlyList<Fixed> seasonMilk, int milkDays,
             int dryDays, Fixed green, Fixed straw, Fixed feed, Fixed dryFeedFactor, Fixed labourHoursPerDay, Fixed dungCompostKgPerDay,
-            long calfPrice, Fixed sellShare, bool draught = false)
+            long calfPrice, Fixed sellShare, bool draught = false, int growSeasons = 0)
         {
+            GrowSeasons = growSeasons;
             Draught = draught;
             Id = id;
             NameKey = nameKey;
@@ -130,6 +134,21 @@ namespace Sim.Core.Definitions
         public IReadOnlyList<CurvePoint> LactationCurve { get; set; }
 
         public IReadOnlyList<string> Names { get; set; }
+
+        /// <summary>A kept heifer (ADR 0135): the share of calves that are heifers, her ration, labour and dung as a share of a grown animal's, hours a game day.</summary>
+        public Fixed HeiferShare { get; set; }
+        public Fixed HeiferRationShare { get; set; }
+        public Fixed HeiferLabourHours { get; set; }
+        public Fixed HeiferDungShare { get; set; }
+
+        /// <summary>The silage pit (US-255, ADR 0136): its price (money, × PriceIndex), its room in kg and the share of the spare cut lost making silage.</summary>
+        public long SilagePitCost { get; set; }
+        public int SilagePitKg { get; set; }
+        public Fixed SilageLossShare { get; set; }
+
+        /// <summary>The chaff cutter: its price (money, × PriceIndex) and the share of the green fodder and straw need it saves.</summary>
+        public long ChaffCutterCost { get; set; }
+        public Fixed ChaffCutterSaving { get; set; }
     }
 
     /// <summary>Spec 012's content: the shared rules, the animals, and where the shed and the feeds are.</summary>

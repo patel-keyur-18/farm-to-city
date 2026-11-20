@@ -36,6 +36,40 @@ namespace Sim.Core.Events
         protected override string Describe() { return "FamilyHouseBuilt(building=" + BuildingId + ", tile=" + TileId + ")"; }
     }
 
+    /// <summary>A family house is being made pucca (spec 024 §3.7, US-152): yours (<see cref="Owner"/> 0) or a builder's (1).</summary>
+    public sealed class HouseUpgradeStarted : SimEvent
+    {
+        public long BuildingId { get; }
+        public int TileId { get; }
+        public int Owner { get; }
+
+        public HouseUpgradeStarted(long simTime, long buildingId, int tileId, int owner) : base(simTime)
+        {
+            BuildingId = buildingId;
+            TileId = tileId;
+            Owner = owner;
+        }
+
+        protected override string Describe() { return "HouseUpgradeStarted(building=" + BuildingId + ", tile=" + TileId + ", owner=" + Owner + ")"; }
+    }
+
+    /// <summary>A family house is pucca now (spec 024 §3.7, US-152).</summary>
+    public sealed class HouseUpgraded : SimEvent
+    {
+        public long BuildingId { get; }
+        public int TileId { get; }
+        public int Owner { get; }
+
+        public HouseUpgraded(long simTime, long buildingId, int tileId, int owner) : base(simTime)
+        {
+            BuildingId = buildingId;
+            TileId = tileId;
+            Owner = owner;
+        }
+
+        protected override string Describe() { return "HouseUpgraded(building=" + BuildingId + ", tile=" + TileId + ", owner=" + Owner + ")"; }
+    }
+
     /// <summary>A household's lease was renewed (spec 014 §3.14, US-240): at the player's answer or, with none, the market rise.</summary>
     public sealed class LeaseRenewed : SimEvent
     {

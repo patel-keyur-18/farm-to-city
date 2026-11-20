@@ -27,6 +27,21 @@ namespace Sim.Core.Weather
             w.SetForecast(ComputeForecast(sim, current));
         }
 
+        /// <summary>
+        /// Brings the buffer and the forecast up to the clock after hourly passes were lost: the same spells the passes would have
+        /// generated (a spell's weather depends only on its index), so nothing is invented. Does nothing when the buffer is whole.
+        /// </summary>
+        internal static void Mend(Simulation sim)
+        {
+            WeatherState w = sim.State.Weather;
+            long current = Calendar.SpellAt(sim.State.Clock.SimTime, sim.Clock);
+            if (current < w.FirstSpell || w.LastGeneratedSpell >= current + sim.Clock.ForecastSpells) return;
+            Generate(sim, current + sim.Clock.ForecastSpells);
+            TrackRunStart(w, current);
+            w.DropBefore(current);
+            w.SetForecast(ComputeForecast(sim, current));
+        }
+
         public void OnPass(Simulation sim, ItemClass pass)
         {
             if (pass != ItemClass.Hourly) return;
@@ -41,15 +56,16 @@ namespace Sim.Core.Weather
             sim.Emit(new WeatherSpellStarted(t, spell, sim.Weather.Types[w.WeatherOf(spell)].Id));
 
             List<ForecastEntry> next = ComputeForecast(sim, spell);
+            IReadOnlyList<ForecastEntry> shown = w.ForecastShown; // consecutive spells in order: the same spell is at a fixed offset, no search
+            long first = shown.Count > 0 ? shown[0].SpellIndex : 0;
             foreach (ForecastEntry now in next)
             {
-                foreach (ForecastEntry before in w.ForecastShown)
-                {
-                    if (before.SpellIndex != now.SpellIndex) continue;
-                    if (before.Bucket != now.Bucket && before.Weather != now.Weather)
-                        sim.Emit(new ForecastRevised(t, now.SpellIndex, sim.Weather.Types[before.Weather].Id, sim.Weather.Types[now.Weather].Id));
-                    break;
-                }
+                long at = now.SpellIndex - first;
+                if (at < 0 || at >= shown.Count) continue;
+                ForecastEntry before = shown[(int)at];
+                if (before.SpellIndex != now.SpellIndex) continue;
+                if (before.Bucket != now.Bucket && before.Weather != now.Weather)
+                    sim.Emit(new ForecastRevised(t, now.SpellIndex, sim.Weather.Types[before.Weather].Id, sim.Weather.Types[now.Weather].Id));
             }
             w.SetForecast(next);
         }
@@ -69,6 +85,10 @@ namespace Sim.Core.Weather
             var list = new List<ForecastEntry>(clock.ForecastSpells);
             long runStart = w.CurrentRunStart;
             int previous = w.WeatherOf(current);
+            bool cached = false;
+            long cachedRun = 0;
+            int cachedBucket = 0, cachedActual = 0, cachedShown = 0;
+            ClimateDef cachedClimate = null;
             for (long k = 1; k <= clock.ForecastSpells; k++)
             {
                 long spell = current + k;
@@ -77,8 +97,17 @@ namespace Sim.Core.Weather
                 previous = actual;
                 int bucket = WeatherRules.Bucket(k, clock);
                 ClimateDef climate = sim.Weather.ClimateFor(SeasonOfSpell(spell, clock));
-                int shown = WeatherRules.ForecastWeather(sim.State.Seed, runStart, bucket, actual, climate, clock);
-                list.Add(new ForecastEntry(spell, bucket, shown));
+                // Every hour of a run in one bucket shows the same weather (ADR 0043), so the rolls are made once for them, not once an hour.
+                if (!cached || cachedRun != runStart || cachedBucket != bucket || cachedActual != actual || !ReferenceEquals(cachedClimate, climate))
+                {
+                    cachedShown = WeatherRules.ForecastWeather(sim.State.Seed, runStart, bucket, actual, climate, clock);
+                    cached = true;
+                    cachedRun = runStart;
+                    cachedBucket = bucket;
+                    cachedActual = actual;
+                    cachedClimate = climate;
+                }
+                list.Add(new ForecastEntry(spell, bucket, cachedShown));
             }
             return list;
         }

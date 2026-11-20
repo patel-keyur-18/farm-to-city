@@ -13,6 +13,8 @@ namespace Game.Presentation.Map
         private int _clinicStage = -1, _quartersStage = -1;
         private readonly int[] _civicStage = { -1, -1, -1 };
         private static readonly string[] CivicBuilt = { "village_watchman_e", "village_hall_e", "village_playground_e" };
+        private readonly int[] _utilityStage = { -1, -1, -1, -1, -1 };
+        private static readonly string[] UtilityIds = { "tower", "generator", "grid", "drains", "collection" };
         private static readonly string[] CivicPlot = { "place_watchman_plot", "place_hall_plot", "place_playground_plot" };
 
         private void RefreshClinic(MapVm map)
@@ -32,6 +34,12 @@ namespace Game.Presentation.Map
                 {
                     _civicStage[i] = map.CivicStage[i];
                     p.sprite = SpriteBank.Rendered(map.CivicStage[i] == 2 ? CivicBuilt[i] : CivicPlot[i]);
+                }
+            for (int u = 0; u < _utilityStage.Length; u++) // the utilities (spec 025 §3.1): the plot, then what stands; the generator without smoke once the grid came
+                if (map.UtilityTile[u] >= 0 && map.UtilityStage[u] != _utilityStage[u] && _places.TryGetValue(map.UtilityTile[u], out SpriteRenderer w))
+                {
+                    _utilityStage[u] = map.UtilityStage[u];
+                    w.sprite = SpriteBank.Rendered(map.UtilityStage[u] == 3 ? "village_generator_off_e" : map.UtilityStage[u] == 2 ? "village_" + UtilityIds[u] + "_e" : "place_" + UtilityIds[u] + "_plot");
                 }
         }
     }

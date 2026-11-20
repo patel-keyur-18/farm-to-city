@@ -263,6 +263,7 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(null, null) { Buttons = new List<ActionVm> { BuildButton(ctx) } });
             OldVillage(ctx, vm); // spec 023 §3.5
             ZoningViews.TownRows(ctx, vm); // spec 024 §3.3
+            UtilitySheet.TownRows(ctx, vm); // spec 025 §3.1
 
             List<string> news = TownNews.ThisSeason(ctx);
             if (news.Count > 0)
@@ -288,7 +289,7 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(TownWords.Home(ctx, b.Id), s.Get("town.houseEmpty")) { Icon = "family_house", Note = s.Get("town.houseEmptyNote") });
             }
             foreach (Construction c in town.Constructions)
-                vm.Lines.Add(new LineVm(s.Get("town.houseBuilding"), s.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))) { Icon = "family_house_building" });
+                vm.Lines.Add(new LineVm(s.Get("town.houseBuilding"), BuildingSheet.HouseValue(ctx, c)) { Icon = "family_house_building" });
             return vm;
         }
 
@@ -306,7 +307,11 @@ namespace Sim.View.Views
             return a;
         }
 
-        public static long HouseCost(Simulation sim) { return MarketRules.Indexed(sim, sim.Config.Game.Buildings[sim.Config.Game.Population.House].Value); }
+        public static long HouseCost(Simulation sim)
+        {
+            if (Sim.Core.Town.ConstructionRules.On(sim)) return Sim.Core.Town.ConstructionRules.Quote(sim, "family_house", Sim.Core.Town.BuildProject.Yours, 1).Total; // spec 025 §3.2: materials and masons
+            return MarketRules.Indexed(sim, sim.Config.Game.Buildings[sim.Config.Game.Population.House].Value);
+        }
 
         private static List<Household> Sorted(Simulation sim, string sort)
         {
@@ -702,6 +707,9 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             var vm = new SheetVm { Icon = "family_house", Title = s.Get("homestead.title"), Subtitle = s.Get("homestead.subtitle", "n", ctx.Fmt.Integer(sim.Config.Game.Population.HousesPerAcre)) };
             AddHouses(ctx, vm, tile.Id);
+            if (Sim.Core.Town.UpgradeRules.On(sim) && HouseRules.HousesOn(sim, tile.Id) > 0) vm.Lines.Add(new LineVm(s.Get("upgrade.note"), null));
+            LineVm value = LandValueViews.AcreRow(ctx, tile.Id); // from the Township (spec 024 §3.1)
+            if (value != null) vm.Lines.Add(value);
             int free = sim.Config.Game.Population.HousesPerAcre - HouseRules.HousesOn(sim, tile.Id);
             if (free > 0) vm.Lines.Add(new LineVm(s.Plural("homestead.free", free), null));
             if (free > 0) vm.Actions.Add(BuildHere(ctx, tile.Id));
@@ -721,10 +729,15 @@ namespace Sim.View.Views
                 if (x != null) line.Action = ActionVm.Open("household:" + x.Id, s.Get("action.see"), new SheetRequest("Household", x.Id));
                 else line.Note = s.Get("town.houseEmptyNote");
                 vm.Lines.Add(line);
+                UpgradeSheet.Rows(ctx, vm, b); // pucca: the offer, why not, or the work under way (US-152)
             }
             foreach (Construction c in sim.State.Citizens.Constructions)
                 if (c.TileId == tileId)
-                    vm.Lines.Add(new LineVm(s.Get("town.houseBuilding"), s.Get("people.hutReadyIn", "time", ctx.Fmt.Duration(c.ReadyAt - ctx.Now))) { Icon = "family_house_building" });
+                {
+                    vm.Lines.Add(new LineVm(s.Get("town.houseBuilding"), BuildingSheet.HouseValue(ctx, c)) { Icon = "family_house_building" });
+                    Sim.Core.Town.BuildProject site = BuildingSheet.Of(sim, c);
+                    if (site != null) BuildingSheet.Site(ctx, vm, site);
+                }
         }
 
         /// <summary>

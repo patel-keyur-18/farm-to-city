@@ -235,6 +235,25 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0122 | Zoning and builders as built (US-142): zoning per parcel, residential only (commercial and pucca cut), builders buy one parcel a season when 2 families an acre were turned away, build 2 homes an acre that are not yours (no rent, no tax, not your households), permit fee 2% to the treasury |
 | 0123 | Leasing land out as built (US-261): per parcel, rent 2.5% of its land value upfront at the close into its own account, the acre locked while leased, ends at a close, the soil stays as it was |
 | 0124 | Sprint 22 balance and the independent review (Opus 5.5): pace day 101 / 135, a town left alone +59,000 in its second year, archetypes 1.13, policies affordable, leasing below hiring; twelve review findings fixed; flagged: land payback 6.0 seasons (target 8–15), builders carry a zero-tax town and take the serviced neighbour acres |
+| 0125 | Spec 025: only the treasury commissions a utility (a one-tap top-up, an upkeep-aware budget guard); bricks, cement and timber from the Township only; the map 24 × 18 from schema 21, the ring locked until the Township, tile ids unchanged and the zoom-out capped; fuel 8,000 and one water reach (the tower's 400 m); the kiln on any owned acre; hills drawn and locked, apples in Sprint 24; calves, silage, your tractor and solar moved in from Sprint 24, the tube well dropped |
+| 0126 | Sprint 23 plan: 49 points (core 42, stretch US-255 to US-257); builders leave the acres beside your land (amended by 0128); land payback read at the land value paid; the land stress bots made to act; specs 026 and 027 written in the sprint |
+| 0127 | Spec 026 (town life): four festivals one a season with the venue and payer chosen, petitions (nine topics, promise or decline), approval (from 50, moves migration only), five reputation scores, crime and inequality |
+| 0128 | Builders take the acres beside yours last, only when no other serviced acre is left (skipping them left a left-alone town with no growth) |
+| 0129 | The brick kiln as built: one kiln hand, fuel a cost in the brick, bricks to your builds at cost then to the trader at his price less a tenth, nothing fired in the Monsoon, its smoke in the coverage overlay |
+| 0130 | Utilities as built: five works (tower, drains, collection post, generator, grid) through `CommissionWorks`, one Utilities department; going without costs health, land value and Belonging |
+| 0131 | Pucca upgrades as built: a build with materials and masons, the rent follows at the renewal, builders upgrade one home a close; the hut to kutcha upgrade is cut |
+| 0132 | The 72 h catch-up guards fail for a reason, not the machine: four hot paths fixed (the quadratic forecast diff, allocating Fixed division, repeated Pow, per-good loops), results bit-identical |
+| 0133 | Overlays as built: one hue in five steps, a tap card beside the acre, smoke hatched red, drawn as one mesh |
+| 0134 | The cold store as built: space rented by the tonne like the warehouse's, potato at a tenth and fruit at a quarter of their spoilage, an honest "is it worth it?" |
+| 0135 | Raising calves as built: heifer calves kept by a switch, grown on a share of the ration, carried at their worth as herd growth (not cash) |
+| 0136 | Silage and a chaff cutter as built: a pit that keeps the spare cut at 15% loss, a cutter that saves a fifth of the roughage; the third shed moved to Phase 4 |
+| 0137 | Your tractor for neighbours as built: 8 acres a morning at 80% of the day's hire, diesel and wear yours, farm income and never passive |
+| 0138 | Solar panels as built: a 60,000 panel for each pumped source taking 80% off its power, payback 75 seasons against a pump that lasts 40, kept for the balance pass |
+| 0139 | A pass that throws never loses the pass after it (a device crash: the forecast ran past the weather buffer); a town saved without a pass is mended on load |
+| 0140 | The mill buys market wheat only while its unsold atta and bran stay under 2 days of what the trader takes (400 kg and 100 kg a day); purchases sized to the cent (the first exception behind 0139) |
+| 0141 | Spec 027: events start at the Township, one roll a day, at most 2 waiting with free defaults, nothing major rolls while away, four mercy rules, 19 events; fire and an epidemic warned 48 h ahead; crop (0.80 threshold, 1.30 loading), property and business insurance (0.2% of book value, 90% and 80%); forward contracts 3% below the expected price |
+| 0142 | Sprint 23 balance and the independent review: pace 101.5 and 135.6 held, archetypes 1.107, twelve findings fixed or flagged (the kiln's cap and era, a per-system guard, the zero-tax happiness) |
+| 0143 | The four flagged items of Sprint 23's review: one brick limit for the town and a smoke health cap (0.08), the kiln a Village business (spec and GDD corrected), a guard around each system in the app (`Simulation.SystemFailed`), zero tax restated (happiness lower, services under 30%) |
 
 ## Current status
 

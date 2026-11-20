@@ -90,17 +90,24 @@ namespace Sim.Core.Livestock
             LivestockDefs defs = LivestockRules.Defs(sim);
             long t = sim.State.Clock.SimTime, grams = 0;
             foreach (Animal a in sim.State.Livestock.Animals)
-                grams += (LivestockRules.PerGameDay(sim, defs.Animals[a.Kind].DungCompostKgPerDay) * Fixed.FromInt(1000)).MulRatio(t - a.Since, ClockDef.SecondsPerDay).RoundToLong();
+            {
+                Fixed dung = LivestockRules.PerGameDay(sim, defs.Animals[a.Kind].DungCompostKgPerDay);
+                if (a.Stage == AnimalStage.Heifer) dung = dung * defs.Livestock.HeiferDungShare;
+                grams += (dung * Fixed.FromInt(1000)).MulRatio(t - a.Since, ClockDef.SecondsPerDay).RoundToLong();
+            }
             long q = System.Math.Min(grams, Market.Store.Fits(sim, defs.Compost));
             if (q > 0) sim.State.Market.Stock[defs.Compost] += q;
         }
 
         /// <summary>One animal's ration for the coming game day in grams: green, straw, feed (feed × dryFeedFactor while dry; §3.7).</summary>
-        public static (long Green, long Straw, long Feed) NeedOf(Simulation sim, Animal a)
+        public static (long Green, long Straw, long Feed) NeedOf(Simulation sim, Animal a, bool withCutter = true)
         {
             AnimalDef d = LivestockRules.Defs(sim).Animals[a.Kind];
+            LivestockDef ld = LivestockRules.Defs(sim).Livestock;
             Fixed feed = a.Stage == AnimalStage.Dry ? d.Feed * d.DryFeedFactor : d.Feed;
-            return (Grams(LivestockRules.PerGameDay(sim, d.Green)), Grams(LivestockRules.PerGameDay(sim, d.Straw)), Grams(LivestockRules.PerGameDay(sim, feed)));
+            Fixed share = a.Stage == AnimalStage.Heifer ? ld.HeiferRationShare : Fixed.One; // a growing heifer eats a share of a grown animal's ration (ADR 0135)
+            Fixed roughage = withCutter && sim.State.Livestock.ChaffCutter ? Fixed.One - ld.ChaffCutterSaving : Fixed.One; // chopped, the stalks are eaten, not trampled (ADR 0136)
+            return (Grams(LivestockRules.PerGameDay(sim, d.Green) * share * roughage), Grams(LivestockRules.PerGameDay(sim, d.Straw) * share * roughage), Grams(LivestockRules.PerGameDay(sim, feed) * share));
         }
 
         /// <summary>
@@ -134,7 +141,25 @@ namespace Sim.Core.Livestock
             long left = report.GreenNeed - report.GreenCommons;
             report.GreenOwn = System.Math.Min(left, ownCut);
             left -= report.GreenOwn;
-            SellStanding(sim, report, ownCut - report.GreenOwn);
+            // The silage pit feeds before anything is bought (ADR 0136); the spare cut goes into it before it is sold standing.
+            long silage = System.Math.Min(left, s.SilageGrams);
+            s.SilageGrams -= silage;
+            left -= silage;
+            report.SilageFed = silage;
+            long spare = ownCut - report.GreenOwn;
+            if (spare > 0 && s.SilagePit)
+            {
+                long room = (long)ld.SilagePitKg * 1000 - s.SilageGrams;
+                Fixed keep = Fixed.One - ld.SilageLossShare;
+                long used = keep <= Fixed.Zero ? 0 : System.Math.Min(spare, (Fixed.FromInt(1) / keep).MulRatio(System.Math.Max(0, room), 1).RoundToLong());
+                long stored = (keep * Fixed.FromInt(1)).MulRatio(used, 1).RoundToLong();
+                if (stored > room) stored = room;
+                s.SilageGrams += stored;
+                report.SilagePut = stored;
+                report.SilageLost = used - stored;
+                spare -= used;
+            }
+            SellStanding(sim, report, spare);
             if (left > 0 && s.BuyGreenFodder)
             {
                 Fixed price = ld.GreenFodderBuyPrice * sim.State.Market.PriceIndex;
@@ -150,7 +175,7 @@ namespace Sim.Core.Livestock
             report.StrawGiven = TakeFeed(sim, defs.Straw, report.StrawNeed);
             report.FeedGiven = TakeFeed(sim, defs.Feed, report.FeedNeed);
 
-            long green = report.GreenCommons + report.GreenOwn + report.GreenBought;
+            long green = report.GreenCommons + report.GreenOwn + report.SilageFed + report.GreenBought;
             // 1 − Σ weight × shortfall: exactly 1 when every feed is met, whatever the weights' rounding.
             Fixed score = Fixed.One - ld.GreenWeight * (Fixed.One - Share(green, report.GreenNeed))
                 - ld.StrawWeight * (Fixed.One - Share(report.StrawGiven, report.StrawNeed)) - ld.FeedWeight * (Fixed.One - Share(report.FeedGiven, report.FeedNeed));
@@ -172,7 +197,7 @@ namespace Sim.Core.Livestock
                 if (a.Health > Fixed.One) a.Health = Fixed.One;
             }
             sim.Emit(new AnimalsFed(t, report.GreenNeed, green, report.GreenBoughtAmount, report.GreenSold, report.GreenSoldAmount, report.StrawGiven,
-                report.FeedGiven, score));
+                report.FeedGiven, score, report.SilageFed, report.SilagePut));
         }
 
         private static Fixed Share(long given, long need) { return need <= 0 || given >= need ? Fixed.One : Fixed.FromRatio(given, need); }
@@ -354,15 +379,26 @@ namespace Sim.Core.Livestock
             return value;
         }
 
-        /// <summary>The lactation days (§3.6): a day older; dry after the milk days; a calf after the dry days, sold at the fair (4030).</summary>
+        /// <summary>
+        /// The lactation days (§3.6): a day older; dry after the milk days; a calf after the dry days, sold at the fair (4030) or, with
+        /// heifers kept, a heifer kept (ADR 0135). A growing heifer grows a day when she was fed, and her book value follows.
+        /// </summary>
         private static void AdvanceDays(Simulation sim)
         {
             LivestockDefs defs = LivestockRules.Defs(sim);
+            LivestockState s = sim.State.Livestock;
             long t = sim.State.Clock.SimTime;
-            foreach (Animal a in sim.State.Livestock.Animals)
+            int n = s.Animals.Count; // a heifer born this morning isn't visited
+            for (int i = 0; i < n; i++)
             {
+                Animal a = s.Animals[i];
                 AnimalDef def = defs.Animals[a.Kind];
                 if (def.Draught) continue; // a bullock gives no milk and no calves
+                if (a.Stage == AnimalStage.Heifer)
+                {
+                    Grow(sim, a, def, t);
+                    continue;
+                }
                 a.StageDay++;
                 if (a.Stage == AnimalStage.Milking && a.StageDay >= def.MilkDays)
                 {
@@ -374,15 +410,71 @@ namespace Sim.Core.Livestock
                 {
                     a.Stage = AnimalStage.Milking;
                     a.StageDay = 0;
-                    long calf = Market.MarketRules.Indexed(sim, def.CalfPrice);
-                    if (calf > 0)
-                    {
-                        sim.State.Ledger.Post(t, sim.Period, "ledger.calf", "animal:" + a.Id, new Posting(Account.Cash, calf), new Posting(Account.LivestockSales, -calf));
-                        a.Earned += calf;
-                    }
-                    sim.Emit(new CalfBorn(t, a.Id, calf));
+                    Calve(sim, a, def, t);
                 }
             }
+        }
+
+        /// <summary>A heifer grows a day only on a day she was fed (the fed score of the morning before is at or above hungryBelow); her book value follows (ADR 0135).</summary>
+        private static void Grow(Simulation sim, Animal a, AnimalDef def, long t)
+        {
+            if (a.FedScore >= LivestockRules.Defs(sim).Livestock.HungryBelow) a.StageDay++;
+            bool grown = a.StageDay >= LivestockRules.GrowDays(sim, def);
+            Revalue(sim, a, grown ? Market.MarketRules.Indexed(sim, def.Price) : LivestockRules.HeiferValue(sim, a), t);
+            if (!grown) return;
+            a.Stage = AnimalStage.Milking;
+            a.StageDay = 0;
+            a.MotherName = null;
+            sim.Emit(new HeiferGrown(t, a.Id));
+            Calve(sim, a, def, t); // her first calf
+        }
+
+        /// <summary>Her book value is set to <paramref name="value"/>: the rise is Herd growth, not cash (4810).</summary>
+        private static void Revalue(Simulation sim, Animal a, long value, long t)
+        {
+            long delta = value - a.Cost;
+            if (delta == 0) return;
+            sim.State.Ledger.Post(t, sim.Period, "ledger.herdGrowth", "animal:" + a.Id, new Posting(Account.Livestock, delta), new Posting(Account.HerdGrowth, -delta));
+            a.Cost = value;
+        }
+
+        /// <summary>
+        /// She calves (§3.6). Heifers kept (ADR 0135): half the calves are heifers (a seeded draw), kept if a shed place is free; the rest,
+        /// and every calf with the switch off, are sold at the fair (4030).
+        /// </summary>
+        private static void Calve(Simulation sim, Animal mother, AnimalDef def, long t)
+        {
+            LivestockState s = sim.State.Livestock;
+            LivestockDef ld = LivestockRules.Defs(sim).Livestock;
+            long calf = Market.MarketRules.Indexed(sim, def.CalfPrice);
+            bool heifer = false;
+            if (s.KeepHeifers)
+            {
+                ulong day = (ulong)(t / ClockDef.SecondsPerDay) + (1UL << 40); // its own counter: the disease draw uses the plain day
+                Fixed u = Fixed.FromRaw((long)(Rng.Next(sim.State.Seed, RngStream.Livestock, (ulong)mother.Id, day) >> 32));
+                heifer = u < ld.HeiferShare;
+                int shed = heifer ? LivestockRules.PlaceFor(sim) : -1;
+                if (heifer && shed >= 0)
+                {
+                    long id = s.NextAnimalId++;
+                    var h = new Animal
+                    {
+                        Id = id, Kind = mother.Kind, Name = Commands.BuyAnimal.PickName(sim, id, mother.Kind), BoughtAt = t, Cost = calf, Stage = AnimalStage.Heifer,
+                        VaccinatedPeriod = sim.Period, Since = t, Shed = shed, MotherName = mother.Name,
+                    };
+                    if (calf > 0) sim.State.Ledger.Post(t, sim.Period, "ledger.calfKept", "animal:" + id, new Posting(Account.Livestock, calf), new Posting(Account.HerdGrowth, -calf));
+                    s.Animals.Add(h);
+                    sim.Emit(new CalfKept(t, mother.Id, id, calf));
+                    return;
+                }
+            }
+            if (calf > 0)
+            {
+                sim.State.Ledger.Post(t, sim.Period, "ledger.calf", "animal:" + mother.Id, new Posting(Account.Cash, calf), new Posting(Account.LivestockSales, -calf));
+                mother.Earned += calf;
+            }
+            if (heifer) sim.Emit(new CalfNoRoom(t, mother.Id, calf));
+            else sim.Emit(new CalfBorn(t, mother.Id, calf, s.KeepHeifers));
         }
 
         /// <summary>The shed is finished (§3.3): a building on the cattle acre, or on the second shed's field (ADR 0088).</summary>

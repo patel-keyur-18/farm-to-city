@@ -2505,6 +2505,64 @@ def model_water_trough():
     return group(o, scale=1.3)
 
 
+def model_silage_pit():
+    """The silage pit (US-255, spec 025 §3.8): a brick-lined pit sunk beside the shed, covered with a dark green tarpaulin held down with old tyres,
+    a brick rim round it and a few sacks of salt at one end."""
+    brick, tarp, tyre = toon("brick", BRICK), toon("tarp", 0x2F4A36), toon("tyre", 0x25262A)
+    o = [box("rim", (0.34, 0.22, 0.03), (0, 0, 0.015), brick, bevel=0.004),
+         box("sheet", (0.30, 0.18, 0.012), (0, 0, 0.036), tarp, bevel=0.004)]
+    o.append(sphere("mound", 0.15, (0, 0, 0.036), toon("tarp2", 0x365840), scale=(1.0, 0.62, 0.16), segs=18, rings=8))
+    for i, (x, y) in enumerate(((-0.10, -0.04), (0.0, 0.05), (0.10, -0.03), (-0.05, 0.05), (0.06, -0.06), (-0.12, 0.04))):
+        o.append(cylinder("tyre%d" % i, 0.024, 0.024, 0.014, (x, y, 0.062), tyre, segs=14))
+        o.append(cylinder("hub%d" % i, 0.012, 0.012, 0.016, (x, y, 0.063), toon("tarp", 0x2F4A36), segs=10, outline=False))
+    o.append(box("salt", (0.05, 0.035, 0.03), (0.20, 0.0, 0.015), toon("salt", 0xE8E4D8)))
+    return group(o, scale=YARD_PROP_SCALE)
+
+
+def model_chaff_cutter():
+    """The chaff cutter (US-255, spec 025 §3.8): a hand-fed machine on a timber stand, a feed table, the blade wheel in its guard, a green motor
+    on a belt, and a heap of cut chaff below the chute."""
+    wood, steel, motor = toon("wood", WOOD), toon("steel", 0xC9CDD2), toon("motor", 0x3F7F4F)
+    o = [box("stand", (0.20, 0.12, 0.05), (0, 0, 0.025), wood, bevel=0.003),
+         box("table", (0.22, 0.06, 0.012), (-0.06, 0, 0.056), steel, bevel=0.002),
+         cylinder("wheel", 0.045, 0.045, 0.012, (0.05, 0.0, 0.085), steel, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "X")),
+         cylinder("hubwheel", 0.012, 0.012, 0.016, (0.05, 0.0, 0.085), toon("lock", 0x6F7A82), segs=10, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False),
+         box("guard", (0.06, 0.03, 0.05), (0.05, 0.0, 0.082), toon("guard", 0xA33B2F), outline=False),
+         cylinder("motor", 0.026, 0.026, 0.07, (0.10, 0.07, 0.06), motor, segs=14, rot=Matrix.Rotation(math.radians(90), 3, "Y")),
+         box("belt", (0.055, 0.008, 0.004), (0.075, 0.04, 0.07), toon("tyre", 0x25262A), outline=False)]
+    o.append(sphere("chaff", 0.05, (0.12, -0.05, 0.012), toon("straw", STRAW), scale=(1.0, 0.7, 0.35), segs=12, rings=6))
+    return group(o, scale=YARD_PROP_SCALE)
+
+
+SPRITES["silage_pit"] = model_silage_pit
+SPRITES["chaff_cutter"] = model_chaff_cutter
+
+
+def model_solar_panel(mult=1.0):
+    """A solar panel for a pump (US-257, spec 025 §3.8): a blue photovoltaic panel in a silver frame with cell lines, tilted up on a steel
+    stand with two legs and a brace, and a small grey controller box on a thin post beside it."""
+    frame, cell, steel, box_c = toon("pvFrame", 0xC9CDD2), toon("pvCell", 0x2A4F8F), toon("pvSteel", 0x6F7A82), toon("pvBox", 0x8E959C)
+    tilt = Matrix.Rotation(math.radians(38), 3, "X")
+    o = [box("frame", (0.22, 0.15, 0.010), (0, 0, 0.085), frame, rot=tilt, bevel=0.002),
+         box("cells", (0.200, 0.128, 0.005), (0, -0.002, 0.0905), cell, rot=tilt, outline=False)]
+    for i in (-1, 0, 1):
+        o.append(box("lineV%d" % i, (0.0025, 0.128, 0.006), (i * 0.066, -0.002, 0.0915), frame, rot=tilt, outline=False))
+    o.append(box("lineH", (0.200, 0.0025, 0.006), (0, -0.002, 0.0915), frame, rot=tilt, outline=False))
+    o.append(box("legL", (0.010, 0.010, 0.080), (-0.08, 0.05, 0.040), steel))
+    o.append(box("legR", (0.010, 0.010, 0.080), (0.08, 0.05, 0.040), steel))
+    o.append(box("legFL", (0.010, 0.010, 0.040), (-0.08, -0.05, 0.020), steel))
+    o.append(box("legFR", (0.010, 0.010, 0.040), (0.08, -0.05, 0.020), steel))
+    o.append(box("brace", (0.17, 0.008, 0.008), (0, 0.05, 0.03), steel, outline=False))
+    o.append(box("post", (0.008, 0.008, 0.05), (0.15, 0.0, 0.025), steel))
+    o.append(box("controller", (0.030, 0.016, 0.026), (0.15, 0.0, 0.060), box_c, bevel=0.002))
+    return group(o, rot_z=math.radians(-28), scale=YARD_PROP_SCALE * 1.1 * mult)
+
+
+SPRITES["solar_panel"] = model_solar_panel
+ICONS["icon_solar_panel"] = lambda: model_solar_panel(2.0)  # the field card's picture button, drawn larger
+SPRITES["icon_solar_panel"] = ICONS["icon_solar_panel"]
+
+
 def model_neem():
     """A neem tree: a straight dark trunk and a rounded crown of small, fine leaves in clusters; it shades the cattle."""
     bark = toon("neemBark", 0x5E4430)
@@ -3077,7 +3135,11 @@ HOUSE_SCALE = 0.70       # times BUILDING_SCALE: two homes with their courtyards
 
 
 def model_family_house(stage):
-    """A family house: a two-room pucca house, lime-washed over brick with an ochre dado, a flat roof with a parapet and a
+    return group(family_house_parts(stage), scale=BUILDING_SCALE * HOUSE_SCALE)
+
+
+def family_house_parts(stage):
+    """A family house (the kutcha house of the game): a two-room house, lime-washed over brick with an ochre dado, a flat roof with a parapet and a
     terracotta-tiled verandah on two posts; in front a low courtyard wall (aangan) with a gate gap, a tulsi, a charpai and pots.
     stage 'done' or 'building' (the plinth, half-raised brick walls, bamboo scaffolding, a brick stack and a sand heap)."""
     o = []
@@ -3115,7 +3177,7 @@ def model_family_house(stage):
             for j in range(2):
                 o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.09 + j * 0.055, -0.12, 0.009 + i * 0.018), brick))
         o.append(dome("sand", 0.045, 0.032, (0.09, -0.12, 0.006), toon("sand", 0xE2C98E)))
-        return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
+        return o
     # The house: walls with a dado, a flat roof and parapet, two doors and a window, a tiled verandah on two posts.
     o.append(box("walls", (w, d, 0.15), (0, cy, 0.035 + 0.075), lime))
     o.append(box("dado", (w + 0.004, d + 0.004, 0.04), (0, cy, 0.055), dado, outline=False))
@@ -3145,6 +3207,77 @@ def model_family_house(stage):
         o.append(cylinder("linePost%d" % (x > 0), 0.003, 0.003, 0.09, (x, -0.15, 0.045), toon("wood", WOOD), segs=6))
     o.append(cylinder("line", 0.0012, 0.0012, w - 0.02, (0, -0.15, 0.088), toon("rope", 0xE3CFA0), segs=6, outline=False,
                       rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+    for i, (x, c) in enumerate(((-0.03, 0xE2582C), (0.02, 0xF2C94C), (0.07, 0x2E6FBA))):
+        o.append(box("cloth%d" % i, (0.035, 0.004, 0.03), (x, -0.15, 0.07), toon("cloth%d" % i, c), outline=False))
+    return o
+
+
+def model_pucca_house(stage):
+    """A pucca house (US-152): the family house made of brick and concrete and raised a floor: a lime-washed ground floor with its ochre dado,
+    a concrete slab with a front balcony and a grille railing, an upper floor washed pale blue with glazed windows and sunshades, a flat roof
+    with a parapet and the black water tank, the courtyard wall, the gate, the tulsi and the washing as before.
+    stage 'done', or 'building' (the family's house as it stands, with bamboo scaffolding to the roof, a brick stack and a sand heap)."""
+    if stage == "building":
+        o = family_house_parts("done")
+        bam = toon("bamboo", BAMBOO)
+        w, d, cy = 0.31, 0.18, 0.06
+        for x in (-w / 2 - 0.03, 0.0, w / 2 + 0.03):
+            o.append(cylinder("spole%d" % int(x * 100), 0.004, 0.004, 0.30, (x, cy - d / 2 - 0.035, 0.15), bam, segs=6))
+        for z in (0.08, 0.16, 0.24):
+            o.append(cylinder("srail%d" % int(z * 100), 0.003, 0.003, w + 0.06, (0, cy - d / 2 - 0.035, z), bam, segs=6, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+            o.append(box("splank%d" % int(z * 100), (w + 0.04, 0.04, 0.006), (0, cy - d / 2 - 0.045, z + 0.004), toon("plank", 0xB98A55), outline=False))
+        brick = toon("brick", 0xB5653E)
+        for i in range(3):
+            for j in range(3):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.17 + j * 0.055, -0.20, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.045, 0.032, (0.15, -0.20, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
+    o = []
+    w, d, cy = 0.31, 0.18, 0.06
+    ay0, ay1 = -0.17, cy - d / 2
+    lime, dado = toon("famLime", 0xF3E9D6), toon("famDado", 0xC9794A)
+    upper, slab = toon("puccaUpper", 0xA9D3E8), toon("puccaSlab", 0xD8CDB8)
+    plinth, steel = toon("plinth", PLINTH), toon("puccaSteel", 0x2F6FA8)
+    glass, frame = toon("puccaGlass", 0x7FB6D6), toon("wood_dark", WOOD_DARK)
+    o.append(box("yard", (w + 0.04, ay1 - ay0, 0.006), (0, (ay0 + ay1) / 2, 0.003), toon("aangan", 0xD8BF92), outline=False))
+    o.append(box("plinth", (w + 0.03, d + 0.03, 0.035), (0, cy, 0.0175), plinth, bevel=0.005))
+    wall, cap = toon("yardWall", 0xE6D6B6), toon("wallCap", 0xB98A55)
+    for sx in (-1, 1):
+        o.append(box("sideWall%d" % sx, (0.018, ay1 - ay0, 0.05), (sx * (w / 2 + 0.01), (ay0 + ay1) / 2, 0.025), wall))
+        o.append(box("frontWall%d" % sx, (w / 2 - 0.045, 0.018, 0.05), (sx * (w / 4 + 0.032), ay0, 0.025), wall))
+        o.append(box("cap%d" % sx, (w / 2 - 0.04, 0.024, 0.008), (sx * (w / 4 + 0.032), ay0, 0.054), cap, outline=False))
+        o.append(box("gatePost%d" % sx, (0.022, 0.022, 0.075), (sx * 0.045, ay0, 0.0375), lime))
+    # Ground floor.
+    o.append(box("walls", (w, d, 0.15), (0, cy, 0.11), lime))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.04), (0, cy, 0.055), dado, outline=False))
+    for x in (-0.085, 0.085):
+        o.append(box("door%d" % (x > 0), (0.05, 0.010, 0.10), (x, cy - d / 2 - 0.004, 0.085), steel))
+    o.append(box("windowG", (0.05, 0.010, 0.045), (0.0, cy - d / 2 - 0.004, 0.13), glass))
+    # The concrete slab with its front balcony and a grille railing.
+    o.append(box("slab", (w + 0.014, d + 0.014, 0.016), (0, cy, 0.193), slab))
+    o.append(box("balcony", (w - 0.02, 0.07, 0.012), (0, cy - d / 2 - 0.035, 0.193), slab))
+    o.append(box("railTop", (w - 0.02, 0.008, 0.008), (0, cy - d / 2 - 0.068, 0.236), frame, outline=False))
+    for i in range(7):
+        o.append(box("bar%d" % i, (0.005, 0.005, 0.04), (-0.125 + i * 0.0417, cy - d / 2 - 0.068, 0.214), frame, outline=False))
+    # Upper floor: pale blue wash, three glazed windows with sunshades, a door to the balcony.
+    o.append(box("upper", (w - 0.01, d - 0.01, 0.115), (0, cy, 0.2585 + 0.0), upper))
+    o.append(box("doorU", (0.05, 0.010, 0.09), (0.095, cy - d / 2 + 0.001, 0.245), steel))
+    for x in (-0.095, -0.015):
+        o.append(box("windowU%d" % (x > 0), (0.05, 0.010, 0.05), (x, cy - d / 2 + 0.001, 0.265), glass))
+        o.append(box("shade%d" % (x > 0), (0.066, 0.028, 0.008), (x, cy - d / 2 - 0.012, 0.298), slab))
+    o.append(box("roof", (w + 0.004, d + 0.004, 0.016), (0, cy, 0.325), slab))
+    o.append(box("parapet", (w + 0.008, d + 0.008, 0.02), (0, cy, 0.341), toon("famLimeShade", 0xE2D5BC)))
+    back_details(o, w, d, 0.255, frame)
+    for part in o[-3:]:
+        part.location.y += cy
+    o.append(cylinder("tank", 0.03, 0.03, 0.045, (-0.10, cy + 0.03, 0.375), toon("tank", 0x2E2E2E), segs=14))
+    # The courtyard as before: tulsi, a pot and the washing line.
+    o.append(box("tulsiBase", (0.035, 0.035, 0.045), (-0.10, -0.13, 0.0225), lime, bevel=0.004))
+    o.append(sphere("tulsi", 0.022, (-0.10, -0.13, 0.064), toon("tulsiLeaf", 0x3F8A3A), segs=10, rings=6))
+    o.extend(matka("pot1", (0.12, -0.13, 0.006)))
+    for x in (-w / 2 + 0.01, w / 2 - 0.01):
+        o.append(cylinder("linePost%d" % (x > 0), 0.003, 0.003, 0.09, (x, -0.15, 0.045), toon("wood", WOOD), segs=6))
+    o.append(cylinder("line", 0.0012, 0.0012, w - 0.02, (0, -0.15, 0.088), toon("rope", 0xE3CFA0), segs=6, outline=False, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
     for i, (x, c) in enumerate(((-0.03, 0xE2582C), (0.02, 0xF2C94C), (0.07, 0x2E6FBA))):
         o.append(box("cloth%d" % i, (0.035, 0.004, 0.03), (x, -0.15, 0.07), toon("cloth%d" % i, c), outline=False))
     return group(o, scale=BUILDING_SCALE * HOUSE_SCALE)
@@ -3303,6 +3436,38 @@ def model_granary():
 
 
 SPRITES["granary"] = model_granary
+
+
+def model_cold_store():
+    """The cold store in the mandi town (US-242, spec 025 §3.6): an insulated warehouse of white panels on a low plinth with a blue band, a
+    steel cold-room door with a long handle up one step, a flat roof with a compressor unit and its fan, and crates of potatoes by the door."""
+    o = []
+    w, d, h = 0.30, 0.21, 0.15
+    pz = 0.04
+    panel, blue = toon("coldPanel", 0xE9F0F3), toon("coldBlue", 0x4F8FB8)
+    cement, steel = toon("cement", 0xBDB5A6), toon("coldDoor", 0xC9D2D8)
+    o.append(box("plinth", (w + 0.04, d + 0.04, pz), (0, 0, pz / 2), cement, bevel=0.005))
+    o.append(box("step", (0.10, 0.03, pz * 0.5), (0.05, -d / 2 - 0.03, pz / 4), cement))
+    o.append(box("walls", (w, d, h), (0, 0, pz + h / 2), panel))
+    o.append(box("band", (w + 0.004, d + 0.004, 0.03), (0, 0, pz + 0.12), blue, outline=False))
+    for i in range(1, 6):                                      # the panel joints
+        o.append(box("joint%d" % i, (0.002, d + 0.006, h - 0.01), (-w / 2 + i * w / 6, 0, pz + h / 2), toon("coldJoint", 0xC4CFD4), outline=False))
+    o.append(box("door", (0.09, 0.012, 0.11), (0.05, -d / 2 - 0.005, pz + 0.056), steel))
+    o.append(box("doorFrame", (0.104, 0.008, 0.124), (0.05, -d / 2 - 0.002, pz + 0.062), blue, outline=False))
+    o.append(box("handle", (0.006, 0.012, 0.05), (0.085, -d / 2 - 0.016, pz + 0.056), toon("lock", 0x6F7A82), outline=False))
+    o.append(box("roof", (w + 0.03, d + 0.03, 0.014), (0, 0, pz + h + 0.007), toon("coldRoof", 0x8FA6B4), bevel=0.004))
+    o.append(box("unit", (0.085, 0.075, 0.045), (-0.07, 0.01, pz + h + 0.0365), toon("unit", 0xA9B4BA)))
+    o.append(box("fan", (0.06, 0.06, 0.006), (-0.07, 0.01, pz + h + 0.0605), toon("fan", 0x3B4249), outline=False))
+    o.append(box("pipe", (0.012, 0.012, 0.05), (-0.01, 0.01, pz + h + 0.04), toon("unit", 0xA9B4BA), outline=False))
+    wood, potato = toon("wood", WOOD), toon("potato", 0xB98A55)
+    for i, (x, z) in enumerate(((-0.10, 0.0), (-0.045, 0.0), (-0.07, 0.026))):
+        o.append(box("crate%d" % i, (0.05, 0.05, 0.026), (x, -d / 2 - 0.07, z + 0.013), wood))
+        o.append(box("potatoes%d" % i, (0.042, 0.042, 0.008), (x, -d / 2 - 0.07, z + 0.028), potato, outline=False))
+    back_details(o, w, d, pz + 0.1, toon("vent", 0x3B3127))
+    return group(o, scale=BUILDING_SCALE * GRANARY_SCALE)
+
+
+SPRITES["cold_store"] = model_cold_store
 
 
 # ---------------------------------------------------------------- irrigation (spec 013 §3.1, ADR 0086, ADR 0087)
@@ -3782,6 +3947,62 @@ for _f, _deg in FACINGS.items():
     SPRITES["bakery_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_bakery("building"), d)))()
 
 
+# ---------------------------------------------------------------- the brick kiln (US-243, Preview 3): a clamp kiln with a chimney
+
+def model_brick_kiln(stage):
+    """A village brick kiln (spec 025 §3.3): a stepped clamp of red bricks with three arched fire mouths and a tall chimney, a
+    stack of fired bricks and a heap of clay with a wooden mould beside it, firewood at the front. stage 'done' (smoke rising
+    from the chimney) or 'building' (the plinth, the first courses, bamboo poles, a pile of bricks)."""
+    o = []
+    brick, brick_dark, plinth = toon("brick", BRICK), toon("brickDark", BRICK_DARK), toon("plinth", PLINTH)
+    clay, soot = toon("clay", 0xB9663F), toon("soot", 0x3A2A22)
+    cy = 0.06
+    yard_pad(o, 0.5, 0.22, -0.16)
+    o.append(box("plinth", (0.34, 0.26, 0.03), (0, cy, 0.015), plinth, bevel=0.005))
+    if stage == "building":
+        o.append(box("course1", (0.30, 0.22, 0.05), (0, cy, 0.055), brick))
+        o.append(box("course2", (0.24, 0.18, 0.04), (0, cy, 0.1), brick_dark))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-0.17, 0.17):
+            for y in (cy - 0.13, cy + 0.13):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.21, (x, y, 0.105), bam, segs=6))
+        for i in range(3):
+            for j in range(2):
+                o.append(box("pile%d%d" % (i, j), (0.05, 0.025, 0.018), (0.18 + j * 0.055, -0.1, 0.009 + i * 0.018), brick))
+        o.append(dome("heap", 0.06, 0.04, (-0.2, -0.1, 0.006), clay))
+        return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+    # The stepped clamp: wide at the foot, narrowing up, a flat top under the chimney.
+    o.append(box("base", (0.30, 0.22, 0.07), (0, cy, 0.065), brick, bevel=0.006))
+    o.append(box("mid", (0.25, 0.18, 0.06), (0, cy, 0.13), brick_dark, bevel=0.005))
+    o.append(box("top", (0.20, 0.14, 0.05), (0, cy, 0.185), brick, bevel=0.005))
+    # Three arched fire mouths along the front, black inside with an orange glow.
+    for i, x in enumerate((-0.09, 0.0, 0.09)):
+        o.append(box("mouth%d" % i, (0.05, 0.008, 0.04), (x, cy - 0.113, 0.06), soot, outline=False))
+        o.append(cylinder("arch%d" % i, 0.025, 0.025, 0.008, (x, cy - 0.113, 0.08), soot, segs=12, rot=Matrix.Rotation(math.radians(90), 3, "X"), outline=False))
+        o.append(box("glow%d" % i, (0.032, 0.009, 0.014), (x, cy - 0.114, 0.05), toon("glow", 0xF39A2B), outline=False))
+    # The chimney up from the top, sooty at its mouth, with smoke.
+    o.append(box("chimney", (0.06, 0.06, 0.2), (0.04, cy + 0.02, 0.31), brick, bevel=0.004))
+    o.append(box("chimneyCap", (0.075, 0.075, 0.012), (0.04, cy + 0.02, 0.416), brick_dark))
+    smoke = toon("smoke", 0xB9B4AE)
+    for i, (dx, dz, r) in enumerate(((0.0, 0.445, 0.03), (0.02, 0.49, 0.038), (0.05, 0.545, 0.046))):
+        o.append(sphere("smoke%d" % i, r, (0.04 + dx, cy + 0.02, dz), smoke, segs=10, rings=6, outline=False))
+    # A stack of fired bricks at the right, a heap of clay and a wooden mould on the left, firewood at the front.
+    for i in range(4):
+        for j in range(3):
+            o.append(box("stack%d%d" % (i, j), (0.05, 0.026, 0.016), (0.22 + (j % 2) * 0.006, cy - 0.09 + j * 0.028, 0.008 + i * 0.016), brick if (i + j) % 2 else brick_dark))
+    o.append(dome("clay", 0.08, 0.05, (-0.22, cy - 0.06, 0.006), clay))
+    o.append(box("mould", (0.07, 0.035, 0.012), (-0.12, cy - 0.17, 0.006), toon("wood", WOOD)))
+    wood = toon("wood_dark", WOOD_DARK)
+    for i in range(5):
+        o.append(cylinder("log%d" % i, 0.012, 0.012, 0.1, (0.06 + (i % 3) * 0.026, cy - 0.17, 0.012 + (i // 3) * 0.022), wood, segs=8, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+    return group(o, scale=BUILDING_SCALE * MILL_SCALE)
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["brick_kiln_%s" % _f] = (lambda d=_deg: (lambda: refit(model_brick_kiln("done"), d)))()
+    SPRITES["brick_kiln_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_brick_kiln("building"), d)))()
+
+
 # ---------------------------------------------------------------- shops (spec 017, US-120): previewed to the owner first
 # Pitch pieces are modelled at the people's scale (a door about 0.11 before BUILDING_SCALE), each on the council's brick pitch.
 
@@ -4131,6 +4352,8 @@ def icon_people(kind):
 for _f, _deg in FACINGS.items():
     SPRITES["family_house_%s" % _f] = (lambda d=_deg: (lambda: refit(model_family_house("done"), d)))()
     SPRITES["family_house_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_family_house("building"), d)))()
+    SPRITES["pucca_house_%s" % _f] = (lambda d=_deg: (lambda: refit(model_pucca_house("done"), d)))()  # US-152
+    SPRITES["pucca_house_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_pucca_house("building"), d)))()
 # ---------------------------------------------------------------- the school (spec 018, US-131): previewed to the owner first
 
 def model_school(stage):
@@ -4450,6 +4673,200 @@ def model_playground():
         o.append(box("gatePost%d" % i, (0.03, 0.03, 0.055), (0.28, y, 0.0275), toon("clinicWall", 0xE9E1C8)))
     return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
 
+
+# ---- the utilities (US-144, spec 025 §3.1): five plots and five standing utilities, on the civic plots' pattern ----
+
+def _utility_ground(o, h=0.04, w=0.54, d=0.56):
+    o.append(box("ground", (w, d, 0.006), (0, 0, 0.003), toon("playground", 0xD6BE90), outline=False))
+    _boundary(o, toon("clinicWall", 0xE9E1C8), h)
+    for i, y in enumerate((-0.08, -0.19)):
+        o.append(box("gatePost%d" % i, (0.03, 0.03, 0.065), (0.28, y, 0.0325), toon("clinicWall", 0xE9E1C8)))
+
+
+def model_tower_plot():
+    def glyph(o):
+        o.append(cylinder("tankGlyph", 0.022, 0.022, 0.03, (0.22, -0.24, 0.175), toon("tankBlue", 0x8FB4CF), segs=10, rot=Matrix.Rotation(1.5708, 3, "X")))
+        for dx in (-0.02, 0.02):
+            o.append(box("legGlyph%d" % (dx > 0), (0.006, 0.012, 0.03), (0.22 + dx, -0.24, 0.145), toon("wood_dark", WOOD_DARK), outline=False))
+    o = []
+    _plot_board(o, glyph)
+    return group(o, scale=BUILDING_SCALE / 1.2)
+
+
+def model_generator_plot():
+    def glyph(o):
+        o.append(box("shedGlyph", (0.05, 0.012, 0.03), (0.21, -0.24, 0.16), toon("tin", 0x9AA0A6), outline=False))
+        o.append(cylinder("chimGlyph", 0.007, 0.007, 0.05, (0.235, -0.24, 0.195), toon("wood_dark", WOOD_DARK), segs=8))
+    o = []
+    _plot_board(o, glyph)
+    return group(o, scale=BUILDING_SCALE / 1.2)
+
+
+def model_grid_plot():
+    def glyph(o):
+        o.append(box("poleGlyph", (0.008, 0.012, 0.07), (0.22, -0.24, 0.17), toon("wood_dark", WOOD_DARK), outline=False))
+        for z, w in ((0.195, 0.07), (0.175, 0.05)):
+            o.append(box("armGlyph%d" % int(z * 1000), (w, 0.012, 0.008), (0.22, -0.24, z), toon("wood_dark", WOOD_DARK), outline=False))
+    o = []
+    _plot_board(o, glyph)
+    return group(o, scale=BUILDING_SCALE / 1.2)
+
+
+def model_drains_plot():
+    def glyph(o):
+        o.append(box("chanGlyph", (0.09, 0.012, 0.012), (0.22, -0.24, 0.16), toon("water", 0x5D8AA5), outline=False))
+        for dx in (-0.03, 0, 0.03):
+            o.append(box("grateGlyph%d" % int(dx * 1000), (0.006, 0.012, 0.02), (0.22 + dx, -0.24, 0.16), toon("wood_dark", WOOD_DARK), outline=False))
+    o = []
+    _plot_board(o, glyph)
+    return group(o, scale=BUILDING_SCALE / 1.2)
+
+
+def model_collection_plot():
+    def glyph(o):
+        o.append(cylinder("binGlyph", 0.018, 0.016, 0.04, (0.22, -0.24, 0.165), toon("binGreen", 0x4F7D4A), segs=10, rot=Matrix.Rotation(1.5708, 3, "X")))
+        o.append(box("lidGlyph", (0.042, 0.012, 0.008), (0.22, -0.24, 0.19), toon("wood_dark", WOOD_DARK), outline=False))
+    o = []
+    _plot_board(o, glyph)
+    return group(o, scale=BUILDING_SCALE / 1.2)
+
+
+def model_tower():
+    """The water tower: a tank on four timber legs with cross-bracing and a ladder, a conical lid, a pump house at its foot and a standpipe with a tap
+    on the street side; the plot's low wall with its gate (+x)."""
+    o = []
+    wood, dark, tank, lid = toon("wood", WOOD), toon("wood_dark", WOOD_DARK), toon("tankBlue", 0x8FB4CF), toon("quartersTile", 0xB8462A)
+    _utility_ground(o)
+    o.append(box("footing", (0.20, 0.20, 0.02), (0, 0.04, 0.01), toon("plinth", PLINTH), bevel=0.004))
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            o.append(box("leg%d%d" % (sx, sy), (0.016, 0.016, 0.30), (sx * 0.07, 0.04 + sy * 0.07, 0.17), wood))
+    for z in (0.12, 0.22):
+        for sy in (-1, 1):
+            o.append(box("braceX%d%d" % (int(z * 100), sy), (0.15, 0.010, 0.010), (0, 0.04 + sy * 0.07, z), dark, outline=False))
+        for sx in (-1, 1):
+            o.append(box("braceY%d%d" % (int(z * 100), sx), (0.010, 0.15, 0.010), (sx * 0.07, 0.04, z), dark, outline=False))
+    o.append(cylinder("tank", 0.105, 0.105, 0.13, (0, 0.04, 0.395), tank, segs=18, smooth=True))
+    o.append(cylinder("tankBandA", 0.108, 0.108, 0.012, (0, 0.04, 0.36), dark, segs=18, outline=False))
+    o.append(cylinder("tankBandB", 0.108, 0.108, 0.012, (0, 0.04, 0.43), dark, segs=18, outline=False))
+    o.append(cylinder("lid", 0.115, 0.012, 0.06, (0, 0.04, 0.49), lid, segs=18))
+    o.append(box("ladder", (0.012, 0.012, 0.34), (0.09, 0.0, 0.19), dark))
+    o.append(box("pumpHouse", (0.10, 0.08, 0.07), (-0.14, -0.12, 0.035), toon("clinicWall", 0xE9E1C8)))
+    o.append(box("pumpRoof", (0.11, 0.09, 0.012), (-0.14, -0.12, 0.076), lid))
+    o.append(cylinder("pipe", 0.008, 0.008, 0.26, (-0.075, -0.06, 0.13), toon("tin", 0x9AA0A6), segs=8))
+    o.append(cylinder("standpipe", 0.010, 0.010, 0.08, (0.20, 0.05, 0.04), toon("tin", 0x9AA0A6), segs=8))
+    o.append(box("tap", (0.05, 0.012, 0.012), (0.185, 0.05, 0.08), toon("tin", 0x9AA0A6), outline=False))
+    o.append(box("trough", (0.10, 0.04, 0.02), (0.20, -0.02, 0.015), toon("plinth", PLINTH)))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+def model_generator(smoking=True):
+    """The diesel generator: a tin-roofed shed with the engine's housing, a tall exhaust stack with a smut of smoke, red diesel drums and a fuel can,
+    and cable out of the wall; the plot's low wall with its gate (+x)."""
+    o = []
+    tin, dark, red, wall = toon("tin", 0x9AA0A6), toon("wood_dark", WOOD_DARK), toon("drum", 0xC8402A), toon("hallWall", 0xEFE0BC)
+    _utility_ground(o)
+    o.append(box("plinth", (0.34, 0.24, 0.03), (-0.02, 0.06, 0.015), toon("plinth", PLINTH), bevel=0.005))
+    o.append(box("shedBack", (0.30, 0.02, 0.13), (-0.02, 0.17, 0.095), wall))
+    for sx in (-1, 1):
+        o.append(box("shedSide%d" % sx, (0.02, 0.20, 0.13), (-0.02 + sx * 0.14, 0.07, 0.095), wall))
+    o.append(box("engine", (0.18, 0.10, 0.09), (-0.02, 0.09, 0.075), toon("engineGreen", 0x3E6B55)))
+    o.append(box("engineTop", (0.10, 0.07, 0.03), (-0.04, 0.09, 0.135), dark))
+    o.append(gable_roof("roof", 0.32, 0.22, 0.05, 0.16, tin, overhang=0.02))
+    o.append(cylinder("stack", 0.012, 0.010, 0.26, (0.09, 0.15, 0.29), dark, segs=8))
+    o.append(cylinder("stackCap", 0.018, 0.012, 0.02, (0.09, 0.15, 0.43), dark, segs=8))
+    if smoking:
+        o.append(sphere("smoke1", 0.04, (0.10, 0.15, 0.48), toon("smoke", 0x6E6E6E), scale=(1, 1, 0.8), segs=10, rings=6, outline=False))
+        o.append(sphere("smoke2", 0.05, (0.13, 0.14, 0.54), toon("smoke2", 0x8A8A8A), scale=(1, 1, 0.8), segs=10, rings=6, outline=False))
+    for i, (x, y) in enumerate(((-0.18, -0.12), (-0.11, -0.15), (-0.18, -0.20))):
+        o.append(cylinder("drum%d" % i, 0.032, 0.032, 0.07, (x, y, 0.035), red, segs=12))
+    o.append(box("fuelCan", (0.03, 0.02, 0.04), (0.10, -0.16, 0.02), toon("lamp", 0xF2C14E)))
+    o.append(box("cable", (0.012, 0.012, 0.10), (0.15, 0.10, 0.08), dark, outline=False))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+def model_grid():
+    """The grid connection: a tall lattice pylon with two cross-arms and insulators, a transformer on a plinth with its cable box, a fence round the
+    yard and a small meter shed; the plot's low wall with its gate (+x)."""
+    o = []
+    steel, dark, cream, ins = toon("tin", 0x9AA0A6), toon("wood_dark", WOOD_DARK), toon("clinicWall", 0xE9E1C8), toon("insulator", 0xD9D3BE)
+    _utility_ground(o)
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            o.append(box("legP%d%d" % (sx, sy), (0.012, 0.012, 0.50), (-0.06 + sx * 0.035, 0.06 + sy * 0.035, 0.26), steel))
+    for z in (0.12, 0.22, 0.32, 0.42):
+        for sx in (-1, 1):
+            o.append(box("rungX%d%d" % (int(z * 100), sx), (0.07, 0.008, 0.008), (-0.06, 0.06 + sx * 0.035, z), steel, outline=False))
+            o.append(box("rungY%d%d" % (int(z * 100), sx), (0.008, 0.07, 0.008), (-0.06 + sx * 0.035, 0.06, z), steel, outline=False))
+    for z, w in ((0.50, 0.30), (0.40, 0.22)):
+        o.append(box("arm%d" % int(z * 100), (w, 0.014, 0.014), (-0.06, 0.06, z), dark))
+        for sx in (-1, 1):
+            o.append(cylinder("ins%d%d" % (int(z * 100), sx), 0.008, 0.008, 0.04, (-0.06 + sx * w / 2.2, 0.06, z - 0.03), ins, segs=8))
+    o.append(box("xfPlinth", (0.16, 0.12, 0.02), (0.14, -0.04, 0.01), toon("plinth", PLINTH)))
+    o.append(box("transformer", (0.10, 0.07, 0.09), (0.14, -0.04, 0.065), toon("engineGreen", 0x3E6B55)))
+    for dx in (-0.03, 0, 0.03):
+        o.append(cylinder("bushing%d" % int(dx * 1000), 0.007, 0.007, 0.04, (0.14 + dx, -0.04, 0.130), ins, segs=8))
+    o.append(box("meterShed", (0.08, 0.06, 0.08), (-0.18, -0.12, 0.04), cream))
+    o.append(box("meterRoof", (0.09, 0.07, 0.010), (-0.18, -0.12, 0.085), toon("quartersTile", 0xB8462A)))
+    for x, y, w, d in ((0, 0.23, 0.46, 0.008), (0, -0.20, 0.46, 0.008), (-0.23, 0.0, 0.008, 0.44)):
+        o.append(box("fence%d%d" % (int(x * 100), int(y * 100)), (w, d, 0.05), (x, y, 0.025), dark, outline=False))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+def model_drains():
+    """The drains: a brick-lined channel running down the plot with stone cover slabs and iron grates, two manholes and a settling pit at its end;
+    the plot's low wall with its gate (+x)."""
+    o = []
+    brick, stone, water, dark = toon("brick", BRICK), toon("plinth", PLINTH), toon("water", 0x5D8AA5), toon("wood_dark", WOOD_DARK)
+    _utility_ground(o, h=0.03)
+    for sx in (-1, 1):
+        o.append(box("lining%d" % sx, (0.02, 0.50, 0.04), (sx * 0.05, 0.0, 0.02), brick))
+    o.append(box("bed", (0.08, 0.50, 0.006), (0, 0, 0.004), water, outline=False))
+    for i, y in enumerate((-0.20, -0.10, 0.10, 0.20)):
+        o.append(box("slab%d" % i, (0.13, 0.07, 0.016), (0, y, 0.048), stone))
+    for i, y in enumerate((-0.05, 0.05)):
+        o.append(box("grate%d" % i, (0.10, 0.07, 0.008), (0, y, 0.044), dark))
+        for k in (-0.03, 0, 0.03):
+            o.append(box("bar%d%d" % (i, int(k * 100)), (0.006, 0.07, 0.008), (k, y, 0.052), dark, outline=False))
+    for i, x in enumerate((-0.17, 0.17)):
+        o.append(cylinder("manhole%d" % i, 0.035, 0.035, 0.014, (x, -0.12 + 0.24 * i, 0.007), dark, segs=12))
+    o.append(box("pit", (0.16, 0.12, 0.03), (-0.14, 0.18, 0.015), brick))
+    o.append(box("pitCover", (0.12, 0.08, 0.010), (-0.14, 0.18, 0.035), stone))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+def model_collection():
+    """The collection post: a small tiled shed with a counter, a row of green and blue bins, a handcart with its two wheels and a heap behind a low
+    screen; the plot's low wall with its gate (+x)."""
+    o = []
+    wall, tile, dark, wood = toon("hallWall", 0xEFE0BC), toon("quartersTile", 0xB8462A), toon("wood_dark", WOOD_DARK), toon("wood", WOOD)
+    _utility_ground(o)
+    o.append(box("plinth", (0.26, 0.20, 0.025), (-0.08, 0.12, 0.0125), toon("plinth", PLINTH), bevel=0.004))
+    o.append(box("shedBack", (0.24, 0.02, 0.11), (-0.08, 0.20, 0.08), wall))
+    for sx in (-1, 1):
+        o.append(box("shedSide%d" % sx, (0.02, 0.18, 0.11), (-0.08 + sx * 0.11, 0.12, 0.08), wall))
+    o.append(gable_roof("roof", 0.26, 0.20, 0.06, 0.135, tile, overhang=0.02))
+    o.append(box("counter", (0.14, 0.04, 0.05), (-0.08, 0.04, 0.05), wood))
+    for i, (x, c) in enumerate(((0.06, 0x4F7D4A), (0.12, 0x3E6FA5), (0.18, 0x4F7D4A))):
+        o.append(cylinder("bin%d" % i, 0.026, 0.022, 0.07, (x, 0.16, 0.035), toon("bin%d" % i, c), segs=10))
+        o.append(cylinder("binLid%d" % i, 0.028, 0.028, 0.008, (x, 0.16, 0.074), dark, segs=10))
+    o.append(box("cartBed", (0.14, 0.07, 0.03), (0.14, -0.10, 0.055), wood))
+    for sy in (-1, 1):
+        o.append(cylinder("wheel%d" % sy, 0.032, 0.032, 0.012, (0.14, -0.10 + sy * 0.045, 0.032), dark, segs=12, rot=Matrix.Rotation(1.5708, 3, "X")))
+    o.append(box("cartHandle", (0.10, 0.010, 0.010), (0.04, -0.10, 0.065), wood, outline=False))
+    o.append(box("heapScreen", (0.20, 0.012, 0.05), (-0.12, -0.18, 0.025), toon("bamboo", BAMBOO)))
+    o.append(sphere("heap", 0.06, (-0.12, -0.22, 0.02), toon("heap", 0x7A6A48), scale=(1.3, 1, 0.5), segs=10, rings=6))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+for _u, _fn in (("tower", model_tower_plot), ("generator", model_generator_plot), ("grid", model_grid_plot), ("drains", model_drains_plot), ("collection", model_collection_plot)):
+    SPRITES["place_%s_plot" % _u] = _fn
+SPRITES["village_tower_e"] = lambda: refit(model_tower(), FACINGS["e"])
+SPRITES["village_generator_e"] = lambda: refit(model_generator(), FACINGS["e"])
+SPRITES["village_generator_off_e"] = lambda: refit(model_generator(False), FACINGS["e"])  # switched off by the grid: no smoke
+SPRITES["village_grid_e"] = lambda: refit(model_grid(), FACINGS["e"])
+SPRITES["village_drains_e"] = lambda: refit(model_drains(), FACINGS["e"])
+SPRITES["village_collection_e"] = lambda: refit(model_collection(), FACINGS["e"])
 
 SPRITES["place_watchman_plot"] = model_watchman_plot
 SPRITES["place_hall_plot"] = model_hall_plot

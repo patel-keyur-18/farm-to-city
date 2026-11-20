@@ -195,7 +195,7 @@ namespace Game.Presentation.Map
 
         private Vector3 TileCentre(int tile)
         {
-            (float x, float y) = _grid.Centre(tile % _width, tile / _width);
+            (float x, float y) = _grid.Centre(TX(tile), TY(tile));
             return new Vector3(x, y, 0);
         }
 
@@ -204,7 +204,19 @@ namespace Game.Presentation.Map
         /// <summary>Crops grow on the land: above all of it, below everyone and everything that stands on it (owner, Sprint 10 review).</summary>
         private const int CropBase = -10000;
 
-        private static int Order(int tile, int width, int offset = 0, float offY = 0f) { return (tile % width + tile / width) * 100 + offset - Mathf.RoundToInt(offY * 100f); }
+        // Tile ids are stable and no longer y × width + x (the ring's tiles follow the 16 × 12 map's, ADR 0125): where a tile stands comes from the map.
+        private static int[] s_tx = new int[0], s_ty = new int[0];
+        private int[] _tileAt = new int[0];
+        private static int TX(int tile) { return s_tx[tile]; }
+        private static int TY(int tile) { return s_ty[tile]; }
+
+        /// <summary>The tile at a place on the grid, or −1.</summary>
+        /// <summary>The tile in a grid cell (<c>y × width + x</c>, what <see cref="IsoGrid.Pick"/> returns), or −1.</summary>
+        public int TileOfCell(int cell) { return cell < 0 || cell >= _tileAt.Length ? -1 : _tileAt[cell]; }
+
+        private int TileAt(int x, int y) { return x < 0 || y < 0 || x >= _width || y >= _height ? -1 : _tileAt[y * _width + x]; }
+
+        private static int Order(int tile, int width, int offset = 0, float offY = 0f) { return (TX(tile) + TY(tile)) * 100 + offset - Mathf.RoundToInt(offY * 100f); }
 
         private SpriteRenderer NewRenderer(string name, Sprite sprite, Vector3 position, int order, Transform parent = null)
         {
@@ -221,6 +233,10 @@ namespace Game.Presentation.Map
         {
             _width = map.Width;
             _height = map.Height;
+            s_tx = new int[map.Tiles.Count];
+            s_ty = new int[map.Tiles.Count];
+            _tileAt = new int[map.Width * map.Height];
+            foreach (TileVm t in map.Tiles) { s_tx[t.Id] = t.X; s_ty[t.Id] = t.Y; _tileAt[t.Y * map.Width + t.X] = t.Id; }
             _grid = new IsoGrid(map.Width, map.Height, HalfWidth);
             foreach (TileVm t in map.Tiles) if (t.Kind == TileKind.Yard) _yardTiles.Add(t.Id);
             foreach (TileVm t in map.Tiles)
@@ -377,6 +393,29 @@ namespace Game.Presentation.Map
                         ground.color = _tint;
                         detail.sprite = null;
                         break;
+                    // The ring (spec 025 §3.4): the same ground as the valley's edge, so the new land reads as the same country.
+                    case TileKind.Hill:
+                    case TileKind.Scrub:
+                        ground.sprite = SpriteBank.Rendered("edge_grass");
+                        ground.color = _tint;
+                        detail.sprite = null;
+                        break;
+                    case TileKind.River:
+                        ground.sprite = SpriteBank.Rendered("edge_water");
+                        ground.color = _tint;
+                        detail.sprite = null;
+                        break;
+                    case TileKind.Highway:
+                        ground.sprite = SpriteBank.Rendered("edge_paved") ?? SpriteBank.Rendered("edge_road");
+                        ground.color = _tint;
+                        detail.sprite = null;
+                        break;
+                    case TileKind.Lane:
+                        // A track until the town builds the section, then a dirt road along the lane (links down the column: y + 1 and y − 1).
+                        ground.sprite = tv.LaneBuilt ? SpriteBank.Rendered("ground_road_12") ?? SpriteBank.Rendered("ground_road_3") : SpriteBank.Rendered("ground_commons");
+                        ground.color = _tint;
+                        detail.sprite = null;
+                        break;
                     case TileKind.Quarters:
                         // Beaten earth: the hands' compound.
                         ground.sprite = SpriteBank.Sand;
@@ -494,7 +533,7 @@ namespace Game.Presentation.Map
             foreach (TileVm t in map.Tiles)
             {
                 if (t.Kind != TileKind.Yard && t.Kind != TileKind.Quarters) continue;
-                int x = t.Id % _width, y = t.Id / _width;
+                int x = t.X, y = t.Y;
                 Fence(map, t.Id, x, y - 1, "fence_x", EdgeNE, 4);
                 Fence(map, t.Id, x + 1, y, "fence_y", EdgeSE, 88);
                 Fence(map, t.Id, x, y + 1, "fence_x", EdgeSW, 88);
@@ -515,7 +554,7 @@ namespace Game.Presentation.Map
         private void Fence(MapVm map, int tile, int nx, int ny, string sprite, Vector2 edge, int order)
         {
             bool inside = nx >= 0 && ny >= 0 && nx < _width && ny < _height;
-            if (inside && map.Tiles[ny * _width + nx].Kind != TileKind.Unowned) return; // open to your own land
+            if (inside && map.At(nx, ny).Kind != TileKind.Unowned) return; // open to your own land
             Prop(sprite, tile, edge, order);
         }
 
@@ -656,7 +695,7 @@ namespace Game.Presentation.Map
         }
 
         /// <summary>Just past the valley's west edge on <paramref name="tile"/>'s row: where neighbours hired for the day come and go.</summary>
-        private Vector3 WestEdge(int tile) { return TileCentre(_width * (tile / _width)) + new Vector3(-1.2f, -0.6f, 0); }
+        private Vector3 WestEdge(int tile) { return TileCentre(TileAt(0, TY(tile))) + new Vector3(-1.2f, -0.6f, 0); }
 
         private static bool SamePatrol(List<int> a, List<int> b)
         {
@@ -810,6 +849,26 @@ namespace Game.Presentation.Map
         {
             foreach (SpriteRenderer r in _lit) Destroy(r.gameObject);
             _lit.Clear();
+            foreach (SpriteRenderer r in _smoke) Destroy(r.gameObject);
+            _smoke.Clear();
+        }
+
+        private readonly List<SpriteRenderer> _smoke = new List<SpriteRenderer>();
+
+        /// <summary>While placing a kiln (US-243): a red wash and ring on every acre its smoke would reach, so the player sees what it touches before building.</summary>
+        public void ShowSmoke(IEnumerable<int> tiles)
+        {
+            foreach (SpriteRenderer r in _smoke) Destroy(r.gameObject);
+            _smoke.Clear();
+            foreach (int t in tiles)
+            {
+                SpriteRenderer fill = NewRenderer("smoke" + t, SpriteBank.TileFill, TileCentre(t), 9099);
+                fill.color = new Color(0.9f, 0.2f, 0.15f, 0.4f);
+                _smoke.Add(fill);
+                SpriteRenderer ring = NewRenderer("smokeRing" + t, SpriteBank.SelectionRing, TileCentre(t), 9099);
+                ring.color = new Color(0.8f, 0.15f, 0.1f, 0.9f);
+                _smoke.Add(ring);
+            }
         }
 
         public void HideGhost()
@@ -917,7 +976,7 @@ namespace Game.Presentation.Map
                 if (d < best) { best = d; place = kv.Key; }
             }
             if (place >= 0) return new Hit(HitKind.Tile, place);
-            int tile = _grid.Pick(w.x, w.y);
+            int tile = TileOfCell(_grid.Pick(w.x, w.y));
             return tile < 0 ? Hit.None : new Hit(HitKind.Tile, tile);
         }
 
@@ -938,7 +997,7 @@ namespace Game.Presentation.Map
             if (tile >= 0)
             {
                 _ring.transform.position = TileCentre(tile);
-                _ring.sortingOrder = Order(tile, _width, 95);
+                _ring.sortingOrder = OverlayShown ? 9010 : Order(tile, _width, 95); // above an overlay's tint
             }
         }
 

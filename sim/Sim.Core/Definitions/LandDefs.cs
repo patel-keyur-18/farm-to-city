@@ -26,6 +26,21 @@ namespace Sim.Core.Definitions
 
         /// <summary>The cattle acre (ADR 0064): inherited barren land beside the yard, never farmed; the cattle shed's place.</summary>
         Cattle = 7,
+
+        /// <summary>The ring's hills (spec 025 §3.5): drawn from the Township, for sale and plantable with apples only from Sprint 24.</summary>
+        Hill = 8,
+
+        /// <summary>The river across the ring's north and the bend at its north-east corner: never land (spec 025 §3.4).</summary>
+        River = 9,
+
+        /// <summary>The ring's scrub and verge: natural land, never for sale.</summary>
+        Scrub = 10,
+
+        /// <summary>A gravel lane's acre (spec 025 §3.4): a track until the treasury builds its section, a road after.</summary>
+        Lane = 11,
+
+        /// <summary>The highway along the map's south edge (spec 025 §3.4).</summary>
+        Highway = 12,
     }
 
     /// <summary>A soil type from <c>content/land.json</c> (spec 002 §4).</summary>
@@ -164,14 +179,30 @@ namespace Sim.Core.Definitions
         /// <summary>A neighbour's name key for the not-for-sale card, or null (spec 010 §3.7).</summary>
         public string OwnerKey { get; }
 
-        public ParcelDef(string id, IReadOnlyList<int> tiles, Fixed locationFactor, bool forSale = true, string ownerKey = null)
+        /// <summary>
+        /// Null, or what opens the parcel (spec 025 §3.4): <c>township</c> for the ring's land, <c>hills</c> for the hill parcels (Sprint 24).
+        /// Until then it can't be bought, built on, zoned or used by a builder, and it isn't simulated.
+        /// </summary>
+        public string Opens { get; }
+
+        public ParcelDef(string id, IReadOnlyList<int> tiles, Fixed locationFactor, bool forSale = true, string ownerKey = null, string opens = null)
         {
+            Opens = opens;
             Id = id;
             Tiles = new List<int>(tiles).AsReadOnly();
             LocationFactor = locationFactor;
             ForSale = forSale;
             OwnerKey = ownerKey;
         }
+    }
+
+    /// <summary>One section of a gravel lane in the ring (spec 025 §3.4).</summary>
+    public sealed class LaneDef
+    {
+        public string Id { get; }
+        public IReadOnlyList<int> Tiles { get; }
+
+        public LaneDef(string id, IReadOnlyList<int> tiles) { Id = id; Tiles = new List<int>(tiles).AsReadOnly(); }
     }
 
     /// <summary>A place in the village centre (spec 010 §3.3): content only, drawn and tappable, no sim state.</summary>
@@ -196,16 +227,54 @@ namespace Sim.Core.Definitions
         public int Height { get; }
         public IReadOnlyList<TileDef> Tiles { get; }
 
+        /// <summary>
+        /// Where a tile stands on the grid. Tile ids are stable: the 16 × 12 map's tiles keep ids 0–191 and the ring's tiles follow
+        /// (spec 025 §3.4, ADR 0125), so a tile's id is no longer <c>y × width + x</c>: use <see cref="X"/>, <see cref="Y"/> and <see cref="TileAt"/>.
+        /// </summary>
+        private readonly int[] _x, _y, _at;
+
+        /// <summary>The column of a tile.</summary>
+        public int X(int tile) { return _x[tile]; }
+
+        /// <summary>The row of a tile.</summary>
+        public int Y(int tile) { return _y[tile]; }
+
+        /// <summary>The tile at a place on the grid, or −1 off the map.</summary>
+        public int TileAt(int x, int y) { return x < 0 || y < 0 || x >= Width || y >= Height ? -1 : _at[y * Width + x]; }
+
+        /// <summary>The first <c>LegacyTiles</c> ids are the 16 × 12 map's, in its row order (0 when the map is a plain grid).</summary>
+        public int LegacyTiles { get; }
+
+        /// <summary>The 16 × 12 map's width: its tiles' row-major ids are the first <c>LegacyTiles</c> (0 for a plain grid).</summary>
+        public int LegacyWidth { get; }
+
         /// <summary>A parcel's index in this list is its id in the state.</summary>
         public IReadOnlyList<ParcelDef> Parcels { get; }
 
         /// <summary>The village centre's places, in file order (spec 010 §3.3).</summary>
         public IReadOnlyList<PlaceDef> Places { get; }
 
-        public MapDef(int width, int height, IReadOnlyList<TileDef> tiles, IReadOnlyList<ParcelDef> parcels, IReadOnlyList<PlaceDef> places = null)
+        /// <summary>The ring's gravel lane sections (spec 025 §3.4): each a few <see cref="Terrain.Lane"/> acres the treasury builds as one work of the same id.</summary>
+        public IReadOnlyList<LaneDef> Lanes { get; }
+
+        public MapDef(int width, int height, IReadOnlyList<TileDef> tiles, IReadOnlyList<ParcelDef> parcels, IReadOnlyList<PlaceDef> places = null,
+            int[] xs = null, int[] ys = null, int legacyTiles = 0, int legacyWidth = 0, IReadOnlyList<LaneDef> lanes = null)
         {
+            Lanes = new List<LaneDef>(lanes ?? new LaneDef[0]).AsReadOnly();
             Width = width;
             Height = height;
+            LegacyTiles = legacyTiles;
+            LegacyWidth = legacyWidth;
+            _x = new int[tiles.Count];
+            _y = new int[tiles.Count];
+            _at = new int[width * height];
+            for (int i = 0; i < _at.Length; i++) _at[i] = -1;
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                _x[i] = xs != null ? xs[i] : i % width;
+                _y[i] = ys != null ? ys[i] : i / width;
+                _at[_y[i] * width + _x[i]] = i;
+            }
             Tiles = new List<TileDef>(tiles).AsReadOnly();
             Parcels = new List<ParcelDef>(parcels).AsReadOnly();
             Places = new List<PlaceDef>(places ?? new PlaceDef[0]).AsReadOnly();

@@ -104,7 +104,8 @@ namespace Sim.Core.Finance
             if (sim.State.People != null) People.PeopleSystem.SettleContracts(sim); // step 6: hands' wages, then skill growth
             People.HouseholdRules.Close(sim); // spec 014 §3.12: households' health and the new season's budgets, on the wages just paid
             Business.BusinessRules.PayUpfront(sim, closing); // spec 016 §3.11: each business's new season's wage, after its loan payment
-            Market.GodownRules.Close(sim); // spec 013 §3.4, ADR 0087: your godown let or not, then the warehouse's rent upfront
+            Market.GodownRules.Close(sim);
+            Market.ColdStoreRules.Close(sim); // US-242: cold-store space for the season, upfront // spec 013 §3.4, ADR 0087: your godown let or not, then the warehouse's rent upfront
             Land.IrrigationRules.Close(sim); // spec 013 §3.5: power, the canal's fee and drip's upkeep for the new season
             People.SchoolRules.Close(sim); // spec 018 §3.1: the school's upkeep for the new season, a gift to the village
             Town.TaxRules.BillFounder(sim); // spec 022 §3.1: your house tax, the office's share, what's unpaid carried

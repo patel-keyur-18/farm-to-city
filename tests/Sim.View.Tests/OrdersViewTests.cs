@@ -159,14 +159,14 @@ namespace Sim.View.Tests
             Assert.That(map.TruckHere, Is.True);
             Assert.That(map.VanHere, Is.True, "today's orders are open");
             int w = map.Width;
-            Assert.That(map.TruckRoute.First() % w, Is.EqualTo(w - 1), "in from the east edge");
+            Assert.That(map.Tiles[map.TruckRoute.First()].X, Is.EqualTo(w - 1), "in from the east edge");
             int stop = map.TruckRoute.Last();
             Assert.That(map.Tiles[stop].Kind, Is.EqualTo(TileKind.Road));
-            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Quarters).Any(t => System.Math.Abs(t.X - stop % w) + System.Math.Abs(t.Y - stop / w) == 1), Is.True, "beside the quarters");
+            Assert.That(map.Tiles.Where(t => t.Kind == TileKind.Quarters).Any(t => System.Math.Abs(t.X - map.Tiles[stop].X) + System.Math.Abs(t.Y - map.Tiles[stop].Y) == 1), Is.True, "beside the quarters");
             for (int i = 1; i < map.TruckRoute.Count; i++)
             {
                 int a = map.TruckRoute[i - 1], b = map.TruckRoute[i];
-                Assert.That(System.Math.Abs(a % w - b % w) + System.Math.Abs(a / w - b / w), Is.EqualTo(1), "acre by acre");
+                Assert.That(System.Math.Abs(map.Tiles[a].X - map.Tiles[b].X) + System.Math.Abs(map.Tiles[a].Y - map.Tiles[b].Y), Is.EqualTo(1), "acre by acre");
                 Assert.That(map.Tiles[b].Kind, Is.EqualTo(TileKind.Road));
             }
         }

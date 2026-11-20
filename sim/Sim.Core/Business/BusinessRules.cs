@@ -82,6 +82,9 @@ namespace Sim.Core.Business
         public sealed class Projection
         {
             public long AreaGrams, OwnGrams, Fees, Sales, Wheat, Power, Repairs, Depreciation, Wage, Rent, Interest, Loan, Revenue, Costs, Profit, Cost, CashNeeded;
+
+            /// <summary>The costs a season with no work still brings (the kiln's Monsoon: wage, repairs, wear and interest, US-243), or 0.</summary>
+            public long Off;
         }
 
         /// <summary>
@@ -105,6 +108,7 @@ namespace Sim.Core.Business
             if (tile < 0 && pitch < 0 && t.IsShop) pitch = 0; // a shop's plan reckons on a pitch in the square
             if (tile < 0 && pitch < 0) tile = PlanTile(sim);
             if (t.IsShop) return ShopRules.Projected(sim, t, runYourself, loan, pitch, tile);
+            if (t.IsKiln) return KilnRules.Projected(sim, t, runYourself, loan);
             if (t.ByRecipe) return ProjectedByRecipe(sim, t, runYourself, loan, mix ?? DefaultMix(sim, t), ownPerDay);
             int days = sim.Clock.DaysPerSeason;
             Fixed index = sim.State.Market.PriceIndex;
@@ -399,7 +403,7 @@ namespace Sim.Core.Business
                 OpenHour = t.OpenHour, CloseHour = t.CloseHour, Fee = t.Fee, OwnPerDay = ownPerDay, Worker = runYourself ? WorkerKind.Founder : WorkerKind.None,
                 Ledger = new Ledger(), Stock = new long[goods], StockCost = new long[goods], Plan = plan, Day = now / Day,
                 Mix = t.Kind == ShopKind.Sweets ? ShopRules.DefaultMix(sim, t, tileId) : DefaultMix(sim, t), MadeToday = new long[goods],
-                BuyFromMarket = t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
+                BuyFromMarket = !t.IsKiln && t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
                 Pitch = pitch, PutOut = t.IsShop ? ShopRules.DefaultPutOut(sim, t, tileId) : new long[goods], Stars = sim.Config.Game.Shops?.StartStars ?? Fixed.FromRatio(5, 2),
             };
             string reference = "business:" + b.Id;
@@ -492,6 +496,7 @@ namespace Sim.Core.Business
             if (sim.State.Shops != null) ShopRules.NewDay(sim, (sim.State.Clock.SimTime - Hour) / Day); // yesterday's stars, then today's counts
             if (morning)
             {
+                KilnRules.Morning(sim); // the trader's stock, with what your kiln sells him, is set first: a build draws on it all day
                 // A new day's batches for every maker first (so what your shops still need is counted), then the stalls fill up from your
                 // store and businesses before the village shops buy what's left (spec 017 §5, ADR 0091 §2).
                 foreach (Business b in sim.State.Businesses.Businesses)
@@ -503,7 +508,7 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
                 if (b.Status == BusinessStatus.Open)
                 {
-                    if (morning && !ShopRules.Stocked(TypeOf(sim, b))) Morning(sim, b, took);
+                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln) Morning(sim, b, took);
                     Work(sim, b);
                 }
             ShopRules.Hourly(sim); // the customers (spec 017 §3.8), after the businesses' hour
@@ -521,7 +526,7 @@ namespace Sim.Core.Business
         public static bool Overtime(Simulation sim, Business b, int hour)
         {
             BusinessTypeDef t = TypeOf(sim, b);
-            return hour < t.OpenHour || hour >= t.CloseHour;
+            return hour < t.OpenHour || hour >= t.CloseHour + Town.UtilityRules.EveningHours(sim, b); // with power in reach the evening is at the usual wage (spec 025 §3.1)
         }
 
         /// <summary>Hours a day it's open past the village's usual day: a long day for its worker.</summary>
@@ -579,6 +584,7 @@ namespace Sim.Core.Business
                 b.Day = start / Day;
                 b.OwnToday = 0;
                 b.AreaToday = 0;
+                b.KilnMade = b.KilnToBuilds = b.KilnSold = 0;
             }
             int hour = (int)(start % Day / Hour);
             KeepStaffed(sim, b);
@@ -587,6 +593,12 @@ namespace Sim.Core.Business
             Worker hired = HiredWorker(sim, b);
             if (hired != null && Overtime(sim, b, hour) && !WorkRules.Pay(sim, hired, WorkRules.OvertimeHour(sim, hired), "ledger.overtime")) return; // past the overdraft: no overtime
             if (ShopRules.Stocked(t)) return; // a stall sells in the shops' hour (spec 017 §3.8)
+            if (t.IsKiln)
+            {
+                KilnRules.Fire(sim, b);
+                BusinessBooks.Sweep(sim, b);
+                return;
+            }
             if (t.ByRecipe)
             {
                 long made = 0;
@@ -643,7 +655,7 @@ namespace Sim.Core.Business
             if (b.BuyFromMarket && left > 0)
             {
                 Fixed price = MarketRules.Ceiling(sim, t.Input);
-                long bought = Affordable(sim, b, t.Input, left, price);
+                long bought = Affordable(sim, b, t.Input, System.Math.Min(left, MarketRoom(sim, b, t)), price);
                 if (bought > 0)
                 {
                     long value = MarketRules.Value(sim, t.Input, bought, price);
@@ -659,6 +671,23 @@ namespace Sim.Core.Business
             if (area > 0 || own > 0) sim.Emit(new BusinessWorked(now, b.Id, area, own));
         }
 
+        /// <summary>
+        /// The wheat a mill may still buy at the market (ADR 0140): what it grinds goes to the trader, who takes only so much a day, so it buys
+        /// only while its unsold atta and bran stay under <c>marketStockDays</c> days of that (each output's room, over its yield; the least rules).
+        /// </summary>
+        public static long MarketRoom(Simulation sim, Business b, BusinessTypeDef t)
+        {
+            long room = long.MaxValue;
+            foreach (BusinessOutput o in t.Outputs)
+            {
+                long yield = (o.Yield * Fixed.FromInt(1000)).RoundToLong();
+                if (yield <= 0) continue;
+                long free = sim.Config.Game.Market.Region.TraderBuyPerDay(o.Good) * Defs(sim).MarketStockDays - b.Stock[o.Good];
+                room = System.Math.Min(room, free <= 0 ? 0 : free * 1000 / yield);
+            }
+            return room == long.MaxValue ? 0 : room;
+        }
+
         /// <summary>How much of <paramref name="grams"/> its cash and overdraft pay for at <paramref name="price"/>: past the limit, inputs stop (§3.10).</summary>
         private static long Affordable(Simulation sim, Business b, int good, long grams, Fixed price)
         {
@@ -666,8 +695,11 @@ namespace Sim.Core.Business
             long unit = MarketRules.Value(sim, good, 1000, price + sim.State.Market.PriceIndex * TypeOf(sim, b).PowerPerKg);
             if (unit <= 0) return grams;
             long spend = BusinessBooks.CanSpend(sim, b);
-            long can = spend <= 0 ? 0 : (long)((System.Numerics.BigInteger)spend * 1000 / unit);
-            return System.Math.Min(grams, can);
+            long can = System.Math.Min(grams, spend <= 0 ? 0 : (long)((System.Numerics.BigInteger)spend * 1000 / unit));
+            // The estimate above rounds the price and the power apart from the amount: the exact cost of what is bought and ground (as the
+            // entries will post it) must fit, or paying the power would push the cash below 0 and the hourly pass would throw (ADR 0139).
+            while (can > 0 && MarketRules.Value(sim, good, can, price) + PowerCost(sim, b, can) > spend) can -= System.Math.Max(1, can / 1000);
+            return can;
         }
 
         private static long PowerCost(Simulation sim, Business b, long grams) { return Money.Value(grams, TypeOf(sim, b).PowerPerKg * sim.State.Market.PriceIndex * CostFactor(sim, b), 1000); }

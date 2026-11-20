@@ -66,6 +66,39 @@ namespace Sim.Core.Commands
         }
     }
 
+    /// <summary>
+    /// Books whole tonnes of cold-store space in the mandi town (spec 025 §3.6, US-242): the warehouse's rules: more from now, paid now for the days left in
+    /// the season; less (0 ends it) from the next close, never below what your goods kept there need. From the Township.
+    /// </summary>
+    public sealed class RentColdStore : TimedCommand
+    {
+        public int Tonnes { get; }
+
+        public RentColdStore(long at, int tonnes) : base(at) { Tonnes = tonnes; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            ColdStoreDef d = ColdStoreRules.Def(sim);
+            GodownState s = sim.State.Godown;
+            if (d == null || s == null || Tonnes < 0 || Tonnes > d.MaxRentTonnes) return CommandResult.Reject(RejectReason.InvalidArgument);
+            if (!ColdStoreRules.On(sim)) return CommandResult.Reject(RejectReason.EraLocked);
+            long t = sim.State.Clock.SimTime;
+            if (Tonnes <= s.ColdRentedTonnes)
+            {
+                if (Tonnes * 1_000_000L < ColdStoreRules.UsedGrams(sim)) return CommandResult.Reject(RejectReason.StockTooHigh);
+                s.ColdRentNextTonnes = Tonnes;
+                sim.Emit(new ColdStoreRented(t, Tonnes, 0));
+                return CommandResult.Ok;
+            }
+            long cost = ColdStoreRules.RentForRestOfSeason(sim, Tonnes - s.ColdRentedTonnes);
+            if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            if (cost > 0) Accrual.Open(sim, Account.Rent, Account.PrepaidRent, cost, t, GodownRules.SeasonEnd(sim), "coldstore");
+            s.ColdRentedTonnes = s.ColdRentNextTonnes = Tonnes;
+            sim.Emit(new ColdStoreRented(t, Tonnes, cost));
+            return CommandResult.Ok;
+        }
+    }
+
     /// <summary>Lets your godown to a trader from the next close, renewed each close until switched off (spec 013 §3.4, ADR 0087).</summary>
     public sealed class LetGodown : TimedCommand
     {

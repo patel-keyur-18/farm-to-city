@@ -51,6 +51,16 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(sim.State.Clock.SimTime + Hour);
         }
 
+        /// <summary>The builders' homes standing: their pace is ConstructionTests'; here every builders' project is finished at once.</summary>
+        private static void Finished(Simulation sim)
+        {
+            foreach (BuildProject p in ConstructionRules.Projects(sim).Where(x => x.Owner == BuildProject.Builders).ToList())
+            {
+                if (p.Working) sim.CompleteJob(sim.State.Jobs.Find(p.JobId));
+                else ConstructionRules.Finish(sim, p);
+            }
+        }
+
         // Before the Township nothing can be zoned; inherited, listed and used land can't be.
         [Test]
         public void ZoningRefusals()
@@ -110,6 +120,8 @@ namespace Sim.Core.Tests
             Assert.That((p.Owned, p.BuilderOwned), Is.EqualTo((false, true)));
             AcreSoldToBuilder sold = sim.DrainEvents().OfType<AcreSoldToBuilder>().Single();
             Assert.That((sold.Yours, sold.Price > 0), Is.EqualTo((true, true)));
+            Assert.That(sim.State.Land.Buildings.Any(b => b.Builders), Is.False, "the homes wait for bricks");
+            Finished(sim);
             var homes = sim.State.Land.Buildings.Where(b => b.Builders).ToList();
             Assert.That(homes.Count, Is.EqualTo(2 * acres));
             Assert.That(homes.All(b => b.Cost == 0 && HouseRules.IsHouse(sim, b)), Is.True, "off your books");
@@ -147,6 +159,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.Land.Parcels[first].Owned, Is.False);
             CloseWith(sim, ZoningRules.Need(sim, first));
             Assert.That(sim.State.Land.Parcels[first].BuilderOwned, Is.True);
+            Finished(sim);
             Assert.That(sim.State.Land.Buildings.Count(b => b.Builders), Is.EqualTo(2 * ZoningRules.HomeTiles(sim, first).Count));
             Assert.That(sim.State.Ledger.Entries.Any(e => e.DescriptionKey == "ledger.sellParcel"), Is.False, "a neighbour's land: nothing is paid to you");
             Assert.That(sim.DrainEvents().OfType<AcreSoldToBuilder>().Single().Yours, Is.False);
@@ -166,6 +179,7 @@ namespace Sim.Core.Tests
             int yours = EraRules.Households(sim);
             int first = ZoningRules.Candidates(sim).First();
             CloseWith(sim, ZoningRules.Need(sim, first));
+            Finished(sim);
             Assert.That(sim.State.Land.Buildings.Any(b => b.Builders), Is.True);
             sim.AdvanceTo(sim.State.Clock.SimTime + 12 * Day);
             Household x = sim.State.Citizens.Households.FirstOrDefault(h => HouseholdRules.InBuildersHome(sim, h));

@@ -18,6 +18,10 @@ namespace Sim.Core.Definitions
         public Fixed BreakdownMaintained { get; set; }
         public Fixed BreakdownSkipped { get; set; }
 
+        /// <summary>Hiring out (US-256, ADR 0137): neighbours pay this share of the day's hire rate for the machine's acres, and on a day it works for them its daily chance of breaking is multiplied by <see cref="CustomWear"/>.</summary>
+        public Fixed CustomFeeShare { get; set; }
+        public int CustomWear { get; set; }
+
         /// <summary>A repair costs this share of the machine's price.</summary>
         public Fixed RepairShare { get; set; }
 
@@ -68,6 +72,9 @@ namespace Sim.Core.Definitions
 
         /// <summary>The most it takes to the mandi without hiring the trolley, kg (0 none).</summary>
         public long CartKg { get; set; }
+
+        /// <summary>The acres a day neighbours want ploughed with it, at most (0: it isn't hired out).</summary>
+        public int CustomAcresPerDay { get; set; }
 
         /// <summary>The bank lends against it (its book value at the lender's <c>equipmentLtv</c>).</summary>
         public bool Loan { get; set; }

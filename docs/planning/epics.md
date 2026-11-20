@@ -94,9 +94,9 @@
 | [F12.4](features/F12.4-rivals-and-competition.md) | Rivals and competition | E12 | 2 | Spec 017 (approved, ADR 0074) | Done | US-122–US-122 | 5 |
 | [F12.5](features/F12.5-invoices-and-payment-terms.md) | Invoices and payment terms | E12 | 3 | Spec 028 (to write, ADR 0107) | Backlog | US-123 | 5 |
 | [F12.6](features/F12.6-managers-valuation-and-exit.md) | Managers, valuation and exit | E12 | 3 | Spec 028 (to write, ADR 0107) | Backlog | US-124, US-125, US-247 | 18 |
-| [F12.7](features/F12.7-township-businesses.md) | Township businesses | E12 | 3 | Specs 025 and 028 (to write, ADR 0107 §7) | Backlog | US-243, US-244, US-245, US-246 | 18 |
-| [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (approved, ADR 0060) | Done; US-254, US-255 Phase 3 (S24) | US-126, US-199, US-200, US-201, US-202, US-203, US-204, US-205, US-213, US-234, US-254, US-255 | 49 |
-| [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | Spec 013 (approved, ADR 0075) | Done; US-256, US-257 Phase 3 (S24) | US-127, US-128, US-256, US-257 | 22 |
+| [F12.7](features/F12.7-township-businesses.md) | Township businesses | E12 | 3 | Specs 025 and 028 (025 built in Sprint 23; ADR 0107 §7) | In progress | US-243, US-244, US-245, US-246 | 18 |
+| [F13.1](features/F13.1-livestock.md) | Livestock | E13 | 2 | Spec 012 (approved, ADR 0060) | Done; US-254, US-255 Phase 3 (S23) | US-126, US-199, US-200, US-201, US-202, US-203, US-204, US-205, US-213, US-234, US-254, US-255 | 49 |
+| [F13.2](features/F13.2-irrigation-and-equipment.md) | Irrigation and equipment | E13 | 2 | Spec 013 (approved, ADR 0075) | Done; US-256, US-257 Phase 3 (S23) | US-127, US-128, US-256, US-257 | 22 |
 | [F13.3](features/F13.3-orchards-and-granary.md) | Orchards and granary | E13 | 2 | Spec 013 (approved, ADR 0075); US-242 spec 025 (ADR 0107 §9) | Done; US-242 Phase 3 (S23) | US-129, US-130, US-242 | 14 |
 | [F14.1](features/F14.1-school-and-literacy.md) | School and literacy | E14 | 2 | Spec 018 (ADR 0077, 0095) | Done (Sprint 17) | US-131–US-132 | 13 |
 | [F14.2](features/F14.2-codex-and-advisors.md) | Codex and advisors | E14 | 2 | Spec 018 (ADR 0077, 0095) | Done (Sprint 17) | US-133–US-134 | 13 |
@@ -105,8 +105,8 @@
 | [F15.1](features/F15.1-treasury-and-budget.md) | Treasury and budget | E15 | 3 | Spec 021 (to write, ADR 0107) | Backlog | US-138, US-139 | 13 |
 | [F15.2](features/F15.2-taxes-and-policies.md) | Taxes and policies | E15 | 3 | Spec 022 (to write, ADR 0107) | Backlog | US-140, US-141 | 13 |
 | [F15.3](features/F15.3-zoning-and-land-value.md) | Zoning and land value | E15 | 3 | Spec 024 (to write, ADR 0107) | Backlog | US-142, US-143, US-261 | 16 |
-| [F15.4](features/F15.4-utilities-and-construction.md) | Utilities and construction | E15 | 3 | Spec 025 (to write, ADR 0107) | Backlog | US-144, US-145 | 16 |
-| [F15.5](features/F15.5-roads-highway-and-hills.md) | Roads, highway and hills | E15 | 3 | Specs 023 and 025 (to write, ADR 0107) | Backlog | US-146, US-147, US-253 | 15 |
+| [F15.4](features/F15.4-utilities-and-construction.md) | Utilities and construction | E15 | 3 | Spec 025 (built in Sprint 23, ADR 0125) | Done (Sprint 23) | US-144, US-145 | 16 |
+| [F15.5](features/F15.5-roads-highway-and-hills.md) | Roads, highway and hills | E15 | 3 | Specs 023 and 025 (US-253 built in Sprint 23; US-147 in Sprint 24) | In progress | US-146, US-147, US-253 | 15 |
 | [F15.6](features/F15.6-civic-services-and-coverage.md) | Civic services and coverage | E15 | 3 | Specs 023 and 026 (to write, ADR 0107) | Backlog | US-148, US-149 | 11 |
 | [F15.7](features/F15.7-petitions-reputation-crime-and-inequality.md) | Petitions, reputation, crime and inequality | E15 | 3 | Spec 026 (to write, ADR 0107) | Backlog | US-150, US-151 | 8 |
 | [F15.8](features/F15.8-building-upgrades-and-overlays.md) | Building upgrades and overlays | E15 | 3 | Spec 024 (to write, ADR 0107) | Backlog | US-152, US-153 | 10 |

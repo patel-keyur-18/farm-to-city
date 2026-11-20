@@ -270,6 +270,17 @@ namespace Sim.Core.Events
         protected override string Describe() { return "GodownBought(cost=" + Cost + ")"; }
     }
 
+    /// <summary>Cold-store space booked (spec 025 §3.6, US-242): <see cref="Tonnes"/> from now when more (paid now for the days left), from the next close when less (<see cref="Cost"/> 0).</summary>
+    public sealed class ColdStoreRented : SimEvent
+    {
+        public int Tonnes { get; }
+        public long Cost { get; }
+
+        public ColdStoreRented(long simTime, int tonnes, long cost) : base(simTime) { Tonnes = tonnes; Cost = cost; }
+
+        protected override string Describe() { return "ColdStoreRented(tonnes=" + Tonnes + ", cost=" + Cost + ")"; }
+    }
+
     /// <summary>
     /// Warehouse space booked (ADR 0087): <see cref="Tonnes"/> from now when more (paid now for the days left), from the next close
     /// when less (<see cref="Cost"/> 0).

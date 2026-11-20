@@ -146,8 +146,8 @@ namespace Sim.Core.Tests
             Assert.That(zero.Broken, Is.EqualTo(0), "the treasury is never below zero and its books reconcile");
             Assert.That(zero.Township.Count(double.IsNaN), Is.EqualTo(normal.Township.Count(double.IsNaN)), "no tax doesn't stop the Township");
             Assert.That(Median(zero.LowestService), Is.LessThan(0.3), "four years with no tax and the services have wasted away");
-            Assert.That(Median(normal.LowestService), Is.GreaterThan(0.9), "and with the default rates they have not");
-            Assert.That(Median(zero.Happiness), Is.LessThan(Median(normal.Happiness) - 1), "the town is less happy for it (spec 022 §9 said 5; measured 1.8: the services weigh little against food, work and rent)");
+            Assert.That(Median(normal.LowestService), Is.GreaterThanOrEqualTo(0.85), "and with the default rates they have not (Health is held at 85% without drains, ADR 0130)");
+            Assert.That(Median(zero.Happiness), Is.LessThan(Median(normal.Happiness)), "the town is less happy for it (spec 022 §9 said 5; measured 1.8, then 0.3 once a town with no drains holds Health at 85% either way, ADR 0130: the services weigh little against food, work and rent)");
             Assert.That(zero.OldVillageLeft.All(n => n == 0), Is.True, "the old village stays");
             Assert.That(zero.HouseholdsAfter.Min(), Is.GreaterThanOrEqualTo(14), "yours stay too");
         }
@@ -160,7 +160,7 @@ namespace Sim.Core.Tests
             Gate.TownshipResult zero = Run("0", "0", Seeds, 16);
             TestContext.Out.WriteLine("ZERO WITH BUILDERS: treasury " + string.Join(" ", zero.TreasuryAfter.Select(c => c / Money.Coin)) + "; lowest service " + string.Join(" ", zero.LowestService.Select(x => x.ToString("0.00"))));
             Assert.That(zero.Broken, Is.EqualTo(0));
-            Assert.That(Median(zero.LowestService), Is.GreaterThan(0.9), "growth pays for the services even with no tax");
+            Assert.That(Median(zero.LowestService), Is.GreaterThanOrEqualTo(0.85), "growth pays for the services even with no tax (Health is held at 85% without drains, ADR 0130)");
         }
 
         // Every tax at its cap: the treasury is the better for it, nobody is stuck, no old household is driven away.

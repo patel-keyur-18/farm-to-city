@@ -95,6 +95,7 @@ namespace Game.Presentation
                 OnMenu = () => OpenSheet(new SheetRequest("Menu", 0)),
                 OnAlerts = () => OpenSheet(new SheetRequest("Alerts", 0)),
                 OnOrders = () => OpenSheet(new SheetRequest("Orders", 0)),
+                OnOverlays = OnOverlaysButton,
                 OnUrgent = () => _sounds.Play("urgent"),
             };
             _sheet = new SheetPresenter(_safeRoot, _tweens)
@@ -110,6 +111,7 @@ namespace Game.Presentation
                 OkLabel = _strings.Get("action.ok"),
                 WhyLabel = _strings.Get("why.label"),
             };
+            BuildOverlays();
             BuildToast();
             BuildCodexToast();
             BuildMilestoneToast();
@@ -162,6 +164,7 @@ namespace Game.Presentation
                 case SavingsSheet.Kind: _sheet.Show(SavingsSheet.Build(_ctx), refreshOnly); break;
                 case "Books": _sheet.Show(BooksSheet.Build(_ctx), refreshOnly); break;
                 case TreasurySheet.Kind: _sheet.Show(TreasurySheet.Build(_ctx, r.Arg), refreshOnly); break; // spec 021 §7
+                case BuildingSheet.Kind: _sheet.Show(BuildingSheet.Build(_ctx), refreshOnly); break; // spec 025 §3.2: building materials
                 case TreasurySheet.BudgetKind: _sheet.Show(TreasurySheet.BudgetSet(_ctx, (int)r.Id), refreshOnly); break; // US-139
                 case TaxSheet.Kind: _sheet.Show(TaxSheet.Build(_ctx), refreshOnly); break; // spec 022 §7, US-140
                 case PolicySheet.Kind: _sheet.Show(PolicySheet.Build(_ctx), refreshOnly); break; // spec 022 §7, US-141
@@ -183,6 +186,7 @@ namespace Game.Presentation
                 case "BuyInput": _sheet.Show(BuyInputsSheet.One(_ctx, (int)r.Id), refreshOnly); break;
                 case "Mandi": _sheet.Show(MandiSheet.Build(_ctx, r.Arg), refreshOnly); break;
                 case GodownSheet.Kind: _sheet.Show(GodownSheet.Build(_ctx), refreshOnly); break;
+                case ColdStoreSheet.Kind: _sheet.Show(ColdStoreSheet.Build(_ctx), refreshOnly); break;
                 case "Forecast": _sheet.Show(ForecastView.Sheet(_ctx), refreshOnly); break;
                 case "Alerts": _sheet.Show(Alerts.Sheet(_ctx), refreshOnly); break;
                 case "Orders": _sheet.Show(OrdersSheet.Build(_ctx), refreshOnly); break;
@@ -213,7 +217,7 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case TreasurySheet.Kind: case TaxSheet.Kind: case PolicySheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case EquipmentSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
+                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case TreasurySheet.Kind: case TaxSheet.Kind: case PolicySheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case ColdStoreSheet.Kind: case EquipmentSheet.Kind: case BuildingSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
                 case TreasurySheet.GiveKind: Return(new SheetRequest(TreasurySheet.Kind, 0)); return; // given: back to the treasury to see its balance
                 case TreasurySheet.BudgetKind: Return(new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)); return; // set: back to the Budget tab, the new figure there

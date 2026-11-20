@@ -26,6 +26,12 @@ namespace Sim.Core
         public ClockDef Clock { get { return Config.Clock; } }
         public WeatherSet Weather { get { return Config.Weather; } }
 
+        /// <summary>
+        /// Set by the app: a system that throws in a pass is reported here and the systems after it still run that pass (ADR 0143). Left null (tests,
+        /// the balancer) the exception propagates at once, so a bug still fails loudly.
+        /// </summary>
+        public static Action<ISimSystem, ItemClass, Exception> SystemFailed { get; set; }
+
         private readonly List<ISimSystem> _systems = new List<ISimSystem>();
         private readonly Dictionary<string, IJobHandler> _handlers = new Dictionary<string, IJobHandler>(StringComparer.Ordinal);
         private readonly List<SimEvent> _events = new List<SimEvent>();
@@ -72,6 +78,7 @@ namespace Sim.Core
                 handlers.Add(new Town.ClinicRules.BuildQuarters());
                 handlers.Add(new Town.ClinicRules.Arrive());
                 handlers.Add(new Town.CivicRules.Arrive());
+                handlers.Add(new Town.ConstructionRules.Done());
             }
             handlers.AddRange(config.JobHandlers);
             foreach (IJobHandler h in handlers)
@@ -140,7 +147,25 @@ namespace Sim.Core
         public static Simulation FromState(SimConfig config, GameState state)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
-            return new Simulation(config, state);
+            var sim = new Simulation(config, state);
+            sim.MendLostPasses();
+            return sim;
+        }
+
+        /// <summary>
+        /// A town saved after a pass was lost (an exception inside a pass used to drop it for good): every pass class is scheduled
+        /// again at its next boundary and the weather buffer is brought up to the clock. Nothing changes in a healthy town.
+        /// </summary>
+        private void MendLostPasses()
+        {
+            long t = State.Clock.SimTime;
+            foreach (ItemClass pass in new[] { ItemClass.Hourly, ItemClass.Daily, ItemClass.Seasonal, ItemClass.Yearly })
+            {
+                if (State.Scheduler.Has(pass)) continue;
+                long period = PassPeriod(pass);
+                SchedulePass(pass, (t / period + 1) * period);
+            }
+            WeatherSystem.Mend(this);
         }
 
         /// <summary>
@@ -341,8 +366,20 @@ namespace Sim.Core
 
         private void RunPass(ScheduledItem item)
         {
-            foreach (ISimSystem system in _systems) system.OnPass(this, item.Class);
-            SchedulePass(item.Class, item.DueTime + PassPeriod(item.Class));
+            // The next pass is scheduled even if a system throws: the clock keeps moving, and a pass lost for good leaves the
+            // weather behind it (the forecast then throws on every refresh). The same order of scheduling as before on the happy path.
+            try
+            {
+                foreach (ISimSystem system in _systems)
+                {
+                    try { system.OnPass(this, item.Class); }
+                    catch (Exception e) when (SystemFailed != null) { SystemFailed(system, item.Class, e); }
+                }
+            }
+            finally
+            {
+                SchedulePass(item.Class, item.DueTime + PassPeriod(item.Class));
+            }
         }
 
         private void SchedulePass(ItemClass pass, long dueTime)

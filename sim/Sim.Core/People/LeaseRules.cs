@@ -95,20 +95,22 @@ namespace Sim.Core.People
             return road == 2 ? p.RentDistrict : road == 1 ? p.RentLane : p.RentInner;
         }
 
+        /// <summary>The acre is on the district road (the paved link road's way, spec 023 §3.3).</summary>
+        public static bool IsDistrictRoad(Simulation sim, int tileId) { return Contains(P(sim).DistrictRoadTiles, tileId); }
+
         /// <summary>The best road an acre touches by an edge: 2 the district road, 1 the village lane, 0 none (inner).</summary>
         public static int RoadAccess(Simulation sim, int tileId)
         {
             PopulationDefs p = P(sim);
             MapDef map = sim.Config.Game.Map;
-            int x = tileId % map.Width, y = tileId / map.Width;
+            int x = map.X(tileId), y = map.Y(tileId);
             bool district = false, lane = false;
             for (int i = 0; i < 4; i++)
             {
-                int nx = x + (i == 1 ? -1 : i == 2 ? 1 : 0), ny = y + (i == 0 ? -1 : i == 3 ? 1 : 0);
-                if (nx < 0 || ny < 0 || nx >= map.Width || ny >= map.Height) continue;
-                int n = ny * map.Width + nx;
+                int n = map.TileAt(x + (i == 1 ? -1 : i == 2 ? 1 : 0), y + (i == 0 ? -1 : i == 3 ? 1 : 0));
+                if (n < 0) continue;
                 if (Contains(p.DistrictRoadTiles, n)) district = true;
-                else if (Contains(p.LaneRoadTiles, n)) lane = true;
+                else if (Contains(p.LaneRoadTiles, n) || Town.LaneRules.BuiltLane(sim, n)) lane = true;
             }
             return district ? 2 : lane ? 1 : 0;
         }
@@ -120,9 +122,9 @@ namespace Sim.Core.People
         }
 
         /// <summary>The market rent of a house on a tile at today's prices: the base × the place × the index, to a whole coin.</summary>
-        public static long MarketRent(Simulation sim, int tileId)
+        public static long MarketRent(Simulation sim, int tileId, bool pucca = false)
         {
-            long rent = Money.MulRate(MarketRules.Indexed(sim, P(sim).BaseRent), Place(sim, tileId));
+            long rent = Money.MulRate(MarketRules.Indexed(sim, pucca ? sim.Config.Game.Township.Upgrade.PuccaRent : P(sim).BaseRent), Place(sim, tileId)); // a pucca house lets for more (spec 024 §3.7)
             return rent / Money.Coin * Money.Coin;
         }
 
@@ -136,7 +138,7 @@ namespace Sim.Core.People
         public static long MarketRentFor(Simulation sim, Household x)
         {
             Building home = sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
-            return home == null || !HouseRules.IsHouse(sim, home) ? 0 : MarketRent(sim, home.TileId);
+            return home == null || !HouseRules.IsHouse(sim, home) ? 0 : MarketRent(sim, home.TileId, home.Pucca);
         }
 
         /// <summary>A household with a lease: in a family house with nobody working as your hand (the house is his pay otherwise).</summary>
@@ -152,10 +154,10 @@ namespace Sim.Core.People
         public static long SeasonsLeft(Simulation sim, Household x) { return System.Math.Max(0, P(sim).LeaseSeasons - (Season(sim) - x.LeaseStart)); }
 
         /// <summary>What a renewal could take now (§3.14).</summary>
-        public static LeaseOptions Options(Simulation sim, Household x)
+        public static LeaseOptions Options(Simulation sim, Household x, long marketRent = -1)
         {
             PopulationDefs p = P(sim);
-            long current = x.LeaseRent, market = MarketRentFor(sim, x);
+            long current = x.LeaseRent, market = marketRent >= 0 ? marketRent : MarketRentFor(sim, x); // a given market rent: what a renewal would take if the house were pucca (US-152)
             var o = new LeaseOptions { Current = current, Market = market, Income = x.Income };
             o.Bearable = Money.MulRate(x.Income, p.BurdenLimit) / Money.Coin * Money.Coin;
             if (current > market)

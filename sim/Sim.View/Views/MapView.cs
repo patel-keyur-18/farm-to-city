@@ -24,6 +24,13 @@ namespace Sim.View.Views
 
         /// <summary>The cattle acre (ADR 0064): the shed's place from the Hamlet.</summary>
         Cattle = 8,
+
+        /// <summary>The ring (spec 025 §3.4): hills (locked until Sprint 24), the river, scrub and verge, an unbuilt gravel lane, the highway.</summary>
+        Hill = 9,
+        River = 10,
+        Scrub = 11,
+        Lane = 12,
+        Highway = 13,
     }
 
     /// <summary>What stands on a field (spec 008 §3.4): vacant, growing in three stages, ready, or waiting past its grace.</summary>
@@ -48,6 +55,15 @@ namespace Sim.View.Views
         public bool Business { get; internal set; }
         public int X { get; internal set; }
         public int Y { get; internal set; }
+
+        /// <summary>The acre is in the ring or the hills and is closed (spec 025 §3.4): drawn dim, never selectable.</summary>
+        public bool Locked { get; internal set; }
+
+        /// <summary>A lane acre whose section the treasury has built (spec 025 §3.4).</summary>
+        public bool LaneBuilt { get; internal set; }
+
+        /// <summary>The ring's land for sale (spec 025 §3.4): meadow, drawn with at most a bush so the ring adds few sprites.</summary>
+        public bool Meadow { get; internal set; }
         public TileKind Kind { get; internal set; }
         public string SoilId { get; internal set; }
         public int ParcelId { get; internal set; }
@@ -180,6 +196,10 @@ namespace Sim.View.Views
         public long Id { get; internal set; }
         public string DefId { get; internal set; }
         public int TileId { get; internal set; }
+
+        /// <summary>A family house made pucca (US-152), or one being made so (drawn with its scaffolding).</summary>
+        public bool Pucca { get; internal set; }
+        public bool Upgrading { get; internal set; }
     }
 
     /// <summary>A hand's hut being built (spec 006 §3.4): drawn as its building stage on the acre's edge.</summary>
@@ -272,6 +292,9 @@ namespace Sim.View.Views
 
         /// <summary>The compost pit: 0 empty, 1 half, 2 full.</summary>
         public int Compost { get; internal set; }
+
+        /// <summary>The silage pit beside the straw stack is built (US-255, ADR 0136).</summary>
+        public bool Silage { get; internal set; }
         public List<AnimalVm> Animals { get; } = new List<AnimalVm>();
     }
 
@@ -285,6 +308,9 @@ namespace Sim.View.Views
 
         /// <summary>Her place on the acre, 0–3 (place 0 is the neem's shade, with no manger).</summary>
         public int Place { get; internal set; }
+
+        /// <summary>A growing heifer, drawn at 70% (ADR 0135).</summary>
+        public bool Young { get; internal set; }
     }
 
     /// <summary>A machine on the map (ADR 0088): at work on a field by day, or the tractor parked on the farm lane.</summary>
@@ -303,7 +329,28 @@ namespace Sim.View.Views
 
         /// <summary>The paved link road is built: the district road's row (the last) is tar, here and past the map's edges (spec 023 §3.3).</summary>
         public bool RoadPaved { get; internal set; }
+
+        /// <summary>A solar panel is fitted to the well's pump or to the borewell (US-257): drawn beside it.</summary>
+        public bool SolarPump { get; internal set; }
+        public bool SolarBorewell { get; internal set; }
+
+        /// <summary>The ring is open (the Township, spec 025 §3.4) and the 16 × 12 map's place in the grid: the camera stays inside it until then.</summary>
+        public bool RingOpen { get; internal set; }
+        public int LegacyX { get; internal set; }
+        public int LegacyY { get; internal set; }
+        public int LegacyW { get; internal set; }
+        public int LegacyH { get; internal set; }
         public List<TileVm> Tiles { get; } = new List<TileVm>();
+
+        private TileVm[] _grid;
+
+        /// <summary>The acre at a place on the grid, or null off the map. Tile ids are stable and no longer <c>y × width + x</c> (ADR 0125).</summary>
+        public TileVm At(int x, int y)
+        {
+            if (x < 0 || y < 0 || x >= Width || y >= Height) return null;
+            if (_grid == null) { _grid = new TileVm[Width * Height]; foreach (TileVm t in Tiles) _grid[t.Y * Width + t.X] = t; }
+            return _grid[y * Width + x];
+        }
         public List<SlotVm> Slots { get; } = new List<SlotVm>();
         public List<OrchardVm> Orchards { get; } = new List<OrchardVm>();
         public List<BedVm> Beds { get; } = new List<BedVm>();
@@ -329,6 +376,10 @@ namespace Sim.View.Views
         /// <summary>The civic plots' tiles (watchman's post, hall, playground; spec 023 §3.7) and whether each stands (0 the empty plot, 2 built), in <c>CivicDef</c> order.</summary>
         public int[] CivicTile { get; internal set; } = { -1, -1, -1 };
         public int[] CivicStage { get; internal set; } = { 0, 0, 0 };
+
+        /// <summary>The five utilities' plots (spec 025 §3.1) and their stage: 0 the plot, 2 standing, 3 the generator switched off by the grid.</summary>
+        public int[] UtilityTile { get; internal set; } = { -1, -1, -1, -1, -1 };
+        public int[] UtilityStage { get; internal set; } = { 0, 0, 0, 0, 0 };
 
         /// <summary>The square's tile and its pitches (spec 017 §3.4): −1 and 0 in content without shops.</summary>
         public int SquareTile { get; internal set; } = -1;
@@ -385,7 +436,7 @@ namespace Sim.View.Views
         private static void TruckRoute(MapVm map)
         {
             int w = map.Width, h = map.Height;
-            bool Road(int x, int y) { return x >= 0 && y >= 0 && x < w && y < h && map.Tiles[y * w + x].Kind == TileKind.Road; }
+            bool Road(int x, int y) { TileVm a = map.At(x, y); return a != null && a.Kind == TileKind.Road; }
             int stop = -1;
             foreach (TileVm t in map.Tiles)
             {
@@ -415,7 +466,7 @@ namespace Sim.View.Views
                 }
             }
             if (entry < 0) entry = edge;
-            for (int c = entry; c >= 0; c = parent[c]) map.TruckRoute.Add(c);
+            for (int c = entry; c >= 0; c = parent[c]) map.TruckRoute.Add(map.At(c % w, c / w).Id); // grid places here, tile ids in the list
         }
 
         public static MapVm Build(ViewContext ctx)
@@ -428,7 +479,10 @@ namespace Sim.View.Views
             var map = new MapVm
             {
                 Width = defs.Map.Width, Height = defs.Map.Height, SimTime = now,
-                Season = (int)Sim.Core.Time.Calendar.SeasonAt(now, sim.Clock), SecondOfDay = now % 86400, RoadPaved = Sim.Core.Town.RoadRules.IsBuilt(sim),
+                Season = (int)Sim.Core.Time.Calendar.SeasonAt(now, sim.Clock), SecondOfDay = now % 86400, RoadPaved = Sim.Core.Town.RoadRules.IsBuilt(sim), SolarPump = sim.State.Irrigation != null && sim.State.Irrigation.PumpSolar > 0, SolarBorewell = sim.State.Irrigation != null && sim.State.Irrigation.BorewellSolar > 0,
+                RingOpen = defs.Map.LegacyTiles == 0 || Sim.Core.Town.TownshipRules.Reached(sim),
+                LegacyX = defs.Map.LegacyTiles == 0 ? 0 : defs.Map.X(0), LegacyY = defs.Map.LegacyTiles == 0 ? 0 : defs.Map.Y(0),
+                LegacyW = defs.Map.LegacyTiles == 0 ? defs.Map.Width : defs.Map.LegacyWidth, LegacyH = defs.Map.LegacyTiles == 0 ? defs.Map.Height : defs.Map.LegacyTiles / defs.Map.LegacyWidth,
             };
 
             var places = new Dictionary<int, string>();
@@ -441,16 +495,25 @@ namespace Sim.View.Views
                 ParcelDef pdef = defs.Map.Parcels[t.ParcelId];
                 var vm = new TileVm
                 {
-                    Id = t.Id, X = t.Id % defs.Map.Width, Y = t.Id / defs.Map.Width,
+                    Id = t.Id, X = defs.Map.X(t.Id), Y = defs.Map.Y(t.Id), Locked = LandRules.Locked(sim, t.ParcelId),
                     Kind = t.Id == secondShed ? TileKind.Cattle : Kind(t.Terrain, parcel.Owned), // the second cattle acre (ADR 0088)
                     SoilId = defs.Soils[t.Soil].Id, ParcelId = t.ParcelId, ParcelKey = defs.Map.Parcels[t.ParcelId].Id, Protected = parcel.Protected,
                     WellAcre = LandSystem.IsWellTile(defs, t.Id) && !IrrigationRules.Pumped(sim, t.Id), Pumped = IrrigationRules.Pumped(sim, t.Id), Fertility = t.Fertility.Raw / (100f * (1L << Sim.Core.Maths.Fixed.FractionBits)),
                 };
                 // Every neighbour's parcel for sale shows its sign (spec 010 §3.7); a parcel not for sale grows the season's crop.
-                if (!parcel.Owned && !parcel.BuilderOwned && pdef.ForSale && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
-                if (vm.Kind == TileKind.Unowned) Neighbour(vm, defs.Map.Width, defs.Map.Height, t.ParcelId, !pdef.ForSale, map.Season);
+                if (!parcel.Owned && !parcel.BuilderOwned && pdef.ForSale && !vm.Locked && pdef.Tiles[0] == t.Id) vm.ForSaleSign = true;
+                if (t.Terrain == Terrain.Lane) vm.LaneBuilt = Sim.Core.Town.LaneRules.BuiltLane(sim, t.Id);
+                if (vm.Kind == TileKind.Unowned && vm.Locked) { vm.Draw = Draw(vm.Id); vm.Neighbour = NeighbourLand.Scrub; } // closed land is plain scrub (spec 025 §3.4)
+                else if (vm.Kind == TileKind.Unowned && pdef.Opens != null)
+                {
+                    // The ring's land for sale is meadow, not a neighbour's field (preview 1): grass, a bush here and there, never a crop.
+                    vm.Draw = Draw(vm.Id);
+                    vm.Neighbour = NeighbourLand.Fallow;
+                    vm.Meadow = true;
+                }
+                else if (vm.Kind == TileKind.Unowned) Neighbour(vm, defs.Map, t.ParcelId, !pdef.ForSale, map.Season);
                 if (parcel.BuilderOwned) { vm.Neighbour = NeighbourLand.Fallow; vm.NeighbourCrop = null; vm.TubeWell = false; vm.Haystack = false; } // builders' homes stand on bare ground (spec 024 §3.3)
-                if (vm.Kind == TileKind.Road) { vm.RoadLinks = RoadLinks(land, defs.Map, t.Id); vm.Paved = map.RoadPaved && vm.Y == defs.Map.Height - 1; }
+                if (vm.Kind == TileKind.Road) { vm.RoadLinks = RoadLinks(land, defs.Map, t.Id); vm.Paved = map.RoadPaved && Sim.Core.People.LeaseRules.IsDistrictRoad(sim, t.Id); }
                 if (places.TryGetValue(t.Id, out string place)) { vm.Place = place; vm.PlaceId = placeIds[t.Id]; vm.Variant = (vm.X + vm.Y) % 2; }
                 if (vm.Kind == TileKind.Yard) { map.HomeX += vm.X; map.HomeY += vm.Y; yards++; }
                 Crop crop = sim.State.Farm.CropOn(t.Id);
@@ -530,7 +593,7 @@ namespace Sim.View.Views
             if (yards > 0) { map.HomeX /= yards; map.HomeY /= yards; }
 
             foreach (Building b in land.Buildings)
-                if (b.TileId >= 0 && !Sim.Core.Town.ClinicRules.IsQuarters(sim, b)) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId }); // the godown is in the mandi town (ADR 0087)
+                if (b.TileId >= 0 && !Sim.Core.Town.ClinicRules.IsQuarters(sim, b)) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId, Pucca = b.Pucca, Upgrading = Sim.Core.Town.UpgradeRules.Underway(sim, b.Id) != null }); // the godown is in the mandi town (ADR 0087)
             AddSchool(ctx, map);
             AddClinic(ctx, map);
             AddHouses(ctx, map);
@@ -558,6 +621,7 @@ namespace Sim.View.Views
             vm.Locked = !Sim.Core.Livestock.LivestockRules.Unlocked(sim);
             vm.Shed = Sim.Core.Livestock.LivestockRules.Shed(sim) != null ? 2 : s.ShedReadyAt > 0 ? 1 : 0;
             if (vm.Shed == 2) vm.Straw = Level(sim, GoodPlace.StrawStack, 3);
+            vm.Silage = vm.Shed == 2 && s.SilagePit;
             AddAnimals(sim, vm, 0, secondOfDay);
             return vm;
         }
@@ -620,7 +684,7 @@ namespace Sim.View.Views
             {
                 if (a.Shed != shed) continue;
                 string pose = a.SickDays > 0 || hour >= 20 || hour < 6 ? "lie" : hour < 9 ? "eat" : new[] { "stand", "eat", "lie" }[(int)((a.Id + hour / 3) % 3)];
-                vm.Animals.Add(new AnimalVm { Id = a.Id, Kind = sim.Config.Game.Livestock.Animals[a.Kind].Id, Pose = pose, Place = (n + 1) % 4 });
+                vm.Animals.Add(new AnimalVm { Id = a.Id, Kind = sim.Config.Game.Livestock.Animals[a.Kind].Id, Pose = pose, Place = (n + 1) % 4, Young = a.Stage == Sim.Core.Livestock.AnimalStage.Heifer });
                 n++;
             }
         }
@@ -642,6 +706,11 @@ namespace Sim.View.Views
                 case Terrain.Village: return TileKind.Village;
                 case Terrain.Commons: return TileKind.Commons;
                 case Terrain.Bank: return TileKind.Bank;
+                case Terrain.Hill: return TileKind.Hill;
+                case Terrain.River: return TileKind.River;
+                case Terrain.Scrub: return TileKind.Scrub;
+                case Terrain.Lane: return TileKind.Lane;
+                case Terrain.Highway: return TileKind.Highway;
             }
             if (!owned) return TileKind.Unowned;
             return t == Terrain.Yard ? TileKind.Yard : t == Terrain.Quarters ? TileKind.Quarters : t == Terrain.Cattle ? TileKind.Cattle : TileKind.Farm;
@@ -689,10 +758,14 @@ namespace Sim.View.Views
 
         private static bool Beats(int h, int id, int other) { int o = Draw(other); return h > o || h == o && id > other; }
 
-        private static void Neighbour(TileVm vm, int width, int height, int parcel, bool notForSale, int season)
+        private static void Neighbour(TileVm vm, MapDef map, int parcel, bool notForSale, int season)
         {
             vm.Draw = Draw(vm.Id);
-            vm.Neighbour = Look(vm.Id, vm.X, vm.Y, width, height, vm.SoilId, vm.Fertility, parcel, notForSale, season, out string crop);
+            // The 16 × 12 map's acres keep the look they had (a scatter of farmsteads and fields drawn from their id and place in it); the ring's use their own place.
+            bool legacy = vm.Id < map.LegacyTiles;
+            int lw = legacy ? map.LegacyWidth : map.Width, lh = legacy ? map.LegacyTiles / map.LegacyWidth : map.Height;
+            int lx = legacy ? vm.Id % lw : vm.X, ly = legacy ? vm.Id / lw : vm.Y;
+            vm.Neighbour = Look(vm.Id, lx, ly, lw, lh, vm.SoilId, vm.Fertility, parcel, notForSale, season, out string crop);
             vm.NeighbourCrop = crop;
             bool good = vm.SoilId != "sandy" && vm.Fertility >= 0.45f;
             vm.TubeWell = good && vm.Neighbour != NeighbourLand.Grove && vm.Neighbour != NeighbourLand.Farmstead && vm.Draw % 25 == 4;
@@ -717,14 +790,16 @@ namespace Sim.View.Views
             }
         }
 
+        private static bool IsRoad(LandState land, int tile) { return land.Tiles[tile].Terrain == Terrain.Road; }
+
         /// <summary>A road acre's links (1 = x+1, 2 = x−1, 4 = y+1, 8 = y−1): to road acres beside it, and on through the map's edge.</summary>
         private static int RoadLinks(LandState land, MapDef map, int id)
         {
-            int x = id % map.Width, y = id / map.Width, links = 0;
-            if (x + 1 >= map.Width || land.Tiles[id + 1].Terrain == Terrain.Road) links |= 1;
-            if (x - 1 < 0 || land.Tiles[id - 1].Terrain == Terrain.Road) links |= 2;
-            if (y + 1 < map.Height && land.Tiles[id + map.Width].Terrain == Terrain.Road) links |= 4;
-            if (y - 1 >= 0 && land.Tiles[id - map.Width].Terrain == Terrain.Road) links |= 8;
+            int x = map.X(id), y = map.Y(id), links = 0, n;
+            if (x + 1 >= map.Width || (n = map.TileAt(x + 1, y)) >= 0 && IsRoad(land, n)) links |= 1;
+            if (x - 1 < 0 || (n = map.TileAt(x - 1, y)) >= 0 && IsRoad(land, n)) links |= 2;
+            if (y + 1 < map.Height && (n = map.TileAt(x, y + 1)) >= 0 && IsRoad(land, n)) links |= 4;
+            if (y - 1 >= 0 && (n = map.TileAt(x, y - 1)) >= 0 && IsRoad(land, n)) links |= 8;
             return links;
         }
 
@@ -799,10 +874,19 @@ namespace Sim.View.Views
             long total = System.Math.Max(1, sim.Config.Game.Buildings[sim.Config.Game.Population.House].BuildHours * 3600L);
             foreach (Sim.Core.People.Construction c in s.Constructions)
             {
-                float progress = 1f - (c.ReadyAt - ctx.Now) / (float)total;
+                float progress = c.ReadyAt == 0 ? 0f : 1f - (c.ReadyAt - ctx.Now) / (float)total; // 0: still waiting for its materials (spec 025 §3.2)
+                Sim.Core.Town.BuildProject made = Sim.Core.Town.ConstructionRules.On(sim) ? BuildingSheet.Of(sim, c) : null;
+                if (made != null && made.Working) progress = 1f - (made.ReadyAt - ctx.Now) / (float)System.Math.Max(1, made.ReadyAt - made.StartedAt);
                 map.HouseSites.Add(new ConstructionVm { Id = c.Id, TileId = c.TileId, Progress = progress < 0 ? 0 : progress > 1 ? 1 : progress });
                 map.Tiles[c.TileId].Houses++;
             }
+            if (Sim.Core.Town.ConstructionRules.On(sim)) // a civic building being made shows its site on its plot
+                foreach (Sim.Core.Town.BuildProject bp in sim.State.Township.Projects)
+                {
+                    if (bp.Owner != Sim.Core.Town.BuildProject.Town) continue;
+                    float progress = bp.Working ? 1f - (bp.ReadyAt - ctx.Now) / (float)System.Math.Max(1, bp.ReadyAt - bp.StartedAt) : 0f;
+                    map.HouseSites.Add(new ConstructionVm { Id = -bp.Id, TileId = bp.Tile, Progress = progress < 0 ? 0 : progress > 1 ? 1 : progress });
+                }
             if (!WorkingHours(map.SecondOfDay)) return;
             foreach (Sim.Core.People.Household x in s.Households)
             {
@@ -845,6 +929,12 @@ namespace Sim.View.Views
             {
                 map.CivicTile[i] = Sim.Core.Town.CivicRules.Def(sim, i).Tile;
                 map.CivicStage[i] = Sim.Core.Town.CivicRules.Post(sim, i).Built ? 2 : 0;
+            }
+            if (Sim.Core.Town.UtilityRules.Defs(sim) == null) return;
+            for (int u = 0; u < Sim.Core.Definitions.UtilityDef.Count; u++)
+            {
+                map.UtilityTile[u] = Sim.Core.Town.UtilityRules.Def(sim, u).Tile;
+                map.UtilityStage[u] = Sim.Core.Town.UtilityRules.SwitchedOff(sim, u) ? 3 : Sim.Core.Town.UtilityRules.Built(sim, u) ? 2 : 0;
             }
         }
 

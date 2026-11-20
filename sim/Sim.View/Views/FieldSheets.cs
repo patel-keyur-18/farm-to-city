@@ -28,8 +28,9 @@ namespace Sim.View.Views
             switch (tile.Terrain)
             {
                 case Terrain.Village: return Place(ctx, tile);
-                case Terrain.Road: case Terrain.Commons: case Terrain.Bank: return VillageLand(ctx, tile);
+                case Terrain.Road: case Terrain.Commons: case Terrain.Bank: case Terrain.River: case Terrain.Scrub: case Terrain.Lane: case Terrain.Highway: return VillageLand(ctx, tile);
             }
+            if (LandRules.Locked(sim, tile.ParcelId)) return ClosedLand(ctx, tile); // the ring and the hills (spec 025 §3.4)
             if (parcel.BuilderOwned) return ZoningViews.BuildersAcre(ctx, tile, parcel); // spec 024 §3.3
             if (!parcel.Owned) return defs.Map.Parcels[parcel.Id].ForSale ? Unowned(ctx, tile, parcel) : NotForSale(ctx, tile, parcel);
             if (tile.Terrain == Terrain.Yard) return Yard(ctx);
@@ -188,6 +189,7 @@ namespace Sim.View.Views
             if (kind == "council_hall") RoadSheet.Fill(ctx, vm); // spec 023 §3.3
             if (kind == "clinic_plot") ClinicSheet.Fill(ctx, vm); // spec 023 §3.1, US-148
             if (kind == "quarters_plot") ClinicSheet.FillQuarters(ctx, vm);
+            if (Sim.Core.Town.UtilityRules.OfPlot(sim, kind) >= 0) UtilitySheet.Fill(ctx, vm, Sim.Core.Town.UtilityRules.OfPlot(sim, kind)); // spec 025 §3.1, US-144
             if (CivicSheet.OfPlot(kind) >= 0) CivicSheet.Fill(ctx, vm, CivicSheet.OfPlot(kind)); // spec 023 §3.7, US-148 part 2
             if (sim.Config.Game.Shops != null && tile.Id == sim.Config.Game.Shops.SquareTile) SquareView.AddPitches(ctx, vm); // the square's pitches (spec 017 §3.4)
             return vm;
@@ -243,8 +245,18 @@ namespace Sim.View.Views
         /// <summary>The village's own land (spec 010): a road acre, the commons, the river bank. Never for sale, never priced.</summary>
         private static SheetVm VillageLand(ViewContext ctx, Tile tile)
         {
-            string key = tile.Terrain == Terrain.Road ? "road" : tile.Terrain == Terrain.Commons ? "commons" : "bank";
-            return new SheetVm { Icon = key, Title = ctx.Strings.Get("village." + key), Subtitle = ctx.Strings.Get("village." + key + ".line") };
+            string key = tile.Terrain == Terrain.Road ? "road" : tile.Terrain == Terrain.Commons ? "commons" : tile.Terrain == Terrain.River ? "river" : tile.Terrain == Terrain.Scrub ? "scrub"
+                : tile.Terrain == Terrain.Lane ? (Sim.Core.Town.LaneRules.Built(ctx.Sim, tile.Id) ? "laneBuilt" : "lane") : tile.Terrain == Terrain.Highway ? "highway" : "bank";
+            var vm = new SheetVm { Icon = key, Title = ctx.Strings.Get("village." + key), Subtitle = ctx.Strings.Get("village." + key + ".line") };
+            if (key == "lane") LaneSheet.Fill(ctx, vm, tile.Id);
+            return vm;
+        }
+
+        /// <summary>Land that is closed (spec 025 §3.4): the ring until the Township, the hills until they open. No price, no buy.</summary>
+        private static SheetVm ClosedLand(ViewContext ctx, Tile tile)
+        {
+            bool hills = ctx.Sim.Config.Game.Map.Parcels[tile.ParcelId].Opens == "hills";
+            return new SheetVm { Icon = "field", Title = ctx.Strings.Get(hills ? "closed.hills" : "closed.ring"), Subtitle = ctx.Strings.Get(hills ? "closed.hills.line" : "closed.ring.line") };
         }
 
         /// <summary>A neighbour's farm not for sale yet (spec 010 §3.7): whose it is, its size and soil, and no price.</summary>

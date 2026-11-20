@@ -64,6 +64,7 @@ namespace Sim.View.Views
             foreach (Household x in sim.State.Citizens.Households) if (HouseholdRules.InBuildersHome(sim, x)) families++;
             vm.Lines.Add(LineVm.Header(s.Get("builders.header")));
             vm.Lines.Add(new LineVm(s.Get("builders.homes"), ctx.Fmt.Integer(homes), WaitingWhy, -1) { Icon = "family_house" });
+            UpgradeSheet.TownRows(ctx, vm);
             vm.Lines.Add(new LineVm(s.Get("builders.families"), ctx.Fmt.Integer(families), WaitingWhy, -1));
             vm.Lines.Add(new LineVm(s.Get("builders.familiesNote"), null));
             vm.Lines.Add(new LineVm(s.Get("builders.waiting"), ctx.Fmt.Integer(t.TurnedAway), WaitingWhy, -1));
@@ -83,6 +84,9 @@ namespace Sim.View.Views
                 if (sim.State.Citizens.Households.Exists(x => x.HomeId == b.Id)) families++;
             }
             var vm = new SheetVm { Icon = "family_house", Title = s.Get("builders.acreTitle"), Subtitle = s.Get("builders.acreSubtitle", "acres", s.Plural("land.acres", def.Tiles.Count)) };
+            Sim.Core.Town.BuildProject making = sim.State.Township.Projects.Find(x => x.Owner == Sim.Core.Town.BuildProject.Builders && x.Parcel == parcel.Id); // spec 025 §3.2
+            if (making != null)
+                vm.Lines.Add(new LineVm(s.Get("build.buildersStatus"), making.Working ? s.Get("build.buildingLeft", "time", ctx.Fmt.Duration(making.ReadyAt - ctx.Now)) : s.Get("build.waitingFor", "good", BuildingSheet.Good(ctx, Sim.Core.Town.ConstructionRules.Missing(sim, making))), "build", making.Id * 100 + BuildingSheet.Status));
             vm.Lines.Add(new LineVm(s.Get("builders.acreHomes"), ctx.Fmt.Integer(homes), WaitingWhy, -1));
             vm.Lines.Add(new LineVm(s.Get("builders.acreFamilies"), ctx.Fmt.Integer(families), WaitingWhy, -1));
             vm.Lines.Add(new LineVm(s.Get("builders.familiesNote"), null));

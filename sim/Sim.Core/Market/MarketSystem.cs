@@ -159,11 +159,14 @@ namespace Sim.Core.Market
             Definitions.MarketDefs defs = sim.Config.Game.Market;
             MarketState m = sim.State.Market;
             long[] dry = GodownRules.Dry(sim); // where each good is at the start of the day's pass
+            long[] cold = ColdStoreRules.Cold(sim);
             for (int g = 0; g < defs.Goods.Count; g++)
             {
                 long inGodown = dry == null ? 0 : dry[g];
-                long lost = defs.Goods[g].SpoilagePerDay.MulRatio(m.Stock[g] - inGodown, 1).RoundToLong();
+                long inCold = cold == null ? 0 : cold[g];
+                long lost = defs.Goods[g].SpoilagePerDay.MulRatio(m.Stock[g] - inGodown - inCold, 1).RoundToLong();
                 if (inGodown > 0) lost += (defs.Goods[g].SpoilagePerDay * GodownRules.Def(sim).SpoilageFactor).MulRatio(inGodown, 1).RoundToLong();
+                if (inCold > 0) lost += ColdStoreRules.SpoilageInCold(sim, g).MulRatio(inCold, 1).RoundToLong(); // a tenth or a quarter of the rate (US-242)
                 if (lost <= 0) continue;
                 if (defs.Goods[g].Kind == Definitions.GoodKind.Produce) Store.Take(sim, g, lost);
                 else
@@ -185,18 +188,20 @@ namespace Sim.Core.Market
         {
             Definitions.MarketDefs defs = sim.Config.Game.Market;
             MarketState m = sim.State.Market;
+            Maths.Fixed? eaters = null; // the town's eaters, counted once an hour for every good that has a share in its basket
             for (int g = 0; g < defs.Goods.Count; g++)
             {
                 if (defs.Goods[g].Kind != Definitions.GoodKind.Produce) continue;
 
                 Maths.Fixed regional = FollowRegion(sim, g);
 
-                Maths.Fixed floor = MarketRules.Floor(sim, g);
+                Maths.Fixed transport = MarketRules.TransportCost(sim, g); // the floor and the ceiling are the regional price either side of it
+                Maths.Fixed floor = regional - transport;
                 bool hasMin = m.MinPrice[g] != Maths.Fixed.Zero;
                 var input = new ClearingInput
                 {
-                    Price = m.Price[g], Regional = regional, Floor = floor, Ceiling = MarketRules.Ceiling(sim, g),
-                    Elasticity = defs.Goods[g].Elasticity, DemandPerDay = defs.Region.DemandPerDay(g) + TownAtMarket(sim, g), // spec 014 §3.7
+                    Price = m.Price[g], Regional = regional, Floor = floor, Ceiling = regional + transport,
+                    Elasticity = defs.Goods[g].Elasticity, DemandPerDay = defs.Region.DemandPerDay(g) + TownAtMarket(sim, g, ref eaters), // spec 014 §3.7
                     OtherSupplyPerDay = (defs.Goods[g].Sales == Definitions.SalesKind.Crop ? (Maths.Fixed.FromInt((int)defs.Region.ValleySupplyPerDay(g)) * Town.PolicyRules.SupplyFactor(sim)).RoundToLong() : defs.Region.ValleySupplyPerDay(g)) + defs.Region.ImportCapacityPerDay(g), // spec 022 §3.5: the subsidy, on field crops only
                     Eligible = paused ? 0 : !hasMin || m.MinPrice[g] <= m.Price[g] ? m.Offered[g] : 0,
                     TraderMayTake = !hasMin || m.MinPrice[g] <= floor,
@@ -271,9 +276,10 @@ namespace Sim.Core.Market
         }
 
         /// <summary>Your town's buying at the market a day (spec 014 §3.7), less what it bought at your stalls yesterday (spec 017 §3.2).</summary>
-        private static long TownAtMarket(Simulation sim, int g)
+        private static long TownAtMarket(Simulation sim, int g, ref Maths.Fixed? eaters)
         {
-            long town = People.HouseholdRules.TownDemandPerDay(sim, g);
+            if (sim.State.Citizens != null && eaters == null) eaters = People.HouseholdRules.Eaters(sim);
+            long town = People.HouseholdRules.TownDemandPerDay(sim, g, eaters);
             return sim.State.Shops == null ? town : System.Math.Max(0, town - sim.State.Shops.TownYesterday[g]);
         }
     }

@@ -199,6 +199,8 @@ namespace Sim.Core.People
             Fixed gain = clinic == null ? p.HealthGainPerSeason : p.HealthGainPerSeason * (Fixed.One + clinic.GainBoost * e);
             Fixed health = x.FoodMet < Fixed.One ? c.Health - loss * (Fixed.One - x.FoodMet) : c.Health + gain;
             if (SchoolRules.IsPupil(sim, c)) health += Town.PolicyRules.MealHealth(sim); // spec 022 §3.5: the meals help children's health
+            health -= Town.SmokeRules.Health(sim, x); // spec 025: a kiln's or a generator's smoke
+            health -= Town.UtilityRules.Strain(sim, x); // spec 025 §3.1: no clean water near, no drains
             return health > Fixed.One ? Fixed.One : health < p.MinHealth ? p.MinHealth : health;
         }
 
@@ -225,6 +227,7 @@ namespace Sim.Core.People
             Town.LandValueRules.Read(sim); // spec 024 §3.9: land value is read once, before this season's leases renew
             Town.LandLeaseRules.Close(sim); // leases end or pay their rent upfront (spec 024 §3.6)
             Town.ZoningRules.Close(sim); // then builders buy a parcel if families are waiting (spec 024 §3.3)
+            Town.UpgradeRules.Close(sim); // and make one of their homes pucca, where it is offered (spec 024 §3.7)
             foreach (Household x in s.Households)
             {
                 Fixed e = Town.ClinicRules.Effect(sim, x); // spec 023 §3.2: the clinic's reach, capacity and the Health service
@@ -273,7 +276,10 @@ namespace Sim.Core.People
         /// The town's food buying a game day in grams (§3.7): each household's basket by adult equivalents × food met (a household short
         /// of money buys less), × real days a game day. Added to the local market's demand.
         /// </summary>
-        public static long TownDemandPerDay(Simulation sim, int good)
+        public static long TownDemandPerDay(Simulation sim, int good) { return TownDemandPerDay(sim, good, null); }
+
+        /// <summary>As <see cref="TownDemandPerDay(Simulation, int)"/> with the town's eaters already counted (the hourly market counts them once for every good, not once for each).</summary>
+        public static long TownDemandPerDay(Simulation sim, int good, Fixed? eatersKnown)
         {
             CitizensState s = sim.State.Citizens;
             if (s == null) return 0;
@@ -281,9 +287,16 @@ namespace Sim.Core.People
             Fixed kg = Fixed.Zero;
             foreach (BasketItem b in p.Basket) if (b.Good == good) kg = b.KgPerRealDay;
             if (kg == Fixed.Zero) return 0;
-            Fixed eaters = Fixed.Zero;
-            foreach (Household x in s.Households) eaters += AdultEquivalents(sim, x) * x.FoodMet;
+            Fixed eaters = eatersKnown ?? Eaters(sim);
             return (kg * p.RealDaysPerGameDay * eaters).MulRatio(1000, 1).RoundToLong();
+        }
+
+        /// <summary>The town's adult equivalents who are fed: each household's, by how much of its food is met.</summary>
+        public static Fixed Eaters(Simulation sim)
+        {
+            Fixed eaters = Fixed.Zero;
+            foreach (Household x in sim.State.Citizens.Households) eaters += AdultEquivalents(sim, x) * x.FoodMet;
+            return eaters;
         }
 
         /// <summary>The employment rate (§3.6): working-age adults with a job in town ÷ all working-age adults (outside work doesn't count).</summary>

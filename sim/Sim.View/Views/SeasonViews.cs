@@ -66,13 +66,13 @@ namespace Sim.View.Views
         {
             Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.SeedsAndPlanting, Account.FertiliserAndSpraying,
             Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent, Account.Depreciation, Account.TransportAndSelling,
-            Account.Power, Account.Repairs,
+            Account.Power, Account.Repairs, Account.MachineHire,
         };
 
         // The *why your cash moved* lines, in the order shown.
         internal static readonly string[] MovedOrder =
         {
-            "paidAhead", "wear", "owed", "interestOwed", "interestPaid", "repaid", "borrowed", "boughtBuildings", "boughtLivestock", "boughtTrees",
+            "paidAhead", "wear", "herdGrowth", "owed", "interestOwed", "interestPaid", "repaid", "borrowed", "boughtBuildings", "boughtLivestock", "boughtTrees",
             "boughtLand", "boughtEquipment", "boughtInvestmentInBusinesses", "savedIn", "savedOut", "sold", "fromBusiness", "other",
         };
 
@@ -117,7 +117,8 @@ namespace Sim.View.Views
                         }
                         else labourers += p.Amount;
                     }
-                    else if (p.Account != Account.Cash) Add(moved, MovedKey(p), -p.Amount);
+                    else if (p.Account != Account.Cash)
+                        Add(moved, p.Account == Account.Livestock && System.Linq.Enumerable.Any(e.Postings, q => q.Account == Account.HerdGrowth) ? "herdGrowth" : MovedKey(p), -p.Amount); // a heifer's rise in worth: not a purchase (ADR 0135)
                 }
             }
             long Of(Account a) { return income[System.Array.IndexOf(Accounts.All, a)]; }
@@ -242,6 +243,7 @@ namespace Sim.View.Views
             switch (a)
             {
                 case Account.MilkSales: return "milk";
+                case Account.MachineHire: return "tractor";
                 case Account.LivestockSales: case Account.AnimalFeed: case Account.VetAndBreeding: return "animal_buffalo";
                 case Account.RentReceived: return "family_house";
                 case Account.LandRentReceived: return "land";
@@ -315,6 +317,9 @@ namespace Sim.View.Views
                     }
                     case DueKind.Warehouse:
                         Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.warehouse"), Icon = "sack", Amount = due.Amount, WhyText = s.Get("season.due.warehouse.why") }, s.Get("season.short.warehouse"));
+                        break;
+                    case DueKind.ColdStore:
+                        Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.coldStore"), Icon = "cold_store", Amount = due.Amount, WhyText = s.Get("season.due.coldStore.why") }, s.Get("season.short.coldStore"));
                         break;
                     case DueKind.Water:
                         Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.water." + due.What), Icon = "coin", Amount = due.Amount, WhyText = s.Get("season.due.water.why") },

@@ -24,6 +24,19 @@ namespace Sim.Core.Definitions
         /// <summary>Zoning and the builders (spec 024 §3.3).</summary>
         public ZoningDef Zoning { get; }
 
+        /// <summary>What a new building takes from the Township: materials, masons and time (spec 025 §3.2).</summary>
+        public ConstructionDef Construction { get; set; }
+
+        /// <summary>What a smoking building does to the land and the homes near it (spec 025 §3.4, §3.3): the generator's and the kiln's.</summary>
+        public SmokeDef Smoke { get; set; }
+        public UtilitiesDef Utilities { get; set; }
+
+        /// <summary>Making a family house pucca (spec 024 §3.7, US-152).</summary>
+        public UpgradeDef Upgrade { get; set; }
+
+        /// <summary>Cold-store space in the mandi town (spec 025 §3.6, US-242).</summary>
+        public ColdStoreDef ColdStore { get; set; }
+
         public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort,
             System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase, LandValueDef landValue, ZoningDef zoning)
         {
@@ -231,6 +244,31 @@ namespace Sim.Core.Definitions
 
 namespace Sim.Core.Definitions
 {
+    /// <summary>
+    /// Cold-store space in the mandi town (spec 025 §3.6, <c>township.json</c> <c>coldStore</c>): rented by the tonne for a season, from the Township. The goods it
+    /// keeps spoil at <see cref="Factor"/> of their rate there (a tenth for potato, a quarter for fruit).
+    /// </summary>
+    public sealed class ColdStoreDef
+    {
+        /// <summary>Money a kg a season (year-0 coins, indexed when charged).</summary>
+        public long RentPerKgSeason { get; internal set; }
+        public int MaxRentTonnes { get; internal set; }
+
+        /// <summary>By good index: the share of its spoilage rate kept in the cold store, or 0 for a good it does not keep.</summary>
+        public System.Collections.Generic.IReadOnlyList<Fixed> Factor { get; internal set; }
+    }
+
+    /// <summary>Making a kutcha family house pucca (spec 024 §3.7, <c>township.json</c> <c>upgrade</c>): offered from this land value; a pucca house lets at this rent × the place.</summary>
+    public sealed class UpgradeDef
+    {
+        public const string Kind = "pucca_upgrade";
+
+        public Fixed PuccaMinLandValue { get; internal set; }
+
+        /// <summary>A season's rent of a pucca house at the base index (1/100 coin), before the place and prices.</summary>
+        public long PuccaRent { get; internal set; }
+    }
+
     /// <summary>Zoning and builders (spec 024 §3.3, <c>township.json</c> <c>zoning</c>).</summary>
     public sealed class ZoningDef
     {
@@ -246,5 +284,142 @@ namespace Sim.Core.Definitions
 
         /// <summary>The most families the counter remembers.</summary>
         public int TurnedAwayMax { get; internal set; }
+    }
+}
+
+namespace Sim.Core.Definitions
+{
+    /// <summary>One smoking building's reach (metres, an acre is 100), the land value it takes from each acre within it and the health it takes from each home.</summary>
+    public sealed class SmokeSource
+    {
+        public string Id { get; internal set; }
+        public int Reach { get; internal set; }
+        public Fixed LandValue { get; internal set; }
+        public Fixed Health { get; internal set; }
+    }
+
+    /// <summary>
+    /// One utility (spec 025 §3.1, US-144): a plot on the map, the treasury work that builds it, its reach in metres and capacity in people, and the
+    /// treasury lines it opens (upkeep, and a second line: the generator's fuel or the collector's wage).
+    /// </summary>
+    public sealed class UtilityDef
+    {
+        public const int Tower = 0, Generator = 1, Grid = 2, Drains = 3, Collection = 4, Count = 5;
+
+        public int Index { get; internal set; }
+        public string Id { get; internal set; }
+        public int Tile { get; internal set; }
+        public string Work { get; internal set; }
+        public int UpkeepLine { get; internal set; } = -1;
+        public int ExtraLine { get; internal set; } = -1;
+        public int Reach { get; internal set; }
+        public int Capacity { get; internal set; }
+
+        /// <summary>The reach or capacity is the whole town's (past this, the sheets say so).</summary>
+        public const int Whole = 5000;
+    }
+
+    /// <summary>The utilities (<c>township.json</c> <c>utilities</c>) and what going without each costs.</summary>
+    public sealed class UtilitiesDef
+    {
+        public System.Collections.Generic.IReadOnlyList<UtilityDef> Steps { get; internal set; }
+
+        /// <summary>Under this condition of the Utilities department a utility covers nobody.</summary>
+        public Fixed MinCondition { get; internal set; }
+
+        /// <summary>Residents from which drains and collection are missed.</summary>
+        public int TownSize { get; internal set; }
+
+        /// <summary>A top-up gift is the shortfall rounded up to this (1/100 coin).</summary>
+        public long GiftRound { get; internal set; }
+
+        /// <summary>Health lost a season in a home beyond clean water; beyond drains; the cap on Health's condition without drains.</summary>
+        public Fixed WaterHealth { get; internal set; }
+        public Fixed DrainsHealth { get; internal set; }
+        public Fixed DrainsHealthCap { get; internal set; }
+
+        /// <summary>Land value lost on a built-up acre beyond drains.</summary>
+        public Fixed DrainsLandValue { get; internal set; }
+
+        /// <summary>Belonging lost without collection; the leisure share power adds; shop hours power gives at the usual wage.</summary>
+        public Fixed WasteBelonging { get; internal set; }
+        public Fixed PowerLeisure { get; internal set; }
+        public int EveningHours { get; internal set; }
+    }
+
+    /// <summary>Smoke (spec 025): the sources by id and the most land value smoke takes from one acre in all.</summary>
+    public sealed class SmokeDef
+    {
+        public System.Collections.Generic.IReadOnlyList<SmokeSource> Sources { get; internal set; }
+        public Fixed LandValueCap { get; internal set; }
+        /// <summary>The most health smoke takes from one home in all (ADR 0143): kilns stack, the total does not.</summary>
+        public Fixed HealthCap { get; internal set; }
+
+        public SmokeSource Source(string id)
+        {
+            foreach (SmokeSource s in Sources) if (s.Id == id) return s;
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Construction from the Township (spec 025 §3.2, US-145): bricks, cement and timber from the trader up to a daily limit for the whole town,
+    /// masons at a price by the mason-day (or the district's gang at <see cref="GangPrice"/> and <see cref="GangHours"/>), and build time.
+    /// Timber is in tenths of a cubic metre.
+    /// </summary>
+    public sealed class ConstructionDef
+    {
+        public long DailyBricks { get; set; }
+        public long DailyCement { get; set; }
+        public long DailyTimber { get; set; }
+
+        /// <summary>The price of one brick, one bag of cement and a tenth of a cubic metre of timber, at the base index (1/100 coin).</summary>
+        public long BrickPrice { get; set; }
+        public long CementPrice { get; set; }
+        public long TimberPrice { get; set; }
+
+        /// <summary>A mason's day, at the base index.</summary>
+        public long MasonDay { get; set; }
+        public Fixed GangPrice { get; set; }
+        public Fixed GangHours { get; set; }
+        public int MaxMasons { get; set; }
+
+        /// <summary>The hour the trader's stock fills again.</summary>
+        public int RestockHour { get; set; }
+
+        /// <summary>Out of a hundred, the share of grown-ups with no town job who have the mason's trade (a fixed draw for each person).</summary>
+        public int MasonShare { get; set; }
+
+        public System.Collections.Generic.IReadOnlyList<BuildKindDef> Kinds { get; set; }
+
+        public BuildKindDef Kind(string id)
+        {
+            foreach (BuildKindDef k in Kinds) if (k.Id == id) return k;
+            return null;
+        }
+
+        public BuildKindDef KindOfWork(string work)
+        {
+            foreach (BuildKindDef k in Kinds) if (k.Work == work) return k;
+            return null;
+        }
+
+        public int IndexOf(string id)
+        {
+            for (int i = 0; i < Kinds.Count; i++) if (Kinds[i].Id == id) return i;
+            return -1;
+        }
+    }
+
+    /// <summary>One kind of building: its materials, mason-days and hours; <see cref="Work"/> is the treasury's work that builds it, or null (a family house).</summary>
+    public sealed class BuildKindDef
+    {
+        public string Id { get; set; }
+        public string Work { get; set; }
+        public long Bricks { get; set; }
+        public long Cement { get; set; }
+        public long Timber { get; set; }
+        public int MasonDays { get; set; }
+        public int Hours { get; set; }
     }
 }

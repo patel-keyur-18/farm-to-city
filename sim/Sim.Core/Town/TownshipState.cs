@@ -43,18 +43,40 @@ namespace Sim.Core.Town
         public int BuilderParcels { get; internal set; }
         public int BuilderHomes { get; internal set; }
 
+        /// <summary>The ring's gravel lane sections the treasury has built, a bit for each <see cref="Definitions.LaneDef"/> in map order (spec 025 §3.4; schema 21).</summary>
+        public int LanesBuilt { get; internal set; }
+
+        /// <summary>The utilities the treasury has built, a bit for each <see cref="Definitions.UtilityDef"/> in order (spec 025 §3.1; schema 21).</summary>
+        public int UtilitiesBuilt { get; internal set; }
+
+        /// <summary>The buildings being made from the Township (spec 025 §3.2), in the order they began; the trader's day they draw from, and what it has sold today.</summary>
+        public System.Collections.Generic.List<BuildProject> Projects { get; internal set; } = new System.Collections.Generic.List<BuildProject>();
+        public long NextProjectId { get; internal set; }
+        public long StockDay { get; internal set; } = -1;
+        public long TakenBricks { get; internal set; }
+        public long TakenCement { get; internal set; }
+        public long TakenTimber { get; internal set; }
+
+        /// <summary>Bricks your kiln sold the trader this trader's day: they add to his stock for the whole town (US-243).</summary>
+        public long KilnBricks { get; internal set; }
+
+        /// <summary>The trader's day those bricks were sold on (−1 none yet).</summary>
+        public long KilnDay { get; internal set; } = -1;
+
+        private bool ConstructionDefault { get { return Projects.Count == 0 && NextProjectId == 0 && StockDay == -1 && TakenBricks == 0 && TakenCement == 0 && TakenTimber == 0 && KilnBricks == 0 && KilnDay == -1; } }
+
         private static CivicPost[] NewCivic() { return new[] { new CivicPost(), new CivicPost(), new CivicPost() }; }
 
         private bool CivicDefault { get { foreach (CivicPost p in Civic) if (!p.IsDefault) return false; return true; } }
 
         /// <summary>Nothing of the Township has started.</summary>
-        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0; } }
+        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0 && LanesBuilt == 0 && UtilitiesBuilt == 0 && ConstructionDefault; } }
 
         internal TownshipState Clone()
         {
             var civic = new CivicPost[Civic.Length];
             for (int i = 0; i < civic.Length; i++) civic[i] = Civic[i].Clone();
-            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes };
+            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes, LanesBuilt = LanesBuilt, UtilitiesBuilt = UtilitiesBuilt, Projects = Projects.ConvertAll(x => x.Clone()), NextProjectId = NextProjectId, StockDay = StockDay, TakenBricks = TakenBricks, TakenCement = TakenCement, TakenTimber = TakenTimber, KilnBricks = KilnBricks, KilnDay = KilnDay };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -72,6 +94,20 @@ namespace Sim.Core.Town
             h.WriteLong(BuiltSeason);
             h.WriteInt(BuilderParcels);
             h.WriteInt(BuilderHomes);
+            if (h.Hashing ? LanesBuilt != 0 : !(h is SaveWriter lw && lw.Schema < MapMigration.RingSchema)) h.WriteInt(LanesBuilt); // schema 21; hashed once a lane stands
+            if (h.Hashing ? UtilitiesBuilt != 0 : !(h is SaveWriter uw && uw.Schema < MapMigration.RingSchema)) h.WriteInt(UtilitiesBuilt); // schema 21; hashed once a utility stands
+            if (h.Hashing ? !ConstructionDefault : !(h is SaveWriter cw && cw.Schema < MapMigration.RingSchema)) // schema 21; hashed once a building has been made
+            {
+                h.WriteInt(Projects.Count);
+                foreach (BuildProject p in Projects) p.WriteTo(h);
+                h.WriteLong(NextProjectId);
+                h.WriteLong(StockDay);
+                h.WriteLong(TakenBricks);
+                h.WriteLong(TakenCement);
+                h.WriteLong(TakenTimber);
+                h.WriteLong(KilnBricks);
+                h.WriteLong(KilnDay);
+            }
         }
 
         internal static TownshipState ReadFrom(SaveReader r)
@@ -85,6 +121,14 @@ namespace Sim.Core.Town
             s.BuiltSeason = r.ReadLong();
             s.BuilderParcels = r.ReadInt();
             s.BuilderHomes = r.ReadInt();
+            if (r.Schema >= MapMigration.RingSchema)
+            {
+                s.LanesBuilt = r.ReadInt();
+                s.UtilitiesBuilt = r.ReadInt();
+                int n = r.ReadCount();
+                for (int i = 0; i < n; i++) s.Projects.Add(BuildProject.ReadFrom(r));
+                s.NextProjectId = r.ReadLong(); s.StockDay = r.ReadLong(); s.TakenBricks = r.ReadLong(); s.TakenCement = r.ReadLong(); s.TakenTimber = r.ReadLong(); s.KilnBricks = r.ReadLong(); s.KilnDay = r.ReadLong();
+            }
             return s;
         }
     }

@@ -1,0 +1,26 @@
+# 0135. Raising calves as built: heifer calves kept by a switch, grown on a share of the ration, carried at their worth as herd growth (not cash)
+
+- Status: Accepted (owner approved the four gaps and Preview 8, 2026-11-19)
+- Date: 2026-11-19
+- Deciders: Keyur Patel
+- Amends: spec 025 §3.8 (US-254), spec 012 §3.6
+- Related: ADR 0056, 0060, 0088, 0107 §15, 0125 (G7); spec 012 §3.6, spec 025 §3.8
+
+## Context
+
+Spec 012 sells every calf at the fair the day it is born. Spec 025 §3.8 (ADR 0107 §15) let the player keep one, grown "for 6 seasons into a cow", costing feed and a shed place, "sold at 60% of a cow's price". Four things were decided with the owner one at a time, then shown in Preview 8.
+
+## Decision
+
+1. **Which calves are kept.** One switch on the shed sheet, *Heifer calves*: *Sold at the fair* (today's behaviour, the default) or *Kept* (`SetKeepHeifers`). With it on, a seeded draw (`livestock.heifer.share` 0.5, stream Livestock, key the mother, its own counter) makes half the calves heifers. A heifer is kept only if a shed place is free (`LivestockRules.PlaceFor`); with the shed full she is sold at the fair and the away card says why (`CalfNoRoom`). A bull calf is always sold (`CalfBorn.Bull`).
+2. **Growing.** A kept heifer is an `Animal` in stage `Heifer`, in a place, eating `livestock.heifer.rationShare` (0.4) of a grown animal's ration in the same morning pass, working 0.5 h a game day (a grown animal 1.5), giving 0.4 of the dung. She gets the vaccine, the vet and the disease draw like the others, and never dies. **Cow 8 seasons, buffalo 10** (`growSeasons` on each animal; the spec's 6 is below real India, where a crossbred heifer first calves at 24 to 30 months and a Murrah at 30 to 42; the game's seasons are real quarters). **A day counts only on a day she is fed**: the morning's fed score at or above `hungryBelow` (0.70) is the day grown, and a hungry heifer waits, losing nothing for good. At the end she calves for the first time and is a milking cow at day 0, her name and book value carried over; her first calf goes by the switch like any other.
+3. **Her book value is her worth for her age**, in the ledger. A kept calf goes on the books at the calf's fair price (Dr 1750 Livestock, Cr 4810 **Herd growth**); each morning her book value is set to the straight line from the calf's price to a grown animal's, both at today's index (`LivestockRules.HeiferValue`), the rise posted the same way, and at her first calving to a grown animal's price. **4810 Herd growth is not cash**: it sits in *Other income*, outside farm profit (so a growing heifer never flatters the Hamlet or Township gates), is left out of the cash flow (no entry touches cash), and counts in net worth ("livestock grows by breeding"). On *Your season* it is one line under *Earned* ("Herd growth (not cash)") and its counter-line under *Why your cash moved differently* is "Herd growth: not cash", not "Animals bought" (found in the Editor tour: the first build called the offset a purchase; fixed). Selling a heifer at the fair gives her worth for her age × 0.80 × health (the grown animal's `sellShare`, not the spec's 60%: a heifer worth 60% of a cow is then 48% of a cow's price at the fair), the gap to her book value the usual gain or loss on sale. **A growing heifer secures nothing**: the dairy loan counts milking animals only (`CreditRules.LivestockCollateral`); foreclosure seizes her at her worth.
+4. **The honest cost.** The shed sheet's *Calves* block says what raising costs next to buying: for each kind "37,610 on your own fodder · 68,951 bought" against "A cow costs 75,000 at the fair" (`Economics.Raising`; the cattle feed alone against all three feeds, for the whole growing time), each with a *Why?*. Raising a cow costs about what a cow costs, as in India; what the player gains is money spread over time and a herd that grows without a purchase.
+5. **On the map** a heifer is the cow's or buffalo's sprite at 70% (`AnimalVm.Young`), full size when grown. No new art.
+
+## Consequences
+
+- Save schema 21 gains `LivestockState.KeepHeifers`, `Animal.MotherName` and the account 4810 (late account: hashed once used); the two schema 21 fixtures were regenerated; older saves read unchanged. `SetKeepHeifers` is a new command tag; `CalfKept`, `CalfNoRoom` and `HeiferGrown` are new events, `CalfBorn` gains `Bull`.
+- Tests: `HeiferTests` (12: the switch, off as before, kept on the books and not in farm profit, grows a fed day at a time, waits unfed, the ration share, grown, shed full, bull calves, no collateral, sale, the save), `HeiferViewTests` (6: the switch and its cost, the row and card and every *Why?*, waiting, the young sprite, the away card, the season page), the view-keys, confirm and words coverage. Editor tour by scripted touch: `docs/art/s23-254-*.png`; render statistics: two heifers add 2 draw calls and 14 triangles (a control with and without them), the readings are in `render-stats.json` (a larger Monsoon town than the US-242 reading's, so the flag is the town's, not the story's).
+- A heifer's growth is checked each morning for every heifer (a few animals): no new hourly work.
+- Balance to read at the sprint-end pass: how many players switch it on, whether the herd fills its places with heifers (and so buys fewer cows), and the deposit against the herd's gain.

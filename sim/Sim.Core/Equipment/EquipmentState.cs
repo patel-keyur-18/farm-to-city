@@ -33,6 +33,9 @@ namespace Sim.Core.Equipment
         /// <summary>The bank loan secured on it, or 0.</summary>
         public long LoanId { get; internal set; }
 
+        /// <summary>Hired out to neighbours on the days it works (US-256, ADR 0137): off until the player switches it on. Schema 21.</summary>
+        public bool HireOut { get; internal set; }
+
         internal Machine Clone() { return (Machine)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -50,6 +53,7 @@ namespace Sim.Core.Equipment
             h.WriteLong(RepairDue);
             h.WriteBool(Unpaid);
             h.WriteLong(LoanId);
+            if (h.Hashing ? HireOut : !(h is SaveWriter hw && hw.Schema < MapMigration.RingSchema)) h.WriteBool(HireOut); // schema 21; hashed once it is on
         }
 
         internal static Machine ReadFrom(SaveReader r)
@@ -60,6 +64,7 @@ namespace Sim.Core.Equipment
                 SeasonsDepreciated = r.ReadInt(), Maintain = r.ReadBool(), Maintained = r.ReadBool(), BrokenUntil = r.ReadLong(), RepairDue = r.ReadLong(),
                 Unpaid = r.ReadBool(), LoanId = r.ReadLong(),
             };
+            if (r.Schema >= MapMigration.RingSchema) m.HireOut = r.ReadBool();
             if (m.Cost < 0 || m.Depreciated < 0 || m.Depreciated > m.Cost || m.RepairDue < 0) throw new SaveContentException("machine " + m.Id);
             return m;
         }

@@ -125,8 +125,9 @@ namespace Game.Presentation.Ui
                 case "cattle_shed": return SpriteBank.Rendered("cattle_shed") ?? SpriteBank.Hut;
                 case "people": return SpriteBank.Rendered("person_founder_front");
                 case "person_hand_m": case "person_hand_f": case "person_labourer_m": case "person_labourer_f": return SpriteBank.Rendered(icon + "_front");
-                case "hand_hut": case "hand_hut_building": case "granary": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut; // granary: your godown in town (ADR 0087)
-                case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
+                case "hand_hut": case "hand_hut_building": case "granary": case "cold_store": case "silage_pit": case "chaff_cutter": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut;
+                case "solar_panel": return SpriteBank.Rendered("icon_solar_panel") ?? SpriteBank.Rendered(icon); // granary: your godown in town (ADR 0087)
+                case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": case "brick_kiln": case "brick_kiln_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
                 case "veg_stall": case "tea_stall": case "sweet_shop": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut; // shops (spec 017)
                 case "school": case "school_building": return IconBank.Good(icon); // spec 018
                 case "watchman_post": case "community_hall": case "playground": return IconBank.Good(icon); // spec 023 §3.7
@@ -164,6 +165,7 @@ namespace Game.Presentation.Ui
                 case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
                 default:
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
+                    if (icon.StartsWith("utility_", StringComparison.Ordinal)) return SpriteBank.Rendered("village_" + icon.Substring(8) + "_e"); // the utilities (spec 025 §3.1)
                     if (icon.StartsWith("place_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon) ?? SpriteBank.Rendered("village_" + icon.Substring(6) + "_s");
                     if (icon.StartsWith("animal_", StringComparison.Ordinal) || icon.StartsWith("seed_", StringComparison.Ordinal)) return IconBank.Good(icon);
                     if (icon.StartsWith("portrait_", StringComparison.Ordinal)) return SpriteBank.Rendered(icon);

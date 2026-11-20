@@ -39,6 +39,9 @@ namespace Sim.View.Views
 
         /// <summary>The savings deposit: interest added, and what your savings paid at the close (spec 019 §3.5).</summary>
         Savings = 17,
+
+        /// <summary>Your tractor worked neighbours' fields while you were away (US-256).</summary>
+        Tractor = 18,
     }
 
     /// <summary>The time, founder, people and away sources (specs 001, 003, 006, 008 §3.9).</summary>

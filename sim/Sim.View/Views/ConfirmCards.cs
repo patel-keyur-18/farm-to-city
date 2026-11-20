@@ -34,15 +34,15 @@ namespace Sim.View.Views
         {
             var k = new Dictionary<Type, ConfirmKind>();
             void Add(ConfirmKind kind, params Type[] types) { foreach (Type t in types) k[t] = kind; }
-            Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
+            Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
-                typeof(BuyGodown), typeof(RentWarehouse), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
+                typeof(BuildSilagePit), typeof(BuyChaffCutter), typeof(FitSolarPanel), typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
                 typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
                 typeof(SellToTrader), typeof(DeliverOrder), typeof(GoToMandi), typeof(Buy), typeof(BuyMedicine), typeof(HireLabourers), typeof(Offer), typeof(Withdraw),
-                typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
+                typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetKeepHeifers), typeof(SetHireOut), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
                 typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetStandingOrder),
                 typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(UnzoneParcel), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
                 typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(PostCivicJob), typeof(DismissStaff), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
@@ -119,7 +119,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             string name = c.GetType().Name;
             long cash = after.State.Ledger.Cash - sim.State.Ledger.Cash;
-            if (c is RentWarehouse && cash == 0) return null; // stopping or cutting the rent spends nothing: no card (ADR 0103)
+            if ((c is RentWarehouse || c is RentColdStore) && cash == 0) return null; // stopping or cutting the rent spends nothing: no card (ADR 0103)
             if (c is SetSavingsCover cover && !cover.Always) return null; // back to Ask me: nothing can move, so nothing to ask
             long owedBefore = Owed(sim), owedAfter = Owed(after);
             long taken = NewLoans(sim, after, out Loan newest);
@@ -131,6 +131,8 @@ namespace Sim.View.Views
             };
             if (c is SetSavingsCover) Standing(ctx, vm);
             else if (c is GiveToTreasury gift) Gift(ctx, vm, gift, after);
+            else if (c is BuildFamilyHouse house && house.Financing == null && Sim.Core.Town.ConstructionRules.On(sim)) BuildingSheet.CardRows(ctx, vm, Sim.Core.Town.ConstructionRules.Quote(sim, "family_house", Sim.Core.Town.BuildProject.Yours, 1), "build.cardNowYours", "build.cardAfterYours", sim.State.Ledger.Cash, after.State.Ledger.Cash);
+            else if (c is UpgradeHouse upgrade) UpgradeSheet.Card(ctx, vm, sim, after, upgrade);
             else if (c is CommissionWorks works) Works(ctx, vm, sim, after, works);
             else if (c is EnactPolicy enact) Enacting(ctx, vm, sim, after, enact);
             else if (c is PetitionRoad || c is BuildClinic || c is BuildDoctorQuarters) Road(ctx, vm, cash, taken, after, newest, name);
@@ -140,7 +142,11 @@ namespace Sim.View.Views
             else if (c is LeaseOutLand || c is EndLease) Leasing(ctx, vm, c);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + (c is BuyParcel && Sim.Core.Town.LandValueRules.On(sim) ? ".warnTownship" : ".warn"), "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
-            if (c is CommissionWorks cw) CivicSheet.Guard(ctx, vm, cw.WorkId); // spec 023 §3.7: the budget guard replaces the generic line for a civic building
+            if (c is CommissionWorks cw) { if (Sim.Core.Town.LaneRules.OfWork(sim, cw.WorkId) >= 0) LaneSheet.Guard(ctx, vm, after); else if (Sim.Core.Town.UtilityRules.OfWork(sim, cw.WorkId) >= 0) UtilitySheet.Guard(ctx, vm, after, cw.WorkId); else { CivicSheet.Guard(ctx, vm, cw.WorkId); if (Sim.Core.Town.ConstructionRules.On(sim) && Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(cw.WorkId) != null) vm.Warning = BuildingSheet.Timing(ctx, after, false) + " " + vm.Warning; } }
+            if (c is FoundBusiness kiln && kiln.Pitch < 0 && sim.Config.Game.Businesses.IndexOfType(kiln.TypeId) >= 0 && sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)].IsKiln)
+                vm.Warning = KilnSheet.Smoke(ctx, sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)], kiln.TileId); // US-243: the smoke's footprint, counted
+            if (c is BuildFamilyHouse bf && Sim.Core.Town.ConstructionRules.On(sim)) vm.Warning = BuildingSheet.Timing(ctx, after, true) + BuildingSheet.KilnSaving(ctx, Sim.Core.Town.ConstructionRules.Quote(sim, "family_house", Sim.Core.Town.BuildProject.Yours, 1)); // spec 023 §3.7: the budget guard replaces the generic line for a civic building
+            if (c is UpgradeHouse uh) vm.Warning = UpgradeSheet.Warning(ctx, sim, after, uh); // US-152: when it is ready and what the rent does
             string verb = s.Get("confirm." + name + ".verb");
             if (kind == ConfirmKind.Hold)
             {
@@ -152,6 +158,13 @@ namespace Sim.View.Views
                 vm.SafeLabel = s.Has("confirm." + name + ".keep") ? s.Get("confirm." + name + ".keep") : s.Get("confirm.notNow");
                 vm.GoLabel = cash < 0 ? s.Get("confirm.verbFor", "verb", verb, "amount", ctx.Fmt.Coins(-cash)) : verb;
             }
+            if (c is CommissionWorks bw && Sim.Core.Town.ConstructionRules.On(sim) && Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(bw.WorkId) != null) vm.GoLabel = s.Get("lane.cardGo", "amount", ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash));
+            if (c is CommissionWorks uw && Sim.Core.Town.UtilityRules.OfWork(sim, uw.WorkId) >= 0)
+            {
+                long paid = sim.State.Treasury.Cash - after.State.Treasury.Cash + uw.Gift;
+                vm.GoLabel = uw.Gift > 0 ? s.Get("utility.cardGoGift", "gift", ctx.Fmt.Coins(uw.Gift)) : s.Get("lane.cardGo", "amount", ctx.Fmt.Coins(paid));
+            }
+            if (c is CommissionWorks lw && Sim.Core.Town.LaneRules.OfWork(sim, lw.WorkId) >= 0) vm.GoLabel = s.Get("lane.cardGo", "amount", ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash));
             return vm;
         }
 
@@ -270,7 +283,20 @@ namespace Sim.View.Views
         private static void Works(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after, CommissionWorks works)
         {
             var s = ctx.Strings;
+            int lane = Sim.Core.Town.LaneRules.OfWork(sim, works.WorkId);
+            if (lane >= 0) { LaneSheet.Card(ctx, vm, after, lane); return; }
+            int utility = Sim.Core.Town.UtilityRules.OfWork(sim, works.WorkId);
+            if (utility >= 0) { UtilitySheet.Card(ctx, vm, sim, after, works, utility); return; } // spec 025 §3.1
             int civic = Sim.Core.Town.CivicRules.OfWork(sim, works.WorkId);
+            Sim.Core.Definitions.BuildKindDef made = civic >= 0 && Sim.Core.Town.ConstructionRules.On(sim) ? Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(works.WorkId) : null;
+            if (made != null) // from the Township a civic building takes materials and masons (spec 025 §3.2)
+            {
+                string cid = CivicSheet.Ids[civic];
+                vm.Title = s.Get("civic." + cid + ".cardTitle");
+                vm.Subtitle = s.Get("civic.cardSub");
+                BuildingSheet.CardRows(ctx, vm, Sim.Core.Town.ConstructionRules.Quote(sim, made.Id, Sim.Core.Town.BuildProject.Town, 1), "civic.cardNow", "civic.cardAfter", sim.State.Treasury.Cash, after.State.Treasury.Cash);
+                return;
+            }
             if (civic >= 0) // a civic building (spec 023 §3.7): the town's cash now and after, and the budget guard
             {
                 string id = CivicSheet.Ids[civic];
@@ -356,6 +382,7 @@ namespace Sim.View.Views
                 Sim.Core.People.Hand hand = ctx.Sim.State.People?.Hand(dh.HandId);
                 return hand == null ? null : Sim.View.Views.PeopleWords.Name(ctx, hand.Name);
             }
+            if (c is FitSolarPanel fs) return ctx.Strings.Get(fs.Source == 1 ? "water.pump" : "water.borewell"); // which source the panel is for
             string id = c is BuyParcel b ? b.ParcelId : c is SellParcel sp ? sp.ParcelId : c is ListParcel lp ? lp.ParcelId : c is CancelSale cs ? cs.ParcelId : c is ZoneParcel zp2 ? zp2.ParcelId : c is LeaseOutLand lo ? lo.ParcelId : c is EndLease el ? el.ParcelId : null;
             int p = id == null ? -1 : defs.Map.IndexOfParcel(id);
             if (p < 0) return null;

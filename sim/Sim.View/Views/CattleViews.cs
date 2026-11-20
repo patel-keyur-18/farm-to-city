@@ -81,11 +81,13 @@ namespace Sim.View.Views
                 buy.Add(b);
             }
             vm.Lines.Add(new LineVm(null, null) { Buttons = buy });
+            CalvesRows(ctx, vm, defs);
 
             vm.Lines.Add(LineVm.Header(s.Get("shed.feed")));
             vm.Lines.Add(GreenRow(ctx));
             vm.Lines.Add(PlaceRow(ctx, defs.Straw, "shed.straw", Store.CapacityGrams(sim, GoodPlace.StrawStack), st.StrawLow));
             vm.Lines.Add(PlaceRow(ctx, defs.Feed, "shed.feedRoom", Store.CapacityGrams(sim, GoodPlace.FeedRoom), st.FeedLow));
+            FeedStoresRows(ctx, vm, defs);
             vm.Lines.Add(CompostRow(ctx, defs));
             vm.Lines.Add(new LineVm(s.Get("shed.work"), s.Get("shed.workValue", "hours", ctx.Fmt.Decimal1(LivestockRules.LabourDemand(sim))), "animalWork", 0));
             vm.Lines.Add(LookAfter(ctx));
@@ -134,11 +136,13 @@ namespace Sim.View.Views
         private static LineVm AnimalRow(ViewContext ctx, Animal a)
         {
             var s = ctx.Strings;
-            var line = new LineVm(a.Name, Stage(ctx, a), "animalMilk", a.Id)
+            bool heifer = a.Stage == AnimalStage.Heifer;
+            var line = new LineVm(heifer && a.MotherName != null ? s.Get("animal.heiferName", "mother", a.MotherName, "name", a.Name) : a.Name, Stage(ctx, a), heifer ? "heiferGrowing" : "animalMilk", a.Id)
             {
                 Icon = "animal_" + LivestockRules.Defs(ctx.Sim).Animals[a.Kind].Id, Opens = new SheetRequest("Animal", a.Id),
             };
             string health = s.Get("animal.health", "pct", ctx.Fmt.Percent(a.Health));
+            if (heifer) health = s.Get("animal.worth", "amount", ctx.Fmt.Coins(LivestockRules.HeiferValue(ctx.Sim, a))) + " · " + health;
             line.Note = a.SickDays > 0 ? health + " · " + s.Get("animal.sick")
                 : a.FedScore < LivestockRules.Defs(ctx.Sim).Livestock.HungryBelow ? health + " · " + s.Get("animal.hungry") : health;
             line.NoteTone = a.SickDays > 0 || a.Health < Fixed.Parse("0.9") || a.FedScore < LivestockRules.Defs(ctx.Sim).Livestock.HungryBelow ? Tone.Warn : Tone.Good;
@@ -150,9 +154,89 @@ namespace Sim.View.Views
         {
             AnimalDef d = LivestockRules.Defs(ctx.Sim).Animals[a.Kind];
             if (d.Draught) return ctx.Strings.Get("animal.draught");
+            if (a.Stage == AnimalStage.Heifer) return ctx.Strings.Plural("animal.heifer", SeasonsLeft(ctx.Sim, a));
             if (a.Stage == AnimalStage.Dry) return ctx.Strings.Plural("animal.dry", System.Math.Max(1, d.DryDays - a.StageDay));
             string day = ctx.Strings.Get("animal.inMilk", "day", ctx.Fmt.Integer(a.StageDay + 1), "of", ctx.Fmt.Integer(d.MilkDays));
             return a.LastMilkMl > 0 ? day + " · " + ctx.Strings.Get("animal.milkToday", "milk", ctx.Fmt.Litres(a.LastMilkMl)) : day;
+        }
+
+        /// <summary>Whole seasons a heifer still has to grow, rounded up (at least 1 until grown).</summary>
+        internal static int SeasonsLeft(Simulation sim, Animal a)
+        {
+            int perSeason = (int)(sim.Clock.SecondsPerSeason / Sim.Core.Definitions.ClockDef.SecondsPerDay);
+            return (LivestockRules.GrowDaysLeft(sim, a) + perSeason - 1) / perSeason;
+        }
+
+        /// <summary>The Feed stores block (US-255, ADR 0136): the silage pit, the chaff cutter, and the shed limit in words.</summary>
+        private static void FeedStoresRows(ViewContext ctx, SheetVm vm, LivestockDefs defs)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            LivestockState st = sim.State.Livestock;
+            LivestockDef ld = defs.Livestock;
+            vm.Lines.Add(LineVm.Header(s.Get("shed.stores.title")));
+            long pitCost = MarketRules.Indexed(sim, ld.SilagePitCost);
+            var pit = new LineVm(s.Get("shed.silage"), !st.SilagePit ? s.Get("shed.silageNone")
+                : st.SilageGrams == 0 ? s.Get("shed.silageEmptyValue", "cap", ctx.Fmt.Kg(ld.SilagePitKg * 1000L))
+                : s.Get("shed.silageValue", "have", ctx.Fmt.Kg(st.SilageGrams), "cap", ctx.Fmt.Kg(ld.SilagePitKg * 1000L), "days", SilageLasts(ctx)), "silagePit", 0) { Icon = "silage_pit", Note = s.Get(st.SilagePit ? "shed.silageNote" : "shed.silageNoteNew", "t", ctx.Fmt.Integer(ld.SilagePitKg / 1000), "loss", ctx.Fmt.Percent(ld.SilageLossShare), "gain", ctx.Fmt.Decimal2(SilageGainPerKg(ctx))) };
+            if (!st.SilagePit) pit.Action = ActionVm.Checked(ctx, "buildSilage", s.Get("shed.silageBuild"), ctx.Fmt.Coins(pitCost), ActionKind.Primary, at => new BuildSilagePit(at));
+            vm.Lines.Add(pit);
+            long cutCost = MarketRules.Indexed(sim, ld.ChaffCutterCost);
+            long perDay = LivestockRules.ChaffSavingPerDay(sim), perSeason = perDay * (sim.Clock.SecondsPerSeason / Sim.Core.Definitions.ClockDef.SecondsPerDay);
+            string note = st.Animals.Count == 0 ? s.Get("shed.chaffNoHerd")
+                : st.ChaffCutter ? s.Get("shed.chaffNote", "day", ctx.Fmt.Coins(perDay), "season", ctx.Fmt.Coins(perSeason))
+                : perSeason <= 0 ? s.Get("shed.chaffNoHerd")
+                : s.Get("shed.chaffNoteNew", "pct", ctx.Fmt.Percent(ld.ChaffCutterSaving), "n", ctx.Fmt.Integer(st.Animals.Count), "day", ctx.Fmt.Coins(perDay), "season", ctx.Fmt.Coins(perSeason),
+                    "pay", s.Plural("why.seasons", (cutCost + perSeason - 1) / perSeason));
+            var cut = new LineVm(s.Get("shed.chaff"), s.Get(st.ChaffCutter ? "shed.chaffOn" : "shed.chaffNone", "pct", ctx.Fmt.Percent(ld.ChaffCutterSaving)), "chaffCutter", 0) { Icon = "chaff_cutter", Note = note };
+            if (!st.ChaffCutter) cut.Action = ActionVm.Checked(ctx, "buyChaff", s.Get("shed.chaffBuy"), ctx.Fmt.Coins(cutCost), ActionKind.Primary, at => new BuyChaffCutter(at));
+            vm.Lines.Add(cut);
+            int sheds = LivestockRules.SecondShed(sim) != null ? 2 : 1;
+            vm.Lines.Add(new LineVm(s.Get("shed.shedsRow"), s.Get("shed.shedsValue", "n", ctx.Fmt.Integer(sheds)), "shedLimit", 0) { Note = s.Get("shed.shedsNote") });
+        }
+
+        /// <summary>What a kg put in the pit gains over selling it standing: what it saves when eaten (kept share × the fodder price) less the standing price.</summary>
+        internal static Fixed SilageGainPerKgFixed(Simulation sim)
+        {
+            LivestockDef ld = LivestockRules.Defs(sim).Livestock;
+            return ((Fixed.One - ld.SilageLossShare) * ld.GreenFodderBuyPrice - ld.GreenFodderSellPrice) * sim.State.Market.PriceIndex;
+        }
+
+        private static Fixed SilageGainPerKg(ViewContext ctx) { return SilageGainPerKgFixed(ctx.Sim); }
+
+        /// <summary>"lasts 6 days" if your fields gave nothing, or "nothing yet" for an empty pit.</summary>
+        private static string SilageLasts(ViewContext ctx)
+        {
+            Simulation sim = ctx.Sim;
+            long days = LivestockRules.SilageDays(sim);
+            return days == long.MaxValue ? ctx.Strings.Get("shed.silageNoHerd") : ctx.Strings.Plural("why.days", days);
+        }
+
+        /// <summary>The Calves block (ADR 0135): the switch, and what raising a heifer costs against buying one.</summary>
+        private static void CalvesRows(ViewContext ctx, SheetVm vm, LivestockDefs defs)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            bool keep = sim.State.Livestock.KeepHeifers;
+            vm.Lines.Add(LineVm.Header(s.Get("shed.calves")));
+            int lo = int.MaxValue, hi = 0;
+            foreach (AnimalDef d in defs.Animals) if (!d.Draught) { lo = System.Math.Min(lo, d.GrowSeasons); hi = System.Math.Max(hi, d.GrowSeasons); }
+            var sw = new LineVm(s.Get("shed.heifers"), s.Get(keep ? "shed.heifersKept" : "shed.heifersSold"), "heiferKeep", 0)
+            {
+                Note = s.Get(keep ? "shed.heifersKeptNote" : "shed.heifersSoldNote", "from", ctx.Fmt.Integer(lo), "to", ctx.Fmt.Integer(hi), "pct", ctx.Fmt.Percent(defs.Livestock.HeiferRationShare)),
+            };
+            sw.Action = ActionVm.Checked(ctx, "keepHeifers", s.Get(keep ? "shed.sellCalves" : "shed.keepCalves"), null, ActionKind.Secondary, at => new SetKeepHeifers(at, !keep));
+            vm.Lines.Add(sw);
+            for (int k = 0; k < defs.Animals.Count; k++)
+            {
+                AnimalDef d = defs.Animals[k];
+                if (d.Draught) continue;
+                Economics.Raising(sim, k, out long bought, out long home);
+                vm.Lines.Add(new LineVm(s.Get("shed.raising", "animal", s.Get(d.NameKey).ToLowerInvariant()), s.Get("shed.raisingValue", "home", ctx.Fmt.Coins(home), "bought", ctx.Fmt.Coins(bought)), "heiferRaise", k)
+                {
+                    Note = s.Get("shed.raisingNote", "animal", s.Get(d.NameKey).ToLowerInvariant(), "price", ctx.Fmt.Coins(MarketRules.Indexed(sim, d.Price)), "n", ctx.Fmt.Integer(d.GrowSeasons)),
+                });
+            }
         }
 
         /// <summary>The green fodder this morning: the need, and where it came from; buying from neighbours on or off on the row.</summary>
@@ -166,7 +250,9 @@ namespace Sim.View.Views
             foreach (Animal a in st.Animals) needNow += LivestockSystem.NeedOf(sim, a).Green;
             // A first animal hasn't had a morning here yet: what she'll need from 6:00.
             string value = f.GreenNeed == 0 ? needNow > 0 ? s.Get("shed.greenFrom", "need", ctx.Fmt.Kg(needNow)) : s.Get("shed.greenNone")
+                : f.SilageFed > 0 ? s.Get("shed.greenValueSilage", "need", ctx.Fmt.Kg(f.GreenNeed), "commons", ctx.Fmt.Kg(f.GreenCommons), "own", ctx.Fmt.Kg(f.GreenOwn), "silage", ctx.Fmt.Kg(f.SilageFed), "bought", ctx.Fmt.Kg(f.GreenBought))
                 : s.Get("shed.greenValue", "need", ctx.Fmt.Kg(f.GreenNeed), "commons", ctx.Fmt.Kg(f.GreenCommons), "own", ctx.Fmt.Kg(f.GreenOwn), "bought", ctx.Fmt.Kg(f.GreenBought));
+            if (f.SilagePut > 0) value += " · " + s.Get("shed.greenSpare", "put", ctx.Fmt.Kg(f.SilagePut), "lost", ctx.Fmt.Kg(f.SilageLost));
             bool on = st.BuyGreenFodder;
             var line = new LineVm(s.Get("shed.green"), value, "greenFodder", 0) { Icon = "green_fodder" };
             line.Note = s.Get(on ? "shed.buyingOn" : "shed.buyingOff");
@@ -321,6 +407,24 @@ namespace Sim.View.Views
             return new Economics(milkMl, green, straw, feed, milkValue, greenCost + strawCost + feedCost, feedCost);
         }
 
+        /// <summary>
+        /// What raising a heifer to her first calving eats, at today's prices (ADR 0135): <paramref name="bought"/> all three feeds bought,
+        /// <paramref name="home"/> only the cattle feed (green and straw your own).
+        /// </summary>
+        public static void Raising(Simulation sim, int kind, out long bought, out long home)
+        {
+            LivestockDefs defs = LivestockRules.Defs(sim);
+            AnimalDef d = defs.Animals[kind];
+            Fixed share = defs.Livestock.HeiferRationShare;
+            long days = LivestockRules.GrowDays(sim, d);
+            long green = Grams(LivestockRules.PerGameDay(sim, d.Green) * share), straw = Grams(LivestockRules.PerGameDay(sim, d.Straw) * share), feed = Grams(LivestockRules.PerGameDay(sim, d.Feed) * share);
+            long greenCost = Money.Value(green, defs.Livestock.GreenFodderBuyPrice * sim.State.Market.PriceIndex, 1000);
+            long strawCost = Money.Value(straw, MarketRules.InputPrice(sim, defs.Straw), sim.Config.Game.Market.Goods[defs.Straw].UnitSize);
+            long feedCost = Money.Value(feed, MarketRules.InputPrice(sim, defs.Feed), sim.Config.Game.Market.Goods[defs.Feed].UnitSize);
+            home = feedCost * days;
+            bought = (greenCost + strawCost + feedCost) * days;
+        }
+
         private static long Grams(Fixed kg) { return (kg * Fixed.FromInt(1000)).RoundToLong(); }
     }
 
@@ -368,6 +472,7 @@ namespace Sim.View.Views
             if (a == null) return new SheetVm { Icon = "hut", Title = s.Get("reject.UnknownAnimal") };
             AnimalDef d = LivestockRules.Defs(sim).Animals[a.Kind];
             var vm = new SheetVm { Icon = "animal_" + d.Id, Title = a.Name, Subtitle = s.Get(d.NameKey) + " · " + ShedSheet.Stage(ctx, a) };
+            if (a.Stage == AnimalStage.Heifer) return Heifer(ctx, vm, a, d);
             vm.Lines.Add(new LineVm(s.Get("animal.milk"), a.Stage == AnimalStage.Dry ? s.Get("animal.milkDry") : ctx.Fmt.Litres(a.LastMilkMl), "animalMilk", a.Id));
             vm.Lines.Add(new LineVm(s.Get("animal.fed"), ctx.Fmt.Percent(a.FedScore), "animalFed", a.Id));
             vm.Lines.Add(new LineVm(s.Get("animal.healthRow"), ctx.Fmt.Percent(a.Health), "animalHealth", a.Id));
@@ -376,6 +481,37 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(s.Get("animal.earned"), ctx.Fmt.Coins(a.Earned), "animalMoney", a.Id));
             long sell = LivestockRules.SellPrice(sim, a);
             vm.Lines.Add(new LineVm(s.Get("animal.sellsFor"), ctx.Fmt.Coins(sell), "animalSell", a.Id));
+            ActionVm sellAction = ActionVm.Checked(ctx, "sellAnimal", s.Get("animal.sell"), ctx.Fmt.Coins(sell), ActionKind.Danger, at => new SellAnimal(at, id));
+            sellAction.Confirm = new ConfirmVm(s.Get("animal.sellQ", "name", a.Name, "amount", ctx.Fmt.Coins(sell)), s.Get("animal.sell"), s.Get("animal.keep"),
+                at => new Command[] { new SellAnimal(at, id) }, noSends: false) { YesIsDanger = true };
+            vm.Actions.Add(sellAction);
+            return vm;
+        }
+
+        /// <summary>A kept heifer's card (ADR 0135): growing, fed, health, her worth now and when grown, and the fair.</summary>
+        private static SheetVm Heifer(ViewContext ctx, SheetVm vm, Animal a, AnimalDef d)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            LivestockDef ld = LivestockRules.Defs(sim).Livestock;
+            long id = a.Id;
+            int perSeason = (int)(sim.Clock.SecondsPerSeason / Sim.Core.Definitions.ClockDef.SecondsPerDay);
+            bool waiting = a.FedScore < ld.HungryBelow;
+            var growing = new LineVm(s.Get("animal.growing"), waiting ? s.Get("animal.growingWaiting") : s.Get("animal.growingValue", "n", ctx.Fmt.Integer(a.StageDay / perSeason + 1), "of", ctx.Fmt.Integer(d.GrowSeasons),
+                "left", s.Plural("why.seasons", ShedSheet.SeasonsLeft(sim, a))), "heiferGrowing", id)
+            {
+                Note = waiting ? s.Get("animal.growingWaitingNote", "fed", ctx.Fmt.Percent(a.FedScore), "need", ctx.Fmt.Percent(ld.HungryBelow)) : s.Get("animal.growingNote"),
+                NoteTone = waiting ? Tone.Warn : Tone.Plain,
+            };
+            vm.Lines.Add(growing);
+            var n = LivestockSystem.NeedOf(sim, a);
+            vm.Lines.Add(new LineVm(s.Get("animal.fed"), ctx.Fmt.Percent(a.FedScore), "animalFed", id) { Note = s.Get("animal.heiferEats", "green", ctx.Fmt.Kg(n.Green), "straw", ctx.Fmt.Kg(n.Straw), "feed", ctx.Fmt.Kg(n.Feed)) });
+            vm.Lines.Add(new LineVm(s.Get("animal.healthRow"), ctx.Fmt.Percent(a.Health), "animalHealth", id));
+            vm.Lines.Add(new LineVm(s.Get("animal.vaccinated"), s.Get(a.VaccinatedPeriod == sim.Period ? "animal.vaccinatedYes" : "animal.vaccinatedNo")));
+            vm.Lines.Add(new LineVm(s.Get("animal.worthNow"), ctx.Fmt.Coins(LivestockRules.HeiferValue(sim, a)), "heiferWorth", id)
+            { Note = s.Get("animal.worthNote", "grown", ctx.Fmt.Coins(MarketRules.Indexed(sim, d.Price))) });
+            long sell = LivestockRules.SellPrice(sim, a);
+            vm.Lines.Add(new LineVm(s.Get("animal.sellsFor"), ctx.Fmt.Coins(sell), "animalSell", id) { Note = s.Get("animal.sellsForHeiferNote") });
             ActionVm sellAction = ActionVm.Checked(ctx, "sellAnimal", s.Get("animal.sell"), ctx.Fmt.Coins(sell), ActionKind.Danger, at => new SellAnimal(at, id));
             sellAction.Confirm = new ConfirmVm(s.Get("animal.sellQ", "name", a.Name, "amount", ctx.Fmt.Coins(sell)), s.Get("animal.sell"), s.Get("animal.keep"),
                 at => new Command[] { new SellAnimal(at, id) }, noSends: false) { YesIsDanger = true };

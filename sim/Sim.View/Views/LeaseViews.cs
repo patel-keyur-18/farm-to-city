@@ -40,8 +40,9 @@ namespace Sim.View.Views
             var d = sim.Config.Game.Population;
             string where = place == d.RentDistrict ? "lease.placeDistrict" : place == d.RentLane ? "lease.placeLane" : "lease.placeInner";
             Fixed shift = place > Fixed.One ? place - Fixed.One : Fixed.One - place; // words, not factors: "20% more", "15% less"
+            long baseRent = home.Pucca ? sim.Config.Game.Township.Upgrade.PuccaRent : d.BaseRent; // a pucca house lets for more (US-152)
             if (Sim.Core.Town.LandValueRules.On(sim)) // from the Township the place is the acre's land value (spec 024 §3.2)
-                return ctx.Strings.Get("lease.parts", "base", ctx.Fmt.Coins(d.BaseRent), "where", ctx.Strings.Get(place >= Fixed.One ? "lease.placeValueMore" : "lease.placeValueLess",
+                return ctx.Strings.Get("lease.parts", "base", ctx.Fmt.Coins(baseRent), "where", ctx.Strings.Get(place >= Fixed.One ? "lease.placeValueMore" : "lease.placeValueLess",
                     "pct", ctx.Fmt.Percent(shift)), "prices", ctx.Fmt.Percent(sim.State.Market.PriceIndex - Fixed.One));
             return ctx.Strings.Get("lease.parts", "base", ctx.Fmt.Coins(d.BaseRent), "where", ctx.Strings.Get(where, "pct", ctx.Fmt.Percent(shift)),
                 "prices", ctx.Fmt.Percent(sim.State.Market.PriceIndex - Fixed.One));
@@ -106,11 +107,30 @@ namespace Sim.View.Views
             return c;
         }
 
+        /// <summary>A pucca house (US-152): the house, the rent it will let at (in steps, at each renewal) and the next step, in words.</summary>
+        private static void PuccaRows(ViewContext ctx, Household x, List<LineVm> lines)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            Building home = sim.State.Land.Buildings.Find(b => b.Id == x.HomeId);
+            if (home == null || !HouseRules.IsHouse(sim, home) || !Sim.Core.Town.UpgradeRules.On(sim)) return;
+            bool making = Sim.Core.Town.UpgradeRules.Underway(sim, home.Id) != null;
+            if (!home.Pucca && !making) return;
+            lines.Add(new LineVm(s.Get("household.house"), s.Get(making ? "household.houseMaking" : "household.housePucca"), "household.rent", x.Id));
+            if (!home.Pucca || !LeaseRules.Applies(sim, x) || HouseholdRules.InBuildersHome(sim, x)) return;
+            long pucca = LeaseRules.MarketRentFor(sim, x);
+            if (pucca <= x.LeaseRent) return;
+            lines.Add(new LineVm(s.Get("household.puccaRent"), s.Get("household.puccaRentValue", "rent", ctx.Fmt.Coins(pucca)), "household.rent", x.Id));
+            LeaseOptions o = LeaseRules.Options(sim, x);
+            lines.Add(new LineVm(s.Get("household.nextRenewal"), s.Plural("household.nextRenewalValue", LeaseRules.SeasonsLeft(sim, x), "rent", ctx.Fmt.Coins(o.Allowed)), "household.rent", x.Id));
+        }
+
         /// <summary>The lease rows of the household sheet: the rent and when it ends, the parts, and, in its last season, your answer.</summary>
         public static void SheetRows(ViewContext ctx, Household x, List<LineVm> lines)
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
+            PuccaRows(ctx, x, lines);
             if (!LeaseRules.Applies(sim, x)) return;
             long left = LeaseRules.SeasonsLeft(sim, x);
             lines.Add(new LineVm(s.Get("household.lease"), s.Get(left <= 1 ? "household.leaseLast" : "household.leaseLeft", "rent", ctx.Fmt.Coins(x.LeaseRent), "n", ctx.Fmt.Integer(left)), "household.lease", x.Id));

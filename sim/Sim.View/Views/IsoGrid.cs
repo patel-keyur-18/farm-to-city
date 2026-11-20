@@ -70,17 +70,26 @@ namespace Sim.View.Views
         /// <summary>The orthographic size: half the visible height in world units.</summary>
         public float HalfHeight { get; private set; }
 
-        /// <summary>Zoomed out all the way: the whole map fits.</summary>
-        public float MaxHalfHeight { get; }
+        /// <summary>Zoomed out all the way: the whole map fits (or, with <see cref="Limit"/>, the window the ring's cap allows).</summary>
+        public float MaxHalfHeight { get; private set; }
+
+        private (float left, float bottom, float right, float top) _b;
 
         /// <summary>Zoomed in all the way: about three acres across the screen.</summary>
-        public float MinHalfHeight { get; }
+        public float MinHalfHeight { get; private set; }
+
+        /// <summary>
+        /// The furthest zoom-out once the ring is open, as a share of the old 16 × 12 window. Preview 1 estimated 90% at +4% draw calls; the Editor's
+        /// render statistics measured 90% at +13.5%, 85% at +9% and 80% at +2% (Sprint 23), so it is 85%: inside the 10% budget (ADR 0125).
+        /// </summary>
+        public const float RingZoomOut = 0.85f;
 
         public MapCamera(IsoGrid grid, float aspect)
         {
             _grid = grid;
             _aspect = aspect;
             var b = grid.Bounds();
+            _b = b;
             float w = b.right - b.left, h = b.top - b.bottom;
             // The whole map fits both ways; the closest zoom shows about three tile diamonds across.
             MaxHalfHeight = Math.Max(h / 2f, w / aspect / 2f) * 1.05f;
@@ -89,6 +98,22 @@ namespace Sim.View.Views
             HalfHeight = MaxHalfHeight;
             CentreX = (b.left + b.right) / 2f;
             CentreY = (b.top + b.bottom) / 2f;
+        }
+
+        /// <summary>
+        /// Limits the camera to a rectangle of the grid (tiles <paramref name="x0"/>, <paramref name="y0"/> to <paramref name="x1"/>, <paramref name="y1"/>)
+        /// and its furthest zoom-out to <paramref name="scale"/> times the window of a <paramref name="windowW"/> × <paramref name="windowH"/> map
+        /// (spec 025 §3.4, ADR 0125): the draw calls follow what is in the window, so the ring costs nothing at the furthest zoom.
+        /// </summary>
+        public void Limit(int x0, int y0, int x1, int y1, int windowW, int windowH, float scale)
+        {
+            float hw = _grid.HalfWidth, hh = _grid.HalfHeight;
+            _b = (_grid.Centre(x0, y1).x - hw, _grid.Centre(x1, y1).y - hh - 2f * hh, _grid.Centre(x1, y0).x + hw, _grid.Centre(x0, y0).y + hh);
+            var w = new IsoGrid(windowW, windowH, hw).Bounds();
+            MaxHalfHeight = Math.Max((w.top - w.bottom) / 2f, (w.right - w.left) / _aspect / 2f) * 1.05f * scale;
+            if (MinHalfHeight > MaxHalfHeight) MinHalfHeight = MaxHalfHeight;
+            HalfHeight = Math.Max(MinHalfHeight, Math.Min(MaxHalfHeight, HalfHeight));
+            Clamp();
         }
 
         /// <summary>Puts the camera on a tile at the closest comfortable zoom, for the start (the inherited parcels).</summary>
@@ -140,7 +165,7 @@ namespace Sim.View.Views
 
         private void Clamp()
         {
-            var b = _grid.Bounds();
+            var b = _b;
             float halfW = HalfHeight * _aspect;
             CentreX = ClampAxis(CentreX, b.left, b.right, halfW);
             // The bottom has extra room so a tap near the south edge can be lifted above a bottom sheet.

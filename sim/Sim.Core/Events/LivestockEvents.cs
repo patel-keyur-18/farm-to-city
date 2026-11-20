@@ -96,13 +96,70 @@ namespace Sim.Core.Events
         public long AnimalId { get; }
         public long Amount { get; }
 
-        public CalfBorn(long simTime, long animalId, long amount) : base(simTime)
+        /// <summary>A bull calf, sold while heifers are being kept (ADR 0135).</summary>
+        public bool Bull { get; }
+
+        public CalfBorn(long simTime, long animalId, long amount, bool bull = false) : base(simTime)
         {
             AnimalId = animalId;
             Amount = amount;
+            Bull = bull;
         }
 
-        protected override string Describe() { return "CalfBorn(animal=" + AnimalId + ", amount=" + Amount + ")"; }
+        protected override string Describe() { return "CalfBorn(animal=" + AnimalId + ", amount=" + Amount + (Bull ? ", bull" : "") + ")"; }
+    }
+
+    /// <summary>She calved a heifer and it was kept (spec 025 §3.8, ADR 0135): <see cref="HeiferId"/>, worth <see cref="Value"/> on the books.</summary>
+    public sealed class CalfKept : SimEvent
+    {
+        public long MotherId { get; }
+        public long HeiferId { get; }
+        public long Value { get; }
+
+        public CalfKept(long simTime, long motherId, long heiferId, long value) : base(simTime) { MotherId = motherId; HeiferId = heiferId; Value = value; }
+
+        protected override string Describe() { return "CalfKept(mother=" + MotherId + ", heifer=" + HeiferId + ", value=" + Value + ")"; }
+    }
+
+    /// <summary>She calved a heifer to keep, but the shed was full: sold at the fair for <see cref="Amount"/> (ADR 0135).</summary>
+    public sealed class CalfNoRoom : SimEvent
+    {
+        public long MotherId { get; }
+        public long Amount { get; }
+
+        public CalfNoRoom(long simTime, long motherId, long amount) : base(simTime) { MotherId = motherId; Amount = amount; }
+
+        protected override string Describe() { return "CalfNoRoom(mother=" + MotherId + ", amount=" + Amount + ")"; }
+    }
+
+    /// <summary>The silage pit was built beside the shed for <see cref="Cost"/> (US-255, ADR 0136).</summary>
+    public sealed class SilagePitBuilt : SimEvent
+    {
+        public long Cost { get; }
+
+        public SilagePitBuilt(long simTime, long cost) : base(simTime) { Cost = cost; }
+
+        protected override string Describe() { return "SilagePitBuilt(cost=" + Cost + ")"; }
+    }
+
+    /// <summary>The chaff cutter was bought for <see cref="Cost"/> (US-255, ADR 0136).</summary>
+    public sealed class ChaffCutterBought : SimEvent
+    {
+        public long Cost { get; }
+
+        public ChaffCutterBought(long simTime, long cost) : base(simTime) { Cost = cost; }
+
+        protected override string Describe() { return "ChaffCutterBought(cost=" + Cost + ")"; }
+    }
+
+    /// <summary>A heifer is grown: a milking cow from day 0 (ADR 0135).</summary>
+    public sealed class HeiferGrown : SimEvent
+    {
+        public long AnimalId { get; }
+
+        public HeiferGrown(long simTime, long animalId) : base(simTime) { AnimalId = animalId; }
+
+        protected override string Describe() { return "HeiferGrown(animal=" + AnimalId + ")"; }
     }
 
     /// <summary>Straw or feed will last less than <c>lowDays</c> game days (spec 012 §3.7); once until refilled.</summary>
@@ -132,9 +189,15 @@ namespace Sim.Core.Events
         public long FeedGiven { get; }
         public Sim.Core.Maths.Fixed FedScore { get; }
 
+        /// <summary>Grams of silage fed from the pit, and of the spare cut put in it this morning (US-255, ADR 0136).</summary>
+        public long SilageFed { get; }
+        public long SilagePut { get; }
+
         public AnimalsFed(long simTime, long greenNeed, long greenGiven, long greenBoughtAmount, long greenSold, long greenSoldAmount, long strawGiven,
-            long feedGiven, Sim.Core.Maths.Fixed fedScore) : base(simTime)
+            long feedGiven, Sim.Core.Maths.Fixed fedScore, long silageFed = 0, long silagePut = 0) : base(simTime)
         {
+            SilageFed = silageFed;
+            SilagePut = silagePut;
             GreenNeed = greenNeed;
             GreenGiven = greenGiven;
             GreenBoughtAmount = greenBoughtAmount;
@@ -148,7 +211,7 @@ namespace Sim.Core.Events
         protected override string Describe()
         {
             return "AnimalsFed(green=" + GreenGiven + "/" + GreenNeed + ", bought=" + GreenBoughtAmount + ", sold=" + GreenSold + ", straw=" + StrawGiven
-                + ", feed=" + FeedGiven + ", fed=" + FedScore + ")";
+                + ", feed=" + FeedGiven + ", fed=" + FedScore + (SilageFed != 0 || SilagePut != 0 ? ", silage=" + SilageFed + "/" + SilagePut : "") + ")";
         }
     }
 

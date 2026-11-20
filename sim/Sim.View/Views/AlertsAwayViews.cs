@@ -283,6 +283,7 @@ namespace Sim.View.Views
                     Level = AlertLevel.Decision, Text = s.Get(st.Window == BudgetWindow.Revise ? "alert.budgetRevise" : "alert.budgetSet"),
                     Action = ActionVm.Open("budget", s.Get("action.open"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)),
                 });
+            BuildingSheet.Alerts(ctx, list); // spec 025 §3.2: a build waiting for materials
             if (ClinicRules.InPost(sim) && st.Unpaid[1] > 0) // spec 023 §3.9: the doctor's allowance went unpaid
                 list.Add(new AlertVm
                 {
@@ -390,7 +391,9 @@ namespace Sim.View.Views
             var orderGood = new Dictionary<long, string>();
             long paid = 0, held = 0;
             long milkMl = 0, milkPaid = 0, fodderBought = 0, fodderSold = 0, calves = 0, vet = 0, godownRent = 0, interest = 0, savingsPaid = 0;
-            int calfCount = 0, vetCount = 0;
+            int calfCount = 0, vetCount = 0, keptCount = 0, noRoomCount = 0, grownCount = 0;
+            long silagePut = 0, silageFed = 0, hiredFee = 0, hiredDiesel = 0;
+            int hiredAcres = 0;
             foreach (SimEvent e in events)
             {
                 switch (e)
@@ -420,8 +423,12 @@ namespace Sim.View.Views
                         break;
                     case MandiTripReturned r: vm.MandiSales += r.Net; break;
                     case MilkCollected mc: milkMl += mc.Millilitres - mc.HomeMillilitres; milkPaid += mc.Amount; break;
-                    case AnimalsFed af: fodderBought += af.GreenBoughtAmount; fodderSold += af.GreenSoldAmount; break;
+                    case MachineHiredOut mh: hiredAcres += mh.Acres; hiredFee += mh.Fee; hiredDiesel += mh.Diesel; break;
+                    case AnimalsFed af: fodderBought += af.GreenBoughtAmount; fodderSold += af.GreenSoldAmount; silagePut += af.SilagePut; silageFed += af.SilageFed; break;
                     case CalfBorn cb: calves += cb.Amount; calfCount++; break;
+                    case CalfNoRoom nr: calves += nr.Amount; calfCount++; noRoomCount++; break;
+                    case CalfKept _: keptCount++; break;
+                    case HeiferGrown _: grownCount++; break;
                     case AnimalSick sk: vet += sk.Cost; vetCount++; break;
                     case DayLabourPaid d: vm.DayLabour += d.Amount; break;
                     case GodownLet gl: godownRent += gl.Rent; break;
@@ -500,7 +507,15 @@ namespace Sim.View.Views
             rows.AddRange(TownAway.Rows(ctx, events));
             rows.AddRange(ShopAway.Rows(ctx, events));
 
+            if (hiredAcres > 0)
+                rows.Add(new LineVm(s.Get("away.tractor"), s.Get("away.tractorValue", "acres", ctx.Fmt.Integer(hiredAcres), "fees", ctx.Fmt.Coins(hiredFee)), "away", (long)AwayRow.Tractor)
+                    { Icon = "tractor", Note = s.Get("away.tractorNote", "diesel", ctx.Fmt.Coins(hiredDiesel)) });
             if (fodderBought > 0) rows.Add(new LineVm(s.Get("away.fodderBought"), "−" + ctx.Fmt.Coins(fodderBought), "away", (long)AwayRow.Dairy) { Icon = "green_fodder" });
+            if (silagePut > 0) rows.Add(new LineVm(s.Get("away.silagePut"), ctx.Fmt.Kg(silagePut), "away", (long)AwayRow.Dairy) { Icon = "silage_pit" });
+            if (silageFed > 0) rows.Add(new LineVm(s.Get("away.silageFed"), ctx.Fmt.Kg(silageFed), "away", (long)AwayRow.Dairy) { Icon = "silage_pit" });
+            if (keptCount > 0) rows.Add(new LineVm(s.Plural("away.heifersKept", keptCount), null, "away", (long)AwayRow.Dairy) { Icon = "animal_cow" });
+            if (noRoomCount > 0) rows.Add(new LineVm(s.Plural("away.heifersNoRoom", noRoomCount), null, "away", (long)AwayRow.Dairy) { Icon = "animal_cow" });
+            if (grownCount > 0) rows.Add(new LineVm(s.Plural("away.heifersGrown", grownCount), null, "away", (long)AwayRow.Dairy) { Icon = "animal_cow" });
             if (vetCount > 0) rows.Add(new LineVm(s.Plural("away.vet", vetCount), "−" + ctx.Fmt.Coins(vet), "away", (long)AwayRow.Dairy) { Icon = "coin" });
             if (vm.SpoiledGrams > 0) rows.Add(new LineVm(s.Get("away.spoiled"), ctx.Fmt.Kg(vm.SpoiledGrams), "away", (long)AwayRow.Spoiled));
             foreach (string p in pests) rows.Add(new LineVm(s.Get("away.pests"), p, "away", (long)AwayRow.Pests));
@@ -593,6 +608,10 @@ namespace Sim.View.Views
                     case DoctorArrived d: rows.Add(Row(s.Get("away.town"), s.Get(d.Returned ? "away.doctorReturned" : "away.doctorArrived"), "portrait_town_m")); break;
                     case DoctorUnpaid u: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorUnpaid"), "place_clinic_plot")); break; // spec 023 §3.9
                     case CohortHouseholdLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.cohortLeft"), "place_council_hall")); break; // spec 023 §3.5
+                    case BuildHeld bh: rows.Add(Row(s.Get("away.town"), s.Get("away.buildHeld", "what", s.Get("build.kind." + bh.Kind), "good", BuildingSheet.Good(ctx, bh.Good)), "brick")); break; // spec 025 §3.2
+                    case HouseUpgraded hu when hu.Owner == 0: rows.Add(Row(s.Get("away.town"), s.Get("away.houseUpgraded", "home", TownWords.Home(ctx, hu.BuildingId)), "family_house")); break; // US-152
+                    case UtilityBuilt ub: rows.Add(Row(s.Get("away.town"), s.Get("away.utilityBuilt", "name", UtilitySheet.Name(ctx, ub.Utility)), "place_" + UtilitySheet.Ids[ub.Utility] + "_plot")); break; // spec 025 §3.1
+                    case GridConnected _: rows.Add(Row(s.Get("away.town"), s.Get("away.gridConnected"), "place_grid_plot")); break;
                     case CivicBuilt cb: rows.Add(Row(s.Get("away.town"), s.Get("away.civicBuilt"), "place_" + CivicSheet.Ids[cb.Civic] + "_plot")); break; // spec 023 §3.7
                     case PostFilled pf: rows.Add(Row(s.Get("away.town"), s.Get("away.postFilled"), "place_" + CivicSheet.Ids[pf.Civic] + "_plot")); break;
                     case PostUnpaid pu: rows.Add(Row(s.Get("away.town"), s.Get("away.postUnpaid"), "place_" + CivicSheet.Ids[pu.Civic] + "_plot")); break;
@@ -691,13 +710,13 @@ namespace Sim.View.Views
             // Spec 012.
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
-            { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "ColdStoreRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
             // Spec 023 (the Township).
             { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },
             { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "CohortHouseholdLeft", Use.Away },
             { "DoctorArrived", Use.Away }, { "DoctorUnpaid", Use.Away }, { "DoctorLeft", Use.Away },
-            { "CivicBuilt", Use.Away }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
+            { "HouseUpgradeStarted", Use.Motion }, { "HouseUpgraded", Use.Away }, { "CivicBuilt", Use.Away }, { "UtilityBuilt", Use.Away }, { "GridConnected", Use.Away }, { "BuildStarted", Use.StateOnly }, { "BuildHeld", Use.Away }, { "BuildFinished", Use.StateOnly }, { "LaneBuilt", Use.StateOnly }, { "RingOpened", Use.StateOnly }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
             // Spec 021 (the town treasury).
             { "TreasuryOpened", Use.Away }, { "GrantPaid", Use.StateOnly }, { "DepartmentPaid", Use.StateOnly }, { "DepartmentUnpaid", Use.Away }, { "ConditionChanged", Use.StateOnly },
             { "GiftGiven", Use.Motion }, { "WorksCommissioned", Use.Motion },
@@ -707,13 +726,13 @@ namespace Sim.View.Views
             // Spec 019 §3.5 (the savings deposit).
             { "InterestEarned", Use.Away }, { "CoveredFromSavings", Use.Away }, { "CloseShortAhead", Use.Alert },
             // Spec 013 §3.1.
-            { "PumpInstalled", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
+            { "PumpInstalled", Use.Motion }, { "SolarPanelFitted", Use.Motion }, { "BorewellDrilled", Use.Motion }, { "ChannelBuilt", Use.Motion }, { "DripLaid", Use.Motion }, { "WaterAcresSet", Use.StateOnly },
             // Spec 013 §3.2.
             { "OrchardPlanted", Use.Motion }, { "OrchardBearing", Use.Motion }, { "OrchardRipe", Use.Motion }, { "OrchardPicked", Use.Motion },
             { "OrchardSoldOnTrees", Use.Motion }, { "OrchardGone", Use.StateOnly },
             { "MachineBought", Use.Motion }, { "MachineLeased", Use.Motion }, { "MachineHired", Use.Motion }, { "MachineSold", Use.Motion }, { "MachineReturned", Use.Away },
-            { "MachineBroke", Use.Alert }, { "MachineRepaired", Use.Away }, { "MachineSeized", Use.Alert },
-            { "MilkCollected", Use.Motion }, { "AnimalDry", Use.Away }, { "CalfBorn", Use.Away }, { "FeedLow", Use.Alert }, { "AnimalsFed", Use.Away }, { "FodderEnded", Use.Away }, { "VaccinationMissed", Use.Alert }, { "AnimalSick", Use.Away }, { "AnimalSeized", Use.Alert },
+            { "MachineBroke", Use.Alert }, { "MachineHiredOut", Use.Away }, { "MachineRepaired", Use.Away }, { "MachineSeized", Use.Alert },
+            { "MilkCollected", Use.Motion }, { "AnimalDry", Use.Away }, { "CalfBorn", Use.Away }, { "SilagePitBuilt", Use.Motion }, { "ChaffCutterBought", Use.Motion }, { "CalfKept", Use.Away }, { "CalfNoRoom", Use.Away }, { "HeiferGrown", Use.Away }, { "FeedLow", Use.Alert }, { "AnimalsFed", Use.Away }, { "FodderEnded", Use.Away }, { "VaccinationMissed", Use.Alert }, { "AnimalSick", Use.Away }, { "AnimalSeized", Use.Alert },
         };
     }
 }

@@ -23,6 +23,41 @@
     "slowSaleSeconds": 172800,
     "leaseYield": 0.025
   },
+  "smoke": {
+    "landValueCap": 0.10,
+    "healthCap": 0.08,
+    "sources": {
+      "generator": { "reach": 250, "landValue": 0.06, "health": 0.05 },
+      "kiln": { "reach": 150, "landValue": 0.04, "health": 0.03 }
+    }
+  },
+  "construction": {
+    "daily": { "bricks": 2000, "cement": 30, "timber": 30 },
+    "price": { "brick": 8, "cement": 400, "timber": 1200 },
+    "masonDay": 1000, "gangPrice": 1.5, "gangHours": 1.5, "maxMasons": 3, "restockHour": 6, "masonShare": 25,
+    "kinds": [
+      { "id": "family_house", "bricks": 2400, "cement": 16, "timber": 12, "masonDays": 20, "hours": 48 },
+      { "id": "watchman_post", "work": "watchman_post", "bricks": 1200, "cement": 8, "timber": 7, "masonDays": 9, "hours": 48 },
+      { "id": "playground", "work": "playground", "bricks": 300, "cement": 4, "timber": 6, "masonDays": 9, "hours": 24 },
+      { "id": "community_hall", "work": "community_hall", "bricks": 4000, "cement": 30, "timber": 15, "masonDays": 18, "hours": 72 },
+      { "id": "water_tower", "work": "water_tower", "bricks": 6000, "cement": 60, "timber": 30, "masonDays": 42, "hours": 96 },
+      { "id": "drains", "work": "drains", "bricks": 5000, "cement": 50, "timber": 15, "masonDays": 42, "hours": 96 },
+      { "id": "collection_post", "work": "collection_post", "bricks": 3000, "cement": 20, "timber": 13, "masonDays": 12, "hours": 48 },
+      { "id": "pucca_upgrade", "bricks": 8000, "cement": 80, "timber": 24, "masonDays": 55, "hours": 48 }
+    ]
+  },
+  "utilities": {
+    "minCondition": 0.50, "townSize": 40, "giftRound": 10000,
+    "waterHealth": 0.04, "drainsHealth": 0.02, "drainsHealthCap": 0.85, "drainsLandValue": 0.04,
+    "wasteBelonging": 0.05, "powerLeisure": 0.10, "eveningHours": 2,
+    "tower": { "place": "tower_plot", "work": "water_tower", "upkeepLine": "tower", "reach": 400, "capacity": 400 },
+    "generator": { "place": "generator_plot", "work": "diesel_generator", "upkeepLine": "generator", "extraLine": "generatorFuel", "reach": 600, "capacity": 300 },
+    "grid": { "place": "grid_plot", "work": "grid_connection", "upkeepLine": "grid", "reach": 100000, "capacity": 100000 },
+    "drains": { "place": "drains_plot", "work": "drains", "upkeepLine": "drains", "reach": 500, "capacity": 300 },
+    "collection": { "place": "collection_plot", "work": "collection_post", "upkeepLine": "collection", "extraLine": "collector", "reach": 100000, "capacity": 400 }
+  },
+  "coldStore": { "rentPerKgSeason": 1.00, "maxRentTonnes": 20, "goods": { "potato": 0.1, "mango": 0.25, "guava": 0.25 } },
+  "upgrade": { "puccaMinLandValue": 1.15, "puccaRent": 7000 },
   "zoning": { "familiesPerAcre": 2, "homesPerAcre": 2, "parcelsPerSeason": 1, "permitFee": 0.02, "turnedAwayMax": 16 },
   "civic": {
     "watchman": { "place": "watchman_plot", "work": "watchman_post", "upkeepLine": "watchmanPost", "wageLine": "watchman", "reach": 700, "capacity": 300, "gain": 0.5, "staffHours": 24, "leaveCloses": 2 },

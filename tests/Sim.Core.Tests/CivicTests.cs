@@ -21,7 +21,8 @@ namespace Sim.Core.Tests
         /// <summary>A Township with the old village in, two families of yours and the treasury rich enough to commission all three.</summary>
         private static Simulation Township(System.Func<string, string, string> edit = null, long treasuryCoins = 1_000_000)
         {
-            Simulation sim = TownshipTests.Start(cohort: true, edit);
+            // These tests are about the civic buildings: the utilities' absence (US-144) is not missed in them, so the town is never "big enough" to need drains or collection.
+            Simulation sim = TownshipTests.Start(cohort: true, (f, j) => { j = f == "township.json" ? j.Replace("\"townSize\": 40", "\"townSize\": 100000") : j; return edit == null ? j : edit(f, j); });
             TownshipTests.Families(sim, 2);
             TreasuryTests.Township(sim);
             Fund(sim, treasuryCoins * Coin);
@@ -36,7 +37,13 @@ namespace Sim.Core.Tests
 
         private static string WorkOf(int civic) { return civic == Watchman ? "watchman_post" : civic == Hall ? "community_hall" : "playground"; }
 
-        private static void Build(Simulation sim, int civic) { Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, WorkOf(civic))); }
+        /// <summary>Commissions a work and waits (bricks, then the masons' hours) until it stands.</summary>
+        private static void Build(Simulation sim, int civic)
+        {
+            Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, WorkOf(civic)));
+            for (int i = 0; i < 400 && !CivicRules.Built(sim, civic); i++) sim.AdvanceTo(sim.State.Clock.SimTime + 6 * Hour);
+            Assert.That(CivicRules.Built(sim, civic), Is.True, WorkOf(civic) + " stands");
+        }
 
         private static void Staff(Simulation sim, int civic)
         {
@@ -50,12 +57,14 @@ namespace Sim.Core.Tests
         {
             Simulation sim = Township();
             long cash = sim.State.Treasury.Cash;
-            Assert.That(CivicRules.Cost(sim, Watchman), Is.EqualTo(Sim.Core.Market.MarketRules.Indexed(sim, 30_000 * Coin)));
-            Assert.That(new[] { CivicRules.Cost(sim, Hall), CivicRules.Cost(sim, Playground) }, Is.EqualTo(new[] { Sim.Core.Market.MarketRules.Indexed(sim, 80_000 * Coin), Sim.Core.Market.MarketRules.Indexed(sim, 20_000 * Coin) }));
+            foreach (int c in new[] { Watchman, Hall, Playground }) Assert.That(CivicRules.Cost(sim, c), Is.EqualTo(ConstructionRules.Quote(sim, WorkOf(c), BuildProject.Town, 1).Total), "the quote at the trader's prices");
             Assert.That(new[] { CivicRules.Def(sim, Watchman).Tile, CivicRules.Def(sim, Hall).Tile, CivicRules.Def(sim, Playground).Tile }, Is.EqualTo(new[] { 91, 59, 107 }), "the plots approved from the map preview");
 
-            Build(sim, Watchman);
-            Assert.That(sim.State.Treasury.Cash, Is.EqualTo(cash - CivicRules.Cost(sim, Watchman)));
+            long cost = CivicRules.Cost(sim, Watchman);
+            Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, "watchman_post"));
+            Assert.That(sim.State.Treasury.Cash, Is.EqualTo(cash - cost), "paid at the start");
+            Assert.That(CivicRules.Post(sim, Watchman).Built, Is.False, "waits for materials");
+            for (int i = 0; i < 400 && !CivicRules.Built(sim, Watchman); i++) sim.AdvanceTo(sim.State.Clock.SimTime + 6 * Hour);
             Assert.That(CivicRules.Post(sim, Watchman).Built, Is.True);
             Assert.That(sim.PendingEvents.OfType<CivicBuilt>().Single().Civic, Is.EqualTo(Watchman));
             Assert.That(sim.Execute(new CommissionWorks(sim.State.Clock.SimTime, "watchman_post")).Reason, Is.EqualTo(RejectReason.PlotTaken), "its plot is taken");

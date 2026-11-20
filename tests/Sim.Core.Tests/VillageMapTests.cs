@@ -26,11 +26,11 @@ namespace Sim.Core.Tests
         public void Map_Phase2Layout()
         {
             MapDef map = TestContent.Game().Map;
-            Assert.That((map.Width, map.Height), Is.EqualTo((16, 12)));
+            Assert.That((map.Width, map.Height, map.LegacyTiles), Is.EqualTo((24, 18, 192)), "the 16 × 12 map is the first 192 tiles of the 24 × 18 map (ADR 0125)");
             var road = new HashSet<int>(Enumerable.Range(0, 16).Select(x => Id(x, 11))
                 .Concat(Enumerable.Range(3, 8).Select(y => Id(10, y))).Concat(Enumerable.Range(8, 3).Select(y => Id(7, y))));
             Assert.That(road.Count, Is.EqualTo(27));
-            for (int i = 0; i < map.Tiles.Count; i++)
+            for (int i = 0; i < 192; i++)
             {
                 int x = i % 16, y = i / 16;
                 Terrain want = road.Contains(i) ? Terrain.Road
@@ -39,22 +39,24 @@ namespace Sim.Core.Tests
                     : map.Tiles[i].Terrain;
                 Assert.That(map.Tiles[i].Terrain, Is.EqualTo(want), "tile " + i);
             }
-            Assert.That(map.Tiles.Count(t => t.Terrain == Terrain.Village), Is.EqualTo(16));
-            foreach (ParcelDef p in map.Parcels.Where(p => p.Tiles.Any(t => Village(map.Tiles[t].Terrain))))
+            Assert.That(map.Tiles.Take(192).Count(t => t.Terrain == Terrain.Village), Is.EqualTo(16));
+            foreach (ParcelDef p in map.Parcels.Where(p => p.Opens == null && p.Tiles.Any(t => Village(map.Tiles[t].Terrain))))
             {
                 Assert.That(p.ForSale, Is.False, p.Id);
                 Assert.That(p.Tiles.All(t => Village(map.Tiles[t].Terrain)), Is.True, p.Id + " holds no farm tile");
             }
-            Assert.That(map.Parcels.SelectMany(p => p.Tiles).OrderBy(t => t), Is.EqualTo(Enumerable.Range(0, 192)), "every tile in exactly one parcel");
+            Assert.That(map.Parcels.Where(p => p.Opens == null).SelectMany(p => p.Tiles).OrderBy(t => t), Is.EqualTo(Enumerable.Range(0, 192)), "every old tile in exactly one parcel");
+            Assert.That(map.Parcels.SelectMany(p => p.Tiles).OrderBy(t => t), Is.EqualTo(Enumerable.Range(0, 432)), "and every tile of the 24 × 18 map");
 
             GameDefs defs = TestContent.Game();
             Assert.That(defs.Start.InheritedParcels.SelectMany(p => map.Parcels[p].Tiles).OrderBy(t => t),
                 Is.EqualTo(new[] { 84, 85, 86, 87, 100, 101, 102, 103, 104, 119 }), "with the cattle acre (ADR 0064)");
             Assert.That(defs.Land.WellTiles, Is.EqualTo(new[] { 86, 102 }));
-            Assert.That(map.Places.Count, Is.EqualTo(16));
+            Assert.That(map.Places.Count, Is.EqualTo(29), "the village's 16 and the ring's 13");
             Assert.That(map.Places.All(p => map.Tiles[p.Tile].Terrain == Terrain.Village), Is.True);
             Assert.That(map.Places.Select(p => p.Kind).Distinct(), Is.EquivalentTo(new[]
-                { "house", "grocery", "tea_stall", "chemist", "dealer", "temple", "council_hall", "school_plot", "banyan", "pond", "dairy", "clinic_plot", "quarters_plot", "watchman_plot", "hall_plot", "playground_plot" }));
+                { "house", "grocery", "tea_stall", "chemist", "dealer", "temple", "council_hall", "school_plot", "banyan", "pond", "dairy", "clinic_plot", "quarters_plot", "watchman_plot", "hall_plot", "playground_plot",
+                  "generator_plot", "spare_plot", "tower_plot", "drains_plot", "collection_plot", "grid_plot", "village_well", "tea_stall_well", "old_house" }));
         }
 
         // Spec 010 AC-2: the Phase 1 farm sits unchanged at columns 2–9, rows 3–8 (saves/map-8x6.json is the Phase 1 map, frozen).
@@ -92,7 +94,7 @@ namespace Sim.Core.Tests
         {
             GameDefs defs = TestContent.Game();
             var inherited = new HashSet<int>(defs.Start.InheritedParcels);
-            int acres = defs.Map.Parcels.Where((p, i) => p.ForSale && !inherited.Contains(i)).Sum(p => p.Tiles.Count);
+            int acres = defs.Map.Parcels.Where((p, i) => p.ForSale && !inherited.Contains(i) && p.Opens == null).Sum(p => p.Tiles.Count);
             Assert.That(acres, Is.InRange(60, 80));
             Assert.That(acres, Is.EqualTo(77), "spec 010 §3.2: 38 of today's acres and 40 new, less the cattle acre (ADR 0064)");
         }
@@ -104,7 +106,7 @@ namespace Sim.Core.Tests
             MapDef map = TestContent.Game().Map;
             foreach (ParcelDef p in map.Parcels)
             {
-                if (p.Tiles.All(t => Village(map.Tiles[t].Terrain))) continue;
+                if (p.Opens != null || p.Tiles.All(t => Village(map.Tiles[t].Terrain))) continue; // the ring's land is priced by its own place (preview 1)
                 bool touches = p.Tiles.Any(t => Neighbours(t).Any(n => map.Tiles[n].Terrain == Terrain.Road || map.Tiles[n].Terrain == Terrain.Village));
                 string want = touches || p.Tiles.Any(t => t / 16 == 2) ? "1.05"
                     : p.Tiles.All(t => t % 16 <= 1 && t / 16 >= 3 && t / 16 <= 10) ? "0.95" : "1.0";
@@ -152,7 +154,7 @@ namespace Sim.Core.Tests
         [Test]
         public void ChunkingInvariance_Phase2Map()
         {
-            Assert.That(TestContent.Game().Map.Tiles.Count, Is.EqualTo(192));
+            Assert.That(TestContent.Game().Map.Tiles.Count, Is.EqualTo(432), "the 16 × 12 map and the closed ring");
             FarmPlayTests.AssertChunkingInvariant(11);
         }
 
