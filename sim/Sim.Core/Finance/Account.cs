@@ -67,6 +67,9 @@ namespace Sim.Core.Finance
         ServiceIncome = 4510,
         GainOnAssetSales = 4800,
 
+        /// <summary>A regional grant paid at a close after you applied (spec 027 §3.2, schema 22): other income, never farm profit.</summary>
+        RegionalGrants = 4350,
+
         /// <summary>A kept calf's and a growing heifer's rise in worth (spec 025 §3.8, ADR 0135): not cash, outside farm profit. Schema 21.</summary>
         HerdGrowth = 4810,
         DebtWrittenOff = 4900,
@@ -81,6 +84,12 @@ namespace Sim.Core.Finance
 
         /// <summary>The house tax you pay as the owner of the town's houses (spec 022 §3.1). Not farm profit.</summary>
         HouseTax = 5270,
+
+        /// <summary>A fire's repair bill (spec 027 §3.4, schema 22): outside farm profit.</summary>
+        DisasterLoss = 5280,
+
+        /// <summary>What you paid to soften an event: tankers, drains, a fine, a second supplier (spec 027 §3.2, schema 22): outside farm profit.</summary>
+        EventCosts = 5285,
 
         /// <summary>The founder's gifts to the village: the school, its upkeep, adult classes (spec 018, ADR 0095 §5). Outside farm profit.</summary>
         GiftsToVillage = 5260,
@@ -152,6 +161,7 @@ namespace Sim.Core.Finance
             Account.DeptOffice, Account.DeptHealth, Account.DeptEducation, Account.DeptRoads, Account.DeptSafety, Account.DeptUtilities, Account.DeptPolicies,
             Account.TaxOwed, Account.HouseTax, Account.BusinessTax, // spec 022 (save schema 19, after the treasury's)
             Account.Festivals, // spec 026 (save schema 22)
+            Account.RegionalGrants, Account.DisasterLoss, Account.EventCosts, // spec 027 (save schema 22)
         };
 
         /// <summary>
@@ -176,7 +186,7 @@ namespace Sim.Core.Finance
                 case Account.StartUpGrant: case Account.GrantUntied: case Account.GrantTied: case Account.PitchRents: case Account.HouseTaxIncome: case Account.BusinessTaxIncome:
                 case Account.Fees: case Account.GiftsFromFounder: case Account.DeptOffice: case Account.DeptHealth: case Account.DeptEducation: case Account.DeptRoads:
                 case Account.DeptSafety: case Account.DeptUtilities: case Account.DeptPolicies: case Account.TaxOwed: case Account.HouseTax: case Account.BusinessTax: return 19;
-                case Account.Festivals: return 22;
+                case Account.Festivals: case Account.RegionalGrants: case Account.DisasterLoss: case Account.EventCosts: return 22;
                 default: return 0;
             }
         }

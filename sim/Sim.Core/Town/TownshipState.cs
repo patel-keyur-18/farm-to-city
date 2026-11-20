@@ -66,6 +66,9 @@ namespace Sim.Core.Town
         /// <summary>Approval, reputation, crime and inequality as read at the last close (spec 026, schema 22); hashed once a close has read the town.</summary>
         public TownLifeState TownLife { get; internal set; } = new TownLifeState();
 
+        /// <summary>The event engine (spec 027, save schema 22); default until the first 6:00 roll sees the Township.</summary>
+        public EventsState Events { get; internal set; } = new EventsState();
+
         private bool ConstructionDefault { get { return Projects.Count == 0 && NextProjectId == 0 && StockDay == -1 && TakenBricks == 0 && TakenCement == 0 && TakenTimber == 0 && KilnBricks == 0 && KilnDay == -1; } }
 
         private static CivicPost[] NewCivic() { return new[] { new CivicPost(), new CivicPost(), new CivicPost() }; }
@@ -73,13 +76,13 @@ namespace Sim.Core.Town
         private bool CivicDefault { get { foreach (CivicPost p in Civic) if (!p.IsDefault) return false; return true; } }
 
         /// <summary>Nothing of the Township has started.</summary>
-        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0 && LanesBuilt == 0 && UtilitiesBuilt == 0 && ConstructionDefault && TownLife.IsDefault; } }
+        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0 && LanesBuilt == 0 && UtilitiesBuilt == 0 && ConstructionDefault && TownLife.IsDefault && Events.IsDefault; } }
 
         internal TownshipState Clone()
         {
             var civic = new CivicPost[Civic.Length];
             for (int i = 0; i < civic.Length; i++) civic[i] = Civic[i].Clone();
-            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes, LanesBuilt = LanesBuilt, UtilitiesBuilt = UtilitiesBuilt, Projects = Projects.ConvertAll(x => x.Clone()), NextProjectId = NextProjectId, StockDay = StockDay, TakenBricks = TakenBricks, TakenCement = TakenCement, TakenTimber = TakenTimber, KilnBricks = KilnBricks, KilnDay = KilnDay, TownLife = TownLife.Clone() };
+            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes, LanesBuilt = LanesBuilt, UtilitiesBuilt = UtilitiesBuilt, Projects = Projects.ConvertAll(x => x.Clone()), NextProjectId = NextProjectId, StockDay = StockDay, TakenBricks = TakenBricks, TakenCement = TakenCement, TakenTimber = TakenTimber, KilnBricks = KilnBricks, KilnDay = KilnDay, TownLife = TownLife.Clone(), Events = Events.Clone() };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -112,6 +115,7 @@ namespace Sim.Core.Town
                 h.WriteLong(KilnDay);
             }
             if (h.Hashing ? !TownLife.IsDefault : !(h is SaveWriter tw && tw.Schema < TownLifeSchema)) TownLife.WriteTo(h); // schema 22; hashed once a close has read the town
+            if (h.Hashing ? !Events.IsDefault : !(h is SaveWriter ew && ew.Schema < TownLifeSchema)) Events.WriteTo(h); // schema 22; the engine, once it has seen the Township
         }
 
         /// <summary>The save schema that added town life (spec 026, Sprint 24).</summary>
@@ -136,7 +140,7 @@ namespace Sim.Core.Town
                 for (int i = 0; i < n; i++) s.Projects.Add(BuildProject.ReadFrom(r));
                 s.NextProjectId = r.ReadLong(); s.StockDay = r.ReadLong(); s.TakenBricks = r.ReadLong(); s.TakenCement = r.ReadLong(); s.TakenTimber = r.ReadLong(); s.KilnBricks = r.ReadLong(); s.KilnDay = r.ReadLong();
             }
-            if (r.Schema >= TownLifeSchema) s.TownLife = TownLifeState.ReadFrom(r);
+            if (r.Schema >= TownLifeSchema) { s.TownLife = TownLifeState.ReadFrom(r); s.Events = EventsState.ReadFrom(r); }
             return s;
         }
     }

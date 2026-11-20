@@ -100,6 +100,9 @@ namespace Sim.Core.Farm
         /// <summary>Grams already taken into the store by part-harvests while the crop stood ready (ADR 0105, save schema 17).</summary>
         public long TakenGrams { get; internal set; }
 
+        /// <summary>What events did to the standing crop (spec 027 §3.2): a multiplier on its health, 1 untouched. Save schema 22.</summary>
+        public Fixed EventHealth { get; internal set; } = Fixed.One;
+
         /// <summary>What a harvest would move into the store now.</summary>
         public long HarvestGrams { get { return Breakdown == null ? 0 : Breakdown.Grams - SpoiledGrams - TakenGrams; } }
 
@@ -140,6 +143,7 @@ namespace Sim.Core.Farm
             h.WriteLong(PestJobId);
             if (!h.Hashing || LastCut != 0) h.WriteLong(LastCut); // fodder only (spec 012): other crops hash as before
             if (h.Hashing ? TakenGrams != 0 : !(h is SaveWriter tw) || tw.Schema >= 17) h.WriteLong(TakenGrams); // a part-harvested crop only: every other crop hashes as before
+            if (h.Hashing ? EventHealth != Fixed.One : !(h is SaveWriter ew) || ew.Schema >= 22) h.WriteFixed(EventHealth); // schema 22: a crop an event hit only
         }
 
         internal static Crop ReadFrom(SaveReader r)
@@ -163,6 +167,7 @@ namespace Sim.Core.Farm
             c.PestJobId = r.ReadLong();
             if (r.Schema >= 7) c.LastCut = r.ReadLong();
             if (r.Schema >= 17) c.TakenGrams = r.ReadLong();
+            if (r.Schema >= 22) c.EventHealth = r.ReadFixed();
             return c;
         }
     }

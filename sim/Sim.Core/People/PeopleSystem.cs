@@ -252,6 +252,21 @@ namespace Sim.Core.People
             sim.Emit(new ApplicantArrived(sim.State.Clock.SimTime, id));
         }
 
+        /// <summary>
+        /// A skilled migrant (spec 027 §3.2): a four-star applicant, skill and traits known, who asks the above-market wage; he joins the applicants for the open post and is
+        /// hired the usual way, with no post fee.
+        /// </summary>
+        internal static void ArriveSkilled(Simulation sim)
+        {
+            PeopleDefs p = sim.Config.Game.People;
+            PeopleState s = sim.State.People;
+            Arrive(sim, 0, true);
+            Applicant a = s.Applicants[s.Applicants.Count - 1];
+            a.Skill = System.Math.Max(a.Skill, p.Hand.SkillMax - 5);
+            a.SkillKnown = true;
+            a.SecondTraitKnown = true;
+        }
+
         /// <summary>Applicants not hired within applicantWaitDays of live time leave.</summary>
         // ---- regulars (§3.3, ADR 0041) ----
 

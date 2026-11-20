@@ -303,6 +303,13 @@ namespace Sim.Core.Commands
 
         /// <summary>The venue isn't ready: the community hall has no caretaker.</summary>
         VenueNotReady,
+
+        // Spec 027 §3.1 (events, US-154)
+        /// <summary>The card has gone: answered, or its clock ran out and its default was taken.</summary>
+        EventClosed,
+
+        /// <summary>That choice can't be taken now (a repair the cash can't cover is not offered).</summary>
+        ChoiceNotAvailable,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -71,6 +71,7 @@ namespace Sim.Core.People
             if (happiness > Fixed.FromInt(100)) happiness = Fixed.FromInt(100);
             happiness -= Fixed.FromInt(Sim.Core.Town.TownLifeRules.InequalityPoints(sim, x)); // spec 026 §3.6: below the median in an unequal town
             happiness += Fixed.FromInt(Sim.Core.Town.FestivalRules.Lift(sim, x)); // spec 026 §3.1: a festival's day
+            happiness += Fixed.FromInt(Sim.Core.Town.EventRules.Lift(sim, x)); // spec 027: a wedding's gift, a dispute
             if (happiness > Fixed.FromInt(100)) happiness = Fixed.FromInt(100);
             if (x.MourningSeason >= CitizenRules.SeasonOf(sim, sim.State.Clock.SimTime)) happiness -= Fixed.FromInt(p.Mourning);
             x.Happiness = happiness < Fixed.Zero ? Fixed.Zero : happiness;

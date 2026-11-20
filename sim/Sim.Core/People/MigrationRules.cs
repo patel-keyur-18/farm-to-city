@@ -110,6 +110,16 @@ namespace Sim.Core.People
             s.NextFamilyAt = 0;
         }
 
+        /// <summary>A family welcomed now (spec 027 §3.2, the "new family" event): it moves into a free house of yours at once. False if none is free.</summary>
+        internal static bool ArriveNow(Simulation sim)
+        {
+            Building free = PopulationRules.FreeHouse(sim);
+            if (free == null || free.Builders) return false;
+            Arrive(sim, free);
+            sim.State.Citizens.NextFamilyAt = 0;
+            return true;
+        }
+
         private static void CloseOffer(CitizensState s)
         {
             s.OfferHandId = 0;

@@ -38,6 +38,9 @@ namespace Sim.Core.Maths
 
         /// <summary>The small business grant's 40% that come to nothing (spec 022 §3.5): key 0, counter = the season that ended.</summary>
         Grants = 20,
+
+        /// <summary>The event engine (spec 027 §3.1): key = the day, counter = what is drawn (1 a major, 2 a minor, 3 the pick, 100+ a target).</summary>
+        Events = 21,
     }
 
     /// <summary>

@@ -266,7 +266,7 @@ namespace Sim.Core.Farm
 
                 c.Breakdown = FarmRules.Yield(defs.Farm.Farm, def.SeasonYieldPerAcre * share * OrchardRules.CropShare(sim, c.TileId), c.SoilFactor, // half between an orchard's rows
                     c.WaterSum.MulRatio(1, g), c.CareSum.MulRatio(1, g), FarmRules.SeedFactor(def, c.Seed, c.SeedAge),
-                    c.WeatherSum.MulRatio(1, g), Land.IrrigationRules.FertiliserFactor(sim, c.TileId, fert), PestRules.FinalHealth(defs.Farm.Pests, c),
+                    c.WeatherSum.MulRatio(1, g), Land.IrrigationRules.FertiliserFactor(sim, c.TileId, fert), PestRules.FinalHealth(defs.Farm.Pests, c) * c.EventHealth, // pests and events (spec 027 §3.2)
                     Equipment.EquipmentRules.ToolsOf(sim, c));
                 Equipment.EquipmentRules.Forget(sim, c.Id);
                 c.State = CropState.Ready;

@@ -153,7 +153,7 @@ namespace Sim.Core.Equipment
         public static long Hire(Simulation sim, MachineDef d) { return MarketRules.Indexed(sim, d.HirePerDay); }
 
         /// <summary>A season's diesel for <paramref name="acres"/> fields.</summary>
-        public static long Diesel(Simulation sim, MachineDef d, int acres) { return MarketRules.Indexed(sim, d.DieselPerAcreSeason) * acres; }
+        public static long Diesel(Simulation sim, MachineDef d, int acres) { return Money.MulRate(MarketRules.Indexed(sim, d.DieselPerAcreSeason) * acres, Town.EventRules.CostFactor(sim, Town.EventEffect.Fuel, 0)); } // a fuel spike (spec 027 §3.2)
 
         /// <summary>A season's maintenance: a share of what it cost.</summary>
         public static long Maintenance(Simulation sim, Machine m) { return Money.RoundToCoin(Money.MulRate(m.Cost, Defs(sim).Machines[m.Kind].MaintenanceShare)); }

@@ -6904,6 +6904,9 @@
   "reject.FestivalThisSeason": "This season's festival is already planned.",
   "reject.VenueNotReady": "The community hall needs its caretaker first.",
   "account.Festivals": "Festivals",
+  "account.RegionalGrants": "Regional grants",
+  "account.DisasterLoss": "Disaster loss",
+  "account.EventCosts": "What you paid for events",
   "ledger.townFestival": "A festival",
   "ledger.festivalGift": "A festival, your gift",
   "event.FestivalScheduled": "A festival was planned.",
@@ -6918,5 +6921,11 @@
   "why.festival.shopsValue": "{chai}, {veg}",
   "why.festival.text": "It is paid at once, outside the town, so a festival is a real choice. On the day nobody works: hands, labourers and your own day labour rest, nobody earns outside wages, and only the stalls stay open. It can't be undone once it is scheduled.",
   "cash.row.5980.out": "Festivals",
-  "cash.row.5980.in": "Festivals refunded"
+  "cash.row.5980.in": "Festivals refunded",
+  "cash.row.4350.in": "A regional grant",
+  "cash.row.4350.out": "A regional grant returned",
+  "cash.row.5280.out": "A fire's repair",
+  "cash.row.5280.in": "A fire's repair refunded",
+  "cash.row.5285.out": "Paid for events",
+  "cash.row.5285.in": "Event costs refunded"
 }

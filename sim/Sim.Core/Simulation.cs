@@ -57,6 +57,7 @@ namespace Sim.Core
                 if (config.Game.Businesses != null) AddSystem(new Business.BusinessSystem());
                 if (config.Game.Equipment != null) AddSystem(new Equipment.EquipmentSystem());
                 if (config.Game.Treasury != null) AddSystem(new Town.TreasurySystem());
+                if (config.Game.Events != null) AddSystem(new Town.EventsSystem()); // spec 027: last, after the treasury
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             var handlers = new List<IJobHandler>();

@@ -15,7 +15,7 @@ namespace Sim.Core.Market
             GoodDef g = defs.Goods[good];
             Fixed index = g.PriceControlled ? Fixed.One : sim.State.Market.PriceIndex;
             int season = (int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock);
-            Fixed p = g.BasePrice * index * defs.Region.SeasonalFactor(good, season);
+            Fixed p = g.BasePrice * index * defs.Region.SeasonalFactor(good, season) * Town.EventRules.PriceFactor(sim, good); // a boom or a slump (spec 027 §3.2)
             // Today's market (spec 011 §3.1b): produce only; inputs keep their seasonal price.
             return g.Kind == GoodKind.Produce && !g.PriceControlled ? p * sim.State.Market.DailyFactor[good] : p;
         }

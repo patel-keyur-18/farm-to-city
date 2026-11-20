@@ -119,4 +119,24 @@ namespace Sim.Core.Commands
             return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }
+
+    /// <summary>
+    /// Answers an event's card (US-154, spec 027 §3.1): the choice's cost is paid and its effects applied. A card nobody answers takes its default when its clock runs
+    /// out, by the engine, not by this command.
+    /// </summary>
+    public sealed class AnswerEvent : TimedCommand
+    {
+        public int EventId { get; }
+
+        /// <summary>The choice, from 0 in the card's order.</summary>
+        public int Choice { get; }
+
+        public AnswerEvent(long at, int eventId, int choice) : base(at) { EventId = eventId; Choice = choice; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = EventRules.Answer(sim, EventId, Choice, false);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
 }

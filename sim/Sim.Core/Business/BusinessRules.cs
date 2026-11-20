@@ -200,6 +200,9 @@ namespace Sim.Core.Business
             return MarketRules.Ceiling(sim, good);
         }
 
+        /// <summary>The import price a business pays for an input: the market's, and a supplier strike's rise while one runs (spec 027 §3.2).</summary>
+        public static Fixed ImportPrice(Simulation sim, Business b, int good) { return MarketRules.Ceiling(sim, good) * Town.EventRules.CostFactor(sim, Town.EventEffect.Inputs, b.Id); }
+
         /// <summary>The livestock kind whose milk <paramref name="good"/> is, or −1.</summary>
         public static int MilkKind(Simulation sim, int good)
         {
@@ -508,7 +511,7 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
                 if (b.Status == BusinessStatus.Open)
                 {
-                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln && !Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour)) Morning(sim, b, took);
+                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln && !Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour) && !Town.EventRules.Shut(sim, b)) Morning(sim, b, took);
                     Work(sim, b);
                 }
             ShopRules.Hourly(sim); // the customers (spec 017 §3.8), after the businesses' hour
@@ -519,6 +522,7 @@ namespace Sim.Core.Business
         {
             if (b.Worker == WorkerKind.None || hour < b.OpenHour || hour >= b.CloseHour) return false;
             if (Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour)) return false; // a festival's day: only the stalls stay open (owner, 2026-11-20)
+            if (Town.EventRules.Shut(sim, b)) return false; // a strike's pause or a fire's repair (spec 027)
             Worker w = HiredWorker(sim, b);
             return w == null || !WorkRules.Away(w);
         }
@@ -655,7 +659,7 @@ namespace Sim.Core.Business
             // Then the market's, if allowed: at the local import price (wheat bought in is dearer than your own).
             if (b.BuyFromMarket && left > 0)
             {
-                Fixed price = MarketRules.Ceiling(sim, t.Input);
+                Fixed price = ImportPrice(sim, b, t.Input);
                 long bought = Affordable(sim, b, t.Input, System.Math.Min(left, MarketRoom(sim, b, t)), price);
                 if (bought > 0)
                 {
@@ -820,7 +824,7 @@ namespace Sim.Core.Business
             {
                 // As the batch will cost it: what it holds at its book cost, the rest bought at the import price.
                 long need = Need(kv.Value, q, r.OutputGrams), held = System.Math.Min(need, b.Stock[kv.Key]), buy = need - held;
-                long bought = buy > 0 ? MarketRules.Value(sim, kv.Key, buy, MarketRules.Ceiling(sim, kv.Key)) : 0;
+                long bought = buy > 0 ? MarketRules.Value(sim, kv.Key, buy, ImportPrice(sim, b, kv.Key)) : 0;
                 cost += bought;
                 inputs += bought + (held <= 0 ? 0 : (long)((System.Numerics.BigInteger)b.StockCost[kv.Key] * held / b.Stock[kv.Key]));
             }
@@ -837,7 +841,7 @@ namespace Sim.Core.Business
                 long need = Need(kv.Value, q, r.OutputGrams), buy = need - b.Stock[g];
                 if (buy > 0)
                 {
-                    long value = MarketRules.Value(sim, g, buy, MarketRules.Ceiling(sim, g));
+                    long value = MarketRules.Value(sim, g, buy, ImportPrice(sim, b, g));
                     BusinessBooks.Draw(sim, b, value);
                     if (value > 0) b.Ledger.Post(now, sim.Period, "ledger.boughtAtMarket", reference, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                     b.Stock[g] += buy;
