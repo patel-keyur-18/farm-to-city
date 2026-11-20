@@ -1034,7 +1034,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - **Branch:** `sprint/23-utilities-ring`, from `main` after PR #32
 - **Goal:** The town runs into what it cannot see on a plan: bricks, masons, water, power, drains and room. The map's ring is in the map and opens with the Township; every new building needs materials and says why when it is held; the treasury builds utilities on a confirm card that counts their upkeep; the generator's smoke lowers the land around it; homes upgrade to pucca; overlays show what is hidden; the cold store keeps potato. The farm's Phase 3 promises (calves, silage, your tractor for neighbours, solar pumps) ride at the end, cut first. Save schema 21 ships once, with a fixture for every new part.
 - **Points:** 49 = US-253 5, US-145 8, US-243 5, US-144 8, US-152 5, US-153 5, US-242 3 (the table's 39) + US-254 3, US-255 2, US-256 3, US-257 2 (the owner moved them in from Sprint 24, a few points more being fine). **The committed core is 42** (39 + US-254); US-255, US-256 and US-257 are the stretch.
-- **Specs to write and review:** spec 025 (amended, for approval with this plan); **spec 026 (festivals, petitions, reputation, crime, inequality)** approved 2026-11-18 (`docs/specs/026-town-life.md`, G1–G8 closed, ADR 0127) and **spec 027 (events, insurance, forward contracts)** still to write, both in this sprint for Sprint 24 (ADR 0057); spec 028 goes to Sprint 24.
+- **Specs to write and review:** spec 025 (amended, for approval with this plan); **spec 026 (festivals, petitions, reputation, crime, inequality)** approved 2026-11-18 (`docs/specs/026-town-life.md`, G1–G8 closed, ADR 0127) and **spec 027 (events, insurance, forward contracts)** approved 2026-11-20 (`docs/specs/027-events-insurance-contracts.md`, G1–G9 closed, ADR 0141), both written in this sprint for Sprint 24 (ADR 0057); spec 028 goes to Sprint 24.
 - **Device build:** Yes: a Development build (frame time with the ring; both p95s; golden replays; a 72 h catch-up with a Township open)
 - **Milestone and labels:** `Phase 3 · Township`; `type:feature`, `type:spec`, `type:adr`, `type:balance`; `area:sim`, `area:content`, `area:ui`, `area:tooling`, `area:art`; `documentation`
 
@@ -1063,7 +1063,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 7. **US-152** pucca upgrades (needs materials and water), then **US-153** overlays (the coverage overlay shows the smoke).
 8. **US-242** the cold store.
 9. **US-254, US-255, US-256, US-257** (the stretch, in this order; US-257 only if its payback holds).
-10. **Spec 027** written and reviewed.
+10. **Spec 027** written and approved (2026-11-20, ADR 0141).
 11. **The builders' neighbour rule** (ADR 0126 §2) lands with US-145, where builders first wait for bricks.
 12. **Balance** (the 20% rule on 24 and 200 seeds; the Village 28–45 days; the Township's pace; the kiln's, generator's and cold store's targets; land payback at the land value actually paid on ring acres; the zone-and-flip and buy-and-hold bots acting, with a developer cash command; `BuildersCarryAZeroTaxTown` re-run; the 200-seed hands-off Township on the ring), **the checklist in the Editor by scripted touch**, render statistics at the three views, Editor saves backed up before and restored and diffed after, **Development build**, **an independent Opus 5.5 high-effort review**, ADRs (as built), `STATUS.md`, feature files, this file, the pull request.
 
