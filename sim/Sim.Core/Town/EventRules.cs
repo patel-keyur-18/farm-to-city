@@ -628,6 +628,13 @@ namespace Sim.Core.Town
                     case EffectKind.SellNow:
                         SellHeld(sim, (int)p.Target);
                         break;
+                    case EffectKind.Mediate:
+                        if (sim.State.Farm != null) // an hour of your day: the founder's working hours today are one less
+                        {
+                            FounderState f = sim.State.Farm.Founder;
+                            f.TodayHours = f.TodayHours > Fixed.FromInt(e.Hours) ? f.TodayHours - Fixed.FromInt(e.Hours) : Fixed.Zero;
+                        }
+                        break;
                 }
             }
             if (ev.Id == EventsDef.FireRepair) Repaired(sim, s, p, choice, now);

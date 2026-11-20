@@ -224,7 +224,7 @@ namespace Sim.Core.Equipment
         }
 
         /// <summary>Working for neighbours on the coming mornings: the switch on, yours (not leased), running, with a hand to drive it.</summary>
-        public static bool HiringOut(Simulation sim, Machine m) { return m.HireOut && !m.Leased && Running(sim, m) && HasDriver(sim); }
+        public static bool HiringOut(Simulation sim, Machine m) { return m.HireOut && !m.Leased && Running(sim, m) && HasDriver(sim) && !Town.EventRules.AnyFlag(sim, Town.EventRules.TractorParked); } // a fuel spike's parked tractor (spec 027 §3.2)
 
         /// <summary>What neighbours pay for a day at the cap: the share of the day's hire for the acres they want (spec 025 §3.8).</summary>
         public static long HireFee(Simulation sim, MachineDef d)
