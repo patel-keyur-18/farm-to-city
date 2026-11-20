@@ -18,6 +18,13 @@ namespace Sim.Core.Scheduling
 
         public int Count { get { return _heap.Count; } }
 
+        /// <summary>Whether an item of this class is waiting.</summary>
+        internal bool Has(ItemClass cls)
+        {
+            for (int i = 0; i < _heap.Count; i++) if (_heap[i].Class == cls) return true;
+            return false;
+        }
+
         internal ScheduledItem Schedule(long dueTime, ItemClass cls, SystemOrder system, long entityId, long jobId)
         {
             var item = new ScheduledItem(dueTime, cls, system, entityId, NextSequence++, jobId);

@@ -141,7 +141,25 @@ namespace Sim.Core
         public static Simulation FromState(SimConfig config, GameState state)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
-            return new Simulation(config, state);
+            var sim = new Simulation(config, state);
+            sim.MendLostPasses();
+            return sim;
+        }
+
+        /// <summary>
+        /// A town saved after a pass was lost (an exception inside a pass used to drop it for good): every pass class is scheduled
+        /// again at its next boundary and the weather buffer is brought up to the clock. Nothing changes in a healthy town.
+        /// </summary>
+        private void MendLostPasses()
+        {
+            long t = State.Clock.SimTime;
+            foreach (ItemClass pass in new[] { ItemClass.Hourly, ItemClass.Daily, ItemClass.Seasonal, ItemClass.Yearly })
+            {
+                if (State.Scheduler.Has(pass)) continue;
+                long period = PassPeriod(pass);
+                SchedulePass(pass, (t / period + 1) * period);
+            }
+            WeatherSystem.Mend(this);
         }
 
         /// <summary>
@@ -342,8 +360,16 @@ namespace Sim.Core
 
         private void RunPass(ScheduledItem item)
         {
-            foreach (ISimSystem system in _systems) system.OnPass(this, item.Class);
-            SchedulePass(item.Class, item.DueTime + PassPeriod(item.Class));
+            // The next pass is scheduled even if a system throws: the clock keeps moving, and a pass lost for good leaves the
+            // weather behind it (the forecast then throws on every refresh). The same order of scheduling as before on the happy path.
+            try
+            {
+                foreach (ISimSystem system in _systems) system.OnPass(this, item.Class);
+            }
+            finally
+            {
+                SchedulePass(item.Class, item.DueTime + PassPeriod(item.Class));
+            }
         }
 
         private void SchedulePass(ItemClass pass, long dueTime)

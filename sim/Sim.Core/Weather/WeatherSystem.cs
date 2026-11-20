@@ -27,6 +27,21 @@ namespace Sim.Core.Weather
             w.SetForecast(ComputeForecast(sim, current));
         }
 
+        /// <summary>
+        /// Brings the buffer and the forecast up to the clock after hourly passes were lost: the same spells the passes would have
+        /// generated (a spell's weather depends only on its index), so nothing is invented. Does nothing when the buffer is whole.
+        /// </summary>
+        internal static void Mend(Simulation sim)
+        {
+            WeatherState w = sim.State.Weather;
+            long current = Calendar.SpellAt(sim.State.Clock.SimTime, sim.Clock);
+            if (current < w.FirstSpell || w.LastGeneratedSpell >= current + sim.Clock.ForecastSpells) return;
+            Generate(sim, current + sim.Clock.ForecastSpells);
+            TrackRunStart(w, current);
+            w.DropBefore(current);
+            w.SetForecast(ComputeForecast(sim, current));
+        }
+
         public void OnPass(Simulation sim, ItemClass pass)
         {
             if (pass != ItemClass.Hourly) return;
