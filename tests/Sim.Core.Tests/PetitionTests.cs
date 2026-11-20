@@ -193,16 +193,19 @@ namespace Sim.Core.Tests
             long a = Approval(sim);
             TownLifeRules.AtClose(sim);
             Assert.That(Approval(sim), Is.EqualTo(a + 4), "up to 4 a close");
-            Happy(sim, 70);
+            int n = D(sim).NeutralHappiness;
+            Happy(sim, n);
             Assert.That(StepNow(sim), Is.EqualTo(0));
-            Happy(sim, 73);
+            Happy(sim, n + 3);
             Assert.That(StepNow(sim), Is.EqualTo(0), "toward zero: 3 ÷ 5 is 0");
-            Happy(sim, 40);
-            Assert.That(StepNow(sim), Is.EqualTo(-4));
-            Happy(sim, 67);
+            Happy(sim, n - 3);
             Assert.That(StepNow(sim), Is.EqualTo(0), "−3 ÷ 5 toward zero");
-            Happy(sim, 60);
+            Happy(sim, n + 7);
+            Assert.That(StepNow(sim), Is.EqualTo(1));
+            Happy(sim, n - 10);
             Assert.That(StepNow(sim), Is.EqualTo(-2));
+            Happy(sim, n - 30);
+            Assert.That(StepNow(sim), Is.EqualTo(-4), "at most 4 either way");
 
             Happy(sim, 100);
             for (int i = 0; i < 40; i++) TownLifeRules.AtClose(sim);

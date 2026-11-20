@@ -69,6 +69,6 @@
     "pullDivisor": 2, "pullMin": 50, "pullMax": 150, "grantBonusDivisor": 5, "roadTrack": 40, "approvalStart": 50,
     "crime": { "base": 20, "perUnemployed": 2, "inequalityShare": 0.3, "landValueStep": 0.02, "landValueMax": 0.10 },
     "inequality": { "needsHouseholds": 10, "happinessAbove": 4, "maxPoints": 6, "pushOutAt": 6, "ratioCap": 10 },
-    "petitions": { "minHouseholds": 3, "minShare": 0.20, "rentShare": 0.25, "promiseCloses": [1, 2, 4], "done": 4, "kept": 6, "declined": -2, "ignored": -4, "broken": -8, "quietCloses": 1, "declinedQuietCloses": 4, "ignoredAfter": 2, "neutralHappiness": 70, "step": 5, "stepMax": 4, "keepEnded": 6, "keepHistory": 6 }
+    "petitions": { "minHouseholds": 3, "minShare": 0.20, "rentShare": 0.25, "promiseCloses": [1, 2, 4], "done": 4, "kept": 6, "declined": -2, "ignored": -2, "broken": -8, "quietCloses": 1, "declinedQuietCloses": 4, "ignoredAfter": 2, "neutralHappiness": 65, "step": 5, "stepMax": 4, "keepEnded": 6, "keepHistory": 6 }
   }
 }

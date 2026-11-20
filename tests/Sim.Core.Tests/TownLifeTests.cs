@@ -52,11 +52,12 @@ namespace Sim.Core.Tests
         {
             Simulation sim = Township();
             Assert.That(TownLifeRules.Known(sim), Is.False, "on, but not yet read");
+            long step = PetitionRules.Step(PetitionRules.Def(sim), HappinessRules.Town(sim));
             TownLifeRules.AtClose(sim);
             TownLifeState s = TownLifeRules.State(sim);
             TownLifeDef d = TownLifeRules.Def(sim);
             Assert.That(s.Read, Is.True);
-            Assert.That(s.Approval, Is.EqualTo(Fixed.FromInt(50)), "approval starts at 50");
+            Assert.That(s.Approval, Is.EqualTo(Fixed.FromInt((int)(50 + step))), "approval starts at 50 and the first close moves it by happiness alone");
             for (int i = 0; i < TownLifeDef.Scores; i++)
             {
                 Fixed sum = Fixed.Zero;
