@@ -6927,5 +6927,19 @@
   "cash.row.5280.out": "A fire's repair",
   "cash.row.5280.in": "A fire's repair refunded",
   "cash.row.5285.out": "Paid for events",
-  "cash.row.5285.in": "Event costs refunded"
+  "cash.row.5285.in": "Event costs refunded",
+  "ledger.eventCost": "Paid to soften an event",
+  "ledger.fireRepair": "A fire's repair",
+  "ledger.regionalGrant": "A regional grant",
+  "reject.EventClosed": "That card has gone: it was answered, or its time ran out.",
+  "reject.ChoiceNotAvailable": "That choice can't be taken now.",
+  "event.EventRaised": "Something has happened in the town.",
+  "event.EventAnswered": "You answered an event.",
+  "event.EventDefaulted": "An event took its default.",
+  "event.DisasterWarned": "A disaster is coming.",
+  "event.DisasterPassed": "A disaster passed without striking.",
+  "event.FireStruck": "A fire struck.",
+  "event.EpidemicBegan": "An epidemic began.",
+  "event.EpidemicEnded": "The epidemic is over.",
+  "event.RegionalGrantPaid": "A regional grant was settled."
 }

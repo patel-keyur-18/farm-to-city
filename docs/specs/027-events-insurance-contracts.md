@@ -89,7 +89,7 @@ At 6:00 each eligible event has a weight `base × the modifiers below`, the prod
 | --- | --- |
 | Drought | ×2 if no rain hour in the last 3 days · ×1.5 more if none in the last 6 |
 | Heatwave | gate: a heatwave spell is on · ×1.5 in Summer |
-| Hailstorm | gate: a storm spell is on |
+| Hailstorm | gate: a storm spell is on (the damage lands as the card comes: a third of the standing fields, rounded up, seeded; the choice is then to keep them or resow them) |
 | Waterlogging | gate: 4+ hours of heavy rain in the last day |
 | Price boom | ×2 for a crop whose price is below its season's norm |
 | Price slump | ×2 for a crop whose price is above its season's norm |
@@ -118,11 +118,11 @@ Both are ★ majors in the same draw (weight 4 against 10), under the four mercy
 - **Damage:** **35% of the building's book value**; ×0.5 if the **water tower** reaches it (400 m); ×0.5 if you took the prepare choice. There is no fire station until the Town.
 - **Downtime:** a business building shuts for **2 days**; a house, hut or shed has none.
 - **Warning choices:** **Do nothing** · *Clear dry straw, keep buckets ready* (800: halves the damage).
-- **When it strikes**, a second card: **Repair at once** (the bill, back in 2 days) or **Repair slowly** (half the bill, 6 days out). If you cannot pay the bill the first is greyed with a reason and the default is the slow one.
+- **When it strikes**, a second card: **Repair at once** (the bill, back in 2 days) or **Repair slowly** (half the bill, 6 days out). If you cannot pay the bill the first is greyed with a reason. **Unanswered for 24 hours the card takes *Repair slowly* (owner, 2026-11-20, Preview 12 question 2)**, paying what cash allows if even half is short.
 - **Books:** the repair bill goes to a new *Disaster loss* line under other costs, outside farm profit.
 
 **Epidemic.**
-- For **6 days** a household's sick-day chance is ×2.5, and ×0.5 of that where a staffed clinic covers the home (net ×1.25). Sick workers are off (spec 015). Health dips to at most **0.75** so it alone can never trigger the `health < 0.7` death rule: **nobody dies from an epidemic** (ADR 0063).
+- For **6 days** a household's sick-day chance is ×2.5, and ×0.5 of that where a staffed clinic covers the home (net ×1.25). Sick workers are off (spec 015). Only sick days change: nobody's health is lowered, so the `health < 0.7` death rule can never fire from it: **nobody dies from an epidemic** (ADR 0063).
 - **Warning choices:** **Let it run** · *Hold a health camp* (25 a person, your gift, outside farm profit: ×1.5 instead of ×2.5) · *Close the school and the shops for 3 days* (no coins: ×1.5, shops −30% demand for the 3 days, lessons paused).
 - The card shows what the clinic saved ("the clinic halved this for 38 families").
 
@@ -184,7 +184,7 @@ Two policies; every building belongs to exactly one. Both are **season policies*
 | event | `id`, `family`, `major`, `baseWeight`, `gate`, `modifiers`, `choices`, `default` | | §3.2–3.3 | | strings `event.<id>.*` |
 | choice | `id`, `costKey`, `effects[]` | | | ≤ 3 per event | effects from the nine kinds |
 | fire | `damageShare`, `towerFactor`, `prepareFactor`, `prepareCost`, `downtimeDays`, `slowRepairShare`, `slowRepairDays` | | 0.35, 0.5, 0.5, 800, 2, 0.5, 6 | | |
-| epidemic | `days`, `sickFactor`, `clinicFactor`, `campFactor`, `campPerPerson`, `closeShopsDemand`, `healthFloor` | | 6, 2.5, 0.5, 1.5, 25, 0.3, 0.75 | | |
+| epidemic | `days`, `sickFactor`, `clinicFactor`, `campFactor`, `closeFactor`, `campPerPerson`, `closeDays`, `closeShopsDemand` | | 6, 2.5, 0.5, 1.5, 1.5, 25, 3, 0.3 | | |
 | cropInsurance | `threshold`, `pestShortfall`, `eventPart`, `loading` | Fixed | 0.80, 0.23, 0.015, 1.30 | | |
 | propertyInsurance | `rate`, `excess` | Fixed | 0.002, 0.10 | | |
 | businessInsurance | `rate`, `profitShare`, `excess`, `dailyProfitShare` | Fixed | 0.002, 0.03, 0.10, 0.80 | | |
@@ -250,7 +250,7 @@ Both previews are exact artifacts that look like the game, approved before any U
 |  [ Let it ride            no cost · rain-fed crops -12% ]  (default) |
 |  [ Hire water tankers     120 an acre · 8 acres = 960   ]            |
 |   Your pump keeps 6 acres watered.                               |
-|   If you do not answer: Let it ride in 23 h                      |
+|   If you do not answer: Let it ride in 47 h                      |
 +------------------------------------------------------------------+
 ```
 - A card in the existing frame; a disaster warning has an amber frame and a countdown ("A fire risk in 47 h"), and says which preparation helps ("the water tower reaches 3 of your buildings").
