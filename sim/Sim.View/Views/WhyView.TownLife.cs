@@ -38,6 +38,21 @@ namespace Sim.View.Views
             return vm;
         }
 
+        /// <summary>What a festival costs and does (spec 026 §3.1).</summary>
+        private static WhyVm Festival(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            FestivalDef d = FestivalRules.Def(sim);
+            int kind = (int)id;
+            WhyVm vm = New(ctx, "why.festival.title", Money(ctx, FestivalRules.Cost(sim, kind)));
+            Row(vm, ctx, "why.festival.perPerson", Money(ctx, d.Kinds[kind].PerPerson * Sim.Core.Finance.Money.Coin));
+            Row(vm, ctx, "why.festival.people", ctx.Fmt.Integer(FestivalRules.People(sim)));
+            Row(vm, ctx, "why.festival.lift", ctx.Strings.Get("why.festival.liftValue", "in", ctx.Fmt.Integer(d.InReach), "out", ctx.Fmt.Integer(d.Outside)));
+            Row(vm, ctx, "why.festival.shops", ctx.Strings.Get("why.festival.shopsValue", "chai", Pct(ctx, d.ShopChai), "veg", Pct(ctx, d.ShopVeg)));
+            Text(vm, ctx, "why.festival.text");
+            return vm;
+        }
+
         private static WhyVm LifeScore(ViewContext ctx, long id)
         {
             int i = (int)id;

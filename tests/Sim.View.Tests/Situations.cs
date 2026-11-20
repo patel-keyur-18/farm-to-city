@@ -404,6 +404,7 @@ namespace Sim.View.Tests
             }
             if (sim.State.Livestock != null && Sim.Core.Livestock.LivestockRules.Shed(sim) != null) yield return N("shed", ShedSheet.Build(ctx)); // US-254, US-255
             if (Sim.Core.Town.TownLifeRules.On(sim)) yield return N("town life", TreasurySheet.Build(ctx, TreasurySheet.LifeTab)); // US-151: every town-life number has a Why?
+            if (Sim.Core.Town.FestivalRules.On(sim)) { yield return N("festival", FestivalSheet.Build(ctx, null)); yield return N("festival you", FestivalSheet.Build(ctx, "1:1:2")); } // US-149: every festival number has a Why?
             yield return N("money", MoneySheet.Build(ctx));
             yield return N("money wealth", MoneySheet.Build(ctx, MoneySheet.Wealth));
             yield return N("money last", MoneySheet.Build(ctx, MoneySheet.LastSeason));

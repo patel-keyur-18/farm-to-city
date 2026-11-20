@@ -287,6 +287,7 @@ namespace Sim.View.Views
                 foreach (Sim.Core.Town.TownPetition p in TownLifeRules.State(sim).Petitions)
                     if (p.Status == Sim.Core.Town.PetitionStatus.Open)
                         list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.petition", "text", TownLifeSheet.Text(ctx, p)), Action = ActionVm.Open("petition:" + p.Id, s.Get("action.open"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.LifeTab)) });
+            FestivalSheet.Alerts(ctx, list); // spec 026 §3.1
             BuildingSheet.Alerts(ctx, list); // spec 025 §3.2: a build waiting for materials
             if (ClinicRules.InPost(sim) && st.Unpaid[1] > 0) // spec 023 §3.9: the doctor's allowance went unpaid
                 list.Add(new AlertVm
@@ -616,6 +617,7 @@ namespace Sim.View.Views
                     case HouseUpgraded hu when hu.Owner == 0: rows.Add(Row(s.Get("away.town"), s.Get("away.houseUpgraded", "home", TownWords.Home(ctx, hu.BuildingId)), "family_house")); break; // US-152
                     case UtilityBuilt ub: rows.Add(Row(s.Get("away.town"), s.Get("away.utilityBuilt", "name", UtilitySheet.Name(ctx, ub.Utility)), "place_" + UtilitySheet.Ids[ub.Utility] + "_plot")); break; // spec 025 §3.1
                     case GridConnected _: rows.Add(Row(s.Get("away.town"), s.Get("away.gridConnected"), "place_grid_plot")); break;
+                    case FestivalHeld fh: rows.Add(Row(s.Get("away.town"), s.Get("away.festival", "name", s.Get("festival." + FestivalRules.Def(sim).Kinds[fh.Kind].Id), "venue", FestivalSheet.VenueName(ctx, fh.Venue)), "place_council_hall")); break; // spec 026 §3.1
                     case CivicBuilt cb: rows.Add(Row(s.Get("away.town"), s.Get("away.civicBuilt"), "place_" + CivicSheet.Ids[cb.Civic] + "_plot")); break; // spec 023 §3.7
                     case PostFilled pf: rows.Add(Row(s.Get("away.town"), s.Get("away.postFilled"), "place_" + CivicSheet.Ids[pf.Civic] + "_plot")); break;
                     case PostUnpaid pu: rows.Add(Row(s.Get("away.town"), s.Get("away.postUnpaid"), "place_" + CivicSheet.Ids[pu.Civic] + "_plot")); break;
@@ -718,7 +720,7 @@ namespace Sim.View.Views
             // Spec 023 (the Township).
             { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },
-            { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "ReputationRead", Use.StateOnly }, { "PetitionRaised", Use.StateOnly }, { "PetitionEnded", Use.StateOnly }, { "ApprovalMoved", Use.StateOnly }, { "CohortHouseholdLeft", Use.Away },
+            { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "ReputationRead", Use.StateOnly }, { "PetitionRaised", Use.StateOnly }, { "PetitionEnded", Use.StateOnly }, { "ApprovalMoved", Use.StateOnly }, { "FestivalScheduled", Use.StateOnly }, { "FestivalHeld", Use.Away }, { "CohortHouseholdLeft", Use.Away },
             { "DoctorArrived", Use.Away }, { "DoctorUnpaid", Use.Away }, { "DoctorLeft", Use.Away },
             { "HouseUpgradeStarted", Use.Motion }, { "HouseUpgraded", Use.Away }, { "CivicBuilt", Use.Away }, { "UtilityBuilt", Use.Away }, { "GridConnected", Use.Away }, { "BuildStarted", Use.StateOnly }, { "BuildHeld", Use.Away }, { "BuildFinished", Use.StateOnly }, { "LaneBuilt", Use.StateOnly }, { "RingOpened", Use.StateOnly }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
             // Spec 021 (the town treasury).

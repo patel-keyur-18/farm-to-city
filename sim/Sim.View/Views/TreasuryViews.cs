@@ -397,7 +397,7 @@ namespace Sim.View.Views
             foreach (KeyValuePair<Account, long> kv in r.Balances)
             {
                 if (Accounts.GroupOf(kv.Key) == AccountGroup.Income) inTotal -= kv.Value;
-                if (kv.Key >= Account.DeptOffice && kv.Key <= Account.DeptPolicies) outTotal += kv.Value;
+                if ((kv.Key >= Account.DeptOffice && kv.Key <= Account.DeptPolicies) || kv.Key == Account.Festivals) outTotal += kv.Value; // the festivals the town paid are spending too (spec 026 §3.1)
             }
             long depreciation = r.Balance(Account.Depreciation);
             vm.Lines.Add(LineVm.Header(s.Get("treasury.moneyIn", "total", ctx.Fmt.Coins(inTotal))));
@@ -415,6 +415,8 @@ namespace Sim.View.Views
                 if (v == 0 && Bal(last, a, 1) == 0) continue;
                 vm.Lines.Add(Row(ctx, TreasurySheet.Department(ctx, i), v, last == null ? (long?)null : last.Balance(a), lastName, "treasuryAccount", r.Period * 10000 + (int)a));
             }
+            long festivals = r.Balance(Account.Festivals);
+            if (festivals != 0 || Bal(last, Account.Festivals, 1) != 0) vm.Lines.Add(Row(ctx, s.Get("account.Festivals"), festivals, last == null ? (long?)null : last.Balance(Account.Festivals), lastName, "treasuryAccount", r.Period * 10000 + (int)Account.Festivals));
             if (depreciation != 0) vm.Lines.Add(Row(ctx, s.Get("account.Depreciation"), depreciation, last == null ? (long?)null : last.Balance(Account.Depreciation), lastName, "treasuryAccount", r.Period * 10000 + (int)Account.Depreciation));
             vm.Lines.Add(LineVm.Header(s.Get("treasury.left", "total", ctx.Fmt.Coins(Surplus(r)))));
             vm.Lines.Add(Row(ctx, s.Get(Surplus(r) >= 0 ? "treasury.surplusLabel" : "treasury.shortfallLabel"), System.Math.Abs(Surplus(r)), last == null ? (long?)null : System.Math.Abs(Surplus(last)), lastName, "treasuryFund", r.Period));

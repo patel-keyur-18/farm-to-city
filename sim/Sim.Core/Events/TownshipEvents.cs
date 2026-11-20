@@ -344,4 +344,32 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "ApprovalMoved(" + From + " to " + To + ")"; }
     }
+
+    /// <summary>A festival was scheduled (spec 026 §3.1): its kind (a season), venue, who paid, the day and the cost.</summary>
+    public sealed class FestivalScheduled : SimEvent
+    {
+        public int Kind { get; }
+        public int Venue { get; }
+        public int Payer { get; }
+        public long Day { get; }
+        public long Cost { get; }
+
+        public FestivalScheduled(long simTime, int kind, int venue, int payer, long day, long cost) : base(simTime) { Kind = kind; Venue = venue; Payer = payer; Day = day; Cost = cost; }
+
+        protected override string Describe() { return "FestivalScheduled(kind " + Kind + ", venue " + Venue + ", payer " + Payer + ", day " + Day + ", cost " + Cost + ")"; }
+    }
+
+    /// <summary>A festival's day is over (spec 026 §3.1): kept in the record, and for the Chronicle (spec 029).</summary>
+    public sealed class FestivalHeld : SimEvent
+    {
+        public int Kind { get; }
+        public int Venue { get; }
+        public int Payer { get; }
+        public long Day { get; }
+        public long Cost { get; }
+
+        public FestivalHeld(long simTime, int kind, int venue, int payer, long day, long cost) : base(simTime) { Kind = kind; Venue = venue; Payer = payer; Day = day; Cost = cost; }
+
+        protected override string Describe() { return "FestivalHeld(kind " + Kind + ", venue " + Venue + ", payer " + Payer + ", day " + Day + ", cost " + Cost + ")"; }
+    }
 }

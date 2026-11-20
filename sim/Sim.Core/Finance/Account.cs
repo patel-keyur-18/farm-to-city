@@ -120,6 +120,9 @@ namespace Sim.Core.Finance
         DeptSafety = 5950,
         DeptUtilities = 5960,
         DeptPolicies = 5970,
+
+        /// <summary>A festival the town paid for (spec 026 §3.1, schema 22): spent at once to suppliers outside the town, outside any department's budget.</summary>
+        Festivals = 5980,
     }
 
     public enum AccountGroup
@@ -148,6 +151,7 @@ namespace Sim.Core.Finance
             Account.StartUpGrant, Account.GrantUntied, Account.GrantTied, Account.PitchRents, Account.HouseTaxIncome, Account.BusinessTaxIncome, Account.Fees, Account.GiftsFromFounder,
             Account.DeptOffice, Account.DeptHealth, Account.DeptEducation, Account.DeptRoads, Account.DeptSafety, Account.DeptUtilities, Account.DeptPolicies,
             Account.TaxOwed, Account.HouseTax, Account.BusinessTax, // spec 022 (save schema 19, after the treasury's)
+            Account.Festivals, // spec 026 (save schema 22)
         };
 
         /// <summary>
@@ -172,6 +176,7 @@ namespace Sim.Core.Finance
                 case Account.StartUpGrant: case Account.GrantUntied: case Account.GrantTied: case Account.PitchRents: case Account.HouseTaxIncome: case Account.BusinessTaxIncome:
                 case Account.Fees: case Account.GiftsFromFounder: case Account.DeptOffice: case Account.DeptHealth: case Account.DeptEducation: case Account.DeptRoads:
                 case Account.DeptSafety: case Account.DeptUtilities: case Account.DeptPolicies: case Account.TaxOwed: case Account.HouseTax: case Account.BusinessTax: return 19;
+                case Account.Festivals: return 22;
                 default: return 0;
             }
         }

@@ -191,7 +191,7 @@ namespace Sim.View.Views
             if (kind == "quarters_plot") ClinicSheet.FillQuarters(ctx, vm);
             if (Sim.Core.Town.UtilityRules.OfPlot(sim, kind) >= 0) UtilitySheet.Fill(ctx, vm, Sim.Core.Town.UtilityRules.OfPlot(sim, kind)); // spec 025 §3.1, US-144
             if (CivicSheet.OfPlot(kind) >= 0) CivicSheet.Fill(ctx, vm, CivicSheet.OfPlot(kind)); // spec 023 §3.7, US-148 part 2
-            if (sim.Config.Game.Shops != null && tile.Id == sim.Config.Game.Shops.SquareTile) SquareView.AddPitches(ctx, vm); // the square's pitches (spec 017 §3.4)
+            if (sim.Config.Game.Shops != null && tile.Id == sim.Config.Game.Shops.SquareTile) { SquareView.AddPitches(ctx, vm); FestivalSheet.Section(ctx, vm, Sim.Core.Definitions.FestivalDef.Square); } // the square's pitches (spec 017 §3.4) and its festival (spec 026 §3.1)
             return vm;
         }
 

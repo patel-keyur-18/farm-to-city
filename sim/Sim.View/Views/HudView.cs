@@ -36,6 +36,9 @@ namespace Sim.View.Views
         /// <summary>The current weather run and the next: "Sun until 14:00 · then heavy rain about 1 h" (ADR 0043 §2).</summary>
         public string ForecastText { get; internal set; }
 
+        /// <summary>"Mango Mela today · the banyan square" on a festival's day (spec 026 §3.1), or null.</summary>
+        public string FestivalText { get; internal set; }
+
         /// <summary>Open alerts (spec 008 §3.10): the ! button's count (0 hides it), red when one is urgent.</summary>
         public int AlertCount { get; internal set; }
         public bool AlertUrgent { get; internal set; }
@@ -71,6 +74,7 @@ namespace Sim.View.Views
             return new HudVm
             {
                 ForecastText = ForecastView.HudLine(ctx),
+                FestivalText = FestivalSheet.TodayNote(ctx),
                 AlertCount = alerts.Count,
                 AlertUrgent = alerts.Count > 0 && alerts[0].Level == AlertLevel.Urgent,
                 DateText = ctx.Fmt.HudDate(d, sim.Clock.DaysPerSeason), // words (spec 020 §3.6c); the forecast and the Why?'s title keep date.full

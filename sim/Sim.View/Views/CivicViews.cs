@@ -88,6 +88,7 @@ namespace Sim.View.Views
                 vm.Lines.Add(service);
             }
             ReachAndCapacity(ctx, vm, i, d, inPost || !post);
+            if (i == CivicDef.Hall) FestivalSheet.Section(ctx, vm, FestivalRules.VenueReady(sim, FestivalDef.Hall) ? FestivalDef.Hall : FestivalDef.Square); // spec 026 §3.1: the hall holds festivals
             vm.Lines.Add(LineVm.Header(s.Get("civic.hdrDoes")));
             vm.Lines.Add(Row(ctx, i, K(i, "effect"), EffectText(ctx, i, d, CivicRules.Staffed(sim, i)), Effect));
             if (post)

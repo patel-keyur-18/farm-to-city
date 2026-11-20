@@ -95,4 +95,28 @@ namespace Sim.Core.Commands
             return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }
+
+    /// <summary>
+    /// Schedules this season's festival (US-149, spec 026 §3.1): at the community hall or the banyan square, paid by the treasury or as your gift, on one of the next
+    /// <c>daysAhead</c> days. Paid at once and not undone.
+    /// </summary>
+    public sealed class ScheduleFestival : TimedCommand
+    {
+        /// <summary>0 the community hall, 1 the banyan square.</summary>
+        public int Venue { get; }
+
+        /// <summary>0 the treasury, 1 your gift.</summary>
+        public int Payer { get; }
+
+        /// <summary>1 tomorrow, 2 in two days, 3 in three.</summary>
+        public int DaysAhead { get; }
+
+        public ScheduleFestival(long at, int venue, int payer, int daysAhead) : base(at) { Venue = venue; Payer = payer; DaysAhead = daysAhead; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = FestivalRules.Schedule(sim, Venue, Payer, DaysAhead);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
 }

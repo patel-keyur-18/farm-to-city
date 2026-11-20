@@ -69,6 +69,16 @@
     "pullDivisor": 2, "pullMin": 50, "pullMax": 150, "grantBonusDivisor": 5, "roadTrack": 40, "approvalStart": 50,
     "crime": { "base": 20, "perUnemployed": 2, "inequalityShare": 0.3, "landValueStep": 0.02, "landValueMax": 0.10 },
     "inequality": { "needsHouseholds": 10, "happinessAbove": 4, "maxPoints": 6, "pushOutAt": 6, "ratioCap": 10 },
-    "petitions": { "minHouseholds": 3, "minShare": 0.20, "rentShare": 0.25, "promiseCloses": [1, 2, 4], "done": 4, "kept": 6, "declined": -2, "ignored": -2, "broken": -8, "quietCloses": 1, "declinedQuietCloses": 4, "ignoredAfter": 2, "neutralHappiness": 65, "step": 5, "stepMax": 4, "keepEnded": 6, "keepHistory": 6 }
+    "petitions": { "minHouseholds": 3, "minShare": 0.20, "rentShare": 0.25, "promiseCloses": [1, 2, 4], "done": 4, "kept": 6, "declined": -2, "ignored": -2, "broken": -8, "quietCloses": 1, "declinedQuietCloses": 4, "ignoredAfter": 2, "neutralHappiness": 65, "step": 5, "stepMax": 4, "keepEnded": 6, "keepHistory": 6 },
+    "festivals": {
+      "inReach": 8, "outside": 3, "squareReach": 500, "daysAhead": 3, "keep": 8,
+      "shops": { "chai": 0.30, "sweets": 0.30, "veg": 0.10 },
+      "list": [
+        { "id": "seed_fair", "season": "spring", "perPerson": 80 },
+        { "id": "mango_mela", "season": "summer", "perPerson": 100 },
+        { "id": "rain_night", "season": "monsoon", "perPerson": 80 },
+        { "id": "harvest_mela", "season": "winter", "perPerson": 120 }
+      ]
+    }
   }
 }

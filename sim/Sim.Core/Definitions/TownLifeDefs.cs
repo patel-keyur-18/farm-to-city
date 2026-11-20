@@ -44,6 +44,44 @@ namespace Sim.Core.Definitions
 
         /// <summary>Petitions and approval (§3.2, §3.3).</summary>
         public PetitionDef Petition { get; internal set; }
+
+        /// <summary>Festivals (§3.1).</summary>
+        public FestivalDef Festival { get; internal set; }
+    }
+
+    /// <summary>One festival a season (spec 026 §3.1): its content id (a string <c>festival.&lt;id&gt;</c>), the season it falls in and its cost a person.</summary>
+    public sealed class FestivalKindDef
+    {
+        public string Id { get; internal set; }
+        public int Season { get; internal set; }
+        public int PerPerson { get; internal set; }
+    }
+
+    /// <summary>Festivals (spec 026 §3.1): the four kinds, the venues' reach, the happiness lift, the shops' rise and how far ahead a day can be chosen.</summary>
+    public sealed class FestivalDef
+    {
+        public const int Hall = 0, Square = 1, Town = 0, You = 1;
+
+        /// <summary>The four festivals, in season order (Spring, Summer, Monsoon, Winter).</summary>
+        public System.Collections.Generic.IReadOnlyList<FestivalKindDef> Kinds { get; internal set; }
+
+        /// <summary>Happiness points on the day: inside the venue's reach, and elsewhere in the town.</summary>
+        public int InReach { get; internal set; }
+        public int Outside { get; internal set; }
+
+        /// <summary>The square's reach in metres (the hall's is its own).</summary>
+        public int SquareReach { get; internal set; }
+
+        /// <summary>The day can be 1 to this many days ahead.</summary>
+        public int DaysAhead { get; internal set; }
+
+        /// <summary>Festivals kept for the hall's sheet.</summary>
+        public int Keep { get; internal set; }
+
+        /// <summary>The shops' demand rise on the day.</summary>
+        public Fixed ShopChai { get; internal set; }
+        public Fixed ShopSweets { get; internal set; }
+        public Fixed ShopVeg { get; internal set; }
     }
 
     /// <summary>

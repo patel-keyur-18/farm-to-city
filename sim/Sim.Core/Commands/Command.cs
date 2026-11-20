@@ -296,6 +296,13 @@ namespace Sim.Core.Commands
 
         /// <summary>The petition is already answered or ended.</summary>
         PetitionClosed,
+
+        // Spec 026 §3.1 (festivals, US-149)
+        /// <summary>This season's festival is already scheduled or held.</summary>
+        FestivalThisSeason,
+
+        /// <summary>The venue isn't ready: the community hall has no caretaker.</summary>
+        VenueNotReady,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

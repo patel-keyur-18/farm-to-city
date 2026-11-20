@@ -125,7 +125,7 @@ namespace Sim.View.Views
             { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryWindow", TreasuryWindow }, { "policy", PolicyWhy }, { "taxHouse", TaxHouseWhy }, { "taxBusiness", TaxBusinessWhy }, { "taxCollected", TaxCollectedWhy }, { "treasuryAccount", TreasuryAccount },
             { "treasuryFund", TreasuryFund },
             // Town life (spec 026).
-            { "lifeApproval", LifeApproval }, { "lifePetition", LifePetition }, { "lifeScore", LifeScore }, { "lifePull", LifePull }, { "lifeCrime", LifeCrime }, { "lifeRatio", LifeRatio }, { "lifeCrimeAcre", LifeCrimeAcre },
+            { "lifeApproval", LifeApproval }, { "lifePetition", LifePetition }, { "festival", Festival }, { "lifeScore", LifeScore }, { "lifePull", LifePull }, { "lifeCrime", LifeCrime }, { "lifeRatio", LifeRatio }, { "lifeCrimeAcre", LifeCrimeAcre },
             // Equipment (spec 013 §3.2).
             { "machine", Machine }, { "machineValue", MachineValue }, { "hireFee", HireFee }, { "hireCost", HireCost }, { "hirePays", HirePays }, { "fieldTools", FieldTools },
         };

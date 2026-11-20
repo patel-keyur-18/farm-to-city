@@ -233,7 +233,7 @@ namespace Sim.Content
         {
             string p = Join(root, "townLife");
             JObject j = Object(Required(o, root, "townLife"), p);
-            OnlyFields(j, p, "weights", "pullDivisor", "pullMin", "pullMax", "grantBonusDivisor", "roadTrack", "approvalStart", "crime", "inequality", "petitions");
+            OnlyFields(j, p, "weights", "pullDivisor", "pullMin", "pullMax", "grantBonusDivisor", "roadTrack", "approvalStart", "crime", "inequality", "petitions", "festivals");
             string wp = Join(p, "weights");
             JObject w = Object(Required(j, p, "weights"), wp);
             string[] names = { "livability", "business", "education", "health", "environment" };
@@ -262,9 +262,42 @@ namespace Sim.Content
                 CrimeLandValueStep = Bounded(c, cp, "landValueStep", "0", "0.1"), CrimeLandValueMax = Bounded(c, cp, "landValueMax", "0", "0.5"),
                 NeedsHouseholds = BoundedInt(q, ip, "needsHouseholds", 2, 100), HappinessAbove = BoundedInt(q, ip, "happinessAbove", 1, 10), MaxPoints = BoundedInt(q, ip, "maxPoints", 0, 20),
                 PushOutAt = BoundedInt(q, ip, "pushOutAt", 2, 10), RatioCap = BoundedInt(q, ip, "ratioCap", 5, 100),
-                Petition = LoadPetitions(j, p),
+                Petition = LoadPetitions(j, p), Festival = LoadFestivals(j, p),
             };
             return d;
+        }
+
+        /// <summary>Festivals (spec 026 §3.1): one for each season, the venues' reach, the lift and the shops' rise.</summary>
+        private static FestivalDef LoadFestivals(JObject o, string root)
+        {
+            string p = Join(root, "festivals");
+            JObject j = Object(Required(o, root, "festivals"), p);
+            OnlyFields(j, p, "inReach", "outside", "squareReach", "daysAhead", "keep", "shops", "list");
+            string sp = Join(p, "shops");
+            JObject shops = Object(Required(j, p, "shops"), sp);
+            OnlyFields(shops, sp, "chai", "sweets", "veg");
+            string lp = Join(p, "list");
+            var arr = Array(Required(j, p, "list"), lp);
+            if (arr.Count != 4) throw new ContentException(lp, "four festivals, one for each season");
+            var kinds = new FestivalKindDef[4];
+            string[] seasons = { "spring", "summer", "monsoon", "winter" };
+            for (int i = 0; i < arr.Count; i++)
+            {
+                string ip = Index(lp, i);
+                JObject k = Object(arr[i], ip);
+                OnlyFields(k, ip, "id", "season", "perPerson");
+                string season = String(Required(k, ip, "season"), Join(ip, "season"));
+                int at = System.Array.IndexOf(seasons, season);
+                if (at < 0) throw new ContentException(Join(ip, "season"), "spring, summer, monsoon or winter");
+                if (kinds[at] != null) throw new ContentException(Join(ip, "season"), "two festivals in " + season);
+                kinds[at] = new FestivalKindDef { Id = String(Required(k, ip, "id"), Join(ip, "id")), Season = at, PerPerson = BoundedInt(k, ip, "perPerson", 20, 300) };
+            }
+            return new FestivalDef
+            {
+                Kinds = System.Array.AsReadOnly(kinds), InReach = BoundedInt(j, p, "inReach", 0, 20), Outside = BoundedInt(j, p, "outside", 0, 20), SquareReach = BoundedInt(j, p, "squareReach", 100, 5000),
+                DaysAhead = BoundedInt(j, p, "daysAhead", 1, 3), Keep = BoundedInt(j, p, "keep", 1, 50),
+                ShopChai = Bounded(shops, sp, "chai", "0", "0.5"), ShopSweets = Bounded(shops, sp, "sweets", "0", "0.5"), ShopVeg = Bounded(shops, sp, "veg", "0", "0.5"),
+            };
         }
 
         /// <summary>Petitions and approval (spec 026 §3.2, §3.3).</summary>

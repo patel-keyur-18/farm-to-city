@@ -37,7 +37,7 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuildSilagePit), typeof(BuyChaffCutter), typeof(FitSolarPanel), typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition), typeof(ScheduleFestival));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
@@ -138,12 +138,14 @@ namespace Sim.View.Views
             else if (c is EnactPolicy enact) Enacting(ctx, vm, sim, after, enact);
             else if (c is PetitionRoad || c is BuildClinic || c is BuildDoctorQuarters) Road(ctx, vm, cash, taken, after, newest, name);
             else if (c is AnswerPetition) Declining(ctx, vm);
+            else if (c is ScheduleFestival fest) Festival(ctx, vm, sim, after, fest);
             else if (c is RepealPolicy repeal) Repealing(ctx, vm, sim, repeal);
             else if (c is ListParcel || c is CancelSale) Listing(ctx, vm, c);
             else if (c is ZoneParcel zp) Zoning(ctx, vm, zp);
             else if (c is LeaseOutLand || c is EndLease) Leasing(ctx, vm, c);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + (c is BuyParcel && Sim.Core.Town.LandValueRules.On(sim) ? ".warnTownship" : ".warn"), "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
+            if (c is ScheduleFestival fw) vm.Warning = FestivalWarning(ctx, after, fw);
             if (c is CommissionWorks cw) { if (Sim.Core.Town.LaneRules.OfWork(sim, cw.WorkId) >= 0) LaneSheet.Guard(ctx, vm, after); else if (Sim.Core.Town.UtilityRules.OfWork(sim, cw.WorkId) >= 0) UtilitySheet.Guard(ctx, vm, after, cw.WorkId); else { CivicSheet.Guard(ctx, vm, cw.WorkId); if (Sim.Core.Town.ConstructionRules.On(sim) && Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(cw.WorkId) != null) vm.Warning = BuildingSheet.Timing(ctx, after, false) + " " + vm.Warning; } }
             if (c is FoundBusiness kiln && kiln.Pitch < 0 && sim.Config.Game.Businesses.IndexOfType(kiln.TypeId) >= 0 && sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)].IsKiln)
                 vm.Warning = KilnSheet.Smoke(ctx, sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)], kiln.TileId); // US-243: the smoke's footprint, counted
@@ -217,6 +219,31 @@ namespace Sim.View.Views
             Sim.Core.Definitions.PetitionDef d = Sim.Core.Town.PetitionRules.Def(ctx.Sim);
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AnswerPetition.approval"), TownLifeSheet.Signed(ctx, d.Declined)));
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AnswerPetition.again"), s.Get("confirm.AnswerPetition.againValue", "n", ctx.Fmt.Integer(d.DeclinedQuietCloses)), total: true));
+        }
+
+        /// <summary>Holding a festival (spec 026 §3.1): where, which day, the cost, who pays, what is left, and whether the town would still pay its bills.</summary>
+        private static void Festival(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after, ScheduleFestival f)
+        {
+            var s = ctx.Strings;
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.where"), FestivalSheet.VenueName(ctx, f.Venue)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.day"), FestivalSheet.DayName(ctx, f.DaysAhead)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.cost"), ctx.Fmt.Coins(Sim.Core.Town.TownLifeRules.State(after).FestivalCost)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.paidBy"), s.Get(f.Payer == Sim.Core.Definitions.FestivalDef.Town ? "festival.theTown" : "festival.youGift")));
+            if (f.Payer == Sim.Core.Definitions.FestivalDef.Town)
+            {
+                long shortBy = Sim.Core.Town.TreasuryRules.Forecast(after).Short;
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.guard"), shortBy > 0 ? s.Get("confirm.ScheduleFestival.guardShort", "short", ctx.Fmt.Coins(shortBy)) : s.Get("confirm.ScheduleFestival.guardOk")));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.treasuryAfter"), ctx.Fmt.Coins(after.State.Treasury.Cash), total: true));
+            }
+            else vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
+        }
+
+        /// <summary>The line under a festival card: whether the town would still pay its bills (or that a gift is outside farm profit), and that it can't be undone.</summary>
+        private static string FestivalWarning(ViewContext ctx, Simulation after, ScheduleFestival f)
+        {
+            var s = ctx.Strings;
+            string first = f.Payer == Sim.Core.Definitions.FestivalDef.Town ? null : s.Get("confirm.ScheduleFestival.giftNote");
+            return first == null ? s.Get("confirm.ScheduleFestival.warn") : first + " " + s.Get("confirm.ScheduleFestival.warn");
         }
 
         private static void Zoning(ViewContext ctx, ConfirmCardVm vm, ZoneParcel c)

@@ -45,6 +45,23 @@ namespace Sim.Core.Town
         /// <summary>Per topic, the last close a petition can't be raised in (§3.2): after one ends, or is declined.</summary>
         public int[] QuietUntil { get; internal set; } = new int[Definitions.PetitionDef.Topics];
 
+        /// <summary>
+        /// The season counter (time ÷ a season) a festival was last scheduled in (−1: none), and the one scheduled now: its kind, venue, payer, the day (a day count
+        /// from the start of play), what it cost and the people it was for (spec 026 §3.1).
+        /// </summary>
+        public long FestivalSeason { get; internal set; } = -1;
+        public bool FestivalOn { get; internal set; }
+        public int FestivalKind { get; internal set; }
+        public int FestivalVenue { get; internal set; }
+        public int FestivalPayer { get; internal set; }
+        public long FestivalDay { get; internal set; }
+        public long FestivalCost { get; internal set; }
+        public int FestivalPeople { get; internal set; }
+        public long FestivalJobId { get; internal set; }
+
+        /// <summary>The festivals held, newest last, the last few kept.</summary>
+        public List<FestivalRecord> Festivals { get; internal set; } = new List<FestivalRecord>();
+
         internal bool IsDefault { get { return !Read; } }
 
         internal TownLifeState Clone()
@@ -56,6 +73,7 @@ namespace Sim.Core.Town
             c.Petitions = new List<TownPetition>();
             foreach (TownPetition p in Petitions) c.Petitions.Add(p.Clone());
             c.QuietUntil = (int[])QuietUntil.Clone();
+            c.Festivals = new List<FestivalRecord>(Festivals);
             return c;
         }
 
@@ -81,6 +99,17 @@ namespace Sim.Core.Town
             h.WriteInt(Petitions.Count);
             foreach (TownPetition p in Petitions) p.WriteTo(h);
             foreach (int q in QuietUntil) h.WriteInt(q);
+            h.WriteLong(FestivalSeason);
+            h.WriteBool(FestivalOn);
+            h.WriteInt(FestivalKind);
+            h.WriteInt(FestivalVenue);
+            h.WriteInt(FestivalPayer);
+            h.WriteLong(FestivalDay);
+            h.WriteLong(FestivalCost);
+            h.WriteInt(FestivalPeople);
+            h.WriteLong(FestivalJobId);
+            h.WriteInt(Festivals.Count);
+            foreach (FestivalRecord f in Festivals) f.WriteTo(h);
         }
 
         internal static TownLifeState ReadFrom(SaveReader r)
@@ -104,7 +133,43 @@ namespace Sim.Core.Town
             n = r.ReadInt();
             for (int i = 0; i < n; i++) s.Petitions.Add(TownPetition.ReadFrom(r));
             for (int i = 0; i < s.QuietUntil.Length; i++) s.QuietUntil[i] = r.ReadInt();
+            s.FestivalSeason = r.ReadLong();
+            s.FestivalOn = r.ReadBool();
+            s.FestivalKind = r.ReadInt();
+            s.FestivalVenue = r.ReadInt();
+            s.FestivalPayer = r.ReadInt();
+            s.FestivalDay = r.ReadLong();
+            s.FestivalCost = r.ReadLong();
+            s.FestivalPeople = r.ReadInt();
+            s.FestivalJobId = r.ReadLong();
+            n = r.ReadInt();
+            for (int i = 0; i < n; i++) s.Festivals.Add(FestivalRecord.ReadFrom(r));
             return s;
         }
+    }
+
+    /// <summary>A festival held (spec 026 §3.1): its kind, venue, who paid, the day, the people it was for and what it cost.</summary>
+    public readonly struct FestivalRecord
+    {
+        public int Kind { get; }
+        public int Venue { get; }
+        public int Payer { get; }
+        public long Day { get; }
+        public int People { get; }
+        public long Cost { get; }
+
+        public FestivalRecord(int kind, int venue, int payer, long day, int people, long cost) { Kind = kind; Venue = venue; Payer = payer; Day = day; People = people; Cost = cost; }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteInt(Kind);
+            h.WriteInt(Venue);
+            h.WriteInt(Payer);
+            h.WriteLong(Day);
+            h.WriteInt(People);
+            h.WriteLong(Cost);
+        }
+
+        internal static FestivalRecord ReadFrom(SaveReader r) { return new FestivalRecord(r.ReadInt(), r.ReadInt(), r.ReadInt(), r.ReadLong(), r.ReadInt(), r.ReadLong()); }
     }
 }

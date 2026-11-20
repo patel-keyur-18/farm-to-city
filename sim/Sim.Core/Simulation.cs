@@ -78,6 +78,7 @@ namespace Sim.Core
                 handlers.Add(new Town.ClinicRules.BuildQuarters());
                 handlers.Add(new Town.ClinicRules.Arrive());
                 handlers.Add(new Town.CivicRules.Arrive());
+                handlers.Add(new Town.FestivalRules.Held());
                 handlers.Add(new Town.ConstructionRules.Done());
             }
             handlers.AddRange(config.JobHandlers);

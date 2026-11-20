@@ -19,7 +19,8 @@ namespace Game.Presentation.Ui
         private readonly StringTable _strings;
         private readonly Formatter _fmt;
         private readonly VisualElement _layer;
-        private readonly Label _date, _clock, _weather, _cash, _store, _forecast, _alertCount;
+        private readonly Label _date, _clock, _weather, _cash, _store, _forecast, _alertCount, _festivalText;
+        private readonly VisualElement _festival; // spec 026 §3.1: a banner on a festival's day
         private readonly VisualElement _alerts;
         private int _alertsShown = -1;
         private bool _urgentShown, _held;
@@ -272,6 +273,22 @@ namespace Game.Presentation.Ui
             _orders.style.display = DisplayStyle.None;
             _layer.Add(_orders);
 
+            // A festival's day (spec 026 §3.1): a green strip at the top centre, "Mango Mela today · the banyan square".
+            _festival = new VisualElement { pickingMode = PickingMode.Ignore };
+            _festival.style.position = Position.Absolute;
+            _festival.style.top = 14;
+            _festival.style.left = Length.Percent(50);
+            _festival.style.translate = new Translate(Length.Percent(-50), 0);
+            _festival.style.backgroundColor = Painter.Hex(0xE6F4D4);
+            UiKit.Border(_festival, 4, Painter.Hex(0x3F7D20));
+            UiKit.Radius(_festival, 22);
+            UiKit.Padding(_festival, 8, 28);
+            _festivalText = UiKit.Text("", 30, Painter.Hex(0x3F7D20), UiKit.BodyBold);
+            _festivalText.style.whiteSpace = WhiteSpace.NoWrap;
+            _festival.Add(_festivalText);
+            _festival.style.display = DisplayStyle.None;
+            _layer.Add(_festival);
+
             // HUD figures never wrap: on a phone's fractional UI scale the measured width can round a hair short, and the last
             // digit then dropped onto a hidden second line ("12:4", "4,38").
             foreach (Label l in new[] { _date, _clock, _weather, _cash, _store, _forecast })
@@ -358,6 +375,8 @@ namespace Game.Presentation.Ui
                 _weatherIcon.style.backgroundImage = new StyleBackground(IconBank.Weather(hud.WeatherId));
             }
             _forecast.text = hud.ForecastText;
+            _festival.style.display = hud.FestivalText == null ? DisplayStyle.None : DisplayStyle.Flex;
+            if (hud.FestivalText != null) _festivalText.text = hud.FestivalText;
             _overlays.style.display = hud.OverlaysAvailable ? DisplayStyle.Flex : DisplayStyle.None;
             _store.text = _strings.Get("hud.store") + " " + hud.StoreText;
             if (_alertsShown != hud.AlertCount || _urgentShown != hud.AlertUrgent)
