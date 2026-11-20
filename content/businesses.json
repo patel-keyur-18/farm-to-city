@@ -3,7 +3,8 @@
     "catchmentPeople": 375,
     "grainPerPersonPerRealDay": 0.40,
     "nextVillageFee": 4,
-    "feeTolerance": 1
+    "feeTolerance": 1,
+    "marketStockDays": 2
   },
   "funding": {
     "businessLtv": 0.6,

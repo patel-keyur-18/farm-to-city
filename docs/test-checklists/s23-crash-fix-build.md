@@ -10,3 +10,5 @@ Install over the app already on the phone (do not delete it first), so your town
 | 4 | Close the app for a minute and open it again | The away card or the HUD, no console errors | Errors on open |
 
 What was fixed (ADR 0139): a failing step no longer stops the clock's hourly work, and a town saved in that state is mended when it loads. The first failing step is still unknown, so check 3 matters.
+| 5 | Flour mill sheet, tap the ? on **Buy wheat at the market** | It says the trader takes 400 kg of atta and 100 kg of bran a day, the village does not buy from the mill, and the mill buys only while unsold stock is under 2 days of that | The text is missing |
+| 6 | Switch **Buy wheat at the market** on and let a few days pass | The mill's unsold atta stays under about 800 kg; its cash is not all in stock | Stock grows past that, or cash stays 0 while profit is positive |

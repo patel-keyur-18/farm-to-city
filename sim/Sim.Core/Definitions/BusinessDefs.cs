@@ -174,6 +174,9 @@ namespace Sim.Core.Definitions
         public Fixed NextVillageFee { get; internal set; }
         public Fixed FeeTolerance { get; internal set; }
 
+        /// <summary>A mill buys wheat at the market only while its unsold atta and bran stay under this many days of what the trader takes (ADR 0140).</summary>
+        public int MarketStockDays { get; internal set; }
+
         public Fixed BusinessLtv { get; internal set; }
         public int TermSeasons { get; internal set; }
         public Fixed OverdraftLimit { get; internal set; }

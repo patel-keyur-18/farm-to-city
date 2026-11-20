@@ -18,11 +18,12 @@ namespace Sim.Content
 
             string ap = root + ".area";
             JObject a = Object(Required(o, root, "area"), ap);
-            OnlyFields(a, ap, "catchmentPeople", "grainPerPersonPerRealDay", "nextVillageFee", "feeTolerance");
+            OnlyFields(a, ap, "catchmentPeople", "grainPerPersonPerRealDay", "nextVillageFee", "feeTolerance", "marketStockDays");
             d.CatchmentPeople = BoundedInt(a, ap, "catchmentPeople", 0, 100000);
             d.GrainPerPersonPerRealDay = Bounded(a, ap, "grainPerPersonPerRealDay", "0", "5");
             d.NextVillageFee = Bounded(a, ap, "nextVillageFee", "0", "100");
             d.FeeTolerance = Bounded(a, ap, "feeTolerance", "0", "100");
+            d.MarketStockDays = BoundedInt(a, ap, "marketStockDays", 1, 30);
 
             string fp = root + ".funding";
             JObject f = Object(Required(o, root, "funding"), fp);

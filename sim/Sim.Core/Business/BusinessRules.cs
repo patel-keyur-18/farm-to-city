@@ -655,7 +655,7 @@ namespace Sim.Core.Business
             if (b.BuyFromMarket && left > 0)
             {
                 Fixed price = MarketRules.Ceiling(sim, t.Input);
-                long bought = Affordable(sim, b, t.Input, left, price);
+                long bought = Affordable(sim, b, t.Input, System.Math.Min(left, MarketRoom(sim, b, t)), price);
                 if (bought > 0)
                 {
                     long value = MarketRules.Value(sim, t.Input, bought, price);
@@ -671,6 +671,23 @@ namespace Sim.Core.Business
             if (area > 0 || own > 0) sim.Emit(new BusinessWorked(now, b.Id, area, own));
         }
 
+        /// <summary>
+        /// The wheat a mill may still buy at the market (ADR 0140): what it grinds goes to the trader, who takes only so much a day, so it buys
+        /// only while its unsold atta and bran stay under <c>marketStockDays</c> days of that (each output's room, over its yield; the least rules).
+        /// </summary>
+        public static long MarketRoom(Simulation sim, Business b, BusinessTypeDef t)
+        {
+            long room = long.MaxValue;
+            foreach (BusinessOutput o in t.Outputs)
+            {
+                long yield = (o.Yield * Fixed.FromInt(1000)).RoundToLong();
+                if (yield <= 0) continue;
+                long free = sim.Config.Game.Market.Region.TraderBuyPerDay(o.Good) * Defs(sim).MarketStockDays - b.Stock[o.Good];
+                room = System.Math.Min(room, free <= 0 ? 0 : free * 1000 / yield);
+            }
+            return room == long.MaxValue ? 0 : room;
+        }
+
         /// <summary>How much of <paramref name="grams"/> its cash and overdraft pay for at <paramref name="price"/>: past the limit, inputs stop (§3.10).</summary>
         private static long Affordable(Simulation sim, Business b, int good, long grams, Fixed price)
         {
@@ -678,8 +695,11 @@ namespace Sim.Core.Business
             long unit = MarketRules.Value(sim, good, 1000, price + sim.State.Market.PriceIndex * TypeOf(sim, b).PowerPerKg);
             if (unit <= 0) return grams;
             long spend = BusinessBooks.CanSpend(sim, b);
-            long can = spend <= 0 ? 0 : (long)((System.Numerics.BigInteger)spend * 1000 / unit);
-            return System.Math.Min(grams, can);
+            long can = System.Math.Min(grams, spend <= 0 ? 0 : (long)((System.Numerics.BigInteger)spend * 1000 / unit));
+            // The estimate above rounds the price and the power apart from the amount: the exact cost of what is bought and ground (as the
+            // entries will post it) must fit, or paying the power would push the cash below 0 and the hourly pass would throw (ADR 0139).
+            while (can > 0 && MarketRules.Value(sim, good, can, price) + PowerCost(sim, b, can) > spend) can -= System.Math.Max(1, can / 1000);
+            return can;
         }
 
         private static long PowerCost(Simulation sim, Business b, long grams) { return Money.Value(grams, TypeOf(sim, b).PowerPerKg * sim.State.Market.PriceIndex * CostFactor(sim, b), 1000); }

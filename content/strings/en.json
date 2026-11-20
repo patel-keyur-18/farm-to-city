@@ -3326,6 +3326,7 @@
   "why.businessMarket.title": "Wheat at the market",
   "why.businessMarket.price": "Wheat bought in costs the market's price with its transport: a little atta margin is left.",
   "why.businessMarket.lesson": "Milling bought wheat keeps the chakki busy but pays thinly.",
+  "why.businessMarket.cap": "The trader takes only {atta} of atta and {bran} of bran a day, and the village does not buy from the mill. So the mill buys wheat at the market only while its unsold atta and bran stay under {days} days of that; more would only fill the yard with goods it cannot sell.",
   "why.businessCash.title": "The mill's cash",
   "why.businessCash.own": "The mill's own money, apart from yours: what you put in, fees and sales in, wheat, power and wages out.",
   "why.businessCash.flow": "Cash isn't profit: the machine was paid for at once but wears out over years.",
