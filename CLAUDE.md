@@ -254,6 +254,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0141 | Spec 027: events start at the Township, one roll a day, at most 2 waiting with free defaults, nothing major rolls while away, four mercy rules, 19 events; fire and an epidemic warned 48 h ahead; crop (0.80 threshold, 1.30 loading), property and business insurance (0.2% of book value, 90% and 80%); forward contracts 3% below the expected price |
 | 0142 | Sprint 23 balance and the independent review: pace 101.5 and 135.6 held, archetypes 1.107, twelve findings fixed or flagged (the kiln's cap and era, a per-system guard, the zero-tax happiness) |
 | 0143 | The four flagged items of Sprint 23's review: one brick limit for the town and a smoke health cap (0.08), the kiln a Village business (spec and GDD corrected), a guard around each system in the app (`Simulation.SystemFailed`), zero tax restated (happiness lower, services under 30%) |
+| 0144 | Sprint 24 plan check: 35 points (US-264 added: the mill's atta at the local market, the code changes to spec 016), no "Pay me every day", US-247 belongs to spec 028, Previews 12–15, US-147's apple figures redone through four gaps before code |
 
 ## Current status
 

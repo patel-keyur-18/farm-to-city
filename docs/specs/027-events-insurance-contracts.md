@@ -26,7 +26,7 @@ The town's preparation is tested. Things happen that the player did not choose (
 - River floods (need an embankment) and recessions: Phase 4.
 - A fire station: the Town. Life and health insurance: not in Phase 3.
 - Futures traded with anyone but the trader: not in Phase 3.
-- The investor's offer event: its card and effects come with spec 029 (US-247). This spec builds the engine it plugs into.
+- The investor's offer event: its card and effects come with spec 028 (US-247, Sprint 25; corrected by ADR 0144, it said spec 029). This spec builds the engine it plugs into.
 - Poaching and the other HR events stay as spec 015 has them (their own flow, not this engine).
 - The Chronicle's own screen: spec 029 (this spec records and announces what happened).
 - Festivals as an event: spec 026 (the player holds them).
@@ -73,7 +73,7 @@ An event is a row of data: a family, a gate, a weight (§3.3), 2–3 choices, a 
 | | **New family** | a free house | **Not now** · Welcome them (they move in) |
 | Opportunity | ★ **Regional grant** | a profitable last season | **Skip** · Apply (400 for the paperwork: 6,000 at the next close if your books and credit are sound; the odds in words) |
 | | ★ **Land auction** | a parcel for sale beside your land | **Pass** · Bid (85% of its land value; answer within a day) |
-| | *Investor's offer* | spec 029 | not built here |
+| | *Investor's offer* | spec 028 | not built here |
 | Disaster | ★ **Fire** | §3.4 | §3.4 |
 | | ★ **Epidemic** | §3.4 | §3.4 |
 

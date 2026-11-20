@@ -33,7 +33,7 @@
 | S21 | 14–27 Jun 2027 (2 weeks) | 3 | The treasury and the budget cycle, taxes and policies (F15.1, F15.2). | 26 | 023, 024 | Yes |
 | S22 | 28 Jun – 11 Jul 2027 (2 weeks) | 3 | The clinic, the link road, the Township unlock with the old village joining (US-148, US-146, US-103); zoning, land value and leasing land out (US-142, US-143, US-261); era-gate reachability (US-100); the carried items (US-263). | 43 | 025 (026 in S23) | Yes |
 | S23 | 12–25 Jul 2027 (2 weeks, ADR 0125, 0126) | 3 | The map's ring (US-253); construction and the brick kiln (US-145, US-243); utilities (US-144); kutcha to pucca and the overlays (F15.8); the cold store (US-242); the farm's promises moved in by the owner: calves, silage and sheds, your tractor for neighbours, solar pumps (US-254 to US-257, cut first). | 49 | 026, 027 | Yes: frame time with the ring |
-| S24 | 26 Jul – 8 Aug 2027 (2 weeks) | 3 | Festivals, petitions, reputation, crime and inequality (US-149, F15.7); events, insurance and forward contracts (F16.1, F16.2); hill parcels and apples (US-147). | 32 | 028 | Yes |
+| S24 | 26 Jul – 8 Aug 2027 (2 weeks, ADR 0144) | 3 | Festivals, petitions, reputation, crime and inequality (US-149, F15.7); events, insurance and forward contracts (F16.1, F16.2); the mill's atta at the local market (US-264); hill parcels and apples (US-147). | 35 | 028 | Yes |
 | S25 | 9–22 Aug 2027 (2 weeks) | 3 | Invoices, managers, sell or expand, investors and buy-outs (F12.5, F12.6); the tuition centre, tempo and restaurant (F12.7); benefits and night shifts (US-258). | 39 | 029 | Yes |
 | S26 | 23 Aug – 5 Sep 2027 (2 weeks) | 3 | The Chronicle, the Almanac and citizen stories (F16.3, F16.4); the Phase 3 exploit checks (US-248); the playtest town and the Release build (US-249); your kirana, marketing and khata (US-260); supervisors, associations, conflicts and accidents (US-259, Could). | 31 | — | Yes: Development, then Release |
 | S27 | 6 Sep – 3 Oct 2027 (4 weeks, ADR 0107 §11) | 3 | The Phase 3 playtest from a town just past the Village, tuning and the gate decision (F10.3). | 6 + fixes | Phase 4's, if the owner says | Fixes only |
@@ -1086,6 +1086,62 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [ ] Balance: the 20% rule, the Village 28–45 days, the Township's pace, the kiln, the generator and grid, the cold store, land payback, the land stress bots, contradictions flagged
 - [ ] Render statistics read for each visible story, growth over 10% reported
 - [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone (the owner)
+- [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
+- [ ] `STATUS.md`, feature files and this file updated
+- [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it
+
+## Sprint 24 · 26 Jul – 8 Aug 2027 · Phase 3 (town life, events, insurance and contracts; the mill's atta; hills and apples; spec 028; 2 weeks, ADR 0144)
+
+- **Status:** Started 2026-11-20 (Sprint 23 merged, PR #34). **Plan shown to the owner before any code and approved 2026-11-20** (order, size, the two leftovers; ADR 0144).
+- **Branch:** `sprint/24-town-life-events`, from `main` after PR #34
+- **Goal:** The town answers what the player does and tests what the player prepared. Citizens petition, remember whether they were heard, hold festivals, and give the town a name that draws families; crime and inequality show fairness. Events, disasters, insurance and forward contracts teach a small sure cost against a large uncertain one. The mill's atta reaches the local market as spec 016 said. The hills open for apples. Save schema 22 ships once with a fixture for every new part.
+- **Points:** 35 = US-151 5, US-150 3, US-149 3, US-154 8, US-155 5, US-156 3, US-147 5 (the table's 32) + **US-264 3** (new, ADR 0144 §3)
+- **Specs to write and review:** **spec 028 (business growth: invoices, managers, sell or expand, investors and buy-outs, the tuition centre, tempo and restaurant, benefits and night shifts, supervisors and associations, your kirana)** written in this sprint for Sprint 25 (ADR 0057), its gaps closed one per message; the apple figures of spec 025 §3.5 re-approved (four gaps) before US-147.
+- **Device build:** Yes: a Development build
+- **Milestone and labels:** `Phase 3 · Township`; `type:feature`, `type:spec`, `type:adr`, `type:balance`; `area:sim`, `area:content`, `area:ui`, `area:art`; `documentation`
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-151 | Reputation, approval, crime and inequality | [F15.7](features/F15.7-petitions-reputation-crime-and-inequality.md) | 5 | Must | To do |
+| US-150 | Petitions | [F15.7](features/F15.7-petitions-reputation-crime-and-inequality.md) | 3 | Must | To do |
+| US-149 | Festivals | [F15.6](features/F15.6-civic-services-and-coverage.md) | 3 | Should | To do |
+| US-154 | Events and disasters | [F16.1](features/F16.1-event-engine.md) | 8 | Must | To do |
+| US-155 | Insurance | [F16.2](features/F16.2-insurance-and-forward-contracts.md) | 5 | Must | To do |
+| US-156 | Forward contracts | [F16.2](features/F16.2-insurance-and-forward-contracts.md) | 3 | Should | To do |
+| US-264 | The mill's atta at the local market (owner, 2026-11-20) | [F12.2](features/F12.2-production-chains.md) | 3 | Should | To do |
+| US-147 | Hill parcels and apples | [F15.5](features/F15.5-roads-highway-and-hills.md) | 5 | Should | To do (blocked on its four gaps) |
+
+**Order of work** (one stop for the owner's review after each story and each spec; every sheet previewed as an artifact that looks exactly like the game before its UI code):
+
+1. **Branch, ADR 0144, this section.**
+2. **Preview 12** (events: the card, the disaster warning, the Events sheet, the away lines) and **Preview 13** (the Money page's Insurance section, the business and sow sheet rows, the close card, the Store sheet's trader offers), approved before their UI code; **Preview 14** (Town life tab, petition cards, the festival card, the crime overlay) before US-151's screens; **Preview 15** (hills and apples) before US-147's.
+3. **Spec 028** in parallel: its gaps one per message, so the owner is never waiting on me.
+4. **US-151** (schema 22 begins: `TownLifeState`; the pull on migration; the Safety part; the land-value term; the crime overlay), then **US-150**, then **US-149**.
+5. **US-154** (the engine, the nine effect kinds, `Crop.EventHealth`, fire and the epidemic), then **US-155**, then **US-156**.
+6. **US-264** (a gap on how the mill's atta shares the local demand with your own offers; the mill's targets re-measured).
+7. **US-147** after its four gaps (yield and price, sapling and years to fruit, keeping time and the cold store, how the hills open).
+8. **Balance** (the 20% rule; the Village 28–45 days; the Township's pace 101.5 and 135.6; `crimeBase` so a typical town sits near 50; `eventPart` from measured shortfalls; insure-everything and accept-every-contract bots; the mill's re-measure; the **200-seed hands-off Township on the ring**), **the checklist in the Editor by scripted touch**, render statistics, Editor saves backed up before and restored and diffed after, **Development build**, **independent Opus 5.5 high-effort review**, ADRs (as built), `STATUS.md`, feature files, this file, the pull request.
+
+**If it runs over,** cut in this order: spec 027 §11 (the Events history, business-strike cover, the social and workforce events), US-156, US-264, US-147, then spec 026 §11. **Never cut:** the engine, its mercy rules and the away rules, crop insurance, fire with property insurance, every number's *Why?*, the schema 22 fixtures, the exploit checks.
+
+**Carried risks:** `Crop`'s written form may move the goldens (re-pinned once, said in the commit); new systems inside the per-system guard, the fixed order and the 72 h catch-up guards; the 200-seed run takes 15–20 minutes (background, no content edits while it runs); the Sprint 23 Development build's device-only rows are still with the owner.
+
+**Definition of Ready (ADR 0025)**
+
+- [x] Every story checked against specs 026, 027, 025 §3.5 and the code at `main` (9e9e69d)
+- [x] Specs 026 and 027 approved (ADR 0127, 0141)
+- [x] This section approved by the owner (2026-11-20)
+- [ ] US-264's gap and US-147's four gaps closed before their code
+
+**Sprint end checklist**
+
+- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [ ] Spec 028 written and approved; the apple figures re-approved
+- [ ] Save schema 22: migration, fixtures for every new part, every older schema loads
+- [ ] Sheets and cards previewed to and approved by the owner before each story's code
+- [ ] Balance: the 20% rule, the Village, the Township's pace, crime, `eventPart`, the exploit bots, the mill, the 200-seed Township
+- [ ] Render statistics read for each visible story, growth over 10% reported
+- [ ] Test checklist with device-only rows marked; Development build
 - [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
 - [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it
