@@ -50,7 +50,7 @@
 | 20 | Every number's **?** on the new sheets | A *Why?* in words, never a raw factor | | `WhyTests` |
 | 21 | Pan and zoom the biggest town you have for a minute | Smooth; the ring's frame time is the one to watch (the zoom-out is capped) | **Device only** | |
 | 22 | Tap targets on the new cards and sheets (the lane, build and overlay cards) | Every button easy to hit with a thumb | **Device only** | |
-| 23 | Text size 125% on the Infrastructure and Building sheets | Nothing cut off | | Editor (see the pull request) |
+| 23 | Text size 125% on the Building sheet and the Your people → Town tab | Nothing cut off | | Editor ✓ (`s23-end-125-*.png`) |
 | 24 | Developer panel → run the frame check on the Township map zoomed out and panned for a minute | Main-thread p95 ≤ 8.3 ms and GPU p95 ≤ 11 ms (ADR 0094); about 60 fps; under 1% of frames over 25 ms. Write both p95s down | **Device only** | |
 | 25 | Developer panel → **Golden replays** | ALL PASS | **Device only** | |
 | 26 | Developer panel → **Away cap (72 h)** with a Township open | It finishes inside the budget shown (2,000 ms) with no hitch; the away card lists what happened | **Device only** | |
