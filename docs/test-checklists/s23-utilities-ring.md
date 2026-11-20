@@ -35,7 +35,7 @@
 | 5 | Build a family house on a free acre | A card lists bricks, cement, timber and masons; the build starts or says why it is held | | Editor ✓ (`s23-145-*.png`) |
 | 6 | Found a **brick kiln** | The ghost shows its smoke footprint; the card lists the fuel; hire a kiln hand | | Editor ✓ (`s23-243-*.png`) |
 | 7 | Let a day pass with the kiln open | Bricks in the yard, some sold to the trader at 6:00, none in the Monsoon | | Editor ✓ (`s23-243-*.png`) |
-| 8 | Menu → Town treasury → **Infrastructure** | Four ladders (water, power, sanitation, waste) with a build card and a top-up | | Editor ✓ (`s23-144-*.png`) |
+| 8 | Tap the people pill (top right) → the **Town** tab → **Infrastructure** | Four ladders (water, power, sanitation, waste) with a build card and a top-up | | Editor ✓ (`s23-144-*.png`) |
 | 9 | Commission a **water tower** | The treasury builds it from materials; the reach and its upkeep are shown | | Editor ✓ (`s23-144-tower.png`) |
 | 10 | Upgrade a house to **pucca** | A card with materials and masons; the rent follows at the renewal | | Editor ✓ (`s23-152-*.png`) |
 | 11 | **Overlays** (right side) → each of the five | One hue in five steps; the coverage overlay hatches the kiln's smoke red; a tap card beside an acre | | Editor ✓ (`s23-153-*.png`) |
@@ -50,7 +50,10 @@
 | 20 | Every number's **?** on the new sheets | A *Why?* in words, never a raw factor | | `WhyTests` |
 | 21 | Pan and zoom the biggest town you have for a minute | Smooth; the ring's frame time is the one to watch (the zoom-out is capped) | **Device only** | |
 | 22 | Tap targets on the new cards and sheets (the lane, build and overlay cards) | Every button easy to hit with a thumb | **Device only** | |
-| 23 | Text size 125% on the Infrastructure and Building sheets | Nothing cut off | **Device only** | |
+| 23 | Text size 125% on the Infrastructure and Building sheets | Nothing cut off | | Editor (see the pull request) |
+| 24 | Developer panel → run the frame check on the Township map zoomed out and panned for a minute | Main-thread p95 ≤ 8.3 ms and GPU p95 ≤ 11 ms (ADR 0094); about 60 fps; under 1% of frames over 25 ms. Write both p95s down | **Device only** | |
+| 25 | Developer panel → **Golden replays** | ALL PASS | **Device only** | |
+| 26 | Developer panel → **Away cap (72 h)** with a Township open | It finishes inside the budget shown (2,000 ms) with no hitch; the away card lists what happened | **Device only** | |
 
 ## Render statistics (Editor, 2026-11-20, three views, no metric grew over 10% against the last reading)
 

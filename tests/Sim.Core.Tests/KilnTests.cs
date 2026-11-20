@@ -71,6 +71,24 @@ namespace Sim.Core.Tests
             Assert.That(sim.Config.Game.Township.Smoke.Source("kiln").Reach, Is.EqualTo(150));
         }
 
+        // The review (2026-11-20): the kiln's plan pays back in about 7 seasons hired and about 4 run by you, counting the Monsoon (nothing fired, the
+        // wage, wear and repairs still come): the targets the bots would have set.
+        [Test]
+        public void Plan_Payback_CountsTheMonsoon()
+        {
+            Simulation sim = Township();
+            BusinessTypeDef t = BusinessRules.Defs(sim).Types.First(x => x.Id == "brick_kiln");
+            foreach (bool you in new[] { false, true })
+            {
+                BusinessRules.Projection p = BusinessRules.Projected(sim, t, you, 0, Fixed.Zero);
+                long dead = p.Wage + p.Repairs + p.Depreciation; // a Monsoon season
+                double average = (3.0 * p.Profit - dead) / 4.0 / Coin, payback = (p.Cost / (double)Coin) / average;
+                TestContext.Out.WriteLine((you ? "run by you" : "hired") + ": a firing season " + p.Profit / Coin + ", a year's average " + (long)average + ", payback " + payback.ToString("0.0") + " seasons");
+                if (you) Assert.That(payback, Is.InRange(2.0, 4.5), "run by you");
+                else Assert.That(payback, Is.InRange(4.0, 8.0), "hired");
+            }
+        }
+
         // AC-7: an open hour fires the hand's rate of bricks into the yard, fuel paid as it burns and kept in the bricks' cost; the books reconcile.
         [Test]
         public void Fires_Outside_The_Monsoon()

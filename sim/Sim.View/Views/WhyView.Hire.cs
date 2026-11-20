@@ -14,11 +14,11 @@ namespace Sim.View.Views
             Machine m = EquipmentRules.Find(sim, id);
             if (m == null) return New(ctx, "why.hireFee.title", "");
             MachineDef d = EquipmentRules.Defs(sim).Machines[m.Kind];
-            WhyVm vm = New(ctx, "why.hireFee.title", ctx.Fmt.Paise(EquipmentRules.HireFeePerAcre(sim, d)));
+            WhyVm vm = New(ctx, "why.hireFee.title", ctx.Fmt.PaiseCoins(EquipmentRules.HireFeePerAcre(sim, d)));
             Row(vm, ctx, "why.hireFee.day", ctx.Fmt.Coins(EquipmentRules.Hire(sim, d)));
             Row(vm, ctx, "why.hireFee.fields", ctx.Fmt.Integer(d.Acres));
-            Row(vm, ctx, "why.hireFee.acre", ctx.Fmt.Paise(EquipmentRules.Hire(sim, d) / d.Acres));
-            Row(vm, ctx, "why.hireFee.share", ctx.Fmt.Paise(EquipmentRules.HireFeePerAcre(sim, d)), "pct", ctx.Fmt.Percent(EquipmentRules.Defs(sim).CustomFeeShare));
+            Row(vm, ctx, "why.hireFee.acre", ctx.Fmt.PaiseCoins(EquipmentRules.Hire(sim, d) / d.Acres));
+            Row(vm, ctx, "why.hireFee.share", ctx.Fmt.PaiseCoins(EquipmentRules.HireFeePerAcre(sim, d)), "pct", ctx.Fmt.Percent(EquipmentRules.Defs(sim).CustomFeeShare));
             Row(vm, ctx, "why.hireFee.cap", ctx.Fmt.Integer(d.CustomAcresPerDay));
             Text(vm, ctx, "why.hireFee.how");
             vm.Footnote = ctx.Strings.Get("why.hireFee.lesson");
@@ -35,7 +35,7 @@ namespace Sim.View.Views
             EquipmentDefs e = EquipmentRules.Defs(sim);
             EquipmentRules.HiredOutSeason(sim, m, out int acres, out long fees, out long diesel);
             WhyVm vm = New(ctx, "why.hireCost.title", ctx.Fmt.Coins(diesel));
-            Row(vm, ctx, "why.hireCost.dieselAcre", ctx.Fmt.Paise(EquipmentRules.Diesel(sim, d, 1) / d.Acres));
+            Row(vm, ctx, "why.hireCost.dieselAcre", ctx.Fmt.PaiseCoins(EquipmentRules.Diesel(sim, d, 1) / d.Acres));
             Row(vm, ctx, "why.hireCost.dieselDay", ctx.Fmt.Coins(EquipmentRules.HireDiesel(sim, d)), "acres", ctx.Fmt.Integer(d.CustomAcresPerDay));
             Row(vm, ctx, "why.hireCost.chance", ctx.Fmt.Percent((m.Maintained ? e.BreakdownMaintained : e.BreakdownSkipped) * Sim.Core.Maths.Fixed.FromInt(e.CustomWear)),
                 "own", ctx.Fmt.Percent(m.Maintained ? e.BreakdownMaintained : e.BreakdownSkipped));

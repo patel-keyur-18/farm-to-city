@@ -156,6 +156,25 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>
+        /// The sprint-23 farm: the Equipped farm with its tractor let out to neighbours, heifers kept, a silage pit and a chaff cutter, and the
+        /// pump with its solar panel (US-254 to US-257), so the Why? sweep reaches their sheets.
+        /// </summary>
+        public static Simulation Promises()
+        {
+            Simulation sim = Equipped();
+            Ok(sim, new SetCashForTest(T(sim), 20_00_000_00));
+            Ok(sim, new SetKeepHeifers(T(sim), true));
+            Ok(sim, new BuildSilagePit(T(sim)));
+            Ok(sim, new BuyChaffCutter(T(sim)));
+            Ok(sim, new SetHireOut(T(sim), Sim.Core.Equipment.EquipmentRules.OfKind(sim, sim.Config.Game.Equipment.IndexOf("tractor")).Id, true));
+            Ok(sim, new InstallPump(T(sim)));
+            Ok(sim, new FitSolarPanel(T(sim), 1));
+            sim.AdvanceTo(T(sim) + 2 * 86_400);
+            sim.DrainEvents();
+            return sim;
+        }
+
         /// <summary>Your cash set to <paramref name="amount"/> (1/100 coin) with a balanced test entry.</summary>
         public static void SetCash(Simulation sim, long amount) { sim.Execute(new SetCashForTest(T(sim), amount)); }
 
@@ -348,6 +367,8 @@ namespace Sim.View.Tests
             yield return Equipped();
             yield return Township();
             yield return TownshipBuilt();
+            yield return Kiln();
+            yield return Promises();
         }
     }
 }
@@ -375,6 +396,13 @@ namespace Sim.View.Tests
                 foreach (Parcel p in sim.State.Land.Parcels.Where(p => p.Owned && !p.Protected))
                     yield return N("sell land " + p.Id, SellLandSheet.Build(ctx, sim.Config.Game.Map.Parcels[p.Id].Tiles[0])); // spec 024 AC-11: every land-value number has a Why?
             if (Sim.Core.Market.ColdStoreRules.On(sim)) yield return N("cold store", ColdStoreSheet.Build(ctx)); // US-242: every number has a Why?
+            if (Sim.Core.Town.ConstructionRules.On(sim)) yield return N("building", BuildingSheet.Build(ctx)); // US-145: every number has a Why?
+            if (sim.State.Equipment != null)
+            {
+                yield return N("equipment", EquipmentSheet.Build(ctx));
+                for (int m = 0; m < sim.Config.Game.Equipment.Machines.Count; m++) yield return N("machine loan " + m, MachineLoanSheet.Build(ctx, m));
+            }
+            if (sim.State.Livestock != null && Sim.Core.Livestock.LivestockRules.Shed(sim) != null) yield return N("shed", ShedSheet.Build(ctx)); // US-254, US-255
             yield return N("money", MoneySheet.Build(ctx));
             yield return N("money wealth", MoneySheet.Build(ctx, MoneySheet.Wealth));
             yield return N("money last", MoneySheet.Build(ctx, MoneySheet.LastSeason));

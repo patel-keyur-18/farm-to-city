@@ -1,23 +1,23 @@
 {
   "Schema": 21,
-  "Hash": "0x499DEFC42844D0ED",
+  "Hash": "0xE0C69A89F7D9329A",
   "Facts": {
-    "buildings": 2,
-    "cash": 637078881,
+    "buildings": 5,
+    "cash": 1014506131,
     "chaptersSeen": 0,
     "crops": 0,
     "era": 3,
     "gardenBedsSown": 0,
     "guidanceStep": 0,
-    "hands": 0,
+    "hands": 1,
     "loansOpen": 0,
     "orders": 0,
     "parcelsOwned": 4,
-    "profitableSeasons": 1,
+    "profitableSeasons": 0,
     "roster": 8,
     "seasonReports": 1,
-    "simTime": 356400,
-    "storeTotal": 597904,
+    "simTime": 529200,
+    "storeTotal": 596709,
     "trees": 0
   }
 }

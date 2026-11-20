@@ -357,9 +357,10 @@ namespace Sim.Core.Equipment
                     continue;
                 }
                 Fixed chance = m.Maintained ? Defs(sim).BreakdownMaintained : Defs(sim).BreakdownSkipped;
-                if (HiringOut(sim, m))
+                bool hiring = HiringOut(sim, m);
+                long fee = hiring ? HireFee(sim, d) : 0, fuel = hiring ? HireDiesel(sim, d) : 0;
+                if (hiring && sim.State.Ledger.Cash + fee - fuel >= 0) // a day's diesel with no cash to pay it is not driven (the books never go below 0)
                 {
-                    long fee = HireFee(sim, d), fuel = HireDiesel(sim, d);
                     if (!changed) FarmSystem.Accrue(sim);
                     changed = true;
                     var postings = new List<Posting> { new Posting(Account.Cash, fee - fuel), new Posting(Account.MachineHire, -fee) };

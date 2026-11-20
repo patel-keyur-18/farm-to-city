@@ -1044,8 +1044,8 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-145 | Construction: bricks, cement, timber, masons, held builds | [F15.4](features/F15.4-utilities-and-construction.md) | 8 | Must | Approved (2026-11-18) |
 | US-243 | Brick kiln | [F12.7](features/F12.7-township-businesses.md) | 5 | Must | Approved (2026-11-19) |
 | US-144 | Utilities | [F15.4](features/F15.4-utilities-and-construction.md) | 8 | Must | Approved (2026-11-19) |
-| US-152 | Building upgrades: kutcha to pucca | [F15.8](features/F15.8-building-upgrades-and-overlays.md) | 5 | Must | Done (owner approval pending) |
-| US-153 | Overlays | [F15.8](features/F15.8-building-upgrades-and-overlays.md) | 5 | Must | Done |
+| US-152 | Building upgrades: kutcha to pucca | [F15.8](features/F15.8-building-upgrades-and-overlays.md) | 5 | Must | Approved (2026-11-19) |
+| US-153 | Overlays | [F15.8](features/F15.8-building-upgrades-and-overlays.md) | 5 | Must | Approved (2026-11-19) |
 | US-242 | The cold store | [F13.3](features/F13.3-orchards-and-granary.md) | 3 | Should | Approved (2026-11-19) |
 | US-254 | Raise calves and grow the herd | [F13.1](features/F13.1-livestock.md) | 3 | Should | Approved (2026-11-19) |
 | US-255 | Silage, a chaff cutter and more sheds | [F13.1](features/F13.1-livestock.md) | 2 | Could | Approved (2026-11-19; the third shed moved to Phase 4) |

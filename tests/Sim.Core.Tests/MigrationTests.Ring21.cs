@@ -30,7 +30,26 @@ namespace Sim.Core.Tests
             Ok(sim, new GiveToTreasury(sim.State.Clock.SimTime, 600_000 * Coin));
             foreach (string lane in new[] { "lane_w1", "lane_w2", "lane_e1" }) Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, lane));
             foreach (string work in new[] { "diesel_generator", "water_tower" }) Ok(sim, new CommissionWorks(sim.State.Clock.SimTime, work)); // US-144: the generator fitted, the tower under way
-            sim.AdvanceTo(TreasuryTests.NextClose(sim) + 3 * Hour);
+            // Every other part of Sprint 23 in the same town (the independent review, 2026-11-20): the kiln with its yard, the cold store, a shed with a
+            // heifer, the silage pit and the chaff cutter, a hired-out tractor, a pump with its solar panel. Each is read behind its own schema gate.
+            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Finance.Posting(Finance.Account.Cash, 5_000_000 * Coin), new Finance.Posting(Finance.Account.OpeningEquity, -5_000_000 * Coin)); // posted straight to the books: a test's cash is no command in the save
+            int kilnTile = sim.State.Land.Tiles.First(t => Business.BusinessRules.Place(sim, t.Id) == RejectReason.None && People.HouseRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "brick_kiln", kilnTile, 400_000 * Coin, false));
+            Business.Business kiln = sim.State.Businesses.Businesses.Last();
+            BusinessTests.Staff(sim, kiln);
+            Ok(sim, new RentColdStore(sim.State.Clock.SimTime, 3));
+            Ok(sim, new BuildShed(sim.State.Clock.SimTime));
+            sim.AdvanceTo(sim.State.Clock.SimTime + 25 * Hour);
+            Ok(sim, new SetKeepHeifers(sim.State.Clock.SimTime, true));
+            Ok(sim, new BuildSilagePit(sim.State.Clock.SimTime));
+            Ok(sim, new BuyChaffCutter(sim.State.Clock.SimTime));
+            HireHand(sim);
+            Ok(sim, new BuyMachine(sim.State.Clock.SimTime, "tractor"));
+            Ok(sim, new SetHireOut(sim.State.Clock.SimTime, Equipment.EquipmentRules.OfKind(sim, sim.Config.Game.Equipment.IndexOf("tractor")).Id, true));
+            Ok(sim, new InstallPump(sim.State.Clock.SimTime));
+            Ok(sim, new FitSolarPanel(sim.State.Clock.SimTime, 1));
+            sim.AdvanceTo(Math.Max(kiln.ReadyAt, TreasuryTests.NextClose(sim)) + 3 * Hour);
+            sim.AdvanceTo(sim.State.Clock.SimTime + 2 * Day);
             sim.DrainEvents();
             Assert.That(sim.State.Township.LanesBuilt, Is.EqualTo(0b10011));
             Assert.That(sim.State.Township.UtilitiesBuilt & 0b10, Is.EqualTo(0b10), "the generator stands");
@@ -55,6 +74,14 @@ namespace Sim.Core.Tests
             Assert.That(r.State.Township.LandValues.Length, Is.EqualTo(432), "the ring is read too");
             Assert.That(r.State.Township.UtilitiesBuilt & 0b10, Is.EqualTo(0b10), "the generator (US-144) stands");
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
+            // the other parts of the sprint (US-243, US-242, US-254, US-255, US-256, US-257)
+            Business.Business kiln = r.State.Businesses.Businesses.Single(x => config.Game.Businesses.Types[x.Type].IsKiln);
+            Assert.That(kiln.KilnMade, Is.GreaterThanOrEqualTo(0), "the kiln and its counts");
+            Assert.That(r.State.Godown.ColdRentedTonnes + r.State.Godown.ColdRentNextTonnes, Is.GreaterThan(0), "the cold store's rented tonnes");
+            Assert.That(r.State.Livestock.KeepHeifers, Is.True, "the heifer switch");
+            Assert.That((r.State.Livestock.SilagePit, r.State.Livestock.ChaffCutter), Is.EqualTo((true, true)), "the silage pit and the chaff cutter");
+            Assert.That(r.State.Equipment.Machines.Any(m => m.HireOut), Is.True, "the tractor let out");
+            Assert.That(r.State.Irrigation.PumpSolar, Is.GreaterThan(0), "the pump's solar panel");
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);
             Assert.That(again.State.ComputeHash(), Is.EqualTo(r.State.ComputeHash()), "round-trips");
             Simulation sim = Simulation.FromState(config, r.State);

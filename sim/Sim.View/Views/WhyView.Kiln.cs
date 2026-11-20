@@ -78,7 +78,7 @@ namespace Sim.View.Views
                 }
                 default:
                 {
-                    WhyVm vm = New(ctx, "why.kilnCost.title", KilnSheet.Plain(ctx, b == null ? KilnRules.FuelCost(sim, k, 1) : KilnRules.FuelCost(sim, b, k, 1)));
+                    WhyVm vm = New(ctx, "why.kilnCost.title", KilnSheet.PerBrick(ctx, b == null ? KilnRules.FuelCost(sim, k, 1) : KilnRules.FuelCost(sim, b, k, 1)));
                     Text(vm, ctx, "why.kilnCost.text", "kg", ctx.Fmt.Decimal1(k.FuelKg), "price", ctx.Fmt.PricePerKg(k.FuelPrice * index));
                     return vm;
                 }

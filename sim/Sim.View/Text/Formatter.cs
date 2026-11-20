@@ -91,6 +91,9 @@ namespace Sim.View.Text
             return _strings.Plural("unit.coins", Math.Abs(coins), "amount", Integer(coins));
         }
 
+        /// <summary>A price in paise with its unit, for a Why? row: "81.37 coins".</summary>
+        public string PaiseCoins(long money) { return _strings.Get("unit.paiseCoins", "amount", Paise(money)); }
+
         /// <summary>The ledger's detail rows: 1,20,000.40 (two decimals, paise).</summary>
         public string Paise(long money)
         {

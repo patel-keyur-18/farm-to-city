@@ -193,7 +193,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 - **Feed** is eaten automatically every morning at 6:00, also while away: green fodder (the grazing commons cover a share, most in the Monsoon; then berseem, sown in Winter and cut through Spring, or sorghum, sown in Summer and cut through the Monsoon; then bought from neighbours); straw, a by-product of wheat and rice, on a straw stack; and bought cattle feed in the shed's feed room. Green fodder is never stored; what the animals don't eat sells standing to neighbours cheaply.
 - **A shortfall** cuts milk, and several hungry days lower health. No animal dies in Phase 2. A notification comes 2 days before straw or feed runs out; the hand's "animals" order keeps them stocked.
 - **Dung becomes compost** in the yard's compost pit, about 3.5 t an animal a year. About 13 game days in milk and 3–5 dry, then a calf (sold at the fair for now). A vaccination each season, a seeded disease risk and the vet. 1.5 labour hours a day per animal from the Care pool.
-- Goats, poultry, raising calves and silage come later; no pigs.
+- Goats and poultry come later; no pigs. Raising calves (a switch that keeps heifer calves, ADR 0135) and silage with a chaff cutter (ADR 0136) are built; a third shed is Phase 4.
 
 **Equipment ladder.** Hand tools, then an ox plough, then a tractor, then a harvester. Each machine has:
 
@@ -272,7 +272,7 @@ Every business is a small company with its own books, staff and customers. The p
 | Era | Businesses |
 | --- | --- |
 | Hamlet | Flour mill (atta chakki), farm stall; the cattle shed is part of the farm (spec 012) |
-| Village | Bakery, dairy (paneer, curd, ghee), vegetable stall, tea stall, sweet shop (built in Phase 2; the grocer is the village's own, spec 017); tailor, carpenter, brick kiln (not built yet: their phase is set in a later plan check) |
+| Village | Bakery, dairy (paneer, curd, ghee), vegetable stall, tea stall, sweet shop (built in Phase 2; the grocer is the village's own, spec 017); tailor, carpenter (not built yet: their phase is set in a later plan check) |
 | Township | Phase 3 (ADR 0107): brick kiln, tuition centre, tempo transport, restaurant; builders are townspeople with a mason trade. Phase 4: hardware store, private clinic, construction company, transport by truck (and the Village's tailor and carpenter) |
 | Town | Hotel, textile mill, food processing plant, furniture factory, real estate developer, bus company |
 | City | Bank, mall, IT services firm, hospital chain, logistics hub, export house |

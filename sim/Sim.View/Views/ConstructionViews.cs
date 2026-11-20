@@ -93,7 +93,7 @@ namespace Sim.View.Views
             {
                 if (p.Owner == BuildProject.Builders) continue;
                 string state = p.Working ? s.Get("build.buildingLeft", "time", ctx.Fmt.Duration(p.ReadyAt - ctx.Now)) : s.Get("build.waitingFor", "good", Good(ctx, ConstructionRules.Missing(sim, p)));
-                var line = new LineVm(s.Get("build.queueRow", "n", ctx.Fmt.Integer(++n), "what", Name(ctx, p)), state);
+                var line = new LineVm(s.Get("build.queueRow", "n", ctx.Fmt.Integer(++n), "what", Name(ctx, p)), state, Why, p.Id * 100 + Status);
                 vm.Lines.Add(line);
             }
             int builders = ConstructionRules.BuildersProjects(sim);
