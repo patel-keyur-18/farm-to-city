@@ -37,7 +37,7 @@ Fixed (with the tests that pin them):
 9. **A loosened balance assertion's message** ("every service at 100%") said the opposite of its bound: corrected.
 10. **The balance pass** was not all done: the kiln's targets are now a test; the generator's and the cold store's are arithmetic in spec 025.
 
-Flagged to the owner (a decision, not a fix): the kiln has no cap on how many you found and the trader buys 5,000 bricks a day from each, so two or three kilns multiply the profit (and the smoke's health effect stacks); the kiln is **from the Village** in the content and in F12.7's scope, but a Township business in spec 025's §3.3 and the GDD; a throwing system still skips the systems after it for that pass (a per-system guard); a zero-tax town is now only 0.3 happiness below a taxed one (spec 022 expected 5).
+Flagged to the owner (a decision, not a fix; the owner took the recommendations on all four, ADR 0143): the kiln has no cap on how many you found and the trader buys 5,000 bricks a day from each, so two or three kilns multiply the profit (and the smoke's health effect stacks); the kiln is **from the Village** in the content and in F12.7's scope, but a Township business in spec 025's §3.3 and the GDD; a throwing system still skips the systems after it for that pass (a per-system guard); a zero-tax town is now only 0.3 happiness below a taxed one (spec 022 expected 5).
 
 ## Consequences
 

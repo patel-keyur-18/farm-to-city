@@ -15,8 +15,8 @@ namespace Sim.Core.Tests
         private sealed class ThrowsOnce : ISimSystem
         {
             public long At;
-            public bool Thrown;
-            public SystemOrder Order { get { return SystemOrder.Events; } }
+            public bool Thrown, Early;
+            public SystemOrder Order { get { return Early ? SystemOrder.Production : SystemOrder.Events; } }
             public void OnPass(Simulation sim, ItemClass pass)
             {
                 if (pass != ItemClass.Hourly || Thrown || sim.State.Clock.SimTime < At) return;
@@ -49,6 +49,31 @@ namespace Sim.Core.Tests
         }
 
         // A town saved while it was in that state (the device's): loads whole, with the hourly pass back and the same weather it would have had.
+        private sealed class Counts : ISimSystem
+        {
+            public int Passes;
+            public SystemOrder Order { get { return SystemOrder.Events; } }
+            public void OnPass(Simulation sim, ItemClass pass) { if (pass == ItemClass.Hourly) Passes++; }
+        }
+
+        // ADR 0143: with the app's handler set, one throwing system is reported and the systems after it still run that pass.
+        [Test]
+        public void ASystemThatThrows_DoesNotStopTheSystemsAfterIt_WhenTheAppHandlesIt()
+        {
+            var bad = new ThrowsOnce { At = 5 * 3600, Early = true };
+            var after = new Counts();
+            var reported = new System.Collections.Generic.List<string>();
+            Simulation.SystemFailed = (s, p, e) => reported.Add(s.GetType().Name);
+            try
+            {
+                Simulation sim = TestSim.New(systems: new ISimSystem[] { bad, after });
+                sim.AdvanceTo(10 * 3600);
+                Assert.That(reported, Is.EqualTo(new[] { nameof(ThrowsOnce) }), "reported once");
+                Assert.That(after.Passes, Is.EqualTo(10), "it ran in every hourly pass, the failing one too");
+            }
+            finally { Simulation.SystemFailed = null; }
+        }
+
         [Test]
         public void ATownSavedWithoutItsHourlyPass_IsMendedOnLoad()
         {

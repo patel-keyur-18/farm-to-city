@@ -25,6 +25,7 @@
   },
   "smoke": {
     "landValueCap": 0.10,
+    "healthCap": 0.08,
     "sources": {
       "generator": { "reach": 250, "landValue": 0.06, "health": 0.05 },
       "kiln": { "reach": 150, "landValue": 0.04, "health": 0.03 }

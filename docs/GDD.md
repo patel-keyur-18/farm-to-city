@@ -272,8 +272,8 @@ Every business is a small company with its own books, staff and customers. The p
 | Era | Businesses |
 | --- | --- |
 | Hamlet | Flour mill (atta chakki), farm stall; the cattle shed is part of the farm (spec 012) |
-| Village | Bakery, dairy (paneer, curd, ghee), vegetable stall, tea stall, sweet shop (built in Phase 2; the grocer is the village's own, spec 017); tailor, carpenter (not built yet: their phase is set in a later plan check) |
-| Township | Phase 3 (ADR 0107): brick kiln, tuition centre, tempo transport, restaurant; builders are townspeople with a mason trade. Phase 4: hardware store, private clinic, construction company, transport by truck (and the Village's tailor and carpenter) |
+| Village | Bakery, dairy (paneer, curd, ghee), vegetable stall, tea stall, sweet shop (built in Phase 2; the grocer is the village's own, spec 017); the brick kiln (built in Phase 3, ADR 0143); tailor, carpenter (not built yet: their phase is set in a later plan check) |
+| Township | Phase 3 (ADR 0107): tuition centre, tempo transport, restaurant; builders are townspeople with a mason trade. Phase 4: hardware store, private clinic, construction company, transport by truck (and the Village's tailor and carpenter) |
 | Town | Hotel, textile mill, food processing plant, furniture factory, real estate developer, bus company |
 | City | Bank, mall, IT services firm, hospital chain, logistics hub, export house |
 

@@ -87,6 +87,7 @@ namespace Game.Presentation
         private void Awake()
         {
             Application.targetFrameRate = 60;
+            Simulation.SystemFailed = (system, pass, e) => Debug.LogError("System " + system.GetType().Name + " failed in the " + pass + " pass; the others carried on: " + e); // ADR 0143
             WeatherSet weather = ContentLoader.LoadWeather(ContentSource.Read("weather.json"));
             GameDefs game = ContentLoader.LoadGame(ContentSource.Read, weather);
             bool dev = Debug.isDebugBuild || Application.isEditor; // development builds and the Editor only (ADR 0038)

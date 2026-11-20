@@ -26,6 +26,12 @@ namespace Sim.Core
         public ClockDef Clock { get { return Config.Clock; } }
         public WeatherSet Weather { get { return Config.Weather; } }
 
+        /// <summary>
+        /// Set by the app: a system that throws in a pass is reported here and the systems after it still run that pass (ADR 0143). Left null (tests,
+        /// the balancer) the exception propagates at once, so a bug still fails loudly.
+        /// </summary>
+        public static Action<ISimSystem, ItemClass, Exception> SystemFailed { get; set; }
+
         private readonly List<ISimSystem> _systems = new List<ISimSystem>();
         private readonly Dictionary<string, IJobHandler> _handlers = new Dictionary<string, IJobHandler>(StringComparer.Ordinal);
         private readonly List<SimEvent> _events = new List<SimEvent>();
@@ -364,7 +370,11 @@ namespace Sim.Core
             // weather behind it (the forecast then throws on every refresh). The same order of scheduling as before on the happy path.
             try
             {
-                foreach (ISimSystem system in _systems) system.OnPass(this, item.Class);
+                foreach (ISimSystem system in _systems)
+                {
+                    try { system.OnPass(this, item.Class); }
+                    catch (Exception e) when (SystemFailed != null) { SystemFailed(system, item.Class, e); }
+                }
             }
             finally
             {

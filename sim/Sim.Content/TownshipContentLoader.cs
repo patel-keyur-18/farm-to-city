@@ -173,7 +173,7 @@ namespace Sim.Content
         {
             string p = Join(root, "smoke");
             JObject j = Object(Required(o, root, "smoke"), p);
-            OnlyFields(j, p, "landValueCap", "sources");
+            OnlyFields(j, p, "landValueCap", "healthCap", "sources");
             JObject src = Object(Required(j, p, "sources"), Join(p, "sources"));
             var list = new System.Collections.Generic.List<SmokeSource>();
             foreach (JProperty prop in src.Properties())
@@ -183,7 +183,7 @@ namespace Sim.Content
                 OnlyFields(x, sp, "reach", "landValue", "health");
                 list.Add(new SmokeSource { Id = prop.Name, Reach = BoundedInt(x, sp, "reach", 0, 5000), LandValue = Bounded(x, sp, "landValue", "0", "1"), Health = Bounded(x, sp, "health", "0", "1") });
             }
-            return new SmokeDef { Sources = list.AsReadOnly(), LandValueCap = Bounded(j, p, "landValueCap", "0", "1") };
+            return new SmokeDef { Sources = list.AsReadOnly(), LandValueCap = Bounded(j, p, "landValueCap", "0", "1"), HealthCap = Bounded(j, p, "healthCap", "0", "1") };
         }
 
         /// <summary>Construction from the Township (spec 025 §3.2): daily limits, prices, masons and the buildings' materials, mason-days and hours.</summary>

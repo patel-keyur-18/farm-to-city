@@ -84,7 +84,8 @@ namespace Sim.Core.Town
             if (home == null || home.TileId < 0) return Fixed.Zero;
             Fixed total = Fixed.Zero;
             foreach (Source s in Reaching(sim, home.TileId)) total += s.Def.Health;
-            return total;
+            Fixed cap = Def(sim)?.HealthCap ?? Fixed.Zero;
+            return total > cap ? cap : total; // like land value: the generator and one kiln, never more
         }
     }
 }

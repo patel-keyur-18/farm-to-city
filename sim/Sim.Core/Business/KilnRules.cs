@@ -104,12 +104,14 @@ namespace Sim.Core.Business
         internal static void Morning(Simulation sim)
         {
             TownshipState town = sim.State.Township;
-            long total = 0;
+            long total = 0, left = -1; // the trader's day for the whole town, shared by the kilns in id order (ADR 0143)
             foreach (Business b in Open(sim))
             {
                 KilnDef k = Def(sim, b);
-                long q = System.Math.Min(b.Yard, k.TraderPerDay);
+                if (left < 0) left = k.TraderPerDay;
+                long q = System.Math.Min(b.Yard, left);
                 if (q <= 0) continue;
+                left -= q;
                 Sell(sim, b, q, BusinessRules.SalePrice(sim, b, PaysFor(sim, k, q)));
                 b.KilnSold += q;
                 total += q;

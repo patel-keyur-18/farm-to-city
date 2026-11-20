@@ -352,6 +352,8 @@ namespace Sim.Core.Definitions
     {
         public System.Collections.Generic.IReadOnlyList<SmokeSource> Sources { get; internal set; }
         public Fixed LandValueCap { get; internal set; }
+        /// <summary>The most health smoke takes from one home in all (ADR 0143): kilns stack, the total does not.</summary>
+        public Fixed HealthCap { get; internal set; }
 
         public SmokeSource Source(string id)
         {

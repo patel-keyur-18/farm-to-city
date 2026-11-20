@@ -142,6 +142,50 @@ namespace Sim.Core.Tests
             Assert.That(b.Ledger.Reconcile(), Is.Null);
         }
 
+        // ADR 0143: the trader's day is one limit for the whole town; two kilns share it, so a second kiln does not sell him more.
+        [Test]
+        public void Two_Kilns_Share_The_Traders_Day()
+        {
+            Simulation sim = Township();
+            ToSeason(sim, Season.Winter);
+            Business.Business a = Kiln(sim);
+            Business.Business b = Kiln(sim, FreeTile(sim, a.TileId));
+            a.Yard = 4_000;
+            b.Yard = 4_000;
+            long cash = a.Ledger.Cash + b.Ledger.Cash;
+            ToHour(sim, 7);
+            Assert.That(a.KilnSold + b.KilnSold, Is.EqualTo(5_000), "5,000 in all, not 5,000 each");
+            Assert.That(a.KilnSold, Is.EqualTo(4_000), "the first kiln in id order takes what it has");
+            Assert.That(b.KilnSold, Is.EqualTo(1_000));
+            Assert.That(ConstructionRules.KilnToday(sim), Is.EqualTo(5_000));
+        }
+
+        // ADR 0143: smoke stacks from kilns, but the health it takes from a home is held at the cap (0.08), as land value is.
+        [Test]
+        public void Smoke_Health_Is_Capped()
+        {
+            Simulation sim = Township();
+            Household home = sim.State.Citizens.Households[0];
+            var free = sim.State.Land.Tiles.Where(t => BusinessRules.Place(sim, t.Id) == RejectReason.None && HouseRules.Place(sim, t.Id) == RejectReason.None).Select(t => t.Id).ToList();
+            int at = free.First(h => free.Count(t => t != h && CoverageRules.Within(sim, h, t, 150)) >= 3); // a home with three free acres in a kiln's reach
+            var house = new Building { Id = sim.State.Land.NextBuildingId++, Def = sim.Config.Game.Population.House, TileId = at }; // the test families come with no home
+            sim.State.Land.Buildings.Add(house);
+            home.HomeId = house.Id;
+            Assert.That(SmokeRules.Health(sim, home), Is.EqualTo(Fixed.Zero));
+            int made = 0;
+            while (made < 3)
+            {
+                int tile = -1;
+                foreach (Tile t in sim.State.Land.Tiles)
+                    if (BusinessRules.Place(sim, t.Id) == RejectReason.None && HouseRules.Place(sim, t.Id) == RejectReason.None && CoverageRules.Within(sim, at, t.Id, 150)) { tile = t.Id; break; }
+                Assert.That(tile, Is.GreaterThanOrEqualTo(0), "a tile in the kiln's reach of the home");
+                Kiln(sim, tile);
+                made++;
+            }
+            Assert.That(SmokeRules.Sources(sim).Count, Is.EqualTo(3));
+            Assert.That(SmokeRules.Health(sim, home), Is.EqualTo(Fixed.Parse("0.08")), "three kilns would take 0.09; the cap holds it at 0.08");
+        }
+
         // AC-7: your own build takes bricks from your yard first, at what they cost the kiln: cheaper than the trader's, no profit for the kiln.
         [Test]
         public void Own_Builds_Take_The_Yard_At_Cost()

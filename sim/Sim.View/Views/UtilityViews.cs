@@ -375,6 +375,7 @@ namespace Sim.View.Views
                     Row(vm, ctx, "why.utility.smoke.lv", ctx.Fmt.Integer((src.LandValue * Fixed.FromInt(100)).RoundToLong()));
                     Row(vm, ctx, "why.utility.smoke.health", ctx.Fmt.Integer((src.Health * Fixed.FromInt(100)).RoundToLong()));
                     Row(vm, ctx, "why.utility.smoke.cap", ctx.Fmt.Integer((SmokeRules.Def(sim).LandValueCap * Fixed.FromInt(100)).RoundToLong()));
+                    Row(vm, ctx, "why.utility.smoke.healthCap", ctx.Fmt.Integer((SmokeRules.Def(sim).HealthCap * Fixed.FromInt(100)).RoundToLong()));
                     Text(vm, ctx, "why.utility.smoke.text");
                     return vm;
                 case UtilitySheet.Who:
