@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 12 Events</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen, scaled to fit, with a tab bar for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink);cursor:pointer}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.sheet.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:700px}
+.card.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.card h3{margin:0;font:700 32px var(--display);text-align:center}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.cost.hi{background:var(--cream2);border-radius:10px;border:0;margin-top:6px}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.btnrow .btn{flex:1}
+.pic{width:170px;height:128px;border-radius:14px;border:3px solid var(--wood);overflow:hidden;flex:none}
+.tag{display:inline-block;font:700 14px var(--body);padding:2px 9px;border-radius:9px;background:#e9d9a8;border:2px solid var(--wood);color:var(--wood);vertical-align:middle;margin-left:8px}
+.tag.major{background:var(--saffron,#E8892A);border-color:#9b5412;color:#fff}
+.tag.warn{background:#fde2cf;border-color:var(--warn);color:var(--warn)}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice.def{background:#efe2bd;border-color:#d8c68e}
+.choice .tx{flex:1;font-size:21px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px;font-weight:400}
+.choice .btn{min-width:190px}
+.note{font-size:17px;color:var(--wood);margin:10px 4px 0;line-height:1.4}
+.note.warn{color:var(--warn);font-weight:600}
+.timer{font:600 19px var(--body);color:var(--warn)}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:760px;text-align:center}
+.banner{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fde2cf;border:4px solid var(--warn);border-radius:16px;padding:9px 20px;font:600 21px var(--body);color:var(--warn);cursor:pointer}
+@keyframes flick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) translateY(-2px)}}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick .5s infinite}
+@media (prefers-reduced-motion:reduce){.flame{animation:none}}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 12: events</h1>
+  <p class="lead">Sprint 24, US-154 (spec 027 §7). Every screen is drawn at the game's own 1280 × 720 size with its palette and type. Tap the tabs, then tap choices, the ? chips and the bell the way you would on the phone. Numbers are the spec's, for a Township in its third year.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const fmt=n=>{n=Math.round(n);const s=String(Math.abs(n));let r=s.length>3?s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+s.slice(-3):s;return (n<0?'-':'')+r};
+const I={
+ sun:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="7" fill="#e8892a"/><g stroke="#e8892a" stroke-width="3" stroke-linecap="round"><path d="M15 2v4M15 24v4M2 15h4M24 15h4M6 6l3 3M21 21l3 3M24 6l-3 3M9 21l-3 3"/></g></svg>',
+ flame:'<svg viewBox="0 0 30 30"><path d="M15 3c1 6 8 8 8 16a8 8 0 0 1-16 0c0-4 3-5 3-9 2 1 4 2 5-7z" fill="#e8602c"/><path d="M15 14c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 2-3 2-5z" fill="#ffd968"/></svg>',
+ bell:'<svg viewBox="0 0 30 30"><path d="M15 4a8 8 0 0 0-8 8v6l-3 4h22l-3-4v-6a8 8 0 0 0-8-8z" fill="#8a5a2b"/><circle cx="15" cy="26" r="3" fill="#8a5a2b"/></svg>',
+ list:'<svg viewBox="0 0 30 30"><rect x="5" y="4" width="20" height="22" rx="3" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M9 11h12M9 16h12M9 21h8" stroke="#8a5a2b" stroke-width="2.5" stroke-linecap="round"/></svg>',
+ drop:'<svg viewBox="0 0 30 30"><path d="M15 3C9 11 7 14 7 18a8 8 0 0 0 16 0c0-4-2-7-8-15z" fill="#4a9bd6"/></svg>',
+ moon:'<svg viewBox="0 0 30 30"><path d="M20 4a11 11 0 1 0 6 18A9 9 0 0 1 20 4z" fill="#8a5a2b"/></svg>',
+ chart:'<svg viewBox="0 0 30 30"><path d="M4 24l7-9 5 5 10-13" fill="none" stroke="#3f7d20" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ heart:'<svg viewBox="0 0 30 30"><path d="M15 26C4 18 4 8 10 7c3 0 5 2 5 4 0-2 2-4 5-4 6 1 6 11-5 19z" fill="#e8604c"/></svg>'
+};
+const pic={
+ drought:'<svg class="pic" viewBox="0 0 170 128"><rect width="170" height="128" fill="#f6d79a"/><circle cx="130" cy="30" r="20" fill="#ffd968"/><rect y="78" width="170" height="50" fill="#b98a4e"/><path d="M10 100l20-6 10 8 22-10 12 8 28-8 18 10 30-6M60 118l12-14 14 10" stroke="#6b4423" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M36 78c0-14 4-22 8-30 2 8 8 14 6 30z" fill="#9a8f4a"/></svg>',
+ fire:'<svg class="pic" viewBox="0 0 170 128"><rect width="170" height="128" fill="#6b3d2a"/><rect y="92" width="170" height="36" fill="#5b4a2a"/><rect x="48" y="48" width="74" height="48" fill="#d9c4a0"/><path d="M40 52l45-30 45 30z" fill="#a0543a"/><g class="flame"><path d="M70 96c-8-14 6-20 2-36 10 6 14 16 10 26 4-4 6-8 6-14 10 10 8 24-2 24z" fill="#e8602c"/><path d="M78 96c-4-8 2-12 0-20 6 4 8 10 6 20z" fill="#ffd968"/></g><ellipse cx="124" cy="30" rx="18" ry="10" fill="#8a8372" opacity=".7"/><ellipse cx="136" cy="16" rx="14" ry="8" fill="#8a8372" opacity=".5"/></svg>',
+ heat:'<svg class="pic" viewBox="0 0 170 128"><rect width="170" height="128" fill="#f9c97a"/><circle cx="85" cy="46" r="26" fill="#e8892a"/><rect y="86" width="170" height="42" fill="#9bb04a"/><path d="M20 70c10-8 10-14 0-22M150 74c10-8 10-14 0-22" stroke="#c2410c" stroke-width="3" fill="none"/></svg>',
+ market:'<svg class="pic" viewBox="0 0 170 128"><rect width="170" height="128" fill="#cfe6b5"/><rect x="30" y="70" width="110" height="46" rx="8" fill="#a8743c"/><circle cx="62" cy="64" r="14" fill="#e8892a"/><circle cx="90" cy="60" r="14" fill="#c2410c"/><circle cx="116" cy="66" r="14" fill="#e8892a"/><path d="M30 40l30-14 30 14 30-14 20 14" stroke="#4a9bd6" stroke-width="4" fill="none"/></svg>'
+};
+const WHY={
+ drought:{t:'Why did this come?',h:'Dry spell',rows:[['The last rain fell','6 days ago'],['It is Spring or Summer','Summer'],['No rain in 3 days makes it twice as likely','×2'],['No rain in 6 days makes it more likely again','×1.5'],['Drought, one of this season\'s big events','1 of 1 this season']],foot:'It came because it hasn\'t rained for 6 days.'},
+ fire:{t:'Why did this come?',h:'Fire risk',rows:[['A heatwave is on, in Summer','twice as likely'],['Buildings you could lose','9'],['Chosen by value; the cattle shed is the dearest','40,000 coins'],['The water tower reaches','3 of 9 buildings']],foot:'Fires are rare: about 1 in 16 days is a big event, and fire is one of two disasters.'},
+ damage:{t:'The fire\'s damage',h:'Cattle shed',rows:[['What the shed is worth','40,000 coins'],['A fire takes 35% of that','14,000 coins'],['The water tower reaches it: half','7,000 coins'],['You cleared dry straw: half again','not done']],foot:'The repair bill is 7,000 coins.'},
+ slow:{t:'Repair slowly or at once',h:'Cattle shed',rows:[['At once: the whole bill','7,000 coins, back in 2 days'],['Slowly: half the bill','3,500 coins, back in 6 days'],['A house or shed loses no days of work','none']],foot:'A shed with cattle still works while it is repaired.'},
+ hist:{t:'What it cost',h:'Heatwave',rows:[['You chose','Water at dawn'],['Paid','240 coins'],['The crops kept','all of their yield'],['If you had let it ride','about 6% of 4 fields']],foot:''}
+};
+let tab='card',cash=139235,state={};
+const views={
+ card:{label:'1 · The event card',notes:[['What to check',['The card sits in the game\'s frame; one choice is named as the default and is free.','Every cost is shown on its button before you tap; paid choices open the usual confirm card.','The card says what happens if you do not answer, and the ? says why it came.','Your pump keeps 6 acres watered: preparation shows on the card.']],['Open questions',['Drought is a major, so its clock is 48 hours. Spec 027 §7\'s sketch says 23 h; this preview uses 46 h and I will correct the spec.']]],render:()=>{
+  if(state.done) return base()+(state.done==='ride'?'':'')+toast(state.done==='tank'?'Water tankers hired for 8 acres: 960 coins. Your rain-fed crops keep their yield.':'You let it ride. Rain-fed crops will lose about 12% this season.');
+  return base()+'<div class="scrim"></div>'+`<div class="card" style="top:46%;width:780px">
+   <div style="display:flex;gap:20px;align-items:flex-start">${pic.drought}<div style="flex:1"><div style="display:flex;align-items:center;gap:10px"><h3 style="text-align:left;font-size:36px;flex:1">Drought<span class="tag major">Big event</span></h3><button class="q" data-why="drought" aria-label="Why did this come?">?</button></div>
+   <div class="note" style="font-size:19px;margin-top:6px">No rain for 6 days, and the soil is drying fast. Rain-fed fields will suffer.</div></div></div>
+   <div class="choice def"><div class="tx">Let it ride<span class="tag">If you wait</span><small>No cost · rain-fed standing crops lose about 12%</small></div><button class="btn sand" data-pick="ride"><span>Let it ride</span></button></div>
+   <div class="choice"><div class="tx">Hire water tankers<small>120 coins an acre · 8 rain-fed acres = 960 coins · no loss</small></div><button class="btn" data-pick="tank"><span>Hire · 960 coins</span></button></div>
+   <div class="note">Your pump keeps 6 acres watered. They are not affected.</div>
+   <div class="note timer">If you do not answer: Let it ride in 46 h</div></div>`;
+ }},
+ warn:{label:'2 · A disaster warning',notes:[['What to check',['Amber frame and a countdown tell this apart from an ordinary event.','Choices are the preparation; the card says what the water tower covers.','A policy bought after the warning does not pay for this fire, and the card says so.']],['Open questions',['A fire warning is shown once; closing it leaves it on the bell with a countdown.']]],render:()=>{
+  if(state.fire) return base(true)+toast(state.fire==='prep'?'Buckets ready and dry straw cleared: 800 coins. A fire would do half the damage.':'You did nothing. The fire risk stays for 47 h.');
+  return base(true)+'<div class="scrim"></div>'+`<div class="card amber" style="top:46%;width:800px">
+   <div style="display:flex;gap:20px;align-items:flex-start">${pic.fire}<div style="flex:1"><div style="display:flex;align-items:center;gap:10px"><h3 style="text-align:left;font-size:36px;flex:1;color:var(--warn)">A fire risk in 47 h<span class="tag warn">Disaster</span></h3><button class="q" data-why="fire" aria-label="Why did this come?">?</button></div>
+   <div class="note" style="font-size:19px;margin-top:6px">Dry straw and a heatwave. A fire may start in one of your 9 buildings. The water tower reaches 3 of them.</div></div></div>
+   <div class="choice def"><div class="tx">Do nothing<span class="tag">If you wait</span><small>No cost · a fire takes 35% of a building's worth, half inside the tower's reach</small></div><button class="btn sand" data-fire="none"><span>Do nothing</span></button></div>
+   <div class="choice"><div class="tx">Clear dry straw, keep buckets ready<small>800 coins · halves the damage of any fire</small></div><button class="btn" data-fire="prep"><span>Prepare · 800 coins</span></button></div>
+   <div class="note">Property insurance: <b>On</b> since the last close. It pays 90% of the repair bill. A policy bought after this warning would not cover this fire.</div>
+   <div class="note timer">The fire, if it comes, strikes at 6:00 on Friday while you are here. It never strikes while you are away.</div></div>`;
+ }},
+ strike:{label:'3 · After the strike',notes:[['What to check',['The second card names the building, the bill and how it was worked out (a ? opens the steps).','Repair at once costs the bill; repairing slowly costs half and takes 6 days.','Insurance shows what comes back before you choose.']],['Open questions',['If you do not answer the strike card in 24 h I would take Repair slowly (half the bill, always affordable). Spec 027 only says that default when you cannot pay. Is that right?']]],render:()=>{
+  if(state.rep) return base(true,true)+toast(state.rep==='now'?'Repair at once: 7,000 coins paid, 6,300 coins back from insurance. The shed works again in 2 days.':'Repairing slowly: 3,500 coins paid, 3,150 coins back from insurance. The shed works again in 6 days.');
+  return base(true,true)+'<div class="scrim"></div>'+`<div class="card amber" style="top:46%;width:800px">
+   <div style="display:flex;gap:20px;align-items:flex-start">${pic.fire}<div style="flex:1"><div style="display:flex;align-items:center;gap:10px"><h3 style="text-align:left;font-size:36px;flex:1;color:var(--warn)">Fire at the cattle shed<span class="tag warn">Disaster</span></h3><button class="q" data-why="damage" aria-label="How was the damage worked out?">?</button></div>
+   <div class="note" style="font-size:19px;margin-top:6px">The shed is damaged. The water tower reached it, so the bill is half. Your 4 animals are safe.</div></div></div>
+   <div class="choice"><div class="tx">Repair at once<small>7,000 coins · working again in 2 days · insurance pays 6,300 back</small></div><button class="btn" data-rep="now"><span>Pay 7,000 coins</span></button></div>
+   <div class="choice def"><div class="tx">Repair slowly<span class="tag">If you wait</span><small>3,500 coins · working again in 6 days · insurance pays 3,150 back</small></div><button class="btn sand" data-rep="slow"><span>Pay 3,500 coins</span></button></div>
+   <div class="note">Cash today: ${fmt(cash)} coins. A shed with cattle in it keeps working while it is repaired, so no days of work are lost.</div>
+   <div class="note timer">If you do not answer: Repair slowly in 23 h <button class="q" data-why="slow" style="display:inline-flex;width:30px;height:30px;font-size:17px;vertical-align:middle;margin-left:6px" aria-label="Why?">?</button></div></div>`;
+ }},
+ sheet:{label:'4 · The Events sheet',notes:[['What to check',['Menu → Events lists what is waiting with its clock and the last 8 answers with what each cost or paid.','Waiting cards open from here; a default taken for you says so in the history.','Each row has its own ? chip.']],['Cut first',['The history list is the first thing to cut if the sprint runs over; the card and the bell stay.']]],render:()=>{
+  const w=(ic,t,sub,tag,k)=>`<div class="row"><div class="ico">${I[ic]}</div><div class="grow">${t}${tag}<small>${sub}</small></div><button class="btn" data-open="${k}" style="min-width:120px;padding:6px 14px 8px"><span>Open</span></button></div>`;
+  const h=(t,sub,val,k)=>`<div class="row"><div class="grow">${t}<small>${sub}</small></div><div class="val">${val}</div><button class="q" data-why="hist" aria-label="Why?">?</button></div>`;
+  return base()+'<div class="scrim"></div>'+sheet('Events','Two waiting · Summer, year 3',I.list,
+  `<div class="sec">Waiting · 2</div>`+
+  w('sun','Drought','Let it ride in 46 h','<span class="tag major">Big event</span>','card')+
+  w('chart','Price boom: wheat','Hold in 20 h (the trader pays 20% more for 3 days)','','card')+
+  `<div class="sec">Your last answers</div>`+
+  h('Heatwave','Water at dawn · 6 days ago','-240 coins')+
+  h('Wedding','Sent regards · 9 days ago','nothing')+
+  h('Fuel spike','Pay it (taken for you) · 14 days ago','diesel +35% for the season')+
+  h('Regional grant','Applied · 21 days ago','+6,000 coins at the close')+
+  h('New family','Welcomed · 27 days ago','a family moved in'));
+ }},
+ away:{label:'5 · The away card',notes:[['What to check',['One line for each default taken, with the choice named and the effect in plain words.','The card says that no big event or disaster can start while you are away.']],['Why',['This is ADR 0002\'s 72 h rule: nothing big happens to a town nobody is watching.']]],render:()=>
+  base()+'<div class="scrim"></div>'+`<div class="card" style="top:48%;width:860px"><h3>While you were away</h3><div class="note" style="text-align:center;font-size:19px;margin-top:4px">11 hours</div>
+   <div class="row"><div class="ico">${I.sun}</div><div class="grow">Heatwave<small>You were away, so the safe choice was taken: Let it ride. Standing crops lose about 6%.</small></div><button class="q" data-why="hist">?</button></div>
+   <div class="row"><div class="ico">${I.chart}</div><div class="grow">Price slump: rice<small>You were away, so you held. The trader pays 15% less for 3 days.</small></div><button class="q" data-why="hist">?</button></div>
+   <div class="note" style="text-align:center">No big event or disaster can start while you are away.</div>
+   <div class="btnrow"><button class="btn" style="max-width:340px;margin:0 auto"><span>OK</span></button></div></div>`},
+ map:{label:'6 · On the map',notes:[['What to check',['The bell keeps waiting cards with a count; the amber banner counts the hours to a disaster.','During the 2 days a business building is shut after a fire, flames and smoke are drawn on it; hail and heat use the weather look already in the game.','Fire\'s sprite and the seven family icons are drawn in Blender (about 10 icons and one map sprite).']]],render:()=>base(true,true,true)+`<div class="banner">A fire risk in 47 h</div>`}
+};
+function mapSvg(fire){
+ let t='';
+ for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+ (r%2?0:0)+520,y=140+(c+r)*46;const col=(c*7+r*3)%5;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][col];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f6a2a" stroke-width="2" opacity=".95"/>`}
+ let b='';
+ if(fire)b=`<g transform="translate(560,330)"><polygon points="0,40 70,75 0,110 -70,75" fill="#c9b690"/><polygon points="-70,75 0,110 0,60 -70,25" fill="#b8a27a"/><polygon points="70,75 0,110 0,60 70,25" fill="#a38c64"/><polygon points="-80,28 0,-20 80,28 0,66" fill="#9a4a32"/>
+   <g class="flame"><path d="M-14 50c-16-26 12-36 4-66 20 12 28 30 20 50 8-8 12-16 12-26 20 20 16 46-4 46z" fill="#e8602c"/><path d="M-4 50c-8-16 4-22 0-38 12 8 16 20 12 38z" fill="#ffd968"/></g>
+   <ellipse cx="40" cy="-60" rx="34" ry="18" fill="#8a8372" opacity=".7"/><ellipse cx="60" cy="-96" rx="26" ry="14" fill="#8a8372" opacity=".5"/></g>
+   <g transform="translate(330,250)"><rect x="-8" y="-60" width="16" height="70" fill="#8a6a46"/><ellipse cx="0" cy="-66" rx="26" ry="14" fill="#6b8caa"/></g>
+   <ellipse cx="330" cy="300" rx="260" ry="130" fill="none" stroke="#4a9bd6" stroke-width="4" stroke-dasharray="14 10" opacity=".9"/>`;
+ return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}${b}</svg>`;
+}
+function base(amber,fire,bell){
+ return `<div class="map">${mapSvg(fire)}</div>
+ <div class="hud l"><div class="s">Summer · 3 days left</div><div class="big">06:12</div><div class="s">Clear until 18:00</div></div>
+ <div class="hud r"><div class="big" style="font-size:40px">1.39 L</div></div><div class="hud r2">Store 61%</div><div class="hud r3">184 people &nbsp;84</div>
+ <div class="roundbtn" style="left:20px;bottom:20px;width:110px;border-radius:22px;height:70px;background:#c9c2b0;border-color:#8a8372;color:#6e6858;align-items:center;padding:0">Collect all</div>
+ <div class="roundbtn" style="right:112px;bottom:128px;width:84px;height:84px">${I.bell.replace('<svg','<svg style="width:40px;height:40px;margin-top:-10px"')}<span class="badge">${bell||amber?'2':'2'}</span></div>
+ <div class="roundbtn" style="right:20px;bottom:20px"><span style="color:#fff;background:#b02a1e;position:absolute;top:18px;left:28px;width:42px;height:34px;border-radius:6px"></span>Menu</div>`;
+}
+function sheet(title,sub,icon,body){return `<div class="sheet"><div class="head"><div class="cbtn">←</div><div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div><div class="body">${body}</div></div>`}
+function toast(t){return `<div class="toast">${t}</div>`}
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:760px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 28px var(--display)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}${w.foot?`<div class="note" style="font-size:18px">${w.foot}</div>`:''}<div class="btnrow"><button class="btn" data-close="1" style="max-width:220px;margin:0 auto"><span>OK</span></button></div></div>`}
+function render(){
+ const v=views[tab];let html=v.render();
+ if(state.why)html+=whyCard(state.why);
+ $('#stage').innerHTML=html;
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;state={};render()});
+$('#stage').addEventListener('click',e=>{
+ const t=e.target.closest('[data-why],[data-pick],[data-fire],[data-rep],[data-close],[data-open]');if(!t)return;
+ if(t.dataset.why){state.why=t.dataset.why}else if(t.dataset.close){state.why=null}
+ else if(t.dataset.pick){state.done=t.dataset.pick;if(t.dataset.pick==='tank')cash-=960}
+ else if(t.dataset.fire){state.fire=t.dataset.fire}
+ else if(t.dataset.rep){state.rep=t.dataset.rep}
+ else if(t.dataset.open){tab='card';state={}}
+ render();
+});
+addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>

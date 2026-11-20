@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 13 Insurance and contracts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen, scaled to fit, with a tab bar for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink);cursor:pointer}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.sheet.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:700px}
+.card.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.card h3{margin:0;font:700 32px var(--display);text-align:center}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.cost.hi{background:var(--cream2);border-radius:10px;border:0;margin-top:6px}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.btnrow .btn{flex:1}
+.pic{width:170px;height:128px;border-radius:14px;border:3px solid var(--wood);overflow:hidden;flex:none}
+.tag{display:inline-block;font:700 14px var(--body);padding:2px 9px;border-radius:9px;background:#e9d9a8;border:2px solid var(--wood);color:var(--wood);vertical-align:middle;margin-left:8px}
+.tag.major{background:var(--saffron,#E8892A);border-color:#9b5412;color:#fff}
+.tag.warn{background:#fde2cf;border-color:var(--warn);color:var(--warn)}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice.def{background:#efe2bd;border-color:#d8c68e}
+.choice .tx{flex:1;font-size:21px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px;font-weight:400}
+.choice .btn{min-width:190px}
+.note{font-size:17px;color:var(--wood);margin:10px 4px 0;line-height:1.4}
+.note.warn{color:var(--warn);font-weight:600}
+.timer{font:600 19px var(--body);color:var(--warn)}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:760px;text-align:center}
+.banner{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fde2cf;border:4px solid var(--warn);border-radius:16px;padding:9px 20px;font:600 21px var(--body);color:var(--warn);cursor:pointer}
+@keyframes flick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) translateY(-2px)}}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick .5s infinite}
+@media (prefers-reduced-motion:reduce){.flame{animation:none}}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 13: insurance and contracts</h1>
+  <p class="lead">Sprint 24, US-155 and US-156 (spec 027 §7). Every screen is drawn at the game's own 1280 × 720 size with its palette and type. Tap the tabs, then the switches, Accept buttons and ? chips the way you would on the phone. Numbers are the spec's, for a Township in its third year; a wheat field of 4 acres in Winter, the flour mill, a fire in the cattle shed.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const fmt=n=>{n=Math.round(n);const s=String(Math.abs(n));let r=s.length>3?s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+s.slice(-3):s;return (n<0?'-':'')+r};
+const I={
+ sun:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="7" fill="#e8892a"/><g stroke="#e8892a" stroke-width="3" stroke-linecap="round"><path d="M15 2v4M15 24v4M2 15h4M24 15h4M6 6l3 3M21 21l3 3M24 6l-3 3M9 21l-3 3"/></g></svg>',
+ flame:'<svg viewBox="0 0 30 30"><path d="M15 3c1 6 8 8 8 16a8 8 0 0 1-16 0c0-4 3-5 3-9 2 1 4 2 5-7z" fill="#e8602c"/><path d="M15 14c1 3 4 4 4 8a4 4 0 0 1-8 0c0-2 2-3 2-5z" fill="#ffd968"/></svg>',
+ bell:'<svg viewBox="0 0 30 30"><path d="M15 4a8 8 0 0 0-8 8v6l-3 4h22l-3-4v-6a8 8 0 0 0-8-8z" fill="#8a5a2b"/><circle cx="15" cy="26" r="3" fill="#8a5a2b"/></svg>',
+ list:'<svg viewBox="0 0 30 30"><rect x="5" y="4" width="20" height="22" rx="3" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M9 11h12M9 16h12M9 21h8" stroke="#8a5a2b" stroke-width="2.5" stroke-linecap="round"/></svg>',
+ drop:'<svg viewBox="0 0 30 30"><path d="M15 3C9 11 7 14 7 18a8 8 0 0 0 16 0c0-4-2-7-8-15z" fill="#4a9bd6"/></svg>',
+ moon:'<svg viewBox="0 0 30 30"><path d="M20 4a11 11 0 1 0 6 18A9 9 0 0 1 20 4z" fill="#8a5a2b"/></svg>',
+ chart:'<svg viewBox="0 0 30 30"><path d="M4 24l7-9 5 5 10-13" fill="none" stroke="#3f7d20" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ heart:'<svg viewBox="0 0 30 30"><path d="M15 26C4 18 4 8 10 7c3 0 5 2 5 4 0-2 2-4 5-4 6 1 6 11-5 19z" fill="#e8604c"/></svg>'
+};
+const pic={
+ drought:'<svg class="pic" viewBox="0 0 170 128"><rect width="170" height="128" fill="#f6d79a"/><circle cx="130" cy="30" r="20" fill="#ffd968"/><rect y="78" width="170" height="50" fill="#b98a4e"/><path d="M10 100l20-6 10 8 22-10 12 8 28-8 18 10 30-6M60 118l12-14 14 10" stroke="#6b4423" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M36 78c0-14 4-22 8-30 2 8 8 14 6 30z" fill="#9a8f4a"/></svg>',
+ fire:'<svg class="pic" viewBox="0 0 170 128"><rect width="170" height="128" fill="#6b3d2a"/><rect y="92" width="170" height="36" fill="#5b4a2a"/><rect x="48" y="48" width="74" height="48" fill="#d9c4a0"/><path d="M40 52l45-30 45 30z" fill="#a0543a"/><g class="flame"><path d="M70 96c-8-14 6-20 2-36 10 6 14 16 10 26 4-4 6-8 6-14 10 10 8 24-2 24z" fill="#e8602c"/><path d="M78 96c-4-8 2-12 0-20 6 4 8 10 6 20z" fill="#ffd968"/></g><ellipse cx="124" cy="30" rx="18" ry="10" fill="#8a8372" opacity=".7"/><ellipse cx="136" cy="16" rx="14" ry="8" fill="#8a8372" opacity=".5"/></svg>',
+ heat:'<svg class="pic" viewBox="0 0 170 128"><rect width="170" height="128" fill="#f9c97a"/><circle cx="85" cy="46" r="26" fill="#e8892a"/><rect y="86" width="170" height="42" fill="#9bb04a"/><path d="M20 70c10-8 10-14 0-22M150 74c10-8 10-14 0-22" stroke="#c2410c" stroke-width="3" fill="none"/></svg>',
+ market:'<svg class="pic" viewBox="0 0 170 128"><rect width="170" height="128" fill="#cfe6b5"/><rect x="30" y="70" width="110" height="46" rx="8" fill="#a8743c"/><circle cx="62" cy="64" r="14" fill="#e8892a"/><circle cx="90" cy="60" r="14" fill="#c2410c"/><circle cx="116" cy="66" r="14" fill="#e8892a"/><path d="M30 40l30-14 30 14 30-14 20 14" stroke="#4a9bd6" stroke-width="4" fill="none"/></svg>'
+};
+const WHY={
+ premium:{t:'The crop insurance premium',h:'Wheat, 4 acres',rows:[['What the harvest is worth at the trader\'s floor price','28,800 coins'],['Pests: about 6 in 100 of these crops get an outbreak that costs a quarter of the yield','411 coins'],['Hail, drought and waterlogging, a flat 1.5%','432 coins'],['The insurer\'s loading: 30% more than the expected payout','253 coins'],['You pay when you sow','1,096 coins']],foot:'Sowing the same crop again raises the pest part, so the premium rises too.'},
+ claim:{t:'Why this was paid',h:'Hail, wheat',rows:[['Luck took the yield to','63 of 100'],['You are paid when it falls under','80 of 100'],['28,800 coins × the 17 points under','4,896 coins'],['Soil, water, care and seed are not insured','not counted']],foot:'Insurance covers luck, not neglect: a field you did not water pays nothing.'},
+ crop:{t:'Crop insurance',h:'On',rows:[['A season policy for each crop you sow while it is on','per crop'],['Pays when weather, pests or an event take more than 20% of the yield','a 20% excess'],['The premium is charged when you sow, from your cash','about 4% of the crop\'s value'],['A pest warning already showing cannot be insured','sown before the warning']],foot:'Switch it off and later sowings are not insured; crops already sown keep theirs.'},
+ prop:{t:'Property insurance',h:'9 buildings',rows:[['What your buildings are worth on your books','10,50,000 coins'],['The premium is 0.2% a season','2,100 coins'],['A fire\'s repair bill: it pays','90%'],['You carry the other 10%','10%'],['A risk already warned of cannot be insured','a policy bought after a warning does not cover that fire']],foot:'Starts at the next close. Switching off stops it at once, with no refund.'},
+ biz:{t:'Business insurance',h:'Flour mill',rows:[['The building and equipment are worth','1,00,000 coins'],['0.2% of that','200 coins'],['3% of last season\'s profit of 35,000','1,050 coins'],['The mill pays, from its own cash','1,250 coins a season'],['A fire\'s repair bill: it pays','90%'],['Each day shut by a fire or a pause: 80% of the day\'s average profit','2,800 coins a day']],foot:'A fire that shuts the mill 2 days on a 14,000 bill pays 12,600 + 5,600 = 18,200 coins.'},
+ contract:{t:'The contract\'s price',h:'Wheat, Winter',rows:[['What the trader expects to pay in Winter','22.7 a kg'],['The contract is 3% lower','22.0 a kg'],['The kilos offered: 40% of last season\'s harvest of 2,500 kg','1,000 kg'],['Delivery: the first kilos you sell to him in Winter','at 22.0 a kg']],foot:'A contract protects you if prices fall and costs you if they rise. It is never better than waiting, on average.'},
+ settle:{t:'Against the market',h:'Rice, so far',rows:[['Delivered so far at the contract price of 29.1','300 kg'],['The market is paying today','30.4 a kg'],['You are behind the market by','390 coins'],['Still to deliver','500 kg']],foot:'If you fall short at the close you pay the difference to the market price on the missing kilos, only if the market is higher.'},
+ prem2:{t:'Premiums at the close',h:'Next season',rows:[['Property insurance from your cash','2,100 coins'],['The flour mill\'s insurance from the mill\'s cash','1,250 coins'],['An unpaid premium ends the policy; it never becomes a debt','no debt']],foot:''}
+};
+let tab='money',cash=139235,state={};
+state={crop:true,prop:true,biz:true,keepP:true,keepB:true};
+const keep=()=>({crop:state.crop,prop:state.prop,biz:state.biz,keepP:state.keepP,keepB:state.keepB});
+const sw=(k,on,fresh)=>`<button class="btn ${on?'':'grey'}" data-tog="${k}" style="min-width:110px;padding:6px 14px 8px;cursor:pointer;${on?'':'background:#c9c2b0'}"><span>${on?'On':'Off'}</span></button>`;
+const qb=k=>`<button class="q" data-why="${k}" aria-label="Why?">?</button>`;
+const row=(ic,t,sub,right,k)=>`<div class="row">${ic?`<div class="ico">${ic}</div>`:''}<div class="grow">${t}<small>${sub||''}</small></div>${right}${k?qb(k):''}</div>`;
+const views={
+ money:{label:'1 · Money page',notes:[['What to check',['An Insurance section on Money and loans with two switches that cost nothing when tapped, so there is no confirm card.','The status under a switch says when it starts: crop insurance on the next sowing, property insurance at the next close.','The last claims are listed with what paid out; each line has its ? chip.']],['Open questions',['Premium wording is in plain coins a season; the percentage is shown only on the crop line.']]],render:()=>{
+  const ps=state.prop?(state.propFresh?'<span style="color:var(--warn);font-weight:600">Starts at the next close.</span> ':'On since the last close. ')+'Pays 90% of a fire\'s repair bill.':'Off now. No refund for the season already paid.';
+  return base()+'<div class="scrim"></div>'+sheet('Money and loans','Summer, year 3',I.chart,
+  `<div class="sec">Insurance</div>`+
+  row(I.drop,'Crop insurance',(state.crop?'About 4% of a crop\'s value, charged when you sow. Pays when luck takes more than 20% of the yield.':'Off. Crops you sow now are not insured.'),sw('crop',state.crop),'crop')+
+  row(I.heart,'Property insurance',(state.prop?'9 buildings · 2,100 coins a season. ':'9 buildings. ')+ps,sw('prop',state.prop),'prop')+
+  `<div class="sec">Claims · last 4</div>`+
+  row(I.flame,'Fire, the cattle shed','Winter, year 2 · property insurance','<div class="val">6,300 coins paid</div>','claim')+
+  row(I.drop,'Hail, wheat on 4 acres','Spring, year 3 · crop insurance','<div class="val">4,896 coins paid</div>','claim')+
+  `<div class="sec">Next season, already due</div>`+
+  row('','Property insurance premium','charged at the close, from your cash','<div class="val">2,100 coins</div>','prem2'));
+ }},
+ biz:{label:'2 · A business sheet',notes:[['What to check',['The business pays its own premium from its own cash (each business keeps its own books, ADR 0068).','The row says what it pays on a fire and on each day shut, with a worked figure under the ?.']]],render:()=>{
+  return base()+'<div class="scrim"></div>'+sheet('Flour mill','Run by a miller · open',I.list,
+  `<div class="sec">The mill's cash</div>`+row('','Cash in the mill','after the last close','<div class="val">62,400 coins</div>','')+
+  `<div class="sec">Business insurance</div>`+
+  row(I.heart,'Business insurance',(state.biz?'1,250 coins a season, from the mill\'s cash. Pays 90% of a fire\'s repair bill and 80% of each day shut.':'Off. A fire or a pause would cost the mill its repair bill and its lost days.'),sw('biz',state.biz),'biz')+
+  row('','Building and equipment','on the mill\'s books','<div class="val">1,00,000 coins</div>','')+
+  row('','Last season\'s profit','what the premium\'s second part follows','<div class="val">35,000 coins</div>',''));
+ }},
+ sow:{label:'3 · The sow sheet',notes:[['What to check',['One line under the crop when crop insurance is on, with the premium and when it pays.','If cash cannot pay the premium the line says the crop will go uninsured, before you tap Sow.']]],render:()=>{
+  const ln=state.crop?`<div class="note" style="color:var(--green2);font-weight:600">Insured: premium 1,096 coins, pays if luck takes more than 20% ${qb('premium').replace('class="q"','class="q" style="display:inline-flex;width:30px;height:30px;font-size:17px;vertical-align:middle;margin-left:6px"')}</div>`:`<div class="note">Not insured. Turn crop insurance on in Money and loans.</div>`;
+  return base()+'<div class="scrim"></div>'+sheet('Sow this field','Field 4 · 4 acres · Winter',I.sun,
+  `<div class="sec">Crops in season</div>`+
+  `<div class="choice"><div class="tx">Wheat<small>Ready in 15 hours · about 28,800 coins · seed and work 7,400 coins</small>${ln}</div><button class="btn"><span>Sow<small>7,400 coins</small></span></button></div>`+
+  `<div class="choice def"><div class="tx">Mustard<small>Ready in 12 hours · about 21,000 coins · seed and work 5,100 coins</small>${state.crop?'<div class="note" style="color:var(--warn);font-weight:600">Not insured: you do not have the cash for the premium after sowing.</div>':''}</div><button class="btn sand"><span>Sow<small>5,100 coins</small></span></button></div>`);
+ }},
+ close:{label:'4 · The close card',notes:[['What to check',['The close card lists the premiums with the other dues and lets you keep or drop each policy for the season that begins.','A business\'s premium is shown beside, because the business pays it.','An unpaid premium ends a policy; it never becomes a debt.']]],render:()=>{
+  const kp=state.keepP,kb=state.keepB,tot=3200+(kp?2100:0);
+  return base()+'<div class="scrim"></div>'+`<div class="card" style="top:50%;width:860px"><h3>Summer is over</h3><div class="note" style="text-align:center;font-size:19px;margin-top:4px">Next season, already due</div>
+   ${row('','Hired hand\'s wages','paid at the close','<div class="val">3,200 coins</div>','')}
+   ${row(I.heart,'Property insurance',kp?'9 buildings, for Monsoon':'Not kept. Your buildings are uninsured next season.',kp?'<div class="val">2,100 coins</div>'+sw('keepP',kp):sw('keepP',kp),'prop')}
+   ${row(I.heart,'The mill\'s business insurance','paid by the mill, 62,400 coins in its cash',kb?'<div class="val">1,250 coins</div>'+sw('keepB',kb):sw('keepB',kb),'biz')}
+   <div class="cost hi"><span>Your cash after</span><b>${fmt(cash-tot)} coins</b></div>
+   <div class="btnrow"><button class="btn" style="max-width:360px;margin:0 auto"><span>Start Monsoon</span></button></div></div>`;
+ }},
+ store:{label:'5 · Trader\'s offers',notes:[['What to check',['Offers sit in the trader\'s section of the Store sheet, one a crop, with the price and the expected price side by side.','Accept opens a confirm card that says the contract is binding and what a shortfall costs.','Your contracts show kilos filled, kilos left, days to go, and how you stand against the market.']],['Open questions',['A contract is offered only for your two biggest crops and only above 300 kg.']]],render:()=>{
+  const open=state.contract?'<div class="note warn" style="margin-left:4px"></div>':'';
+  const acc=state.accepted?
+   row(I.chart,'Wheat · 1,000 kg · 22.0 a kg','Delivery Winter · 0 filled · 1,000 left · starts in 2 days','<div class="val">Accepted</div>','contract'):
+   row(I.chart,'Wheat · 1,000 kg','22.0 a kg (expected 22.7) · delivery Winter',`<button class="btn" data-acc="1" style="min-width:130px;padding:6px 14px 8px"><span>Accept</span></button>`,'contract');
+  return base()+'<div class="scrim"></div>'+(state.confirm?'':'')+sheet('Store','Trader and mandi',I.list,
+  `<div class="sec">Trader's offers</div>`+acc+
+  row(I.chart,'Rice · 800 kg','29.1 a kg (expected 30.0) · delivery Monsoon',`<button class="btn" style="min-width:130px;padding:6px 14px 8px"><span>Accept</span></button>`,'contract')+
+  `<div class="note">You can accept until the season ends. Two contracts open at most, one for each crop.</div>`+
+  `<div class="sec">Your contracts</div>`+
+  row(I.chart,'Rice · 800 kg at 29.1 a kg','300 filled · 500 left · 3 days to go','<div class="val">Behind the market by 390 coins</div>','settle'))+
+  (state.confirm?`<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:720px"><h3>Accept this contract?</h3>
+   <div class="cost"><span>You promise</span><b>1,000 kg of wheat</b></div><div class="cost"><span>The price</span><b>22.0 a kg</b></div><div class="cost"><span>Delivery</span><b>Winter, year 3</b></div>
+   <div class="note" style="font-size:18px">It is binding. You deliver by selling to the trader as usual; the first kilos count. If you fall short, you pay the difference to the market price on the missing kilos, but only when the market is higher. If prices fall you still get 22.0.</div>
+   <div class="btnrow"><button class="btn sand" data-no="1"><span>Not now</span></button><button class="btn" data-yes="1"><span>Accept the contract</span></button></div></div>`:'')+(state.accepted?toast('Contract accepted: 1,000 kg of wheat at 22.0 a kg for Winter.'):'');
+ }},
+ season:{label:'6 · The season page',notes:[['What to check',['Four new lines on Your season, each with a ? : crop insurance premiums and claims in farm money, the rest outside farm profit.','Insurance is never passive income; nothing flows to you from the treasury.']]],render:()=>
+  base()+'<div class="scrim"></div>'+sheet('Money and loans','Your season · Summer, year 3',I.chart,
+  `<div class="sec">Farm income and costs</div>`+
+  row('','Insurance claims','hail, wheat on 4 acres','<div class="val">4,896 coins</div>','claim')+
+  row('','Crop insurance premiums','charged when you sowed','<div class="val">-1,096 coins</div>','premium')+
+  row('','Forward contract settlement','rice, shortfall at the close','<div class="val">0 coins</div>','settle')+
+  `<div class="sec">Outside farm profit</div>`+
+  row('','Insurance claims received','fire, the cattle shed','<div class="val">6,300 coins</div>','claim')+
+  row('','Insurance premiums','property, 9 buildings','<div class="val">-2,100 coins</div>','prop')+
+  row('','Disaster loss','fire, the cattle shed, repaired at once','<div class="val">-7,000 coins</div>','claim'))}
+};
+function mapSvg(fire){
+ let t='';
+ for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+ (r%2?0:0)+520,y=140+(c+r)*46;const col=(c*7+r*3)%5;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][col];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f6a2a" stroke-width="2" opacity=".95"/>`}
+ let b='';
+ if(fire)b=`<g transform="translate(560,330)"><polygon points="0,40 70,75 0,110 -70,75" fill="#c9b690"/><polygon points="-70,75 0,110 0,60 -70,25" fill="#b8a27a"/><polygon points="70,75 0,110 0,60 70,25" fill="#a38c64"/><polygon points="-80,28 0,-20 80,28 0,66" fill="#9a4a32"/>
+   <g class="flame"><path d="M-14 50c-16-26 12-36 4-66 20 12 28 30 20 50 8-8 12-16 12-26 20 20 16 46-4 46z" fill="#e8602c"/><path d="M-4 50c-8-16 4-22 0-38 12 8 16 20 12 38z" fill="#ffd968"/></g>
+   <ellipse cx="40" cy="-60" rx="34" ry="18" fill="#8a8372" opacity=".7"/><ellipse cx="60" cy="-96" rx="26" ry="14" fill="#8a8372" opacity=".5"/></g>
+   <g transform="translate(330,250)"><rect x="-8" y="-60" width="16" height="70" fill="#8a6a46"/><ellipse cx="0" cy="-66" rx="26" ry="14" fill="#6b8caa"/></g>
+   <ellipse cx="330" cy="300" rx="260" ry="130" fill="none" stroke="#4a9bd6" stroke-width="4" stroke-dasharray="14 10" opacity=".9"/>`;
+ return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}${b}</svg>`;
+}
+function base(amber,fire,bell){
+ return `<div class="map">${mapSvg(fire)}</div>
+ <div class="hud l"><div class="s">Summer · 3 days left</div><div class="big">06:12</div><div class="s">Clear until 18:00</div></div>
+ <div class="hud r"><div class="big" style="font-size:40px">1.39 L</div></div><div class="hud r2">Store 61%</div><div class="hud r3">184 people &nbsp;84</div>
+ <div class="roundbtn" style="left:20px;bottom:20px;width:110px;border-radius:22px;height:70px;background:#c9c2b0;border-color:#8a8372;color:#6e6858;align-items:center;padding:0">Collect all</div>
+ <div class="roundbtn" style="right:112px;bottom:128px;width:84px;height:84px">${I.bell.replace('<svg','<svg style="width:40px;height:40px;margin-top:-10px"')}<span class="badge">${bell||amber?'2':'2'}</span></div>
+ <div class="roundbtn" style="right:20px;bottom:20px"><span style="color:#fff;background:#b02a1e;position:absolute;top:18px;left:28px;width:42px;height:34px;border-radius:6px"></span>Menu</div>`;
+}
+function sheet(title,sub,icon,body){return `<div class="sheet"><div class="head"><div class="cbtn">←</div><div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div><div class="body">${body}</div></div>`}
+function toast(t){return `<div class="toast">${t}</div>`}
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:760px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 28px var(--display)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}${w.foot?`<div class="note" style="font-size:18px">${w.foot}</div>`:''}<div class="btnrow"><button class="btn" data-close="1" style="max-width:220px;margin:0 auto"><span>OK</span></button></div></div>`}
+function render(){
+ const v=views[tab];let html=v.render();
+ if(state.why)html+=whyCard(state.why);
+ $('#stage').innerHTML=html;
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;Object.assign(state,{why:null,confirm:false});render()});
+$('#stage').addEventListener('click',e=>{
+ const t=e.target.closest('[data-why],[data-close],[data-tog],[data-acc],[data-no],[data-yes]');if(!t)return;
+ if(t.dataset.why){state.why=t.dataset.why}else if(t.dataset.close){state.why=null}
+ else if(t.dataset.tog){const k=t.dataset.tog;state[k]=!state[k];if(k==='prop')state.propFresh=state.prop}
+ else if(t.dataset.acc){state.confirm=true}
+ else if(t.dataset.no){state.confirm=false}
+ else if(t.dataset.yes){state.confirm=false;state.accepted=true}
+ render();
+});
+addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>
