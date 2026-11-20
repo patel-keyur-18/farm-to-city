@@ -50,7 +50,7 @@ namespace Game.Presentation.Ui
                 UiKit.Padding(row, 2, 14);
                 VisualElement swatch = new VisualElement { pickingMode = PickingMode.Ignore };
                 swatch.style.width = 46; swatch.style.height = 46; swatch.style.flexShrink = 0;
-                swatch.style.backgroundColor = OverlayColours.Step(c.Kind, 2);
+                swatch.style.backgroundColor = OverlayColours.Step(c.Kind, 2, !c.Muted);
                 UiKit.Radius(swatch, 14);
                 UiKit.Border(swatch, 3, new Color(0f, 0f, 0f, 0.3f));
                 row.Add(swatch);
@@ -98,7 +98,7 @@ namespace Game.Presentation.Ui
                     col.style.width = 150;
                     var bar = new VisualElement { pickingMode = PickingMode.Ignore };
                     bar.style.height = 34;
-                    bar.style.backgroundColor = OverlayColours.Step(vm.Kind, i);
+                    bar.style.backgroundColor = OverlayColours.Step(vm.Kind, i, vm.Labels.Count > 0);
                     UiKit.Border(bar, 2, new Color(0f, 0f, 0f, 0.35f));
                     bar.style.borderLeftWidth = i == 0 ? 2 : 0;
                     col.Add(bar);

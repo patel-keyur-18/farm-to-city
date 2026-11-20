@@ -403,6 +403,7 @@ namespace Sim.View.Tests
                 for (int m = 0; m < sim.Config.Game.Equipment.Machines.Count; m++) yield return N("machine loan " + m, MachineLoanSheet.Build(ctx, m));
             }
             if (sim.State.Livestock != null && Sim.Core.Livestock.LivestockRules.Shed(sim) != null) yield return N("shed", ShedSheet.Build(ctx)); // US-254, US-255
+            if (Sim.Core.Town.TownLifeRules.On(sim)) yield return N("town life", TreasurySheet.Build(ctx, TreasurySheet.LifeTab)); // US-151: every town-life number has a Why?
             yield return N("money", MoneySheet.Build(ctx));
             yield return N("money wealth", MoneySheet.Build(ctx, MoneySheet.Wealth));
             yield return N("money last", MoneySheet.Build(ctx, MoneySheet.LastSeason));

@@ -1102,7 +1102,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-151 | Reputation, approval, crime and inequality | [F15.7](features/F15.7-petitions-reputation-crime-and-inequality.md) | 5 | Must | To do |
+| US-151 | Reputation, approval, crime and inequality | [F15.7](features/F15.7-petitions-reputation-crime-and-inequality.md) | 5 | Must | Built (2026-11-20, ADR 0145; awaiting the owner's review) |
 | US-150 | Petitions | [F15.7](features/F15.7-petitions-reputation-crime-and-inequality.md) | 3 | Must | To do |
 | US-149 | Festivals | [F15.6](features/F15.6-civic-services-and-coverage.md) | 3 | Should | To do |
 | US-154 | Events and disasters | [F16.1](features/F16.1-event-engine.md) | 8 | Must | To do |

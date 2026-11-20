@@ -21,7 +21,7 @@ namespace Sim.View.Tests
             ViewContext ctx = ViewKit2.Context(sim);
             ulong hash = sim.State.ComputeHash();
             SheetVm vm = TreasurySheet.Build(ctx, TreasurySheet.BudgetTab);
-            Assert.That(vm.Lines.Single(l => l.Tabs != null).Tabs.Select(t => t.Label), Is.EqualTo(new[] { "This season", "Budget •" }), "an unlooked window is marked");
+            Assert.That(vm.Lines.Single(l => l.Tabs != null).Tabs.Select(t => t.Label), Is.EqualTo(new[] { "This season", "Budget •", "Town life" }), "an unlooked window is marked, and town life is a tab from the Township");
             LineVm strip = vm.Lines.Single(l => l.Banner && l.Action != null);
             Assert.That(strip.Label, Does.Contain("open").Or.Contain("proposed"));
             Assert.That(strip.Action.Label, Is.EqualTo("Accept"));

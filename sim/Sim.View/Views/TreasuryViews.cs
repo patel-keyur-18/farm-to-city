@@ -20,7 +20,7 @@ namespace Sim.View.Views
         public const string BooksKind = "TreasuryBooks";
         public const string StatementKind = "TreasuryStatement";
         public const string BudgetKind = "TreasuryBudget";
-        public const string BudgetTab = "budget", SeasonTab = "season";
+        public const string BudgetTab = "budget", SeasonTab = "season", LifeTab = TownLifeSheet.Tab;
 
         /// <summary>The department's name ("Council's office").</summary>
         public static string Department(ViewContext ctx, int dept)
@@ -67,6 +67,12 @@ namespace Sim.View.Views
                     ActionVm.Open("tab:" + BudgetTab, s.Get(unseen ? "treasury.tabBudgetNew" : "treasury.tabBudget"), new SheetRequest(Kind, 0, BudgetTab)),
                 },
             });
+            if (TownLifeRules.On(sim)) vm.Lines[vm.Lines.Count - 1].Tabs.Add(ActionVm.Open("tab:" + LifeTab, s.Get("treasury.tabLife"), new SheetRequest(Kind, 0, LifeTab))); // spec 026 §7: from the Township
+            if (tab == LifeTab)
+            {
+                TownLifeSheet.Rows(ctx, vm);
+                return vm;
+            }
             if (tab == BudgetTab)
             {
                 BudgetRows(ctx, vm, st, f);

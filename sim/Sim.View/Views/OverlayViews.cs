@@ -17,7 +17,7 @@ namespace Sim.View.Views
         Coverage = 3,
         Happiness = 4,
 
-        /// <summary>Grey with "No crime yet" until the Town life update (spec 026, Sprint 24).</summary>
+        /// <summary>Crime as the town was read at the last close (spec 026 §3.5); grey with "No crime yet" until the first reading.</summary>
         Crime = 5,
     }
 
@@ -88,6 +88,7 @@ namespace Sim.View.Views
         private static readonly string[] CoverageSteps = { "overlay.coverage.step0", "overlay.coverage.step1", "overlay.coverage.step2", "overlay.coverage.step3", "overlay.coverage.step4" };
         private static readonly Fixed[] FertilityEdges = { Fixed.FromInt(20), Fixed.FromInt(40), Fixed.FromInt(60), Fixed.FromInt(80) };
         private static readonly Fixed[] HappinessEdges = { Fixed.FromInt(50), Fixed.FromInt(60), Fixed.FromInt(70), Fixed.FromInt(80) };
+        private static readonly Fixed[] CrimeEdges = { Fixed.FromInt(20), Fixed.FromInt(35), Fixed.FromInt(50), Fixed.FromInt(65) };
 
         /// <summary>The button is there from the Township, when land value exists to be read.</summary>
         public static bool Available(Simulation sim) { return LandValueRules.On(sim); }
@@ -108,7 +109,7 @@ namespace Sim.View.Views
         {
             var list = new List<OverlayChoiceVm>();
             foreach (OverlayKind k in new[] { OverlayKind.Fertility, OverlayKind.LandValue, OverlayKind.Coverage, OverlayKind.Happiness, OverlayKind.Crime })
-                list.Add(new OverlayChoiceVm { Kind = k, Name = ctx.Strings.Get("overlay." + Key(k) + ".name"), Sub = ctx.Strings.Get("overlay." + Key(k) + ".sub"), Muted = k == OverlayKind.Crime });
+                list.Add(new OverlayChoiceVm { Kind = k, Name = ctx.Strings.Get("overlay." + Key(k) + ".name"), Sub = ctx.Strings.Get(k == OverlayKind.Crime && TownLifeRules.Known(ctx.Sim) ? "overlay.crime.subLive" : "overlay." + Key(k) + ".sub"), Muted = k == OverlayKind.Crime && !TownLifeRules.Known(ctx.Sim) });
             return list;
         }
 
@@ -164,8 +165,10 @@ namespace Sim.View.Views
                     foreach (SmokeRules.Source src in SmokeRules.Sources(sim))
                         foreach (int t in SmokeRules.Footprint(sim, src.Tile, src.Def)) vm.Smoke[t] = true;
                     break;
-                case OverlayKind.Crime: // one grey step on every acre of land, with no number yet
-                    foreach (Tile t in land.Tiles) if (IsLand(sim, t)) vm.Steps[t.Id] = 0;
+                case OverlayKind.Crime: // from the first reading: crime at each acre (the watchman's reach is lower); before it one grey step, no number yet
+                    bool known = TownLifeRules.Known(sim);
+                    foreach (Tile t in land.Tiles) if (IsLand(sim, t)) vm.Steps[t.Id] = known ? StepOf(TownLifeRules.CrimeAtTile(sim, t.Id), CrimeEdges) : 0;
+                    if (known) { Ranges(ctx, vm, CrimeEdges); vm.Note = s.Get("overlay.crime.noteLive"); }
                     break;
                 case OverlayKind.Happiness:
                     var sum = new Fixed[n];
@@ -255,7 +258,12 @@ namespace Sim.View.Views
             switch (kind)
             {
                 case OverlayKind.Crime:
-                    card.Value = s.Get("overlay.crime.value");
+                    if (!TownLifeRules.Known(sim)) { card.Value = s.Get("overlay.crime.value"); break; }
+                    if (!IsLand(sim, t)) break;
+                    Fixed here = TownLifeRules.CrimeAtTile(sim, tile), town = TownLifeRules.State(sim).Crime;
+                    card.Value = ctx.Fmt.Integer(here.RoundToLong());
+                    card.Line = s.Get(here < town ? "overlay.crime.lineWatched" : "overlay.crime.line", "town", ctx.Fmt.Integer(town.RoundToLong()), "less", ctx.Fmt.Integer((town - here).RoundToLong()));
+                    card.WhyKey = "lifeCrimeAcre"; card.WhyId = tile;
                     break;
                 case OverlayKind.Fertility:
                     if (t.Terrain != Terrain.Farm || LandRules.Locked(sim, t.ParcelId)) break;

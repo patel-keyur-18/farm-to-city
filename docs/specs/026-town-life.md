@@ -252,3 +252,8 @@ Each is closed with the owner, one per message, with my recommendation, before c
 3. The festival's shop lift (the happiness lift stays).
 4. The *Rent too high* and *No work* topics (service topics stay).
 5. The *Environment* score's drains and collection parts (they wait for spec 025's buildings).
+
+## 12. As built
+
+**US-151 (Sprint 24, ADR 0145):** the town is read at each close from the Township (`TownLifeRules.AtClose`, `TownLifeState` in save schema 22, in `township.json` `townLife`). Differences from the plan above: inequality is **income a person among households with someone of working age** (§3.6; a retired household is left out), because raw household income measured household size and capped the ratio in most bot towns; `crimeBase` stays 20 (measured median 49); nothing is read or applied until the first close from the Township. The Town life tab is the third tab of the town treasury's sheet; the crime overlay lights up once the town is read. Approval, petitions and festivals are US-150 and US-149.
+

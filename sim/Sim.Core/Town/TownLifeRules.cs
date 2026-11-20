@@ -65,6 +65,7 @@ namespace Sim.Core.Town
             s.Score = Fixed.Zero;
             s.MedianIncome = 0;
             s.PoorestTop = -1;
+            s.RichestMean = s.PoorestMean = 0;
             var incomes = new List<KeyValuePair<long, long>>(); // income a person, then household id: a total order, so ties never depend on the sort
             foreach (Household x in Yours(sim))
             {
@@ -85,6 +86,8 @@ namespace Sim.Core.Town
             s.Score = (ratio - Fixed.One).MulRatio(100, d.RatioCap - 1);
             s.MedianIncome = incomes[incomes.Count / 2].Key;
             s.PoorestTop = incomes[tenth - 1].Key;
+            s.RichestMean = high / tenth;
+            s.PoorestMean = low / tenth;
         }
 
         /// <summary><c>crime = base + 2 × unemployed% + 0.3 × the inequality score</c>, 0–100 (§3.5): the old village's adults count as employed.</summary>

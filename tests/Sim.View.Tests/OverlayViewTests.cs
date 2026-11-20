@@ -39,9 +39,11 @@ namespace Sim.View.Tests
         [Test]
         public void Chooser_HasFiveAndCrimeIsMuted()
         {
-            var c = OverlayView.Choices(ViewKit2.Context(Situations.Township()));
+            Simulation sim = Situations.Township();
+            sim.State.Township.TownLife = new Sim.Core.Town.TownLifeState(); // the town not yet read
+            var c = OverlayView.Choices(ViewKit2.Context(sim));
             Assert.That(c.Select(x => x.Kind), Is.EqualTo(All));
-            Assert.That(c.Where(x => x.Muted).Select(x => x.Kind), Is.EqualTo(new[] { OverlayKind.Crime }), "crime is drawn grey; it still opens, with No crime yet");
+            Assert.That(c.Where(x => x.Muted).Select(x => x.Kind), Is.EqualTo(new[] { OverlayKind.Crime }), "before the first reading crime is drawn grey; it still opens, with No crime yet");
             Assert.That(c.All(x => x.Name.Length > 0 && x.Sub.Length > 0), Is.True);
         }
 
@@ -71,7 +73,7 @@ namespace Sim.View.Tests
                 OverlayVm vm = OverlayView.Build(ctx, k);
                 Assert.That(vm.Title, Is.Not.Empty, k.ToString());
                 Assert.That(vm.Note, Is.Not.Empty, k.ToString());
-                Assert.That(vm.Labels.Count, Is.EqualTo(k == OverlayKind.Crime ? 0 : 5), k.ToString());
+                Assert.That(vm.Labels.Count, Is.EqualTo(5), k.ToString()); // crime too, from the first reading
                 Assert.That(vm.Labels.All(l => l.Length > 0 && !l.Contains("{")), Is.True, k + ": " + string.Join(" | ", vm.Labels));
             }
             Assert.That(OverlayView.Build(ctx, OverlayKind.Fertility).Labels, Is.EqualTo(new[] { "under 20", "20–39", "40–59", "60–79", "80+" }));
@@ -175,6 +177,7 @@ namespace Sim.View.Tests
         public void Crime_IsGreyWithNoCrimeYet()
         {
             Simulation sim = Situations.Township();
+            sim.State.Township.TownLife = new Sim.Core.Town.TownLifeState(); // not yet read: Sprint 24's reading lights the overlay up (OverlayTests in TownLifeViewTests)
             ViewContext ctx = ViewKit2.Context(sim);
             OverlayVm vm = OverlayView.Build(ctx, OverlayKind.Crime);
             Assert.That(vm.Steps.All(s => s == OverlayVm.NoStep || s == 0), Is.True, "one grey step");
@@ -199,7 +202,7 @@ namespace Sim.View.Tests
                     Assert.That(card.Line, Is.Not.Empty, k + " acre " + t.Id);
                     Assert.That(card.OpenLabel, Is.EqualTo("Open the acre"));
                     Assert.That(card.Line + card.Title + card.Value, Does.Not.Contain("{"), k + " acre " + t.Id);
-                    if (card.Value == null || k == OverlayKind.Crime) { Assert.That(card.WhyKey, Is.Null, k + " acre " + t.Id + ": an acre with no number has no ?"); continue; }
+                    if (card.Value == null) { Assert.That(card.WhyKey, Is.Null, k + " acre " + t.Id + ": an acre with no number has no ?"); continue; }
                     Assert.That(card.WhyKey, Is.Not.Null, k + " acre " + t.Id + " shows " + card.Value + " and needs a ?");
                     Assert.That(WhyView.Has(card.WhyKey), Is.True, card.WhyKey);
                     WhyVm why = WhyView.Build(ctx, card.WhyKey, card.WhyId);

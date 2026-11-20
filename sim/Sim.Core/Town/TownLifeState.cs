@@ -31,6 +31,10 @@ namespace Sim.Core.Town
         public long MedianIncome { get; internal set; }
         public long PoorestTop { get; internal set; }
 
+        /// <summary>What the richest and the poorest tenth earn a person in a season, on average (the ratio's two sides).</summary>
+        public long RichestMean { get; internal set; }
+        public long PoorestMean { get; internal set; }
+
         internal bool IsDefault { get { return !Read; } }
 
         internal TownLifeState Clone()
@@ -54,6 +58,8 @@ namespace Sim.Core.Town
             h.WriteBool(RatioKnown);
             h.WriteLong(MedianIncome);
             h.WriteLong(PoorestTop);
+            h.WriteLong(RichestMean);
+            h.WriteLong(PoorestMean);
         }
 
         internal static TownLifeState ReadFrom(SaveReader r)
@@ -68,6 +74,8 @@ namespace Sim.Core.Town
             s.RatioKnown = r.ReadBool();
             s.MedianIncome = r.ReadLong();
             s.PoorestTop = r.ReadLong();
+            s.RichestMean = r.ReadLong();
+            s.PoorestMean = r.ReadLong();
             return s;
         }
     }
