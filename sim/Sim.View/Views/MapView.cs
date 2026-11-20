@@ -271,8 +271,11 @@ namespace Sim.View.Views
         /// <summary>A citizen's sprite kind (town_m, town_f, boy, girl, elder_m, elder_f), else null.</summary>
         public string Look { get; internal set; }
 
-        /// <summary>A pupil's place in the school's yard (0 to <see cref="MapView.PupilsDrawn"/>, the teacher last).</summary>
+        /// <summary>A pupil's place in the school's yard (0 to <see cref="MapView.PupilsDrawn"/>, the teacher last), or a reveller's place in the festival's crowd.</summary>
         public int Spot { get; internal set; }
+
+        /// <summary>At the festival (spec 026 §3.1): on its day nobody works, and everyone is at the venue (<see cref="TileId"/>), at <see cref="Spot"/> in its crowd.</summary>
+        public bool Festival { get; internal set; }
     }
 
     /// <summary>Everything the map draws, built from the state: tiles, tree slots, garden beds and buildings (spec 008 §3.4).</summary>
@@ -599,6 +602,7 @@ namespace Sim.View.Views
             AddHouses(ctx, map);
             AddBusinesses(ctx, map);
             AddPeople(ctx, map);
+            FestivalCrowd(ctx, map);
             map.Cattle = CattleAcre(sim, map.SecondOfDay);
             bool ploughing = AddMachines(sim, map);
             map.SecondCattle = SecondCattleAcre(sim, map.SecondOfDay, ploughing);
@@ -887,7 +891,8 @@ namespace Sim.View.Views
                     float progress = bp.Working ? 1f - (bp.ReadyAt - ctx.Now) / (float)System.Math.Max(1, bp.ReadyAt - bp.StartedAt) : 0f;
                     map.HouseSites.Add(new ConstructionVm { Id = -bp.Id, TileId = bp.Tile, Progress = progress < 0 ? 0 : progress > 1 ? 1 : progress });
                 }
-            if (!WorkingHours(map.SecondOfDay)) return;
+            bool fest = FestivalHours(ctx, map); // a festival's day: everyone is out and about, resting, workers included
+            if (!fest && !WorkingHours(map.SecondOfDay)) return;
             foreach (Sim.Core.People.Household x in s.Households)
             {
                 if (!Sim.Core.People.HouseholdRules.InFamilyHouse(sim, x)) continue;
@@ -896,7 +901,8 @@ namespace Sim.View.Views
                 foreach (long id in x.Members)
                 {
                     Sim.Core.People.Citizen c = s.Citizen(id);
-                    if (c.Job == Sim.Core.People.CitizenJob.Hand || c.Job == Sim.Core.People.CitizenJob.Business || c.Labouring(ctx.Now)) continue; // at work
+                    if (!fest && (c.Job == Sim.Core.People.CitizenJob.Hand || c.Job == Sim.Core.People.CitizenJob.Business || c.Labouring(ctx.Now))) continue; // at work
+                    if (fest && (c.Job == Sim.Core.People.CitizenJob.Hand || StallKeeper(sim, c, map))) continue; // the hand is drawn as himself; a stall's keeper stays at his stall
                     if (map.People.Exists(p => p.Key == "pupil:" + c.Id)) continue; // at school
                     if (Sim.Core.People.HouseholdRules.IsChild(sim, c)) { if (child == null) child = c; }
                     else if (grown == null && (c.Female || Sim.Core.People.HouseholdRules.IsElder(sim, c))) grown = c;
@@ -907,6 +913,55 @@ namespace Sim.View.Views
                             HomeHut = home.Id, Look = Look(sim, c) });
             }
         }
+
+        /// <summary>Festival hours on the map, 7:00 to 22:00 on the festival's day (spec 026 §3.1).</summary>
+        private static bool FestivalHours(ViewContext ctx, MapVm map)
+        {
+            return Sim.Core.Town.FestivalRules.IsDay(ctx.Sim) && map.SecondOfDay >= 7 * 3600 && map.SecondOfDay < 22 * 3600;
+        }
+
+        /// <summary>The citizen works a stall that is open now: he is drawn at it, not in the crowd.</summary>
+        private static bool StallKeeper(Simulation sim, Sim.Core.People.Citizen c, MapVm map)
+        {
+            if (c.Job != Sim.Core.People.CitizenJob.Business || sim.State.Businesses == null) return false;
+            foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)
+                if (b.WorkerCitizen == c.Id) return b.Status == Sim.Core.Business.BusinessStatus.Open && Sim.Core.Business.BusinessRules.OpenAt(sim, b, (int)(map.SecondOfDay / 3600));
+            return false;
+        }
+
+        /// <summary>The most people drawn in the festival's crowd (more would crowd the venue; its sheet counts them all).</summary>
+        public const int FestivalDrawn = 24;
+
+        /// <summary>
+        /// A festival's day (owner, 2026-11-20): nobody works, everyone rests and enjoys the festival at its venue. The founder, the hands, your labourers and your people all
+        /// stand in the venue's crowd, except the founder at his own stall; the stalls' keepers and customers stay at the stalls. Presentation only.
+        /// </summary>
+        private static void FestivalCrowd(ViewContext ctx, MapVm map)
+        {
+            if (!FestivalHours(ctx, map)) return;
+            Simulation sim = ctx.Sim;
+            int venue = Sim.Core.Town.FestivalRules.Tile(sim, Sim.Core.Town.TownLifeRules.State(sim).FestivalVenue);
+            var crowd = new List<PersonVm>();
+            foreach (PersonVm p in map.People)
+            {
+                if (p.Kind == PersonKind.Customer || p.Kind == PersonKind.Worker) continue; // at the stalls
+                if (p.Kind == PersonKind.Founder && p.Patrol.Exists(tile => map.Tiles[tile].Business)) continue; // he keeps his own stall
+                crowd.Add(p);
+            }
+            crowd.Sort((a, b) => CrowdOrder(a.Kind).CompareTo(CrowdOrder(b.Kind)));
+            int spot = 0;
+            foreach (PersonVm p in crowd)
+            {
+                if (spot >= FestivalDrawn) { map.People.Remove(p); continue; }
+                p.Festival = true;
+                p.Working = false;
+                p.Patrol.Clear();
+                p.TileId = venue;
+                p.Spot = spot++;
+            }
+        }
+
+        private static int CrowdOrder(PersonKind kind) { return kind == PersonKind.Founder ? 0 : kind == PersonKind.Hand ? 1 : kind == PersonKind.Citizen ? 2 : 3; }
 
         /// <summary>The town's pupils drawn in the school's yard at most (owner, 2026-11-07: more crowds the yard; the school sheet counts them all).</summary>
         public const int PupilsDrawn = 6;
@@ -1077,7 +1132,7 @@ namespace Sim.View.Views
             if (sim.State.Citizens != null)
                 foreach (Sim.Core.People.Citizen c in Sim.Core.People.PeopleRules.TownLabourers(sim))
                 {
-                    if (!c.Labouring(ctx.Now)) continue;
+                    if (!c.Labouring(ctx.Now) || Sim.Core.Town.FestivalRules.IsDay(sim)) continue; // a festival's day: they rest, in the crowd as one of your people
                     Building house = sim.State.Land.Buildings.Find(b => b.Id == sim.State.Citizens.Household(c.HouseholdId)?.HomeId);
                     if (house == null) continue;
                     var vm = new PersonVm { Key = "labourer:town:" + c.Id, Kind = PersonKind.Labourer, Female = c.Female, Look = Look(sim, c), HomeTile = house.TileId, HomeHut = house.Id };
@@ -1088,7 +1143,7 @@ namespace Sim.View.Views
                 }
             foreach (Sim.Core.People.Neighbour n in p.Roster)
             {
-                if (!n.Hired) continue;
+                if (!n.Hired || Sim.Core.Town.FestivalRules.IsDay(sim)) continue; // a festival's day: the neighbours hired for the day rest too
                 var vm = new PersonVm { Key = "labourer:" + n.Id, Kind = PersonKind.Labourer, Female = sim.Config.Game.People.Names[n.Name].Female, HomeTile = frontYard };
                 // Labourers tend the growing fields too, each starting at a different one.
                 List<int> theirs = fields;

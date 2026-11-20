@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Sim.Core.Business;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
+using Sim.Core.Farm;
 using Sim.Core.Events;
 using Sim.Core.Finance;
 using Sim.Core.Maths;
@@ -161,6 +162,71 @@ namespace Sim.Core.Tests
             }
             sim.AdvanceTo(sim.State.Clock.SimTime + 3 * Day, AdvanceMode.Away);
             Assert.That(s.Festivals.Count, Is.EqualTo(FestivalRules.Def(sim).Keep));
+        }
+
+        // Owner, 2026-11-20: on a festival's day nobody works. Only the stalls stay open; no day labour or outside wages; hands and labourers rest.
+        [Test]
+        public void Rest_Day()
+        {
+            Simulation sim = Township();
+            Assert.That(Hold(sim, days: 1).Accepted, Is.True);
+            long day = FestivalRules.Today(sim) + 1;
+            FestivalDef d = FestivalRules.Def(sim);
+            Assert.That(FestivalRules.WasFestival(sim, day), Is.True);
+            Assert.That(FestivalRules.WasFestival(sim, day - 1), Is.False);
+            Assert.That(FestivalRules.WasFestival(sim, day + 1), Is.False);
+
+            // Businesses: a stall stays open, anything else is shut, in the festival's hours only.
+            BusinessDefs defs = BusinessRules.Defs(sim);
+            BusinessTypeDef stall = defs.Types.First(t => t.Kind != ShopKind.None), maker = defs.Types.First(t => t.Kind == ShopKind.None);
+            Assert.That(FestivalRules.ClosedForFestival(sim, stall, day * Day + 10 * Hour), Is.False, "a stall sells to the crowd");
+            Assert.That(FestivalRules.ClosedForFestival(sim, maker, day * Day + 10 * Hour), Is.True, "a mill, bakery, dairy or kiln rests");
+            Assert.That(FestivalRules.ClosedForFestival(sim, maker, (day + 1) * Day + 10 * Hour), Is.False, "the next day it works");
+            Assert.That(FestivalRules.ClosedForFestival(sim, maker, (day - 1) * Day + 10 * Hour), Is.False);
+
+            // The founder earns no day labour on the day; he does the day before.
+            FounderState f = sim.State.Farm.Founder;
+            f.DayLabourShare = 100;
+            sim.AdvanceTo(day * Day - 6 * Hour);
+            f.DayLabourHours = Fixed.Zero;
+            FarmSystem.Accrue(sim);
+            sim.AdvanceTo(day * Day - 1);
+            FarmSystem.Accrue(sim);
+            Fixed before = f.DayLabourHours;
+            Assert.That(before, Is.GreaterThan(Fixed.Zero), "the day before: he works");
+            sim.AdvanceTo(day * Day + 12 * Hour);
+            f.DayLabourHours = Fixed.Zero;
+            FarmSystem.Accrue(sim);
+            sim.AdvanceTo(day * Day + 18 * Hour);
+            FarmSystem.Accrue(sim);
+            Assert.That(f.DayLabourHours, Is.EqualTo(Fixed.Zero), "the festival: he rests");
+
+            // Nobody is paid outside wages for the festival's day, and they are the next.
+            Household x = TownLifeRules.Yours(sim)[0];
+            foreach (long id in x.Members) sim.State.Citizens.Citizen(id).Job = CitizenJob.None;
+            x.Earned = 0;
+            sim.AdvanceTo((day + 1) * Day + 1);
+            Assert.That(x.Earned, Is.EqualTo(0), "no outside work on the festival's day");
+            sim.AdvanceTo((day + 2) * Day + 1);
+            Assert.That(x.Earned, Is.GreaterThan(0), "back to work the day after");
+        }
+
+        // The hand's orders wait on the festival's day and carry on the day after.
+        [Test]
+        public void Rest_Hand()
+        {
+            Simulation sim = Township();
+            Hold(sim, days: 1);
+            long day = FestivalRules.Today(sim) + 1;
+            Hand h = PeopleKit.HireHand(sim);
+            Ok(sim, new SetWorkHours(sim.State.Clock.SimTime, "normal"));
+            Ok(sim, new SetStandingOrder(sim.State.Clock.SimTime, h.Id, OrderSpec.KeepCrop(PeopleKit.HomeTile, "wheat", SeedSource.Certified, "none", SellRule.Store, Fixed.Zero)));
+            sim.AdvanceTo(day * Day + Hour);
+            long actedBefore = h.ActionHour;
+            sim.AdvanceTo(day * Day + 20 * Hour);
+            Assert.That(h.ActionHour, Is.LessThan(day * Day / Hour), "no action in any hour of the festival's day");
+            sim.AdvanceTo((day + 1) * Day + 6 * Hour);
+            Assert.That(h.ActionHour, Is.GreaterThanOrEqualTo((day + 1) * Day / Hour), "he is at it again the next day");
         }
 
         [Test]

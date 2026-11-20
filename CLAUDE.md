@@ -257,7 +257,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0144 | Sprint 24 plan check: 35 points (US-264 added: the mill's atta at the local market, the code changes to spec 016), no "Pay me every day", US-247 belongs to spec 028, Previews 12–15, US-147's apple figures redone through four gaps before code |
 | 0145 | US-151 as built: the town read at each close from the Township (five reputation scores, crime, inequality as income a person among earning households), what it does (the pull, the grants' bonus, Safety, land value, happiness), `crimeBase` 20, nothing applies until the first reading |
 | 0146 | US-150 as built: eight topics read at each close from the households' own needs, 3 families or a fifth, done/kept/broken judged at the close, approval moves (happiness − 65) ÷ 5 at most 4 a close, ignored −2 (tuned from the bots) and only draws or turns away families |
-| 0147 | US-149 as built: a festival is a day of the clock (lift 8 or 3 points, shops +30% and +10%), one a season, the treasury pays into a new Festivals account or you gift, the budget guard informs and doesn't block, planned on its own sheet from the hall's or the square's, a banner on the day; no crowd drawn on the map |
+| 0147 | US-149 as built: a festival is a day of the clock (lift 8 or 3 points, shops +30% and +10%), one a season, the treasury pays into a new Festivals account or you gift, the budget guard informs and doesn't block, planned on its own sheet from the hall's or the square's, a banner on the day; nobody works that day (only the stalls stay open) and everyone is drawn at the venue |
 
 ## Current status
 

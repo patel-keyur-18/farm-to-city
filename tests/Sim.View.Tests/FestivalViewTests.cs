@@ -93,5 +93,35 @@ namespace Sim.View.Tests
             SheetVm square = FieldSheets.ForTile(ctx, sim.Config.Game.Shops.SquareTile);
             Assert.That(square.Lines.Any(l => l.IsHeader && l.Label == ctx.Strings.Get("festival.last")), Is.True, "the record");
         }
+
+        // Owner, 2026-11-20: on a festival's day everyone rests at the venue, except the stalls' keepers and customers.
+        [Test]
+        public void Crowd_AtVenue()
+        {
+            Simulation sim = Town();
+            ViewContext ctx = ViewKit2.Context(sim);
+            // Give the founder a family or two at home so there is a crowd.
+            Assert.That(sim.Execute(new ScheduleFestival(ctx.Now, FestivalDef.Square, FestivalDef.Town, 1)).Accepted, Is.True);
+            long day = FestivalRules.Today(sim) + 1;
+            int venue = FestivalRules.Tile(sim, FestivalDef.Square);
+
+            sim.AdvanceTo((day - 1) * 86400 + 10 * 3600); // the day before, mid-morning: people about their work
+            MapVm before = MapView.Build(ViewKit2.Context(sim));
+            Assert.That(before.People.Any(p => p.Festival), Is.False);
+
+            sim.AdvanceTo(day * 86400 + 10 * 3600); // the festival, mid-morning
+            MapVm map = MapView.Build(ViewKit2.Context(sim));
+            var gone = map.People.Where(p => p.Kind != PersonKind.Customer && p.Kind != PersonKind.Worker).ToList();
+            Assert.That(gone, Is.Not.Empty, "the founder, at least");
+            Assert.That(gone.All(p => p.Festival && p.TileId == venue && p.Patrol.Count == 0 && !p.Working), Is.True, "everyone is at the venue, resting");
+            Assert.That(gone.Count, Is.LessThanOrEqualTo(MapView.FestivalDrawn));
+            Assert.That(gone.Select(p => p.Spot).Distinct().Count(), Is.EqualTo(gone.Count), "each has a place in the crowd");
+            Assert.That(map.People.Any(p => p.Kind == PersonKind.Labourer), Is.False, "neighbours hired for the day rest too");
+
+            sim.AdvanceTo(day * 86400 + 23 * 3600); // late evening: home again
+            Assert.That(MapView.Build(ViewKit2.Context(sim)).People.Any(p => p.Festival), Is.False);
+            sim.AdvanceTo((day + 1) * 86400 + 10 * 3600);
+            Assert.That(MapView.Build(ViewKit2.Context(sim)).People.Any(p => p.Festival), Is.False, "the next day: back to work");
+        }
     }
 }

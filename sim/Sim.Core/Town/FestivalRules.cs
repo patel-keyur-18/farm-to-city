@@ -112,6 +112,28 @@ namespace Sim.Core.Town
             return s.FestivalOn && s.FestivalDay == Today(sim);
         }
 
+        /// <summary>
+        /// A festival's day is a day of rest (owner, 2026-11-20): nobody works. Today is the festival day: hands, labourers and your own day labour stop, nobody earns outside
+        /// wages, and businesses make nothing, except the stalls (the vegetable stall, the tea stall, the sweet shop), whose keepers sell to the crowd.
+        /// </summary>
+        public static bool Resting(Simulation sim) { return IsDay(sim); }
+
+        /// <summary>Whether the day with this index (a day count) was a festival's, whether or not its record has been written yet.</summary>
+        public static bool WasFestival(Simulation sim, long day)
+        {
+            if (!On(sim)) return false;
+            TownLifeState s = State(sim);
+            if (s.FestivalOn && s.FestivalDay == day) return true;
+            foreach (FestivalRecord f in s.Festivals) if (f.Day == day) return true;
+            return false;
+        }
+
+        /// <summary>The business doesn't work in the hour that has just ended because it was a festival's day and it is not a stall.</summary>
+        public static bool ClosedForFestival(Simulation sim, BusinessTypeDef type, long hourStart)
+        {
+            return type.Kind == ShopKind.None && WasFestival(sim, hourStart / ClockDef.SecondsPerDay);
+        }
+
         /// <summary>Happiness points a household gets today: inside the venue's reach, or elsewhere in the town (§3.1).</summary>
         public static int Lift(Simulation sim, Household x)
         {

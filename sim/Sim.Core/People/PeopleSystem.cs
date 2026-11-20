@@ -108,6 +108,8 @@ namespace Sim.Core.People
                 done |= c.LabourUntil != 0 && t >= c.LabourUntil;
             }
             if (!hired) return;
+            bool rest = Sim.Core.Town.FestivalRules.Resting(sim); // a festival's day: the labourers rest too, and the crops wait (owner, 2026-11-20)
+            if (!rest)
             foreach (Crop c in sim.State.Farm.Crops.ToArray())
             {
                 if (c.State != CropState.Ready || s.OrderFor(OrderTargetKind.Field, c.TileId) != null) continue;
@@ -115,7 +117,7 @@ namespace Sim.Core.People
                 long part = System.Math.Min(c.HarvestGrams, Store.Fits(sim, sim.Config.Game.Farm.Crops[c.Def].OutputGood));
                 if (new Harvest(t, c.TileId, Overflow.StorePart).ApplyNow(sim).Accepted) sim.Emit(new LabourersHarvested(t, c.TileId, part));
             }
-            if (sim.State.Orchards != null)
+            if (sim.State.Orchards != null && !rest)
                 foreach (Orchard o in sim.State.Orchards.Orchards.ToArray()) // and pick a ripe orchard with no hand's order (spec 013 §3.3)
                 {
                     if (o.RipeGrams == 0 || s.OrderFor(OrderTargetKind.Field, o.TileId) != null) continue;

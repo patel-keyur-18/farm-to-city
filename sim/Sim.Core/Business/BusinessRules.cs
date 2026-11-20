@@ -508,7 +508,7 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
                 if (b.Status == BusinessStatus.Open)
                 {
-                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln) Morning(sim, b, took);
+                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln && !Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour)) Morning(sim, b, took);
                     Work(sim, b);
                 }
             ShopRules.Hourly(sim); // the customers (spec 017 §3.8), after the businesses' hour
@@ -518,6 +518,7 @@ namespace Sim.Core.Business
         public static bool OpenAt(Simulation sim, Business b, int hour)
         {
             if (b.Worker == WorkerKind.None || hour < b.OpenHour || hour >= b.CloseHour) return false;
+            if (Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour)) return false; // a festival's day: only the stalls stay open (owner, 2026-11-20)
             Worker w = HiredWorker(sim, b);
             return w == null || !WorkRules.Away(w);
         }

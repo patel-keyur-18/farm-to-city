@@ -135,7 +135,8 @@ namespace Sim.Core.Farm
         {
             FounderState s = sim.State.Farm.Founder;
             DietPlanDef plan = sim.Config.Game.Farm.DietPlans[s.DietPlan];
-            s.DayLabourHours += LabourRate(sim).MulRatio(s.DayLabourShare * dt, 100 * Day);
+            if (!Town.FestivalRules.WasFestival(sim, (sim.State.Clock.SimTime - 1) / Day)) // a festival's day: no day labour (owner, 2026-11-20)
+                s.DayLabourHours += LabourRate(sim).MulRatio(s.DayLabourShare * dt, 100 * Day);
             s.NutritionSum += plan.Nutrition.MulRatio(dt, 1);
             // Accrual intervals never cross a season boundary (one falls on every daily pass), so the season at the
             // interval's start is its season.

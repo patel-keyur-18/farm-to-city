@@ -6881,7 +6881,7 @@
   "festival.fromMidnight": "The day starts at 0:00 and lasts the whole day.",
   "festival.cost": "Cost",
   "festival.costNote": "{per} coins for each of your {people} people",
-  "festival.does": "For the day: happiness +{in} within {m} m of the venue and +{out} elsewhere. Chai and sweets sell {chai} more, vegetables {veg}.",
+  "festival.does": "For the day nobody works: everyone rests at the venue, and only the stalls stay open. Happiness +{in} within {m} m of the venue and +{out} elsewhere. Chai and sweets sell {chai} more, vegetables {veg}.",
   "festival.holdIt": "Hold the festival",
   "festival.theTown": "The town",
   "festival.youGift": "You, as a gift",
@@ -6916,7 +6916,7 @@
   "why.festival.liftValue": "+{in} points, +{out} points",
   "why.festival.shops": "Chai and sweets sell more that day, vegetables a little",
   "why.festival.shopsValue": "{chai}, {veg}",
-  "why.festival.text": "It is paid at once, outside the town, so a festival is a real choice. It can't be undone once it is scheduled.",
+  "why.festival.text": "It is paid at once, outside the town, so a festival is a real choice. On the day nobody works: hands, labourers and your own day labour rest, nobody earns outside wages, and only the stalls stay open. It can't be undone once it is scheduled.",
   "cash.row.5980.out": "Festivals",
   "cash.row.5980.in": "Festivals refunded"
 }

@@ -79,7 +79,7 @@ namespace Game.Presentation.Map
             public int PatrolIndex, PointsLeft;
             public int WorkTile = -1; // the field being worked, or −1 at home
             public float WorkStart = -1f, WorkFor;
-            public bool Leaving;
+            public bool Leaving, Festival; // Festival: standing in the festival's crowd (spec 026 §3.1)
             public Vector3? LeaveTo; // a labourer's way out: the west edge for a neighbour, their house for your people; else off to the west
             public float Phase;
         }
@@ -651,7 +651,7 @@ namespace Game.Presentation.Map
                 if (p.TileId < 0) continue;
                 seen.Add(p.Key);
                 Vector3 home = HomeOf(p);
-                bool comes = p.Kind == PersonKind.Labourer || p.Kind == PersonKind.Worker || (p.Kind == PersonKind.Pupil && p.HomeHut != 0);
+                bool comes = !p.Festival && (p.Kind == PersonKind.Labourer || p.Kind == PersonKind.Worker || (p.Kind == PersonKind.Pupil && p.HomeHut != 0));
                 Vector3 fromHome = p.Kind == PersonKind.Pupil && p.HomeHut != 0 ? HouseYard(p.HomeHut, p.HomeTile) : home; // a pupil walks from home and back
                 if (!_people.TryGetValue(p.Key, out PersonView v))
                 {
@@ -669,9 +669,10 @@ namespace Game.Presentation.Map
                     _people[p.Key] = v;
                 }
                 v.Home = home;
-                v.LeaveTo = p.Kind == PersonKind.Pupil && p.HomeHut == 0 ? SchoolSpot(p) : !comes ? (Vector3?)null : p.HomeHut != 0 ? fromHome : WestEdge(p.TileId); // the teacher stays put
+                v.LeaveTo = p.Festival && p.HomeHut != 0 ? HouseYard(p.HomeHut, p.HomeTile) : p.Kind == PersonKind.Pupil && p.HomeHut == 0 ? SchoolSpot(p) : !comes ? (Vector3?)null : p.HomeHut != 0 ? fromHome : WestEdge(p.TileId); // the teacher stays put
                 v.Leaving = false;
-                bool changed = !SamePatrol(v.Patrol, p.Patrol);
+                bool changed = !SamePatrol(v.Patrol, p.Patrol) || v.Festival != p.Festival; // going to, or leaving, the festival is a change of place
+                v.Festival = p.Festival;
                 v.Patrol.Clear();
                 v.Patrol.AddRange(p.Patrol);
                 if (v.Patrol.Count == 0)
@@ -704,8 +705,16 @@ namespace Game.Presentation.Map
             return true;
         }
 
+        /// <summary>A place in the festival's crowd (spec 026 §3.1): a ring round the venue's acre, spread by the golden angle so no two stand together.</summary>
+        private Vector3 VenueSpot(PersonVm p)
+        {
+            float k = Mathf.Max(0, p.Spot), r = 0.07f + 0.21f * Mathf.Sqrt((k + 0.5f) / MapView.FestivalDrawn), a = k * 2.39996f;
+            return OnTile(p.TileId, new Vector2(r * Mathf.Cos(a), r * Mathf.Sin(a) * 0.8f));
+        }
+
         private Vector3 HomeOf(PersonVm p)
         {
+            if (p.Festival) return VenueSpot(p); // a festival's day: everyone rests at the venue
             switch (p.Kind)
             {
                 case PersonKind.Founder: return _hutWorld + new Vector2(-0.12f, -0.12f);
