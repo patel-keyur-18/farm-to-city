@@ -288,4 +288,23 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "BuildFinished(" + ProjectId + ", " + Kind + ", owner=" + Owner + ", tile=" + TileId + ")"; }
     }
+
+    /// <summary>The town was read at a close (spec 026 §3.4, §3.5, §3.6): the mean of the five reputation scores, crime and the inequality ratio (whole units; known only from 10 households).</summary>
+    public sealed class ReputationRead : SimEvent
+    {
+        public long Mean { get; }
+        public long Crime { get; }
+        public bool RatioKnown { get; }
+        public long Ratio { get; }
+
+        public ReputationRead(long simTime, long mean, long crime, bool ratioKnown, long ratio) : base(simTime)
+        {
+            Mean = mean;
+            Crime = crime;
+            RatioKnown = ratioKnown;
+            Ratio = ratio;
+        }
+
+        protected override string Describe() { return "ReputationRead(mean " + Mean + ", crime " + Crime + (RatioKnown ? ", ratio " + Ratio : "") + ")"; }
+    }
 }

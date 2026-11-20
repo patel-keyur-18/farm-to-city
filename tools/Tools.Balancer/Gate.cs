@@ -432,6 +432,10 @@ namespace Tools.Balancer
             public List<double> Happiness = new List<double>(), OldVillageHappiness = new List<double>();
             public List<int> HouseholdsAfter = new List<int>();
 
+            /// <summary>At the same time (spec 026 §9): crime, the unemployed in tenths of a percent, the inequality ratio (NaN under 10 families), the reputation mean, approval and the pull.</summary>
+            public List<double> Crime = new List<double>(), Unemployed = new List<double>(), Ratio = new List<double>(), RepMean = new List<double>(), Approval = new List<double>(), Pull = new List<double>();
+            public List<string> Incomes = new List<string>();
+
             public List<double>[] DaysAt = { new List<double>(), new List<double>(), new List<double>(), new List<double>() };
         }
 
@@ -450,6 +454,7 @@ namespace Tools.Balancer
                 long unlockPeriod = -1, startCash = 0, afterCash = long.MinValue, midCash = long.MinValue;
                 double lowest = double.NaN, happy = double.NaN, oldHappy = double.NaN;
                 int ownAfter = 0;
+                string incomes = ""; double crime = double.NaN, unemployed = double.NaN, ratio = double.NaN, repMean = double.NaN, approval = double.NaN, pull = double.NaN;
                 bool doctor = false;
                 int left = 0;
                 Economy.RunBot(config, make(), seasons, (ulong)(i + 1), sim =>
@@ -483,6 +488,13 @@ namespace Tools.Balancer
                         happy = (double)Sim.Core.People.HappinessRules.Town(sim).Raw / 4294967296.0;
                         oldHappy = (double)sim.State.Township.Cohort.Happiness.Raw / 4294967296.0;
                         ownAfter = Sim.Core.Progress.EraRules.Households(sim);
+                        Sim.Core.Town.TownLifeState tl = Sim.Core.Town.TownLifeRules.State(sim);
+                        incomes = string.Join(" ", System.Linq.Enumerable.Select(System.Linq.Enumerable.OrderBy(Sim.Core.Town.TownLifeRules.Yours(sim), h => h.Income), h => (h.Income / 100) + "[" + string.Join(",", System.Linq.Enumerable.Select(h.Members, id => { var c = sim.State.Citizens.Citizen(id); return Sim.Core.People.CitizenRules.Age(sim, c) + "/" + c.Job; })) + "]"));
+                        if (tl != null && tl.Read)
+                        {
+                            crime = (double)tl.Crime.Raw / 4294967296.0; unemployed = tl.UnemployedPermille / 10.0; ratio = tl.RatioKnown ? (double)tl.Ratio.Raw / 4294967296.0 : double.NaN;
+                            repMean = (double)Sim.Core.Town.TownLifeRules.Mean(tl).Raw / 4294967296.0; approval = (double)tl.Approval.Raw / 4294967296.0; pull = (double)Sim.Core.Town.TownLifeRules.Pull(sim).Raw / 4294967296.0;
+                        }
                     }
                     for (int k = 0; k < at.Length; k++)
                         if (double.IsNaN(at[k]) && Sim.Core.Progress.EraRules.Households(sim) >= HouseholdSteps[k]) at[k] = sim.State.Clock.SimTime / 86400.0;
@@ -493,7 +505,7 @@ namespace Tools.Balancer
                 if (!double.IsNaN(township)) { r.HouseholdsAtUnlock.Add(households); r.TreasuryAtUnlock.Add(tcash); r.CashAtUnlock.Add(cash); }
                 r.Broken = broken;
                 for (int k = 0; k < at.Length; k++) r.DaysAt[k].Add(at[k]);
-                if (afterCash != long.MinValue) { r.TreasuryAfter.Add(afterCash); r.TreasuryStart.Add(startCash); r.TreasuryMid.Add(midCash); r.LowestService.Add(lowest); r.DoctorIn.Add(doctor); r.OldVillageLeft.Add(left); r.Happiness.Add(happy); r.OldVillageHappiness.Add(oldHappy); r.HouseholdsAfter.Add(ownAfter); }
+                if (afterCash != long.MinValue) { r.TreasuryAfter.Add(afterCash); r.TreasuryStart.Add(startCash); r.TreasuryMid.Add(midCash); r.LowestService.Add(lowest); r.DoctorIn.Add(doctor); r.OldVillageLeft.Add(left); r.Happiness.Add(happy); r.OldVillageHappiness.Add(oldHappy); r.HouseholdsAfter.Add(ownAfter); r.Crime.Add(crime); r.Unemployed.Add(unemployed); r.Ratio.Add(ratio); r.RepMean.Add(repMean); r.Approval.Add(approval); r.Pull.Add(pull); r.Incomes.Add(incomes); }
                 rows[i] = r;
             });
             var all = new TownshipResult { Bot = name, Seeds = seeds };
@@ -506,6 +518,7 @@ namespace Tools.Balancer
                 for (int k = 0; k < r.DaysAt.Length; k++) all.DaysAt[k].AddRange(r.DaysAt[k]);
                 all.TreasuryAfter.AddRange(r.TreasuryAfter); all.TreasuryMid.AddRange(r.TreasuryMid); all.TreasuryStart.AddRange(r.TreasuryStart); all.LowestService.AddRange(r.LowestService);
                 all.DoctorIn.AddRange(r.DoctorIn); all.OldVillageLeft.AddRange(r.OldVillageLeft); all.Happiness.AddRange(r.Happiness); all.OldVillageHappiness.AddRange(r.OldVillageHappiness); all.HouseholdsAfter.AddRange(r.HouseholdsAfter);
+                all.Crime.AddRange(r.Crime); all.Unemployed.AddRange(r.Unemployed); all.Ratio.AddRange(r.Ratio); all.RepMean.AddRange(r.RepMean); all.Approval.AddRange(r.Approval); all.Pull.AddRange(r.Pull); all.Incomes.AddRange(r.Incomes);
             }
             return all;
         }

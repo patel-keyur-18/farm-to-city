@@ -123,7 +123,9 @@ namespace Sim.Core.People
             PopulationDefs p = sim.Config.Game.Population;
             int jitter = p.FamilyJitterHours;
             long hours = p.FamilyEveryHours - jitter + (long)Rng.Below(PopulationRules.Roll(sim, RngStream.Migration, 0, WaitKey, t), (ulong)(2 * jitter + 1));
-            return hours * Hour;
+            long secs = hours * Hour;
+            Fixed pull = Sim.Core.Town.TownLifeRules.Pull(sim);
+            return pull == Fixed.FromInt(100) ? secs : (Fixed.FromInt(secs) * Fixed.FromInt(100) / pull).FloorToLong(); // spec 026 §3.7: a name that draws families shortens the wait
         }
 
         private const long ForHousehold = 1, ForCitizen = 2, ForAnswer = 3;

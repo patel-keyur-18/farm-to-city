@@ -15,7 +15,7 @@ namespace Sim.Content
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke", "utilities", "upgrade", "coldStore");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke", "utilities", "upgrade", "coldStore", "townLife");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -114,7 +114,7 @@ namespace Sim.Content
                 };
                 civic.Add(def);
             }
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root), Utilities = LoadUtilities(o, root, treasury, map), Upgrade = LoadUpgrade(o, root), ColdStore = LoadColdStore(o, root, market) };
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root), Utilities = LoadUtilities(o, root, treasury, map), Upgrade = LoadUpgrade(o, root), ColdStore = LoadColdStore(o, root, market), TownLife = o["townLife"] == null ? null : LoadTownLife(o, root) };
         }
 
         /// <summary>The utilities (spec 025 §3.1): each step's plot, work, lines, reach and capacity, and what going without costs.</summary>
@@ -226,6 +226,44 @@ namespace Sim.Content
                 MasonDay = Money(Required(j, p, "masonDay"), Join(p, "masonDay")), GangPrice = Bounded(j, p, "gangPrice", "1", "3"), GangHours = Bounded(j, p, "gangHours", "1", "3"),
                 MaxMasons = BoundedInt(j, p, "maxMasons", 1, 10), RestockHour = BoundedInt(j, p, "restockHour", 0, 23), MasonShare = BoundedInt(j, p, "masonShare", 0, 100), Kinds = kinds,
             };
+        }
+
+        /// <summary>Town life (spec 026 §4): the five scores' weights, the pull, the grants' bonus, approval, crime and inequality.</summary>
+        private static TownLifeDef LoadTownLife(JObject o, string root)
+        {
+            string p = Join(root, "townLife");
+            JObject j = Object(Required(o, root, "townLife"), p);
+            OnlyFields(j, p, "weights", "pullDivisor", "pullMin", "pullMax", "grantBonusDivisor", "roadTrack", "approvalStart", "crime", "inequality");
+            string wp = Join(p, "weights");
+            JObject w = Object(Required(j, p, "weights"), wp);
+            string[] names = { "livability", "business", "education", "health", "environment" };
+            OnlyFields(w, wp, names);
+            var weights = new System.Collections.Generic.List<int[]>();
+            for (int i = 0; i < names.Length; i++)
+            {
+                string np = Join(wp, names[i]);
+                var a = Array(Required(w, wp, names[i]), np);
+                if (a.Count != TownLifeDef.PartsEach) throw new ContentException(np, "three weights");
+                var row = new int[TownLifeDef.PartsEach];
+                int sum = 0;
+                for (int k = 0; k < row.Length; k++) { row[k] = Int(a[k], Index(np, k)); Range(row[k], 0, 100, Index(np, k)); sum += row[k]; }
+                if (sum != 100) throw new ContentException(np, "the weights must add up to 100");
+                weights.Add(row);
+            }
+            string cp = Join(p, "crime"), ip = Join(p, "inequality");
+            JObject c = Object(Required(j, p, "crime"), cp), q = Object(Required(j, p, "inequality"), ip);
+            OnlyFields(c, cp, "base", "perUnemployed", "inequalityShare", "landValueStep", "landValueMax");
+            OnlyFields(q, ip, "needsHouseholds", "happinessAbove", "maxPoints", "pushOutAt", "ratioCap");
+            var d = new TownLifeDef
+            {
+                Weights = weights, PullDivisor = BoundedInt(j, p, "pullDivisor", 1, 10), PullMin = BoundedInt(j, p, "pullMin", 10, 100), PullMax = BoundedInt(j, p, "pullMax", 100, 300),
+                GrantBonusDivisor = BoundedInt(j, p, "grantBonusDivisor", 1, 20), RoadTrack = BoundedInt(j, p, "roadTrack", 0, 100), ApprovalStart = BoundedInt(j, p, "approvalStart", 0, 100),
+                CrimeBase = BoundedInt(c, cp, "base", 0, 100), CrimePerUnemployed = Bounded(c, cp, "perUnemployed", "0", "5"), CrimeInequalityShare = Bounded(c, cp, "inequalityShare", "0", "1"),
+                CrimeLandValueStep = Bounded(c, cp, "landValueStep", "0", "0.1"), CrimeLandValueMax = Bounded(c, cp, "landValueMax", "0", "0.5"),
+                NeedsHouseholds = BoundedInt(q, ip, "needsHouseholds", 2, 100), HappinessAbove = BoundedInt(q, ip, "happinessAbove", 1, 10), MaxPoints = BoundedInt(q, ip, "maxPoints", 0, 20),
+                PushOutAt = BoundedInt(q, ip, "pushOutAt", 2, 10), RatioCap = BoundedInt(q, ip, "ratioCap", 5, 100),
+            };
+            return d;
         }
 
         /// <summary>Pucca upgrades (spec 024 §3.7): the land value that offers one and the pucca rent; its materials are the <c>pucca_upgrade</c> construction kind.</summary>

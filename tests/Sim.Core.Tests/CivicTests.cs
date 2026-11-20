@@ -170,11 +170,13 @@ namespace Sim.Core.Tests
             Assert.That(x.Security, Is.EqualTo(three), "no post, no fourth part");
 
             Build(sim, Watchman);
+            TownLifeRules.State(sim).Crime = Fixed.FromInt(50); // spec 026 §3.5: at crime 50 the Safety part is the one it always was (building takes closes, which read the town)
             HappinessRules.Update(sim, x);
             Fixed unstaffed = x.Security;
             Assert.That(CivicRules.Safety(sim, x), Is.EqualTo(Fixed.FromRatio(1, 2)), "a post with nobody in it is 0.5");
             Assert.That(unstaffed, Is.EqualTo((three * Fixed.FromInt(3) + Fixed.FromRatio(1, 2)).MulRatio(1, 4)));
             Staff(sim, Watchman);
+            TownLifeRules.State(sim).Crime = Fixed.FromInt(50);
             HappinessRules.Update(sim, x);
             Assert.That(CivicRules.Safety(sim, x), Is.EqualTo(Fixed.One), "a watchman in reach is 1.0");
             Assert.That(x.Security, Is.GreaterThanOrEqualTo(three), "never worse than without the post");
