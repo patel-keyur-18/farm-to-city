@@ -197,6 +197,7 @@ namespace Game.Presentation
                 case RoadSheet.LoanKind: _sheet.Show(RoadSheet.LoanSheet(_ctx), refreshOnly); break; // spec 023 §3.3
                 case ClinicSheet.ClinicLoanKind: _sheet.Show(ClinicSheet.LoanSheet(_ctx, false), refreshOnly); break; // spec 023 §3.1
                 case ClinicSheet.QuartersLoanKind: _sheet.Show(ClinicSheet.LoanSheet(_ctx, true), refreshOnly); break;
+                case TownLifeSheet.PromiseKind: _sheet.Show(TownLifeSheet.Promise(_ctx, r.Id), refreshOnly); break; // spec 026 §3.2: when to keep a petition by
                 case EquipmentSheet.Kind: _sheet.Show(EquipmentSheet.Build(_ctx), refreshOnly); break; // spec 013 §7
                 case MachineLoanSheet.Kind: _sheet.Show(MachineLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "Animal":
@@ -219,6 +220,7 @@ namespace Game.Presentation
             {
                 case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case TreasurySheet.Kind: case TaxSheet.Kind: case PolicySheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case ColdStoreSheet.Kind: case EquipmentSheet.Kind: case BuildingSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
+                case TownLifeSheet.PromiseKind: Return(new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.LifeTab)); return; // promised: back to the Town life tab, the petition marked
                 case TreasurySheet.GiveKind: Return(new SheetRequest(TreasurySheet.Kind, 0)); return; // given: back to the treasury to see its balance
                 case TreasurySheet.BudgetKind: Return(new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)); return; // set: back to the Budget tab, the new figure there
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0, MoneySheet.Wealth)); return;

@@ -44,6 +44,8 @@ namespace Sim.Core.Town
             ReadInequality(sim, d, s);
             ReadCrime(sim, d, s);
             ReadReputation(sim, d, s);
+            s.Closes++;
+            PetitionRules.AtClose(sim, d, s);
             sim.Emit(new Events.ReputationRead(sim.State.Clock.SimTime, Mean(s).FloorToLong(), s.Crime.FloorToLong(), s.RatioKnown, s.Ratio.RoundToLong()));
         }
 

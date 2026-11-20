@@ -75,4 +75,24 @@ namespace Sim.Core.Commands
             return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }
+
+    /// <summary>
+    /// Answers a petition of your households (US-150, spec 026 §3.2): promise it by <c>Closes</c> closes (one of the content's choices: 1, 2 or 4), or decline it with 0.
+    /// Doing the thing answers it with no command at all, at the next close.
+    /// </summary>
+    public sealed class AnswerPetition : TimedCommand
+    {
+        public int PetitionId { get; }
+
+        /// <summary>The closes to promise it by, or 0 to decline.</summary>
+        public int Closes { get; }
+
+        public AnswerPetition(long at, int petitionId, int closes) : base(at) { PetitionId = petitionId; Closes = closes; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = PetitionRules.Answer(sim, PetitionId, Closes);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
 }

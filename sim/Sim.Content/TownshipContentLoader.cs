@@ -233,7 +233,7 @@ namespace Sim.Content
         {
             string p = Join(root, "townLife");
             JObject j = Object(Required(o, root, "townLife"), p);
-            OnlyFields(j, p, "weights", "pullDivisor", "pullMin", "pullMax", "grantBonusDivisor", "roadTrack", "approvalStart", "crime", "inequality");
+            OnlyFields(j, p, "weights", "pullDivisor", "pullMin", "pullMax", "grantBonusDivisor", "roadTrack", "approvalStart", "crime", "inequality", "petitions");
             string wp = Join(p, "weights");
             JObject w = Object(Required(j, p, "weights"), wp);
             string[] names = { "livability", "business", "education", "health", "environment" };
@@ -262,8 +262,30 @@ namespace Sim.Content
                 CrimeLandValueStep = Bounded(c, cp, "landValueStep", "0", "0.1"), CrimeLandValueMax = Bounded(c, cp, "landValueMax", "0", "0.5"),
                 NeedsHouseholds = BoundedInt(q, ip, "needsHouseholds", 2, 100), HappinessAbove = BoundedInt(q, ip, "happinessAbove", 1, 10), MaxPoints = BoundedInt(q, ip, "maxPoints", 0, 20),
                 PushOutAt = BoundedInt(q, ip, "pushOutAt", 2, 10), RatioCap = BoundedInt(q, ip, "ratioCap", 5, 100),
+                Petition = LoadPetitions(j, p),
             };
             return d;
+        }
+
+        /// <summary>Petitions and approval (spec 026 §3.2, §3.3).</summary>
+        private static PetitionDef LoadPetitions(JObject o, string root)
+        {
+            string p = Join(root, "petitions");
+            JObject j = Object(Required(o, root, "petitions"), p);
+            OnlyFields(j, p, "minHouseholds", "minShare", "rentShare", "promiseCloses", "done", "kept", "declined", "ignored", "broken", "quietCloses", "declinedQuietCloses", "ignoredAfter", "neutralHappiness", "step", "stepMax", "keepEnded", "keepHistory");
+            string cp = Join(p, "promiseCloses");
+            var arr = Array(Required(j, p, "promiseCloses"), cp);
+            var closes = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < arr.Count; i++) { int n = Int(arr[i], Index(cp, i)); Range(n, 1, 12, Index(cp, i)); closes.Add(n); }
+            if (closes.Count == 0) throw new ContentException(cp, "at least one choice");
+            return new PetitionDef
+            {
+                MinHouseholds = BoundedInt(j, p, "minHouseholds", 1, 50), MinShare = Bounded(j, p, "minShare", "0", "1"), RentShare = Bounded(j, p, "rentShare", "0.1", "0.3"), PromiseCloses = closes.AsReadOnly(),
+                Done = BoundedInt(j, p, "done", 0, 20), Kept = BoundedInt(j, p, "kept", 0, 20), Declined = BoundedInt(j, p, "declined", -20, 0), Ignored = BoundedInt(j, p, "ignored", -20, 0), Broken = BoundedInt(j, p, "broken", -20, 0),
+                QuietCloses = BoundedInt(j, p, "quietCloses", 0, 12), DeclinedQuietCloses = BoundedInt(j, p, "declinedQuietCloses", 0, 12), IgnoredAfter = BoundedInt(j, p, "ignoredAfter", 1, 12),
+                NeutralHappiness = BoundedInt(j, p, "neutralHappiness", 0, 100), Step = BoundedInt(j, p, "step", 1, 50), StepMax = BoundedInt(j, p, "stepMax", 0, 20),
+                KeepEnded = BoundedInt(j, p, "keepEnded", 1, 50), KeepHistory = BoundedInt(j, p, "keepHistory", 2, 24),
+            };
         }
 
         /// <summary>Pucca upgrades (spec 024 §3.7): the land value that offers one and the pucca rent; its materials are the <c>pucca_upgrade</c> construction kind.</summary>

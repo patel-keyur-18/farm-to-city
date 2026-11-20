@@ -37,7 +37,7 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuildSilagePit), typeof(BuyChaffCutter), typeof(FitSolarPanel), typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
@@ -110,6 +110,7 @@ namespace Sim.View.Views
         {
             ConfirmKind kind = ConfirmRules.Of(c);
             if (kind != ConfirmKind.Tap && kind != ConfirmKind.Hold) return null;
+            if (c is AnswerPetition promise && promise.Closes != 0) return null; // a promise costs nothing and ends nothing: it is its own choice sheet
             if (c is RepealPolicy undo && ctx.Sim.State.Treasury != null && ctx.Sim.State.Treasury.Policies[(int)undo.Policy].PaidCloses == 0) return null; // never paid: taking it back costs nothing and ends at once
             if (c is EndLease cancel && Sim.Core.Town.LandLeaseRules.StatusOf(ctx.Sim.State.Land.Parcels[ctx.Sim.Config.Game.Map.IndexOfParcel(cancel.ParcelId)]) == Sim.Core.Land.LeaseStatus.Starting) return null; // not started: cancelling costs nothing and ends at once
             if (c is EnactPolicy keep && ctx.Sim.State.Treasury != null && ctx.Sim.State.Treasury.Policies[(int)keep.Policy].Repealing) return null; // keeping a policy that is ending costs nothing new
@@ -136,6 +137,7 @@ namespace Sim.View.Views
             else if (c is CommissionWorks works) Works(ctx, vm, sim, after, works);
             else if (c is EnactPolicy enact) Enacting(ctx, vm, sim, after, enact);
             else if (c is PetitionRoad || c is BuildClinic || c is BuildDoctorQuarters) Road(ctx, vm, cash, taken, after, newest, name);
+            else if (c is AnswerPetition) Declining(ctx, vm);
             else if (c is RepealPolicy repeal) Repealing(ctx, vm, sim, repeal);
             else if (c is ListParcel || c is CancelSale) Listing(ctx, vm, c);
             else if (c is ZoneParcel zp) Zoning(ctx, vm, zp);
@@ -208,6 +210,15 @@ namespace Sim.View.Views
         }
 
         /// <summary>Offering a parcel to builders (spec 024 §3.3): its land value, the families a builder waits for, what you receive; nothing is paid by you and it can be taken back.</summary>
+        /// <summary>Declining a petition (spec 026 §3.2): approval falls and the families don't raise it again for a while.</summary>
+        private static void Declining(ViewContext ctx, ConfirmCardVm vm)
+        {
+            var s = ctx.Strings;
+            Sim.Core.Definitions.PetitionDef d = Sim.Core.Town.PetitionRules.Def(ctx.Sim);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AnswerPetition.approval"), TownLifeSheet.Signed(ctx, d.Declined)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AnswerPetition.again"), s.Get("confirm.AnswerPetition.againValue", "n", ctx.Fmt.Integer(d.DeclinedQuietCloses)), total: true));
+        }
+
         private static void Zoning(ViewContext ctx, ConfirmCardVm vm, ZoneParcel c)
         {
             var s = ctx.Strings;
@@ -381,6 +392,11 @@ namespace Sim.View.Views
             {
                 Sim.Core.People.Hand hand = ctx.Sim.State.People?.Hand(dh.HandId);
                 return hand == null ? null : Sim.View.Views.PeopleWords.Name(ctx, hand.Name);
+            }
+            if (c is AnswerPetition pa)
+            {
+                Sim.Core.Town.TownPetition pet = Sim.Core.Town.TownLifeRules.State(ctx.Sim)?.Petitions.Find(x => x.Id == pa.PetitionId);
+                return pet == null ? null : TownLifeSheet.Text(ctx, pet);
             }
             if (c is FitSolarPanel fs) return ctx.Strings.Get(fs.Source == 1 ? "water.pump" : "water.borewell"); // which source the panel is for
             string id = c is BuyParcel b ? b.ParcelId : c is SellParcel sp ? sp.ParcelId : c is ListParcel lp ? lp.ParcelId : c is CancelSale cs ? cs.ParcelId : c is ZoneParcel zp2 ? zp2.ParcelId : c is LeaseOutLand lo ? lo.ParcelId : c is EndLease el ? el.ParcelId : null;

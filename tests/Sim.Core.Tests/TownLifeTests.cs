@@ -16,7 +16,7 @@ namespace Sim.Core.Tests
     public class TownLifeTests
     {
         /// <summary>A Township with the old village in and <paramref name="families"/> families of yours, every working-age adult in a town job.</summary>
-        private static Simulation Township(int families = 12, System.Func<string, string, string> edit = null)
+        internal static Simulation Township(int families = 12, System.Func<string, string, string> edit = null)
         {
             Simulation sim = TownshipTests.Start(cohort: true, (f, j) => { j = f == "township.json" ? j.Replace("\"townSize\": 40", "\"townSize\": 100000") : j; return edit == null ? j : edit(f, j); });
             TownshipTests.Families(sim, families);

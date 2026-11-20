@@ -283,6 +283,10 @@ namespace Sim.View.Views
                     Level = AlertLevel.Decision, Text = s.Get(st.Window == BudgetWindow.Revise ? "alert.budgetRevise" : "alert.budgetSet"),
                     Action = ActionVm.Open("budget", s.Get("action.open"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)),
                 });
+            if (TownLifeRules.Known(sim)) // spec 026 §3.2: a petition waits for an answer
+                foreach (Sim.Core.Town.TownPetition p in TownLifeRules.State(sim).Petitions)
+                    if (p.Status == Sim.Core.Town.PetitionStatus.Open)
+                        list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.petition", "text", TownLifeSheet.Text(ctx, p)), Action = ActionVm.Open("petition:" + p.Id, s.Get("action.open"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.LifeTab)) });
             BuildingSheet.Alerts(ctx, list); // spec 025 §3.2: a build waiting for materials
             if (ClinicRules.InPost(sim) && st.Unpaid[1] > 0) // spec 023 §3.9: the doctor's allowance went unpaid
                 list.Add(new AlertVm
@@ -714,7 +718,7 @@ namespace Sim.View.Views
             // Spec 023 (the Township).
             { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },
-            { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "ReputationRead", Use.StateOnly }, { "CohortHouseholdLeft", Use.Away },
+            { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "ReputationRead", Use.StateOnly }, { "PetitionRaised", Use.StateOnly }, { "PetitionEnded", Use.StateOnly }, { "ApprovalMoved", Use.StateOnly }, { "CohortHouseholdLeft", Use.Away },
             { "DoctorArrived", Use.Away }, { "DoctorUnpaid", Use.Away }, { "DoctorLeft", Use.Away },
             { "HouseUpgradeStarted", Use.Motion }, { "HouseUpgraded", Use.Away }, { "CivicBuilt", Use.Away }, { "UtilityBuilt", Use.Away }, { "GridConnected", Use.Away }, { "BuildStarted", Use.StateOnly }, { "BuildHeld", Use.Away }, { "BuildFinished", Use.StateOnly }, { "LaneBuilt", Use.StateOnly }, { "RingOpened", Use.StateOnly }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
             // Spec 021 (the town treasury).

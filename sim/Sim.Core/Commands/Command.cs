@@ -289,6 +289,13 @@ namespace Sim.Core.Commands
         // Spec 024 §3.7 (pucca upgrades, US-152)
         /// <summary>No such building.</summary>
         UnknownBuilding,
+
+        // Spec 026 §3.2 (petitions, US-150)
+        /// <summary>No such petition.</summary>
+        UnknownPetition,
+
+        /// <summary>The petition is already answered or ended.</summary>
+        PetitionClosed,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

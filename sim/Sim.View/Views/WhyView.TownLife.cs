@@ -10,11 +10,31 @@ namespace Sim.View.Views
     {
         private static WhyVm LifeApproval(ViewContext ctx, long id)
         {
-            TownLifeState st = TownLifeRules.State(ctx.Sim);
+            Simulation sim = ctx.Sim;
+            TownLifeState st = TownLifeRules.State(sim);
+            PetitionDef d = PetitionRules.Def(sim);
             WhyVm vm = New(ctx, "why.life.approval.title", Num(ctx, st.Approval));
-            Row(vm, ctx, "why.life.approval.start", ctx.Fmt.Integer(TownLifeRules.Def(ctx.Sim).ApprovalStart));
-            Row(vm, ctx, "why.life.approval.happiness", Num(ctx, Sim.Core.People.HappinessRules.Town(ctx.Sim)));
+            Row(vm, ctx, "why.life.approval.start", ctx.Fmt.Integer(TownLifeRules.Def(sim).ApprovalStart));
+            Row(vm, ctx, "why.life.approval.happiness", Num(ctx, Sim.Core.People.HappinessRules.Town(sim)));
+            Row(vm, ctx, "why.life.approval.step", TownLifeSheet.Signed(ctx, (int)PetitionRules.Step(d, Sim.Core.People.HappinessRules.Town(sim))), "max", ctx.Fmt.Integer(d.StepMax));
+            Row(vm, ctx, "why.life.approval.endings", ctx.Strings.Get("why.life.approval.endingsValue", "done", TownLifeSheet.Signed(ctx, d.Done), "kept", TownLifeSheet.Signed(ctx, d.Kept), "declined", TownLifeSheet.Signed(ctx, d.Declined), "ignored", TownLifeSheet.Signed(ctx, d.Ignored), "broken", TownLifeSheet.Signed(ctx, d.Broken)));
             Text(vm, ctx, "why.life.approval.text");
+            return vm;
+        }
+
+        /// <summary>A petition's <em>Why?</em> (spec 026 §3.2): how many families, how many it takes, and what answers it.</summary>
+        private static WhyVm LifePetition(ViewContext ctx, long id)
+        {
+            Simulation sim = ctx.Sim;
+            TownLifeState st = TownLifeRules.State(sim);
+            PetitionDef d = PetitionRules.Def(sim);
+            TownPetition p = st.Petitions.Find(x => x.Id == id);
+            if (p == null) return New(ctx, "why.life.petition.title", "");
+            WhyVm vm = New(ctx, "why.life.petition.title", ctx.Strings.Plural("petition.families", p.Households));
+            Row(vm, ctx, "why.life.petition.count", ctx.Fmt.Integer(p.Households));
+            Row(vm, ctx, "why.life.petition.needed", ctx.Fmt.Integer(PetitionRules.Needed(sim, d, TownLifeRules.Yours(sim).Count)));
+            Row(vm, ctx, "why.life.petition.answer", ctx.Strings.Get("why.life.petition.answerValue"));
+            Text(vm, ctx, "why.life.petition.text." + p.Topic);
             return vm;
         }
 

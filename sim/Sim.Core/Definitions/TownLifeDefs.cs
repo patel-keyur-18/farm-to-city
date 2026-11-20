@@ -41,5 +41,48 @@ namespace Sim.Core.Definitions
         public int MaxPoints { get; internal set; }
         public int PushOutAt { get; internal set; }
         public int RatioCap { get; internal set; }
+
+        /// <summary>Petitions and approval (§3.2, §3.3).</summary>
+        public PetitionDef Petition { get; internal set; }
+    }
+
+    /// <summary>
+    /// Petitions and approval (spec 026 §3.2, §3.3): when families raise one, how it can end and what each ending does to approval, and how approval moves a close.
+    /// </summary>
+    public sealed class PetitionDef
+    {
+        /// <summary>The eight topics: the clinic, the school, the community hall, the watchman, the playground, water, rent too high, no work.</summary>
+        public const int Clinic = 0, School = 1, Hall = 2, Watchman = 3, Playground = 4, Water = 5, Rent = 6, Work = 7, Topics = 8;
+
+        /// <summary>A petition is raised when this many of your households (or <c>MinShare</c> of them, whichever is more) share the need.</summary>
+        public int MinHouseholds { get; internal set; }
+        public Fixed MinShare { get; internal set; }
+
+        /// <summary>A household's rent over this share of its income raises the rent petition.</summary>
+        public Fixed RentShare { get; internal set; }
+
+        /// <summary>The closes a promise can run: 1, 2 or 4.</summary>
+        public System.Collections.Generic.IReadOnlyList<int> PromiseCloses { get; internal set; }
+
+        /// <summary>Approval points for each ending.</summary>
+        public int Done { get; internal set; }
+        public int Kept { get; internal set; }
+        public int Declined { get; internal set; }
+        public int Ignored { get; internal set; }
+        public int Broken { get; internal set; }
+
+        /// <summary>Closes a topic is quiet after a petition ends, and after one is declined; closes an unanswered petition waits before it is ignored.</summary>
+        public int QuietCloses { get; internal set; }
+        public int DeclinedQuietCloses { get; internal set; }
+        public int IgnoredAfter { get; internal set; }
+
+        /// <summary>Approval moves <c>(happiness − neutral) ÷ step</c> a close, at most <c>StepMax</c> either way.</summary>
+        public int NeutralHappiness { get; internal set; }
+        public int Step { get; internal set; }
+        public int StepMax { get; internal set; }
+
+        /// <summary>Settled petitions kept for the sheet, and the closes of approval shown.</summary>
+        public int KeepEnded { get; internal set; }
+        public int KeepHistory { get; internal set; }
     }
 }

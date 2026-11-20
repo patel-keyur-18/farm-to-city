@@ -256,6 +256,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0143 | The four flagged items of Sprint 23's review: one brick limit for the town and a smoke health cap (0.08), the kiln a Village business (spec and GDD corrected), a guard around each system in the app (`Simulation.SystemFailed`), zero tax restated (happiness lower, services under 30%) |
 | 0144 | Sprint 24 plan check: 35 points (US-264 added: the mill's atta at the local market, the code changes to spec 016), no "Pay me every day", US-247 belongs to spec 028, Previews 12–15, US-147's apple figures redone through four gaps before code |
 | 0145 | US-151 as built: the town read at each close from the Township (five reputation scores, crime, inequality as income a person among earning households), what it does (the pull, the grants' bonus, Safety, land value, happiness), `crimeBase` 20, nothing applies until the first reading |
+| 0146 | US-150 as built: eight topics read at each close from the households' own needs, 3 families or a fifth, done/kept/broken judged at the close, approval moves (happiness − 70) ÷ 5 at most 4 a close and only draws or turns away families |
 
 ## Current status
 

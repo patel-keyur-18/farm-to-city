@@ -307,4 +307,41 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "ReputationRead(mean " + Mean + ", crime " + Crime + (RatioKnown ? ", ratio " + Ratio : "") + ")"; }
     }
+
+    /// <summary>Your households raised a petition at a close (spec 026 §3.2): its topic, the side of the town and how many families.</summary>
+    public sealed class PetitionRaised : SimEvent
+    {
+        public int Id { get; }
+        public int Topic { get; }
+        public int Side { get; }
+        public int Households { get; }
+
+        public PetitionRaised(long simTime, int id, int topic, int side, int households) : base(simTime) { Id = id; Topic = topic; Side = side; Households = households; }
+
+        protected override string Describe() { return "PetitionRaised(" + Id + ", topic " + Topic + ", side " + Side + ", " + Households + " families)"; }
+    }
+
+    /// <summary>A petition ended (spec 026 §3.2): done, kept, declined, ignored or broken, and what it did to approval.</summary>
+    public sealed class PetitionEnded : SimEvent
+    {
+        public int Id { get; }
+        public int Topic { get; }
+        public Town.PetitionStatus Status { get; }
+        public int Points { get; }
+
+        public PetitionEnded(long simTime, int id, int topic, Town.PetitionStatus status, int points) : base(simTime) { Id = id; Topic = topic; Status = status; Points = points; }
+
+        protected override string Describe() { return "PetitionEnded(" + Id + ", topic " + Topic + ", " + Status + ", approval " + Points + ")"; }
+    }
+
+    /// <summary>Approval moved (spec 026 §3.3): at a close, or when you declined a petition.</summary>
+    public sealed class ApprovalMoved : SimEvent
+    {
+        public long From { get; }
+        public long To { get; }
+
+        public ApprovalMoved(long simTime, long from, long to) : base(simTime) { From = from; To = to; }
+
+        protected override string Describe() { return "ApprovalMoved(" + From + " to " + To + ")"; }
+    }
 }
