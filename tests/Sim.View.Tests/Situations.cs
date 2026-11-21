@@ -322,6 +322,24 @@ namespace Sim.View.Tests
         }
 
         /// <summary>The Township with its works built and land in use: the clinic and quarters, the civic works, and three bought parcels leased, zoned and listed (spec 023, 024).</summary>
+        /// <summary>The built Township with a card waiting for every kind of event, and some answered (US-154).</summary>
+        public static Simulation Events()
+        {
+            Simulation sim = TownshipBuilt();
+            Sim.Core.Town.EventsState st = Sim.Core.Town.EventRules.State(sim);
+            Sim.Core.Definitions.EventsDef defs = sim.Config.Game.Events;
+            long hh = sim.State.Citizens.Households[0].Id, hh2 = sim.State.Citizens.Households.Count > 1 ? sim.State.Citizens.Households[1].Id : hh;
+            st.Waiting.Clear();
+            for (int i = 0; i < defs.Events.Count; i++)
+            {
+                if (defs.Events[i].Disaster && i != defs.IndexOf("fire")) continue;
+                Sim.Core.Town.EventRules.Raise(sim, st, i, defs.Events[i].Id == "wedding" || defs.Events[i].Id == "dispute" ? hh : 0, hh2, 0, sim.State.Clock.SimTime, defs.Events[i].Major);
+            }
+            st.History.Add(new Sim.Core.Town.EventRecord(defs.IndexOf("heatwave"), 1, false, sim.State.Clock.SimTime - 3 * Day, -24_000, 0));
+            st.History.Add(new Sim.Core.Town.EventRecord(defs.IndexOf("fuel_spike"), 0, true, sim.State.Clock.SimTime - 9 * Day, 0, 0));
+            return sim;
+        }
+
         public static Simulation TownshipBuilt()
         {
             Simulation sim = Township();
@@ -369,6 +387,7 @@ namespace Sim.View.Tests
             yield return TownshipBuilt();
             yield return Kiln();
             yield return Promises();
+            yield return Events();
         }
     }
 }
@@ -405,6 +424,11 @@ namespace Sim.View.Tests
             if (sim.State.Livestock != null && Sim.Core.Livestock.LivestockRules.Shed(sim) != null) yield return N("shed", ShedSheet.Build(ctx)); // US-254, US-255
             if (Sim.Core.Town.TownLifeRules.On(sim)) yield return N("town life", TreasurySheet.Build(ctx, TreasurySheet.LifeTab)); // US-151: every town-life number has a Why?
             if (Sim.Core.Town.FestivalRules.On(sim)) { yield return N("festival", FestivalSheet.Build(ctx, null)); yield return N("festival you", FestivalSheet.Build(ctx, "1:1:2")); } // US-149: every festival number has a Why?
+            if (Sim.Core.Town.EventRules.On(sim)) // US-154: every card's numbers have a Why?
+            {
+                foreach (Sim.Core.Town.PendingEvent p in Sim.Core.Town.EventRules.State(sim).Waiting) yield return N("event " + sim.Config.Game.Events.Events[p.Def].Id, EventSheet.Card(ctx, p.Id));
+                yield return N("events", EventSheet.List(ctx));
+            }
             yield return N("money", MoneySheet.Build(ctx));
             yield return N("money wealth", MoneySheet.Build(ctx, MoneySheet.Wealth));
             yield return N("money last", MoneySheet.Build(ctx, MoneySheet.LastSeason));

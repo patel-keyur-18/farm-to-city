@@ -654,6 +654,21 @@ def model_haystack():
     return group(o, scale=BUILDING_SCALE)
 
 
+def model_fire_flames():
+    """A fire on a roof (spec 027 §3.4): flames standing up, turned to the camera, drawn over the building for the days it is shut."""
+    o = flame_parts(0.0, 0.0, 2.2, True) + [ob for ob in flame_parts(-0.2, 0.0, 1.4, True)]
+    return group(turn(o, Matrix.Rotation(math.radians(45), 4, "Z")), scale=BUILDING_SCALE)
+
+
+def model_fire_smoke():
+    """The smoke over a burning building: three grey puffs, rising."""
+    smoke, dark = toon("fireSmoke", 0xA39C92), toon("fireSmokeDark", 0x7C766D)
+    o = [sphere("puff0", 0.07, (0.0, 0.0, 0.07), dark, scale=(1, 0.9, 0.9), segs=14, rings=8),
+         sphere("puff1", 0.085, (0.05, 0.02, 0.2), smoke, scale=(1, 0.9, 0.9), segs=14, rings=8),
+         sphere("puff2", 0.06, (-0.03, 0.0, 0.34), smoke, scale=(1, 0.9, 0.9), segs=12, rings=8)]
+    return group(o, scale=BUILDING_SCALE)
+
+
 def model_tulsi():
     """A tulsi chaura: a whitewashed stepped planter with an ochre band and a holy basil bush."""
     white, ochre, leaf = toon("lime", 0xF2EBDD), toon("ochre", 0xD08A3A), toon("tulsi", 0x4F8F3A)
@@ -1592,6 +1607,44 @@ def icon_weather(kind):
 LEVEL_DEG = 45  # turns a flat icon so it sits level after facing the camera
 
 
+def drop_points(cx, w, h, lean):
+    """A flame's outline in a plane (x across, y up): a round base of radius w at the bottom, curving up to a tip h high, leaning to one side."""
+    pts = []
+    for a in range(180, 361, 20):
+        pts.append((cx + w * math.cos(math.radians(a)), w + w * math.sin(math.radians(a))))
+    pts.append((cx + 0.82 * w + lean * 0.25, 0.45 * h))
+    pts.append((cx + 0.35 * w + lean * 0.7, 0.78 * h))
+    pts.append((cx + lean, h))
+    pts.append((cx - 0.3 * w + lean * 0.55, 0.74 * h))
+    pts.append((cx - 0.8 * w + lean * 0.2, 0.42 * h))
+    return pts
+
+
+def flat_prism(name, pts, depth, offset, mat, vertical, **kw):
+    """The outline extruded: in the x-y plane (an icon), or standing up in the x-z plane (a sprite on the map), at <offset> along the extrusion."""
+    n = len(pts)
+    if vertical:
+        v3 = [(x, -offset - depth / 2, y) for x, y in pts] + [(x, -offset + depth / 2, y) for x, y in pts]
+    else:
+        v3 = [(x, y, offset - depth / 2) for x, y in pts] + [(x, y, offset + depth / 2) for x, y in pts]
+    faces = [tuple(range(n - 1, -1, -1)), tuple(range(n, 2 * n))] + [(i, (i + 1) % n, n + (i + 1) % n, n + i) for i in range(n)]
+    return poly_mesh(name, v3, faces, mat, **kw)
+
+
+def flame_parts(x, y, k, vertical):
+    """One fire: a big flame with two smaller behind it, each in orange with a yellow heart and a pale core."""
+    outer, inner, core = toon("flameOuter", 0xE8602C), toon("flameInner", 0xFFB627), toon("flameCore", 0xFFE9A0)
+    o = []
+    z = 0.0
+    spec = ((-0.065, 0.05, 0.15, -0.012), (0.065, 0.046, 0.13, 0.012), (0.0, 0.07, 0.24, 0.006))   # (cx, w, h, lean): the two behind, then the big one in front
+    for i, (cx, w, h, lean) in enumerate(spec):
+        o.append(flat_prism("flame%d" % i, drop_points(x + cx * k, w * k, h * k, lean * k), 0.018 * k, z, outer, vertical))
+        o.append(flat_prism("heart%d" % i, drop_points(x + cx * k, w * 0.62 * k, h * 0.7 * k, lean * 0.7 * k), 0.012 * k, z + 0.012 * k, inner, vertical, outline=False))
+        o.append(flat_prism("core%d" % i, drop_points(x + cx * k, w * 0.3 * k, h * 0.38 * k, lean * 0.4 * k), 0.008 * k, z + 0.02 * k, core, vertical, outline=False))
+        z += 0.016 * k
+    return o
+
+
 def icon_ui(kind):
     o = []
     if kind == "sack":
@@ -1713,6 +1766,44 @@ def icon_ui(kind):
         for a in (45, -45):
             o.append(box("bar%d" % a, (0.03, 0.03, 0.2), (0, 0, 0), white, rot=Matrix.Rotation(math.radians(a), 3, "Y"), bevel=0.008))
         return turn(o, Matrix.Rotation(math.radians(45), 4, "Z"))
+    elif kind == "flame":
+        # A disaster (spec 027 §7): a fire, a big tongue and two small, orange outside, a yellow heart and a pale core; flat, facing the camera like the stars.
+        o.extend(flame_parts(0.0, 0.0, 1.0, False))
+        return turn(turn(o, Matrix.Rotation(math.radians(LEVEL_DEG), 4, "Z")), facing_camera(0.12))
+    elif kind == "health":
+        # An epidemic and the health camp: a white first-aid box with a red cross.
+        white, red = toon("aidWhite", 0xFFF3D1), toon("aidRed", 0xC0392B)
+        o.append(box("case", (0.2, 0.2, 0.03), (0, 0, 0), white, bevel=0.012))
+        o.append(box("barH", (0.13, 0.04, 0.012), (0, 0, 0.018), red, outline=False))
+        o.append(box("barV", (0.04, 0.13, 0.012), (0, 0, 0.018), red, outline=False))
+        return turn(turn(o, Matrix.Rotation(math.radians(LEVEL_DEG), 4, "Z")), facing_camera(0.25))
+    elif kind == "shield":
+        # Insurance (spec 027 §7): a blue shield with a gold rim and a gold tick.
+        blue, rim, gold = toon("shieldBlue", 0x3F7FBF), toon("shieldRim", 0xE6B33A), toon("shieldGold", 0xFFC93C)
+        def outline(r, bottom):
+            pts = [(-r, r), (0, r * 1.12), (r, r), (r, 0.0), (r * 0.7, -bottom * 0.55), (0, -bottom), (-r * 0.7, -bottom * 0.55), (-r, 0.0)]
+            return pts
+        def prism(name, pts, depth, z, mat, **kw):
+            n = len(pts)
+            v3 = [(x, y, z - depth / 2) for x, y in pts] + [(x, y, z + depth / 2) for x, y in pts]
+            faces = [tuple(range(n - 1, -1, -1)), tuple(range(n, 2 * n))] + [(i, (i + 1) % n, n + (i + 1) % n, n + i) for i in range(n)]
+            return poly_mesh(name, v3, faces, mat, **kw)
+        o.append(prism("rim", outline(0.1, 0.17), 0.024, 0.0, rim))
+        o.append(prism("face", outline(0.082, 0.14), 0.028, 0.0, blue, outline=False))
+        for sgn, ln, x0 in ((1, 0.09, 0.02), (-1, 0.05, -0.03)):
+            o.append(box("tick%d" % sgn, (0.02, ln, 0.012), (x0, -0.005 if sgn > 0 else -0.03, 0.02), gold, rot=Matrix.Rotation(math.radians(-40 * sgn), 3, "Z"), outline=False))
+        return turn(o, facing_camera(0.25))
+    elif kind == "scroll":
+        # A forward contract (spec 027 §7): a rolled paper tied with a red ribbon.
+        paper, edge, ribbon = toon("scrollPaper", 0xFFF3D1), toon("scrollEdge", 0xC9A46A), toon("scrollRibbon", 0xB8322A)
+        o.append(cylinder("roll", 0.05, 0.05, 0.2, (0, 0, 0.05), paper, segs=20, smooth=True, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        for x in (-0.1, 0.1):
+            o.append(cylinder("end%d" % (x > 0), 0.052, 0.052, 0.012, (x, 0, 0.05), edge, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+            o.append(sphere("spiral%d" % (x > 0), 0.02, (x + (0.008 if x > 0 else -0.008), 0, 0.05), edge, segs=10, rings=6, outline=False))
+        o.append(cylinder("ribbon", 0.054, 0.054, 0.026, (0, 0, 0.05), ribbon, segs=20, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+        o.append(box("knotL", (0.05, 0.012, 0.025), (-0.015, -0.055, 0.04), ribbon, rot=Matrix.Rotation(math.radians(25), 3, "Z"), outline=False))
+        o.append(box("knotR", (0.05, 0.012, 0.025), (0.02, -0.055, 0.035), ribbon, rot=Matrix.Rotation(math.radians(-25), 3, "Z"), outline=False))
+        return turn(o, Matrix.Rotation(math.radians(-25), 4, "Z"))
     return o
 
 
@@ -1725,6 +1816,7 @@ for _t, _f in (("banana", model_banana), ("papaya", model_papaya), ("guava", mod
         SPRITES["tree_%s_%s" % (_t, _st)] = (lambda f=_f, st=_st: (lambda: f(st)))()
 SPRITES.update({"tree_pit": model_pit, "sign_sale": model_sign,
                 "marker_ready": lambda: model_marker("ready"), "marker_spoil": lambda: model_marker("spoil"), "marker_pest": lambda: model_marker("pest")})
+SPRITES.update({"fire_flames": model_fire_flames, "fire_smoke": model_fire_smoke})
 ICONS = {"icon_coin": icon_coin, "icon_gear": icon_gear}
 for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran", "pav", "rusk", "paneer", "curd", "ghee",
            "rasgulla", "atta_laddoo"):
@@ -1733,7 +1825,7 @@ for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
 for _w in ("sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm"):
     ICONS["icon_weather_" + _w] = (lambda w=_w: (lambda: icon_weather(w)))()
-for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders", "codex", "deed", "savings"):
+for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders", "codex", "deed", "savings", "flame", "health", "shield", "scroll"):
     ICONS["icon_" + _u] = (lambda u=_u: (lambda: icon_ui(u)))()
 SPRITES.update(ICONS)
 

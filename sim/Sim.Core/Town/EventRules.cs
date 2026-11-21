@@ -790,7 +790,8 @@ namespace Sim.Core.Town
             EventsState s = State(sim);
             if (s == null || s.Effects.Count == 0) return Fixed.Zero;
             Fixed r = Fixed.Zero;
-            if (AnyFlag(sim, Rush)) r += Fixed.FromRatio(40, 100);
+            if (AnyFlag(sim, RushStocked)) r += Fixed.FromRatio(40, 100); // stocked up: everyone who comes is served
+            else if (AnyFlag(sim, Rush)) r += Fixed.FromRatio(20, 100); // carrying on: the stock you have serves about half of them
             if (AnyFlag(sim, CloseShops)) r -= Def(sim).EpidemicDef.CloseShopsDemand;
             return r;
         }

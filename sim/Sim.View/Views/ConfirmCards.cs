@@ -37,7 +37,7 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuildSilagePit), typeof(BuyChaffCutter), typeof(FitSolarPanel), typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition), typeof(ScheduleFestival));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(AnswerEvent), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition), typeof(ScheduleFestival));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
@@ -45,7 +45,7 @@ namespace Sim.View.Views
                 typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetKeepHeifers), typeof(SetHireOut), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
                 typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetStandingOrder),
                 typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(UnzoneParcel), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
-                typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(PostCivicJob), typeof(DismissStaff), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
+                typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(PostCivicJob), typeof(DismissStaff), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
                 typeof(CompleteStep), typeof(SkipFirstSession), typeof(FindCodexCards), typeof(ReadCodexCard), typeof(HearAdvisors));
             Add(ConfirmKind.System, typeof(AdvanceTo), typeof(DebugAdvance), typeof(DebugNextEra), typeof(LiveRun), typeof(NewGame), typeof(Sync));
             return k;
@@ -120,6 +120,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             string name = c.GetType().Name;
             long cash = after.State.Ledger.Cash - sim.State.Ledger.Cash;
+            if (c is AnswerEvent && cash == 0) return null; // a choice that costs nothing is just answered (spec 027 §3.1)
             if ((c is RentWarehouse || c is RentColdStore) && cash == 0) return null; // stopping or cutting the rent spends nothing: no card (ADR 0103)
             if (c is SetSavingsCover cover && !cover.Always) return null; // back to Ask me: nothing can move, so nothing to ask
             long owedBefore = Owed(sim), owedAfter = Owed(after);

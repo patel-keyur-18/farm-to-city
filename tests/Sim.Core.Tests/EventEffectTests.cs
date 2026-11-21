@@ -316,9 +316,14 @@ namespace Sim.Core.Tests
             // A viral rush: demand +40% for the day.
             PendingEvent rush = Force(sim, "viral_rush", b.Id);
             Answer(sim, rush, 0);
-            Assert.That(EventRules.ShopRise(sim), Is.EqualTo(Fixed.FromRatio(40, 100)));
+            Assert.That(EventRules.ShopRise(sim), Is.EqualTo(Fixed.FromRatio(20, 100)), "carrying on: the stock you have serves about half of the extra customers");
             sim.AdvanceTo(Now(sim) + ClockDef.SecondsPerDay + 3600);
             Assert.That(EventRules.ShopRise(sim), Is.EqualTo(Fixed.Zero));
+            PendingEvent stock = Force(sim, "viral_rush", b.Id);
+            long before = sim.State.Ledger.Cash;
+            Answer(sim, stock, 1);
+            Assert.That(sim.State.Ledger.Cash, Is.EqualTo(before - Cost(sim, 1500)));
+            Assert.That(EventRules.ShopRise(sim), Is.EqualTo(Fixed.FromRatio(40, 100)), "stocking up serves everyone: demand +40% for the day");
         }
     }
 }

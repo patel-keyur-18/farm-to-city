@@ -65,7 +65,7 @@ An event is a row of data: a family, a gate, a weight (§3.3), 2–3 choices, a 
 | | **Fuel spike** | you pay diesel or power | diesel and power +35% for the season: **Pay it** · Park your hired-out tractor (US-256) and save its diesel |
 | Business | **Supplier strike** | you run a business | its inputs +30% for 3 days: **Pay the extra** · Pause the line 3 days · Second supplier (1,000: no extra, and a strike next season costs half) |
 | | **Health inspection** | a food business | **Pay the fine (1,000)** · Fix the kitchen (3,000, no fine for a year) |
-| | **Viral rush** | a shop | demand +40% for a day: **Carry on** · Stock up (1,500 of ingredients, serve all) |
+| | **Viral rush** | a shop | demand +40% for a day: **Carry on** (the stock you have serves about half of them: +20%) · Stock up (1,500 of ingredients, serve all: +40%) |
 | | **Breakdown** | a machine or a business's equipment | down 24 h: **Wait** · Rush repair (2,500, back in 6 h) |
 | Workforce | **Skilled migrant** | a vacancy on the hiring board | a 4-star applicant asks 20% over the going wage: **Pass** · Hire (no post fee) |
 | Social | **Wedding** | you have households | **Send regards** · Attend and give a gift (500: that family +2 happiness, approval +1) |

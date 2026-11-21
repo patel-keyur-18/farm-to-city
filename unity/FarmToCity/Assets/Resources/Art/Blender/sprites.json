@@ -968,6 +968,20 @@
    "name": "fence_y"
   },
   {
+   "w": 398,
+   "h": 338,
+   "pivotX": 0.57949,
+   "pivotY": 0.19359,
+   "name": "fire_flames"
+  },
+  {
+   "w": 182,
+   "h": 266,
+   "pivotX": 0.42085,
+   "pivotY": 0.1373,
+   "name": "fire_smoke"
+  },
+  {
    "w": 390,
    "h": 320,
    "pivotX": 0.45638,
@@ -1392,6 +1406,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_flame"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_gear"
   },
   {
@@ -1630,6 +1651,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_health"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_letter"
   },
   {
@@ -1686,7 +1714,21 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_scroll"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_seed"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_shield"
   },
   {
    "w": 256,

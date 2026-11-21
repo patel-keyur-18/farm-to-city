@@ -33,6 +33,7 @@ namespace Sim.View.Views
             if (ctx.Sim.State.Businesses != null) Add("businesses", new SheetRequest("Businesses", 0), "flour_mill"); // spec 016 §3.3
             if (Sim.Core.Town.TreasuryRules.IsOpen(ctx.Sim)) Add("treasury", new SheetRequest(TreasurySheet.Kind, 0), "place_council_hall"); // spec 021 §7: from the Township
             if (Sim.Core.Town.ConstructionRules.On(ctx.Sim)) Add("building", new SheetRequest(BuildingSheet.Kind, 0), "brick"); // spec 025 §3.2: from the Township
+            if (Sim.Core.Town.EventRules.On(ctx.Sim)) Add("events", new SheetRequest(EventSheet.ListKind, 0), "bell"); // spec 027: what waits and what you chose
             Add("land", new SheetRequest("Lands", 0), "sign");
             if (Sim.Core.Equipment.EquipmentRules.On(ctx.Sim)) Add("equipment", new SheetRequest(EquipmentSheet.Kind, 0), "tractor"); // spec 013 §3.2
             Add("calendar", new SheetRequest(CropCalendar.Sheet, 0), "seed_wheat"); // every crop by season (spec 020 §3.6b)

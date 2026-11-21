@@ -288,6 +288,7 @@ namespace Sim.View.Views
                     if (p.Status == Sim.Core.Town.PetitionStatus.Open)
                         list.Add(new AlertVm { Level = AlertLevel.Decision, Text = s.Get("alert.petition", "text", TownLifeSheet.Text(ctx, p)), Action = ActionVm.Open("petition:" + p.Id, s.Get("action.open"), new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.LifeTab)) });
             FestivalSheet.Alerts(ctx, list); // spec 026 §3.1
+            EventSheet.Alerts(ctx, list); // spec 027: a card waits for an answer; a disaster's countdown
             BuildingSheet.Alerts(ctx, list); // spec 025 §3.2: a build waiting for materials
             if (ClinicRules.InPost(sim) && st.Unpaid[1] > 0) // spec 023 §3.9: the doctor's allowance went unpaid
                 list.Add(new AlertVm
@@ -583,6 +584,7 @@ namespace Sim.View.Views
             LineVm Row(string label, string value, string icon) { return new LineVm(label, value, "away", (long)AwayRow.Town) { Icon = icon }; }
             var pupils = new List<int>();
             int adults = 0;
+            bool eventLines = false;
             foreach (SimEvent e in events)
             {
                 switch (e)
@@ -618,6 +620,13 @@ namespace Sim.View.Views
                     case UtilityBuilt ub: rows.Add(Row(s.Get("away.town"), s.Get("away.utilityBuilt", "name", UtilitySheet.Name(ctx, ub.Utility)), "place_" + UtilitySheet.Ids[ub.Utility] + "_plot")); break; // spec 025 §3.1
                     case GridConnected _: rows.Add(Row(s.Get("away.town"), s.Get("away.gridConnected"), "place_grid_plot")); break;
                     case FestivalHeld fh: rows.Add(Row(s.Get("away.town"), s.Get("away.festival", "name", s.Get("festival." + FestivalRules.Def(sim).Kinds[fh.Kind].Id), "venue", FestivalSheet.VenueName(ctx, fh.Venue)), "place_council_hall")); break; // spec 026 §3.1
+                    case EventDefaulted ed:
+                        rows.Add(Row(EventSheet.Title(ctx, ed.Def), s.Get("away.eventDefault", "choice", EventSheet.ChoiceName(ctx, ed.Def, ed.Choice), "effect", EventSheet.Outcome(ctx, ed.Def, ed.Choice)), EventSheet.Icon(ctx, ed.Def)));
+                        eventLines = true;
+                        break;
+                    case DisasterPassed dp: rows.Add(Row(EventSheet.Title(ctx, dp.Def), s.Get("away.disasterPassed", "name", s.Get("event." + EventSheet.IdOf(ctx, dp.Def) + ".risk")), EventSheet.Icon(ctx, dp.Def))); eventLines = true; break;
+                    case EpidemicEnded _: rows.Add(Row(s.Get("event.epidemic.title"), s.Get("away.epidemicOver"), "health")); break;
+                    case RegionalGrantPaid rg: rows.Add(Row(s.Get("event.regional_grant.title"), rg.Amount > 0 ? s.Get("away.grantPaid", "amount", ctx.Fmt.Coins(rg.Amount)) : s.Get("away.grantRefused"), "deed")); break;
                     case CivicBuilt cb: rows.Add(Row(s.Get("away.town"), s.Get("away.civicBuilt"), "place_" + CivicSheet.Ids[cb.Civic] + "_plot")); break; // spec 023 §3.7
                     case PostFilled pf: rows.Add(Row(s.Get("away.town"), s.Get("away.postFilled"), "place_" + CivicSheet.Ids[pf.Civic] + "_plot")); break;
                     case PostUnpaid pu: rows.Add(Row(s.Get("away.town"), s.Get("away.postUnpaid"), "place_" + CivicSheet.Ids[pu.Civic] + "_plot")); break;
@@ -658,6 +667,7 @@ namespace Sim.View.Views
             if (pupils.Count == 1) rows.Add(Row(s.Get("away.town"), s.Get("away.literatePupil", "name", PeopleWords.Name(ctx, pupils[0])), "school"));
             else if (pupils.Count > 1) rows.Add(Row(s.Get("away.town"), s.Plural("away.literatePupils", pupils.Count), "school"));
             if (adults > 0) rows.Add(Row(s.Get("away.town"), s.Plural("away.literateClass", adults), "school"));
+            if (eventLines) rows.Add(new LineVm(s.Get("away.eventsNote"), null) { Dim = true }); // ADR 0002: nothing big starts in a town nobody is watching
             return rows;
         }
 
@@ -720,7 +730,7 @@ namespace Sim.View.Views
             // Spec 023 (the Township).
             { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },
-            { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "ReputationRead", Use.StateOnly }, { "PetitionRaised", Use.StateOnly }, { "EventRaised", Use.Alert }, { "EventAnswered", Use.StateOnly }, { "EventDefaulted", Use.Away }, { "DisasterWarned", Use.Alert }, { "DisasterPassed", Use.Away }, { "FireStruck", Use.Away }, { "EpidemicBegan", Use.Away }, { "EpidemicEnded", Use.Away }, { "RegionalGrantPaid", Use.Away }, { "PetitionEnded", Use.StateOnly }, { "ApprovalMoved", Use.StateOnly }, { "FestivalScheduled", Use.StateOnly }, { "FestivalHeld", Use.Away }, { "CohortHouseholdLeft", Use.Away },
+            { "GateGoalMet", Use.StateOnly }, { "CohortJoined", Use.StateOnly }, { "ReputationRead", Use.StateOnly }, { "PetitionRaised", Use.StateOnly }, { "EventRaised", Use.Alert }, { "EventAnswered", Use.StateOnly }, { "EventDefaulted", Use.Away }, { "DisasterWarned", Use.Alert }, { "DisasterPassed", Use.Away }, { "FireStruck", Use.StateOnly }, { "EpidemicBegan", Use.StateOnly }, { "EpidemicEnded", Use.Away }, { "RegionalGrantPaid", Use.Away }, { "PetitionEnded", Use.StateOnly }, { "ApprovalMoved", Use.StateOnly }, { "FestivalScheduled", Use.StateOnly }, { "FestivalHeld", Use.Away }, { "CohortHouseholdLeft", Use.Away },
             { "DoctorArrived", Use.Away }, { "DoctorUnpaid", Use.Away }, { "DoctorLeft", Use.Away },
             { "HouseUpgradeStarted", Use.Motion }, { "HouseUpgraded", Use.Away }, { "CivicBuilt", Use.Away }, { "UtilityBuilt", Use.Away }, { "GridConnected", Use.Away }, { "BuildStarted", Use.StateOnly }, { "BuildHeld", Use.Away }, { "BuildFinished", Use.StateOnly }, { "LaneBuilt", Use.StateOnly }, { "RingOpened", Use.StateOnly }, { "PostAdvertised", Use.StateOnly }, { "PostFilled", Use.Away }, { "PostUnpaid", Use.Away }, { "PostVacated", Use.Away },
             // Spec 021 (the town treasury).
