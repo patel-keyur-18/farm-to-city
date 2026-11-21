@@ -103,6 +103,30 @@ namespace Sim.View.Tests
             Assert.That(season.Own.Any(l => l.Why.Any(w => w.Label == "Its insurance premium")), Is.True);
         }
 
+        // An insured fire's repair card says what the policy pays back, and the confirm card shows the bill, the refund and what you pay.
+        [Test]
+        public void Repair_Card_Insured()
+        {
+            Simulation sim = Situations.Insured();
+            EventsState st = EventRules.State(sim);
+            int repairDef = sim.Config.Game.Events.IndexOf(Sim.Core.Definitions.EventsDef.FireRepair);
+            long house = InsuranceRules.Insurable(sim).First().Id;
+            long bill = 12_000_00;
+            var p = new PendingEvent { Id = st.NextId++, Def = repairDef, RaisedAt = sim.State.Clock.SimTime, ExpiresAt = sim.State.Clock.SimTime + 24 * 3600, Target = house, Param = bill };
+            st.Waiting.Add(p);
+            var ctx = ViewKit2.Context(sim);
+            Assert.That(EventSheet.Card(ctx, p.Id).Lines.Where(l => l.Action != null).Any(l => l.Note != null && l.Note.Contains("insurance pays back")), Is.False, "uninsured: no line");
+
+            st.FireInsured = true;
+            long back = Sim.Core.Finance.Money.MulRate(bill, Sim.Core.Maths.Fixed.FromRatio(90, 100));
+            Assert.That(InsuranceRules.RepairPays(sim, p, 0), Is.EqualTo(back));
+            SheetVm card = EventSheet.Card(ctx, p.Id);
+            Assert.That(card.Lines.Where(l => l.Action != null).All(l => l.Note != null && l.Note.Contains(" · insurance pays back ")), Is.True);
+            ConfirmCardVm pay = ConfirmCards.For(ctx, new AnswerEvent(ctx.Now, p.Id, 0));
+            Assert.That(pay.Rows.Select(r => r.Label), Is.EqualTo(new[] { "The repair bill", "Your insurance pays back", "You pay", "Cash after" }));
+            Assert.That(pay.CashChange, Is.EqualTo(-(bill - back)));
+        }
+
         // The away card names a claim, a lapse and an uninsured sowing.
         [Test]
         public void Away_Lines()

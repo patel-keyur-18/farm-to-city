@@ -128,7 +128,7 @@ Both are ★ majors in the same draw (weight 4 against 10), under the four mercy
 
 ### 3.5 Crop insurance (US-155)
 
-A **season policy** by one switch on the Money page and on the close card: *Crop insurance: On / Off*. It covers field crops sown **after** you switch it on (a pest warning already showing cannot be insured). Fodder crops and orchard trees are not insured. A crop's policy is fixed when it is sown (`Crop.Insured`, `Crop.SumInsured`, `Crop.Premium`).
+A **season policy** by one switch on the Money page: *Crop insurance: On / Off* (the close card of Preview 13 became the switches' place on that page, beside *Next season, already due*; ADR 0149). It covers field crops sown **after** you switch it on (a pest warning already showing cannot be insured). Fodder crops and orchard trees are not insured. A crop's policy is fixed when it is sown (`Crop.Insured`, `Crop.SumInsured`, `Crop.Premium`).
 
 | Rule | Behaviour |
 | --- | --- |
@@ -147,14 +147,14 @@ Two policies; every building belongs to exactly one. Both are **season policies*
 
 | | Property insurance | Business insurance |
 | --- | --- | --- |
-| Covers | the buildings on **your own books** (yard, huts, family houses, the cattle shed, the godown, solar panels) | a business's own building and equipment, and its lost profit |
+| Covers | the buildings on **your own books** (yard, huts, family houses, the cattle shed, the godown; solar panels are not buildings in the sim and are not covered) | a business's own building and equipment, and its lost profit |
 | Paid from | your cash | **that business's cash** |
 | Switch | the Money page | the business's sheet |
 | Premium a season | **0.2%** of the insured book value | **0.2%** of its building and equipment book value + **3%** of its last season's net profit |
 | Pays on a fire | **90%** of the repair bill (a 10% excess) | **90%** of the repair bill |
 | Pays for lost days | none | **80%** of its average daily profit (last season's net profit ÷ days) for each day shut by a fire or by *Pause the line* |
 
-*Worked example:* a mill with a building and equipment worth 100,000 that made 35,000 last season pays 200 + 1,050 = **1,250** a season; a fire's repair bill of 14,000 pays 12,600, plus 80% of 35,000 ÷ 4 × 2 days = 3,500, so **16,100** back; uninsured it costs 14,000 and 4,375 of profit.
+*Worked example:* a mill with a building and equipment worth 100,000 that made 35,000 last season pays 200 + 1,050 = **1,250** a season; a fire's repair bill of 14,000 pays 12,600, plus 80% of the profit of the days shut (35,000 ÷ the season's 4 days × 2 days = 17,500, so 14,000), so **26,600** back; uninsured it costs 14,000 and 17,500 of profit. (Corrected in ADR 0149: the first draft divided by 16, a year's days, not a season's 4.) The repair share is paid when the repair is paid, on what was paid (half the bill if repaired slowly); the lost-days share is paid into the business's own books.
 
 *Books:* *Insurance premiums* (other costs, outside farm profit) and *Insurance claims received* (other income), beside *Disaster loss*, so the season page shows the net.
 
@@ -223,7 +223,7 @@ An older save loads with the engine idle (no event before the Township), no poli
 | `EventRaised` | id, kind, major | a 6:00 roll | the card, the bell |
 | `EventAnswered` / `EventDefaulted` | id, kind, choice | an answer / its clock | the away card, history |
 | `DisasterWarned` / `FireStruck` / `EpidemicBegan` / `EpidemicEnded` | kind, target, strikeAt | the warning, the strike | the card, the map, alerts |
-| `PolicyStarted` / `PolicyLapsed` / `PremiumCharged` | policy, amount | a close, a sowing | the season page |
+| `InsuranceStarted` / `InsuranceLapsed` / `PremiumCharged` (`PolicyStarted` is the treasury's) | policy, amount | a close, a sowing | the season page |
 | `ClaimPaid` / `CropNotInsured` | policy, amount, the crop | readiness, a sowing | the away card, the season page |
 | `ContractOffered` / `ContractAccepted` / `ContractFilled` / `ContractSettled` | crop, kg, price, gain or loss | a close, an answer, a sale, the delivery close | the Store sheet, the season page |
 

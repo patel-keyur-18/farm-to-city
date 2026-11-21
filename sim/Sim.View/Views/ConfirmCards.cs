@@ -139,6 +139,7 @@ namespace Sim.View.Views
             else if (c is EnactPolicy enact) Enacting(ctx, vm, sim, after, enact);
             else if (c is PetitionRoad || c is BuildClinic || c is BuildDoctorQuarters) Road(ctx, vm, cash, taken, after, newest, name);
             else if (c is AnswerPetition) Declining(ctx, vm);
+            else if (c is AnswerEvent insured && Sim.Core.Town.EventRules.State(sim)?.Waiting.Find(x => x.Id == insured.EventId) is Sim.Core.Town.PendingEvent repair && Sim.Core.Town.InsuranceRules.RepairPays(sim, repair, insured.Choice) > 0) InsuredRepair(ctx, vm, sim, after, repair, insured.Choice); // US-155: an insured fire's bill, the refund and what you pay
             else if (c is ScheduleFestival fest) Festival(ctx, vm, sim, after, fest);
             else if (c is RepealPolicy repeal) Repealing(ctx, vm, sim, repeal);
             else if (c is ListParcel || c is CancelSale) Listing(ctx, vm, c);
@@ -171,6 +172,17 @@ namespace Sim.View.Views
             }
             if (c is CommissionWorks lw && Sim.Core.Town.LaneRules.OfWork(sim, lw.WorkId) >= 0) vm.GoLabel = s.Get("lane.cardGo", "amount", ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash));
             return vm;
+        }
+
+        /// <summary>An insured fire's repair (spec 027 §3.6): the bill, what the policy pays back, what you pay, the cash after.</summary>
+        private static void InsuredRepair(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after, Sim.Core.Town.PendingEvent repair, int choice)
+        {
+            var s = ctx.Strings;
+            long bill = Sim.Core.Town.EventRules.ChoiceCost(sim, repair.Def, choice, repair), back = Sim.Core.Town.InsuranceRules.RepairPays(sim, repair, choice);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.insuredBill"), ctx.Fmt.Coins(bill)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.insuredBack"), ctx.Fmt.Coins(back)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.insuredYouPay"), ctx.Fmt.Coins(System.Math.Max(0, sim.State.Ledger.Cash - after.State.Ledger.Cash))));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
         }
 
         /// <summary>What you pay and what is borrowed: the cost, the loan, what you pay now, the first payment, the cash after.</summary>

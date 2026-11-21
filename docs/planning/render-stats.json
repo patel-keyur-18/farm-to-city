@@ -442,5 +442,8 @@
   {"label":"US-151","view":"farm","date":"2026-11-20","drawCalls":327,"batches":325,"setPassCalls":9,"triangles":6585,"visibleSprites":364,"sprites":2186},
   {"label":"US-154 events (a fire is two sprites and the banner one panel; a fire was burning)","view":"all","date":"2026-11-21","drawCalls":1022,"batches":1022,"setPassCalls":11,"triangles":23325,"visibleSprites":1255,"sprites":2192},
   {"label":"US-154 events (a fire is two sprites and the banner one panel; a fire was burning)","view":"village","date":"2026-11-21","drawCalls":457,"batches":457,"setPassCalls":9,"triangles":10107,"visibleSprites":544,"sprites":2192},
-  {"label":"US-154 events (a fire is two sprites and the banner one panel; a fire was burning)","view":"farm","date":"2026-11-21","drawCalls":332,"batches":332,"setPassCalls":9,"triangles":7197,"visibleSprites":371,"sprites":2192}
+  {"label":"US-154 events (a fire is two sprites and the banner one panel; a fire was burning)","view":"farm","date":"2026-11-21","drawCalls":332,"batches":332,"setPassCalls":9,"triangles":7197,"visibleSprites":371,"sprites":2192},
+  {"label":"US-155 insurance (no new map sprites; sheets only)","view":"all","date":"2026-11-21","drawCalls":1114,"batches":1114,"setPassCalls":11,"triangles":22838,"visibleSprites":1371,"sprites":2254},
+  {"label":"US-155 insurance (no new map sprites; sheets only)","view":"village","date":"2026-11-21","drawCalls":486,"batches":486,"setPassCalls":8,"triangles":9980,"visibleSprites":579,"sprites":2254},
+  {"label":"US-155 insurance (no new map sprites; sheets only)","view":"farm","date":"2026-11-21","drawCalls":348,"batches":348,"setPassCalls":8,"triangles":6691,"visibleSprites":394,"sprites":2254}
 ]

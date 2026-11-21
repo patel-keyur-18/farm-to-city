@@ -7341,5 +7341,9 @@
   "why.insPremium.loading": "The insurer's costs and margin",
   "why.insPremium.loadingValue": "{pct} on top",
   "why.insPremium.total": "You pay when you sow",
-  "why.insPremium.text": "The premium is priced a little above what the insurer expects to pay out, so on average insurance costs you a little. It is for the one bad year."
+  "why.insPremium.text": "The premium is priced a little above what the insurer expects to pay out, so on average insurance costs you a little. It is for the one bad year.",
+  "insurance.repairBack": "insurance pays back {back}",
+  "confirm.insuredBill": "The repair bill",
+  "confirm.insuredBack": "Your insurance pays back",
+  "confirm.insuredYouPay": "You pay"
 }

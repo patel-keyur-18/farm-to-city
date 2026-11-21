@@ -234,20 +234,38 @@ namespace Sim.Core.Town
             if (!s.FireInsured || !Available(sim)) return;
             InsuranceDef d = Def(sim);
             bool business = p.Target2 == 1;
-            long repair = Money.MulRate(paid, Fixed.One - (business ? d.Business.Excess : d.Property.Excess)), lost = 0;
-            int days = 0;
+            Split(sim, p, choice, paid, out long repair, out long lost, out int days);
             Business.Business b = business ? sim.State.Businesses?.Find(p.Target) : null;
-            if (b != null)
-            {
-                FireDef f = EventRules.Def(sim).FireDef;
-                days = choice == 1 ? f.SlowRepairDays : f.DowntimeDays;
-                lost = LostPaid(sim, b, days * Day);
-            }
             if (repair > 0) sim.State.Ledger.Post(now, sim.Period, "ledger.fireClaim", "event:fire", new Posting(Account.Cash, repair), new Posting(Account.InsuranceClaimsReceived, -repair));
-            if (lost > 0) b.Ledger.Post(now, sim.Period, "ledger.lostDaysClaim", "business:" + b.Id, new Posting(Account.Cash, lost), new Posting(Account.InsuranceClaimsReceived, -lost));
+            if (lost > 0 && b != null) b.Ledger.Post(now, sim.Period, "ledger.lostDaysClaim", "business:" + b.Id, new Posting(Account.Cash, lost), new Posting(Account.InsuranceClaimsReceived, -lost));
+            else lost = 0;
             if (repair + lost <= 0) return;
             int cause = EventRules.Def(sim).IndexOf(EventsDef.Fire) + 1;
             Paid(sim, new Claim(business ? Claim.BusinessPolicy : Claim.PropertyPolicy, cause, p.Target, repair + lost, now, days, paid, (int)((Fixed.One - (business ? d.Business.Excess : d.Property.Excess)) * Fixed.FromInt(100)).RoundToLong()));
+        }
+
+        /// <summary>What a repair that cost <paramref name="paid"/> pays back: the share of the bill, and for a business its lost days (a share of last season's profit for each day shut).</summary>
+        private static void Split(Simulation sim, PendingEvent p, int choice, long paid, out long repair, out long lost, out int days)
+        {
+            InsuranceDef d = Def(sim);
+            bool business = p.Target2 == 1;
+            repair = Money.MulRate(paid, Fixed.One - (business ? d.Business.Excess : d.Property.Excess));
+            lost = 0;
+            days = 0;
+            Business.Business b = business ? sim.State.Businesses?.Find(p.Target) : null;
+            if (b == null) return;
+            FireDef f = EventRules.Def(sim).FireDef;
+            days = choice == 1 ? f.SlowRepairDays : f.DowntimeDays;
+            lost = LostPaid(sim, b, days * Day);
+        }
+
+        /// <summary>What the insurance would pay back if this fire-repair choice were taken now (0 when the fire is not insured): the repair card says so.</summary>
+        public static long RepairPays(Simulation sim, PendingEvent p, int choice)
+        {
+            EventsState s = EventRules.State(sim);
+            if (s == null || !s.FireInsured || !Available(sim)) return 0;
+            Split(sim, p, choice, EventRules.ChoiceCost(sim, p.Def, choice, p), out long repair, out long lost, out _);
+            return repair + lost;
         }
 
         /// <summary>A supplier strike's <em>Pause the line</em>: the policy pays its share of the lost profit for the hours shut (not a risk signalled before the cover began).</summary>

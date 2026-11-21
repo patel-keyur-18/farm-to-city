@@ -216,6 +216,8 @@ namespace Sim.View.Views
                 string label = ChoiceLabel(ctx, p, choice);
                 string hint = s.Get("event." + name + ".hint." + ev.Choices[choice].Id, a);
                 if (cost > 0) hint = s.Get("event.hintCost", "cost", ctx.Fmt.Coins(cost), "hint", hint);
+                long back = ev.Id == EventsDef.FireRepair ? InsuranceRules.RepairPays(sim, p, choice) : 0; // an insured fire says what the policy pays back (spec 027 §3.6)
+                if (back > 0) hint += " · " + s.Get("insurance.repairBack", "back", ctx.Fmt.Coins(back));
                 var line = new LineVm(label, null, null, 0) { Note = hint, Tag = def ? s.Get("event.ifYouWait") : null };
                 string button = cost > 0 ? s.Get("event.pay", "what", s.Get("event." + name + ".button." + ev.Choices[choice].Id), "cost", ctx.Fmt.Coins(cost)) : s.Get("event." + name + ".button." + ev.Choices[choice].Id);
                 line.Action = ActionVm.Checked(ctx, "event:" + p.Id + ":" + choice, button, null, def ? ActionKind.Secondary : ActionKind.Primary, at => new AnswerEvent(at, p.Id, choice));

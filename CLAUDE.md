@@ -259,6 +259,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0146 | US-150 as built: eight topics read at each close from the households' own needs, 3 families or a fifth, done/kept/broken judged at the close, approval moves (happiness − 65) ÷ 5 at most 4 a close, ignored −2 (tuned from the bots) and only draws or turns away families |
 | 0147 | US-149 as built: a festival is a day of the clock (lift 8 or 3 points, shops +30% and +10%), one a season, the treasury pays into a new Festivals account or you gift, the budget guard informs and doesn't block, planned on its own sheet from the hall's or the square's, a banner on the day; nobody works that day (only the stalls stay open) and everyone is drawn at the venue |
 | 0148 | US-154 as built: one roll at 6:00, at most two cards with a named free default (24 h minor, 48 h major), away rules and four mercy rules, 18 events from a closed list of effects, a fire and an epidemic warned 48 h ahead that slide while you are away, three new accounts, amber cards, the Events sheet and a fire drawn on the map |
+| 0149 | US-155 as built: crop insurance fixed at each sowing (luck covered, neglect not), property and business policies bought at the close, claims paid when the repair is paid, business buildings can now burn (a US-154 gap), four new accounts, switches on the Money page |
 
 ## Current status
 
