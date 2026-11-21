@@ -1790,9 +1790,10 @@ def icon_ui(kind):
             return poly_mesh(name, v3, faces, mat, **kw)
         o.append(prism("rim", outline(0.1, 0.17), 0.024, 0.0, rim))
         o.append(prism("face", outline(0.082, 0.14), 0.028, 0.0, blue, outline=False))
-        for sgn, ln, x0 in ((1, 0.09, 0.02), (-1, 0.05, -0.03)):
-            o.append(box("tick%d" % sgn, (0.02, ln, 0.012), (x0, -0.005 if sgn > 0 else -0.03, 0.02), gold, rot=Matrix.Rotation(math.radians(-40 * sgn), 3, "Z"), outline=False))
-        return turn(o, facing_camera(0.25))
+        # One check-mark polygon (no duplicate points: they break the outline), a little left of centre to sit in the face's visual middle.
+        tick = [(-0.062, 0.000), (-0.022, -0.042), (0.064, 0.048), (0.046, 0.066), (-0.020, -0.012), (-0.044, 0.018)]
+        o.append(prism("tick", [(x, y + 0.004) for x, y in reversed(tick)], 0.016, 0.022, gold, outline=False))
+        return turn(turn(o, Matrix.Rotation(math.radians(LEVEL_DEG), 4, "Z")), facing_camera(0.12))
     elif kind == "scroll":
         # A forward contract (spec 027 §7): a rolled paper tied with a red ribbon.
         paper, edge, ribbon = toon("scrollPaper", 0xFFF3D1), toon("scrollEdge", 0xC9A46A), toon("scrollRibbon", 0xB8322A)
