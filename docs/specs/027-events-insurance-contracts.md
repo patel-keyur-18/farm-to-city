@@ -123,7 +123,7 @@ Both are ★ majors in the same draw (weight 4 against 10), under the four mercy
 
 **Epidemic.**
 - For **6 days** a household's sick-day chance is ×2.5, and ×0.5 of that where a staffed clinic covers the home (net ×1.25). Sick workers are off (spec 015). Only sick days change: nobody's health is lowered, so the `health < 0.7` death rule can never fire from it: **nobody dies from an epidemic** (ADR 0063).
-- **Warning choices:** **Let it run** · *Hold a health camp* (25 a person, your gift, outside farm profit: ×1.5 instead of ×2.5) · *Close the school and the shops for 3 days* (no coins: ×1.5, shops −30% demand for the 3 days, lessons paused).
+- **Warning choices:** **Let it run** · *Hold a health camp* (25 a person, your gift, outside farm profit: ×1.5 instead of ×2.5) · *Close the school and the shops for 3 days* (no coins: ×1.5, shops −30% demand for the 3 days; the school has no lessons in the sim, so none are paused, ADR 0148).
 - The card shows what the clinic saved ("the clinic halved this for 38 families").
 
 ### 3.5 Crop insurance (US-155)

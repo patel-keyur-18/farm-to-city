@@ -32,3 +32,4 @@ Spec 027 sets the engine, 19 events (18 built here; the investor's offer comes w
 - Save schema 22 gains `EventsState`, `Crop.EventHealth` and the three accounts; the fixture is regenerated. A town that has not reached the Township hashes as before.
 - No event rolls before the Township, so the Village's and the Township's pace are unchanged; the balance pass measures a left-alone year, an *answer everything* and an *insure everything* bot (US-155).
 - Not built: the investor's offer card (spec 028), insurance (US-155) and contracts (US-156); `eventPart` stays 1.5% for the balance pass.
+- Carried, with owner's agreement (2026-11-21): the fire's flames are drawn at the acre's centre (US-154.T7 moves them onto the building, before the sprint review) and the shield icon's tick is redone with US-155 (US-155.T0). The epidemic's "lessons paused" was dropped from spec 027: the school has no lessons in the sim.

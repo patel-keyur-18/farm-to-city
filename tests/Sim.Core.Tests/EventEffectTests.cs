@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Sim.Core.Business;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
+using Sim.Core.Equipment;
 using Sim.Core.Events;
 using Sim.Core.Farm;
 using Sim.Core.Finance;
@@ -324,6 +325,31 @@ namespace Sim.Core.Tests
             Answer(sim, stock, 1);
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(before - Cost(sim, 1500)));
             Assert.That(EventRules.ShopRise(sim), Is.EqualTo(Fixed.FromRatio(40, 100)), "stocking up serves everyone: demand +40% for the day");
+        }
+
+        // AC-6 breakdown, machine side: wait 24 h, or pay for a rush repair and lose 6 h. A leased machine is never drawn.
+        [Test]
+        public void Breakdown_Machine()
+        {
+            Simulation sim = Spring();
+            var m = new Machine { Id = sim.State.Equipment.NextMachineId, Kind = sim.Config.Game.Equipment.IndexOf("tractor"), Since = Now(sim), Cost = 5_00_000 };
+            sim.State.Equipment.Machines.Add(m);
+            Assert.That(EquipmentRules.Broken(sim, m), Is.False);
+
+            PendingEvent wait = Force(sim, "breakdown", m.Id, 0);
+            Assert.That(EventRules.ChoiceCost(sim, wait.Def, 0, wait), Is.EqualTo(0));
+            long t = Now(sim);
+            Answer(sim, wait, 0);
+            Assert.That(m.BrokenUntil, Is.EqualTo(t + 24 * 3600), "waiting: down for 24 hours");
+            Assert.That(EquipmentRules.Broken(sim, m), Is.True);
+            sim.AdvanceTo(t + 24 * 3600 + 60);
+            Assert.That(EquipmentRules.Broken(sim, m), Is.False, "and it works again");
+
+            PendingEvent rush = Force(sim, "breakdown", m.Id, 0);
+            long cash = sim.State.Ledger.Cash, now = Now(sim);
+            Answer(sim, rush, 1);
+            Assert.That(sim.State.Ledger.Cash, Is.EqualTo(cash - Cost(sim, 2500)));
+            Assert.That(m.BrokenUntil, Is.EqualTo(now + 6 * 3600), "a rush repair: down for 6 hours");
         }
     }
 }
