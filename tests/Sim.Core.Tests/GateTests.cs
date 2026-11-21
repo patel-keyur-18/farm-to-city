@@ -409,12 +409,25 @@ namespace Sim.Core.Tests
             double Worth(TownshipBot.RiskUse use)
             {
                 var worth = new double[16];
+                var payout = new double[16]; // claims received ÷ premiums paid (spec 027 §9: 0.7 to 0.95, measured for `eventPart`)
                 System.Threading.Tasks.Parallel.For(0, 16, i =>
                 {
                     var bot = new TownshipBot(false) { Risk = use };
-                    Economy.Run run = Economy.RunBot(config, bot, 60, (ulong)(i + 1), null);
+                    var prem = new long[3]; var claim = new long[3]; // crop, property, business
+                    Economy.Run run = Economy.RunBot(config, bot, 60, (ulong)(i + 1), sim =>
+                    {
+                        foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                        {
+                            if (e is Sim.Core.Events.PremiumCharged pc && pc.Policy >= 0 && pc.Policy < 3) prem[pc.Policy] += pc.Amount;
+                            if (e is Sim.Core.Events.ClaimPaid cp && cp.Policy >= 0 && cp.Policy < 3) claim[cp.Policy] += cp.Amount;
+                        }
+                    });
                     worth[i] = (double)Sim.Core.Finance.Reporting.NetWorth(run.Sim).Total / 100.0 / ((double)run.Sim.State.Market.PriceIndex.Raw / 4294967296.0);
+                    var ins = run.Sim.State.Township?.Insurance;
+                    payout[i] = ins == null || ins.PremiumsPaid <= 0 ? double.NaN : (double)ins.ClaimsReceived / ins.PremiumsPaid;
+                    if (use == TownshipBot.RiskUse.Insure && i < 6) TestContext.Out.WriteLine("RISK seed " + (i + 1) + " premiums crop/property/business " + string.Join("/", prem.Select(x => (x / 100).ToString())) + " claims " + string.Join("/", claim.Select(x => (x / 100).ToString())));
                 });
+                if (use == TownshipBot.RiskUse.Insure) TestContext.Out.WriteLine("RISK insured: claims ÷ premiums by seed " + string.Join(" ", payout.Select(x => x.ToString("0.00"))));
                 return worth.OrderBy(w => w).ElementAt(8);
             }
             double plain = Worth(TownshipBot.RiskUse.None);
