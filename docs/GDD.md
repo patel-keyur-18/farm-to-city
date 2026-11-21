@@ -165,7 +165,7 @@ Care is the labour hours delivered divided by the hours needed, capped at 1.1. L
 | Papaya | About 1 week | All seasons | Short |
 | Guava | About 2 weeks | Monsoon, Winter | Whole game |
 | Mango | About 3–4 weeks | Summer | Whole game |
-| Apple | About 3–4 weeks | Monsoon | Whole game; hill parcels only, from the phase that adds hill terrain |
+| Apple | 32 days (8 seasons) | Monsoon | Whole game; hill parcels only, which open with the Township (US-147, ADR 0152) |
 
 - **Where trees go:**
   - yard slots around the house (about 4, with more for bigger houses)

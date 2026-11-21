@@ -87,7 +87,7 @@ namespace Sim.Core.Tests
             Simulation sim = Simulation.FromState(config, r.State);
             MapDef map = config.Game.Map;
             Assert.That(LandRules.Locked(sim, map.IndexOfParcel("rw1a")), Is.False, "the ring is open");
-            Assert.That(LandRules.Locked(sim, map.IndexOfParcel("rh1")), Is.True, "the hills are not");
+            Assert.That(LandRules.Locked(sim, map.IndexOfParcel("rh1")), Is.False, "the hills open with the ring (US-147)");
             Assert.That(LaneRules.Built(sim, map.TileAt(2, 6)), Is.True);
             Assert.That(LaneRules.Built(sim, map.TileAt(2, 12)), Is.False);
             sim.AdvanceTo(sim.State.Clock.SimTime + 2 * sim.Clock.SecondsPerSeason);

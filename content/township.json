@@ -56,7 +56,7 @@
     "drains": { "place": "drains_plot", "work": "drains", "upkeepLine": "drains", "reach": 500, "capacity": 300 },
     "collection": { "place": "collection_plot", "work": "collection_post", "upkeepLine": "collection", "extraLine": "collector", "reach": 100000, "capacity": 400 }
   },
-  "coldStore": { "rentPerKgSeason": 1.00, "maxRentTonnes": 20, "goods": { "potato": 0.1, "mango": 0.25, "guava": 0.25 } },
+  "coldStore": { "rentPerKgSeason": 1.00, "maxRentTonnes": 20, "goods": { "potato": 0.1, "mango": 0.25, "guava": 0.25, "apple": 0.25 } },
   "upgrade": { "puccaMinLandValue": 1.15, "puccaRent": 7000 },
   "zoning": { "familiesPerAcre": 2, "homesPerAcre": 2, "parcelsPerSeason": 1, "permitFee": 0.02, "turnedAwayMax": 16 },
   "civic": {

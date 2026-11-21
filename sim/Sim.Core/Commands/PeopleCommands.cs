@@ -396,7 +396,7 @@ namespace Sim.Core.Commands
             {
                 if (Order.Target < 0 || Order.Target >= sim.State.Land.Tiles.Count) return CommandResult.Reject(RejectReason.UnknownTarget);
                 Tile tile = sim.State.Land.Tiles[(int)Order.Target];
-                if (tile.Terrain != Terrain.Farm || !sim.State.Land.Parcels[tile.ParcelId].Owned) return CommandResult.Reject(RejectReason.UnknownTarget);
+                if (!Land.LandRules.Tillable(tile.Terrain) || !sim.State.Land.Parcels[tile.ParcelId].Owned) return CommandResult.Reject(RejectReason.UnknownTarget);
                 if (sim.State.Land.Parcels[tile.ParcelId].Leased) return CommandResult.Reject(RejectReason.Leased); // a leased acre is the tenant's (spec 024 §3.6)
                 crop = Order.CropId == OrderSpec.HandChooses ? -1 : defs.Farm.IndexOfCrop(Order.CropId);
                 if (crop < 0 && Order.CropId != OrderSpec.HandChooses) return CommandResult.Reject(RejectReason.UnknownCrop);

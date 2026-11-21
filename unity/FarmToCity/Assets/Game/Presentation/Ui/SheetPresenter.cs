@@ -162,7 +162,7 @@ namespace Game.Presentation.Ui
                 case "place_house": return SpriteBank.Rendered("place_house_0");
                 case "field": return SpriteBank.SoilTile;
                 case "tree": return SpriteBank.Tree("mango", TreeStage.Mature);
-                case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
+                case "banana": case "papaya": case "guava": case "mango": case "apple": return SpriteBank.Tree(icon, TreeStage.Mature);
                 default:
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
                     if (icon.StartsWith("utility_", StringComparison.Ordinal)) return SpriteBank.Rendered("village_" + icon.Substring(8) + "_e"); // the utilities (spec 025 §3.1)

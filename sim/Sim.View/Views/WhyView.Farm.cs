@@ -365,7 +365,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.landPrice.soil", Effect(ctx, defs.Soils[t.Soil].PriceFactor), "soil", ctx.Strings.Get(defs.Soils[t.Soil].NameKey));
             Row(vm, ctx, "why.landPrice.drainage", Effect(ctx, defs.Drainages[t.Drainage].PriceFactor));
             Row(vm, ctx, "why.landPrice.fertility", Effect(ctx, LandRules.FertilityPriceFactor(defs.Land, t.Fertility)), "n", ctx.Fmt.Decimal1(t.Fertility));
-            Row(vm, ctx, "why.landPrice.location", Effect(ctx, pd.LocationFactor));
+            Row(vm, ctx, pd.Opens == "hills" ? "why.landPrice.hills" : "why.landPrice.location", Effect(ctx, pd.LocationFactor));
             if (Sim.Core.Town.LandValueRules.On(sim)) Row(vm, ctx, "why.landPrice.value", Effect(ctx, LandValueViews.Average(sim, parcel.Id))); // spec 024 §3.5
             vm.Footnote = ctx.Strings.Get("why.landPrice.lesson");
             return vm;

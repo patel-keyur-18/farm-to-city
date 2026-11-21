@@ -7,6 +7,8 @@
     { "id": "guava",  "nameKey": "tree.guava",  "saplingGood": "sapling_guava",  "fruitGood": "guava",  "growthMinutes": 20160,
       "fruitingSeasons": ["monsoon", "winter"],                     "batchYieldPerTree": 30,  "harvestLimit": 0, "terrain": "any", "shade": 0.08 },
     { "id": "mango",  "nameKey": "tree.mango",  "saplingGood": "sapling_mango",  "fruitGood": "mango",  "growthMinutes": 34560,
-      "fruitingSeasons": ["summer"],                                "batchYieldPerTree": 120, "harvestLimit": 0, "terrain": "any", "shade": 0.08 }
+      "fruitingSeasons": ["summer"],                                "batchYieldPerTree": 120, "harvestLimit": 0, "terrain": "any", "shade": 0.08 },
+    { "id": "apple",  "nameKey": "tree.apple",  "saplingGood": "sapling_apple",  "fruitGood": "apple",  "growthMinutes": 46080,
+      "fruitingSeasons": ["monsoon"],                               "batchYieldPerTree": 30,  "harvestLimit": 0, "terrain": "hill", "shade": 0.08 }
   ]
 }

@@ -32,7 +32,7 @@ namespace Sim.Core.Commands
             Tile tile = sim.State.Land.Tiles[TileId];
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return CommandResult.Reject(RejectReason.NotOwned);
             if (sim.State.Land.Parcels[tile.ParcelId].Locked) return CommandResult.Reject(sim.State.Land.Parcels[tile.ParcelId].LockReason); // a listed acre is locked (spec 024 §3.4)
-            if (tile.Terrain != Terrain.Farm) return CommandResult.Reject(RejectReason.NotFarmTile);
+            if (!Land.LandRules.Tillable(tile.Terrain)) return CommandResult.Reject(RejectReason.NotFarmTile);
             if (tile.Occupied) return CommandResult.Reject(RejectReason.TileOccupied);
             int c = defs.Farm.IndexOfCrop(CropId);
             if (c < 0) return CommandResult.Reject(RejectReason.UnknownCrop);

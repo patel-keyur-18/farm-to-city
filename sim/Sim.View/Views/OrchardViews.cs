@@ -52,8 +52,20 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(str.Get("tree.cost"), ctx.Fmt.Coins(o.Cost), "orchardPayback", o.TileId));
             vm.Lines.Add(new LineVm(str.Get("tree.returns"), ctx.Fmt.Coins(o.Returns), "orchardPayback", o.TileId));
             TreePayback pay = TreeRules.Payback(sim, o);
-            vm.Lines.Add(new LineVm(str.Get("tree.payback"), pay.PaidBack ? str.Get("tree.paidBack", "season", FieldSheets.SeasonName(ctx, pay.Season.Value))
-                : pay.Season.HasValue ? str.Get("tree.paysBack", "season", FieldSheets.SeasonName(ctx, pay.Season.Value)) : str.Get("tree.neverPaysBack"), "orchardPayback", o.TileId));
+            int fruiting = 0;
+            foreach (bool f in def.FruitingSeasons) if (f) fruiting++;
+            string payText = pay.PaidBack ? str.Get("tree.paidBack", "season", FieldSheets.SeasonName(ctx, pay.Season.Value))
+                : !pay.Season.HasValue ? str.Get("tree.neverPaysBack")
+                : fruiting == 1 ? str.Get("tree.paysBackHarvest", "nth", Ordinal(pay.Harvests)) // once a year: "the 2nd harvest" says more than a season
+                : str.Get("tree.paysBack", "season", FieldSheets.SeasonName(ctx, pay.Season.Value));
+            vm.Lines.Add(new LineVm(str.Get("tree.payback"), payText, "orchardPayback", o.TileId));
+        }
+
+        /// <summary>1st, 2nd, 3rd, 4th, 11th, 21st.</summary>
+        private static string Ordinal(int n)
+        {
+            int last = n % 10, two = n % 100;
+            return n + (two >= 11 && two <= 13 ? "th" : last == 1 ? "st" : last == 2 ? "nd" : last == 3 ? "rd" : "th");
         }
 
         /// <summary>Pick what can go today, sell the rest on the trees, or clear the orchard (asked first: its cost is lost).</summary>
@@ -106,17 +118,20 @@ namespace Sim.View.Views
             var str = ctx.Strings;
             var vm = new SheetVm { Icon = "mango", Title = str.Get("orchard.plantTitle"),
                 Subtitle = str.Get("orchard.plantLine", "share", ctx.Fmt.Percent(OrchardRules.Defs(sim).IntercropShare)) };
-            for (int i = 0; i < defs.Farm.Trees.Count; i++)
-            {
-                int n = OrchardRules.TreesPerAcre(sim, i);
-                if (n == 0) continue;
-                TreeDef d = defs.Farm.Trees[i];
-                var line = new LineVm(str.Get(d.NameKey), str.Get("orchard.plantInfo", "trees", ctx.Fmt.Integer(n), "seasons", FieldSheets.SeasonsText(ctx, d.FruitingSeasons),
-                    "time", ctx.Fmt.Duration(d.GrowthSeconds)), "orchardPlant", i) { Icon = defs.Market.Goods[d.FruitGood].Id };
-                line.Action = ActionVm.Checked(ctx, "plant:" + d.Id, str.Get("action.plant"), ctx.Fmt.Coins(OrchardRules.Price(sim, i)), ActionKind.Primary,
-                    at => new PlantOrchard(at, tileId, d.Id));
-                vm.Lines.Add(line);
-            }
+            bool hill = sim.State.Land.Tiles[tileId].Terrain == Terrain.Hill;
+            for (int pass = 0; pass < 2; pass++) // the hill-only tree first (spec 025 §3.5), then the rest in content order
+                for (int i = 0; i < defs.Farm.Trees.Count; i++)
+                {
+                    int n = OrchardRules.TreesPerAcre(sim, i);
+                    TreeDef d = defs.Farm.Trees[i];
+                    if (n == 0 || d.HillOnly != (pass == 0) || d.HillOnly && !Sim.Core.Town.TownshipRules.Reached(sim)) continue; // apple shows once the hills are open
+                    string info = str.Get("orchard.plantInfo", "trees", ctx.Fmt.Integer(n), "seasons", FieldSheets.SeasonsText(ctx, d.FruitingSeasons), "time", ctx.Fmt.Duration(d.GrowthSeconds));
+                    if (d.HillOnly && !hill) info += " · " + str.Get("orchard.hillOnly");
+                    var line = new LineVm(str.Get(d.NameKey), info, "orchardPlant", i) { Icon = defs.Market.Goods[d.FruitGood].Id };
+                    line.Action = ActionVm.Checked(ctx, "plant:" + d.Id, str.Get("action.plant"), ctx.Fmt.Coins(OrchardRules.Price(sim, i)), ActionKind.Primary,
+                        at => new PlantOrchard(at, tileId, d.Id));
+                    vm.Lines.Add(line);
+                }
             return vm;
         }
     }

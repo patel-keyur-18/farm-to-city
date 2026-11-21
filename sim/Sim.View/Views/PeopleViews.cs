@@ -66,7 +66,7 @@ namespace Sim.View.Views
             int n = 0;
             foreach (Tile t in ctx.Sim.State.Land.Tiles)
             {
-                if (t.Terrain != Terrain.Farm || !ctx.Sim.State.Land.Parcels[t.ParcelId].Owned) continue;
+                if (!LandRules.Tillable(t.Terrain) || !ctx.Sim.State.Land.Parcels[t.ParcelId].Owned) continue;
                 n++;
                 if (t.Id == tileId) break;
             }
@@ -823,7 +823,7 @@ namespace Sim.View.Views
             var others = new List<LineVm>();
             foreach (Tile t in sim.State.Land.Tiles)
             {
-                if (t.Terrain != Terrain.Farm || !sim.State.Land.Parcels[t.ParcelId].Owned) continue;
+                if (!LandRules.Tillable(t.Terrain) || !sim.State.Land.Parcels[t.ParcelId].Owned) continue;
                 StandingOrder o = p.OrderFor(OrderTargetKind.Field, t.Id);
                 if (o != null && o.HandId == h.Id) continue;
                 Crop crop = sim.State.Farm.CropOn(t.Id);

@@ -1427,6 +1427,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_good_apple"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_good_atta"
   },
   {
@@ -3269,6 +3276,34 @@
    "pivotX": 0.34827,
    "pivotY": 0.26045,
    "name": "tractor_trolley"
+  },
+  {
+   "w": 240,
+   "h": 286,
+   "pivotX": 0.45255,
+   "pivotY": 0.14914,
+   "name": "tree_apple_mature"
+  },
+  {
+   "w": 280,
+   "h": 286,
+   "pivotX": 0.48475,
+   "pivotY": 0.14914,
+   "name": "tree_apple_ripe"
+  },
+  {
+   "w": 180,
+   "h": 238,
+   "pivotX": 0.5,
+   "pivotY": 0.26494,
+   "name": "tree_apple_sapling"
+  },
+  {
+   "w": 190,
+   "h": 222,
+   "pivotX": 0.45769,
+   "pivotY": 0.18148,
+   "name": "tree_apple_young"
   },
   {
    "w": 224,

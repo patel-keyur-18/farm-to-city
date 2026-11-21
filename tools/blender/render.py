@@ -1179,6 +1179,26 @@ def model_guava(stage):
     return group(o, scale=BUILDING_SCALE)
 
 
+def model_apple(stage):
+    """An apple tree on the hills: a short grey-brown trunk, a rounded crown of mid-green leaves, red apples when ripe (US-147)."""
+    import random
+    rnd = random.Random(23)
+    if stage == "sapling":
+        return model_sapling(0x8A6A4C, (0x7DB852, 0x5FA040), 0.058, 0.032)
+    k = 0.6 if stage == "young" else 0.85
+    bark, light, mid = toon("appleBark", 0x8A6A4C), toon("appleLight", 0x7DB852), toon("appleMid", 0x5FA040)
+    o = [cylinder("trunk", 0.03 * k, 0.02 * k, 0.24 * k, (0, 0, 0.12 * k), bark, segs=8, smooth=True)]
+    cz = 0.32 * k
+    for i, (x, y, z, r) in enumerate([(0, 0, 0.05, 0.15), (0.1, 0.03, -0.01, 0.12), (-0.1, 0.04, -0.01, 0.12), (0.03, -0.1, -0.02, 0.11), (0.04, 0.1, 0.0, 0.11)]):
+        o.append(sphere("canopy%d" % i, r * k, (x * k, y * k, cz + z * k), light if z > 0.02 else mid, scale=(1, 1, 0.85), segs=14, rings=9))
+    if stage == "ripe":
+        for i in range(14):
+            a = math.radians(-45) + math.radians(rnd.uniform(-85, 85))
+            r = rnd.uniform(0.17, 0.22) * k
+            o.append(sphere("apple%d" % i, 0.026, (math.cos(a) * r, math.sin(a) * r, cz + rnd.uniform(-0.12, 0.03) * k), toon("appleRed%d" % (i % 2), (0xD8362B, 0xE5503A)[i % 2]), segs=10, rings=6))
+    return group(o, scale=BUILDING_SCALE)
+
+
 def model_pit():
     """An empty planting place: a ring of stones round a dark, dug circle."""
     o = [cylinder("hole", 0.075, 0.075, 0.006, (0, 0, 0.003), toon("dug", 0x5C3A22), segs=16, outline=False)]
@@ -1491,12 +1511,14 @@ def icon_good(good):
             o.append(sphere("banana%d" % i, 0.03, tuple(m @ Vector((0, 0, 0.09))), toon("banana", 0xF2D84A), scale=(0.75, 0.75, 3.2), segs=10, rings=8))
         o.append(cylinder("crown", 0.02, 0.016, 0.04, (0, 0, 0.0), toon("bananaStalk", 0x8FA84A), segs=8))
         return turn(o, Matrix.Rotation(math.radians(45), 4, "Z"))
-    elif good in ("papaya", "guava", "mango"):
-        hexes = {"papaya": (0xF2A23A, (0.9, 0.9, 1.35), 0.07), "guava": (0xD8E07A, (1, 1, 1.05), 0.06), "mango": (0xF4B33C, (0.8, 0.95, 1.2), 0.065)}
+    elif good in ("papaya", "guava", "mango", "apple"):
+        hexes = {"apple": (0xD8362B, (1, 1, 0.92), 0.065), "papaya": (0xF2A23A, (0.9, 0.9, 1.35), 0.07), "guava": (0xD8E07A, (1, 1, 1.05), 0.06), "mango": (0xF4B33C, (0.8, 0.95, 1.2), 0.065)}
         col, sc, r = hexes[good]
         o.append(sphere("fruit", r, (0, 0, r), toon(good, col), scale=sc, segs=18, rings=12))
         if good == "mango":
             o.append(sphere("blush", r * 0.6, (0.02, -0.035, r * 1.25), toon("mangoBlush", 0xE8723A), scale=(0.6, 0.4, 0.5), segs=10, rings=6, outline=False))
+        if good == "apple":
+            o.append(sphere("dimple", r * 0.35, (0, 0, r * 1.78), toon("appleDimple", 0x9E2218), scale=(1, 1, 0.45), segs=8, rings=5, outline=False))
         if good == "papaya":
             o.append(sphere("green", r * 0.5, (0, -0.02, r * 1.9), toon("papayaGreen", 0x9CC24A), scale=(0.9, 0.9, 0.5), segs=10, rings=6, outline=False))
         o.append(cylinder("stalk", 0.005, 0.004, 0.04, (0, 0, r * 2.3), toon("stalk", 0x7A4E2E), segs=6))
@@ -1812,14 +1834,14 @@ SPRITES["bed_empty"] = lambda: model_bed(None, None)
 for _c in GARDEN:
     for _st in STAGES:
         SPRITES["bed_%s_%s" % (_c, _st)] = (lambda c=_c, st=_st: (lambda: model_bed(c, st)))()
-for _t, _f in (("banana", model_banana), ("papaya", model_papaya), ("guava", model_guava)):
+for _t, _f in (("banana", model_banana), ("papaya", model_papaya), ("guava", model_guava), ("apple", model_apple)):
     for _st in ("sapling", "young", "mature", "ripe"):
         SPRITES["tree_%s_%s" % (_t, _st)] = (lambda f=_f, st=_st: (lambda: f(st)))()
 SPRITES.update({"tree_pit": model_pit, "sign_sale": model_sign,
                 "marker_ready": lambda: model_marker("ready"), "marker_spoil": lambda: model_marker("spoil"), "marker_pest": lambda: model_marker("pest")})
 SPRITES.update({"fire_flames": model_fire_flames, "fire_smoke": model_fire_smoke})
 ICONS = {"icon_coin": icon_coin, "icon_gear": icon_gear}
-for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "atta", "bran", "pav", "rusk", "paneer", "curd", "ghee",
+for _g in ("radish", "wheat", "rice", "potato", "lentils", "spinach", "coriander", "banana", "papaya", "guava", "mango", "apple", "atta", "bran", "pav", "rusk", "paneer", "curd", "ghee",
            "rasgulla", "atta_laddoo"):
     ICONS["icon_good_" + _g] = (lambda g=_g: (lambda: icon_good(g)))()
 for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):

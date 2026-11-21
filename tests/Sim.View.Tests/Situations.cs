@@ -340,6 +340,24 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>The Township with a hill parcel (rh6) bought beside the acres you own, an apple orchard bearing on one acre and a guava orchard on the other (US-147, Preview 15).</summary>
+        public static Simulation Hills()
+        {
+            Simulation sim = TownshipBuilt();
+            MapDef map = sim.Config.Game.Map;
+            int parcel = map.IndexOfParcel("rh8");
+            foreach (int t in map.Parcels[parcel].Tiles) // the acres beside it become yours, as a run of purchases would
+                foreach ((int dx, int dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                {
+                    int n = map.TileAt(map.X(t) + dx, map.Y(t) + dy);
+                    if (n >= 0 && map.Parcels[sim.State.Land.Tiles[n].ParcelId].Opens != "hills") sim.State.Land.Parcels[sim.State.Land.Tiles[n].ParcelId].Owned = true;
+                }
+            Ok(sim, new BuyParcel(T(sim), "rh8"));
+            Ok(sim, new PlantOrchard(T(sim), map.Parcels[parcel].Tiles[0], "apple"));
+            Ok(sim, new PlantOrchard(T(sim), map.Parcels[parcel].Tiles[1], "guava"));
+            return sim;
+        }
+
         /// <summary>The Township with crop insurance on, the property and a tea stall's policies covering, and the last claims (spec 027 §7): every insurance sheet and Why? in one place.</summary>
         public static Simulation Insured()
         {

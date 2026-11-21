@@ -283,7 +283,7 @@ namespace Sim.Core.Commands
         /// <summary>The parcel is not leased out.</summary>
         NotLeased,
 
-        /// <summary>The land is closed: the ring until the Township, the hills until they open (spec 025 §3.4).</summary>
+        /// <summary>The land is closed: the ring and the hills until the Township (spec 025 §3.4).</summary>
         LandClosed,
 
         // Spec 024 §3.7 (pucca upgrades, US-152)
@@ -327,6 +327,10 @@ namespace Sim.Core.Commands
 
         /// <summary>That crop already has a contract for the season (or the offer is already accepted).</summary>
         AlreadyContracted,
+
+        // Spec 025 §3.5 (hills and apples, US-147)
+        /// <summary>The tree grows on hill land only.</summary>
+        HillOnly,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

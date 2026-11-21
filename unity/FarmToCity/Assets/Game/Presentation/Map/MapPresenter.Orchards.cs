@@ -24,7 +24,7 @@ namespace Game.Presentation.Map
             switch (tree)
             {
                 case "mango": return (3, 0.4f, 0.15f);
-                case "guava": return (3, 0.36f, 0.14f);
+                case "guava": case "apple": return (3, 0.36f, 0.14f);
                 default: return (4, 0.27f, 0.11f); // banana, papaya
             }
         }

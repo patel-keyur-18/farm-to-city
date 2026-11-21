@@ -8,15 +8,18 @@ namespace Sim.Core.Land
     public static class LandRules
     {
         /// <summary>
-        /// True while a parcel is closed (spec 025 §3.4): the ring's land until the Township, the hills until Sprint 24. A closed parcel
-        /// can't be bought, built on, zoned or leased, a builder skips it, and its tiles are not simulated.
+        /// True while a parcel is closed (spec 025 §3.4): the ring's land and the hills (opened by US-147) until the Township. A closed
+        /// parcel can't be bought, built on, zoned or leased, a builder skips it, and its tiles are not simulated.
         /// </summary>
         public static bool Locked(Simulation sim, int parcelId)
         {
             string opens = sim.Config.Game.Map.Parcels[parcelId].Opens;
             if (opens == null) return false;
-            return opens == "hills" || !Town.TownshipRules.Reached(sim);
+            return !Town.TownshipRules.Reached(sim);
         }
+
+        /// <summary>Land that can be sown or planted: the valley's farm acres and the hills (spec 025 §3.5). Hills take no house, shop, zone or builder.</summary>
+        public static bool Tillable(Terrain terrain) { return terrain == Terrain.Farm || terrain == Terrain.Hill; }
 
         /// <summary>The closed parcels, by id, or null when the map has none (so the hourly pass pays nothing for them).</summary>
         public static bool[] LockedParcels(Simulation sim)

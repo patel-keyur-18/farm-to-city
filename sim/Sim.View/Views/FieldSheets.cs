@@ -50,7 +50,7 @@ namespace Sim.View.Views
             vm.Lines.Add(new LineVm(ctx.Strings.Get("field.soilFactor"), ctx.Rating(LandRules.SoilFactor(sim, tile)), "soil", tileId)); // a word, not a factor (spec 008 §10)
             if (!parcel.Leased) // a leased acre is the tenant's: no water to install, no tools
             {
-                IrrigationViews.AddRows(ctx, vm, tileId); // the well's buckets, or the acre's water and what it can take (spec 013 §7)
+                if (tile.Terrain != Terrain.Hill) IrrigationViews.AddRows(ctx, vm, tileId); // the well's buckets, or the acre's water and what it can take (spec 013 §7); the hills are rain-fed (spec 025 §3.5)
                 EquipmentSheet.AddRow(ctx, vm, tileId); // the machine working it today, or hand tools (spec 013 §3.2)
             }
 
@@ -333,6 +333,7 @@ namespace Sim.View.Views
                 // One row per tree: when it fruits and how long it grows, with its own Plant button and price.
                 foreach (TreeDef def in defs.Farm.Trees)
                 {
+                    if (def.HillOnly) continue; // an apple needs a whole hill acre (the orchard sheet), not a yard or field-edge slot
                     TreeDef d = def;
                     long cost = MarketRules.Value(sim, d.SaplingGood, 1, MarketRules.InputPrice(sim, d.SaplingGood));
                     var line = new LineVm(ctx.Strings.Get(d.NameKey),

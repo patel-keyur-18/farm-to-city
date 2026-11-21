@@ -725,7 +725,7 @@ namespace Sim.View.Views
                 case Terrain.Village: return TileKind.Village;
                 case Terrain.Commons: return TileKind.Commons;
                 case Terrain.Bank: return TileKind.Bank;
-                case Terrain.Hill: return TileKind.Hill;
+                case Terrain.Hill: if (owned) break; return TileKind.Hill; // an acre you own is a field (spec 025 §3.5)
                 case Terrain.River: return TileKind.River;
                 case Terrain.Scrub: return TileKind.Scrub;
                 case Terrain.Lane: return TileKind.Lane;

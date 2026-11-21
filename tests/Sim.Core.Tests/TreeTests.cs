@@ -36,7 +36,7 @@ namespace Sim.Core.Tests
             Assert.That(LandRules.ShadeFactor(sim, tile), Is.EqualTo(shade0), "saplings cast no shade");
             Assert.That(sim.Execute(new PlantTree(0, edge.Id, "mango")).Reason, Is.EqualTo(RejectReason.SlotOccupied));
             Assert.That(sim.Execute(new PlantTree(0, 999, "mango")).Reason, Is.EqualTo(RejectReason.UnknownSlot));
-            Assert.That(sim.Execute(new PlantTree(0, YardSlot(sim), "apple")).Reason, Is.EqualTo(RejectReason.UnknownTree));
+            Assert.That(sim.Execute(new PlantTree(0, YardSlot(sim), "apple")).Reason, Is.EqualTo(RejectReason.TerrainNotAllowed), "apple is hill land only: no yard slot (US-147)");
 
             long matures = 10_080 * 60L;
             sim.AdvanceTo(matures - 1);

@@ -42,7 +42,8 @@
       { "tree": "mango",  "treesPerAcre": 40,  "labourYoung": 1.0, "labourBearing": 2.0, "moistureMin": 25, "moistureMax": 70 },
       { "tree": "guava",  "treesPerAcre": 100, "labourYoung": 1.0, "labourBearing": 2.5, "moistureMin": 25, "moistureMax": 75 },
       { "tree": "banana", "treesPerAcre": 400, "labourYoung": 2.0, "labourBearing": 3.0, "moistureMin": 50, "moistureMax": 85 },
-      { "tree": "papaya", "treesPerAcre": 400, "labourYoung": 2.0, "labourBearing": 3.0, "moistureMin": 40, "moistureMax": 70 }
+      { "tree": "papaya", "treesPerAcre": 400, "labourYoung": 2.0, "labourBearing": 3.0, "moistureMin": 40, "moistureMax": 70 },
+      { "tree": "apple",  "treesPerAcre": 100, "labourYoung": 1.0, "labourBearing": 2.0, "moistureMin": 25, "moistureMax": 70 }
     ]
   },
   "pests": {

@@ -80,10 +80,12 @@ namespace Sim.View.Views
                 if (p.Owned || p.BuilderOwned || !d.ForSale) continue; // the village's land and neighbours not selling yet are not for sale (ADR 0104)
                 int tile = d.Tiles[0];
                 string soil = ctx.Strings.Get(defs.Soils[sim.State.Land.Tiles[tile].Soil].NameKey);
-                var line = new LineVm(ctx.Strings.Get("lands.parcel", "soil", soil, "acres", ctx.Strings.Plural("land.acres", d.Tiles.Count)),
-                    ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
+                bool hills = d.Opens == "hills"; // spec 025 §3.5: sandy, dry, cool; apples grow here
+                var line = new LineVm(ctx.Strings.Get(hills ? "lands.hills" : "lands.parcel", "soil", soil, "acres", ctx.Strings.Plural("land.acres", d.Tiles.Count)),
+                    hills ? ctx.Strings.Get("lands.hillsValue", "price", ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p))) : ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
                 { Action = ActionVm.Open("show:" + tile, ctx.Strings.Get("action.show"), new SheetRequest("ShowTile", tile)) };
                 if (!LandSystem.IsAdjacentToOwned(sim, p.Id)) { line.Note = ctx.Strings.Get("lands.notNext"); }
+                else if (hills) line.Note = ctx.Strings.Get("lands.hillsNote");
                 vm.Lines.Add(line);
             }
             if (vm.Lines.Count == 0) vm.Subtitle = ctx.Strings.Get("lands.none");
