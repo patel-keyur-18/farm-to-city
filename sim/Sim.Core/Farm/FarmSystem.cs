@@ -270,6 +270,7 @@ namespace Sim.Core.Farm
                     Equipment.EquipmentRules.ToolsOf(sim, c));
                 Equipment.EquipmentRules.Forget(sim, c.Id);
                 c.State = CropState.Ready;
+                Town.InsuranceRules.CropReady(sim, c); // an insured crop whose luck fell short pays its claim (spec 027 §3.5)
 
                 // Fertility for the cycle's share (§3.10).
                 Fixed use = def.FertilityPerSeason * share;

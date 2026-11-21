@@ -6,18 +6,18 @@ namespace Sim.Core.Finance
     /// <summary>The season report (spec 005 §3.4 step 3, ADR 0032 grouping) and net worth (§3.5).</summary>
     public static class Reporting
     {
-        private static readonly Account[] FarmIncome = { Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.MachineHire };
+        private static readonly Account[] FarmIncome = { Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.MachineHire, Account.InsuranceClaims };
         private static readonly Account[] FarmCosts =
         {
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent,
-            Account.Depreciation, Account.TransportAndSelling, Account.Power, Account.Repairs, // power and upkeep: irrigation (spec 013 §3.1)
+            Account.Depreciation, Account.TransportAndSelling, Account.Power, Account.Repairs, Account.CropInsurancePremiums, // power and upkeep: irrigation (spec 013 §3.1)
         };
-        private static readonly Account[] OtherIncome = { Account.DayLabourEarnings, Account.RentReceived, Account.LandRentReceived, Account.GainOnAssetSales, Account.HerdGrowth, Account.DebtWrittenOff, Account.BusinessDrawingsIncome, Account.InterestOnSavings, Account.RegionalGrants }; // rent: not farming (spec 014)
+        private static readonly Account[] OtherIncome = { Account.DayLabourEarnings, Account.RentReceived, Account.LandRentReceived, Account.GainOnAssetSales, Account.HerdGrowth, Account.DebtWrittenOff, Account.BusinessDrawingsIncome, Account.InterestOnSavings, Account.RegionalGrants, Account.InsuranceClaimsReceived }; // rent: not farming (spec 014)
         private static readonly Account[] Household = { Account.LivingCosts, Account.HealthCosts };
         private static readonly Account[] Gifts = { Account.GiftsToVillage }; // the school and its classes (ADR 0095 §5): never farm profit
         private static readonly Account[] Taxes = { Account.HouseTax }; // spec 022 §3.1: the owner's house tax, outside farm profit
         private static readonly Account[] FinanceCosts = { Account.Interest, Account.PenaltyInterest };
-        private static readonly Account[] Other = { Account.LossOnAssetSales, Account.DisasterLoss, Account.EventCosts };
+        private static readonly Account[] Other = { Account.LossOnAssetSales, Account.DisasterLoss, Account.EventCosts, Account.InsurancePremiums };
 
         /// <summary>Net worth now (spec 005 §3.5).</summary>
         public static NetWorthSnapshot NetWorth(Simulation sim)

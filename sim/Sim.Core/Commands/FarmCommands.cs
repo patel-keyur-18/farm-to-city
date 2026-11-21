@@ -83,6 +83,7 @@ namespace Sim.Core.Commands
             Equipment.EquipmentRules.Sown(sim, sown); // the Tools factor of timely sowing under a machine (spec 013 §3.2)
             LandSystem.SetOccupied(sim, TileId, true);
             FarmSystem.Refresh(sim);
+            Town.InsuranceRules.OnSown(sim, sown, tile, crop, fert); // crop insurance, if it is on: the policy is fixed now (spec 027 §3.5)
             sim.Emit(new CropSown(t, TileId, CropId, sown.ReadyAt, cost));
             return CommandResult.Ok;
         }

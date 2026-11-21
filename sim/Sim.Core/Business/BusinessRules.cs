@@ -1092,6 +1092,7 @@ namespace Sim.Core.Business
                     }
                 }
                 if (b.Status == BusinessStatus.Open || b.Status == BusinessStatus.Building) ShopRules.PayRent(sim, b, sim.Period); // the new season's pitch rent, upfront (spec 017 §3.4)
+                Town.InsuranceRules.CloseBusiness(sim, b); // spec 027 §3.6: its premium from its own cash, or the policy ends
                 BusinessBooks.Sweep(sim, b);
                 b.Ledger.DropEntriesBefore(closing - sim.Config.Game.Ledger.RetainSeasons + 1);
             }

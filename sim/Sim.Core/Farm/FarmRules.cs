@@ -137,6 +137,7 @@ namespace Sim.Core.Farm
             c.Spray = SprayState.None;
             c.RolledHealth = Fixed.One;
             c.EventHealth = Fixed.One;
+            c.HitBy = 0;
             c.JobId = sim.ScheduleJob(FarmSystem.CropJob, c.Id, c.ReadyAt).Id;
             c.PestJobId = sim.ScheduleJob(FarmSystem.PestJob, c.Id, t + crop.GrowthSeconds / 2).Id;
             FarmSystem.Refresh(sim);

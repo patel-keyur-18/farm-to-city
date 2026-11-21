@@ -136,6 +136,9 @@ namespace Sim.Core.Town
         /// <summary>The disaster signalled, or none (<see cref="DisasterDef"/> −1): its target, when it was warned and when it strikes, the days it has slid, and the choice made.</summary>
         public int DisasterDef { get; internal set; } = -1;
         public long DisasterTarget { get; internal set; }
+
+        /// <summary>0: the target is a building; 1: a business (a fire on a shop or mill).</summary>
+        public long DisasterTarget2 { get; internal set; }
         public long DisasterWarnedAt { get; internal set; }
         public long DisasterStrikeAt { get; internal set; }
         public int DisasterSlides { get; internal set; }
@@ -145,6 +148,9 @@ namespace Sim.Core.Town
         public long FireTarget { get; internal set; } = -1;
         public long FireBill { get; internal set; }
         public long FireAt { get; internal set; }
+
+        /// <summary>Whether the fire that struck was insured when it struck (a policy whose cover began no later than the warning, spec 027 §3.6): its repair pays a claim.</summary>
+        public bool FireInsured { get; internal set; }
 
         /// <summary>Money moved by events this year of play, for the *Why?* and the books (kept as totals).</summary>
         public long LossTotal { get; internal set; }
@@ -191,6 +197,7 @@ namespace Sim.Core.Town
             foreach (EventEffect e in Effects) e.WriteTo(h);
             h.WriteInt(DisasterDef);
             h.WriteLong(DisasterTarget);
+            h.WriteLong(DisasterTarget2);
             h.WriteLong(DisasterWarnedAt);
             h.WriteLong(DisasterStrikeAt);
             h.WriteInt(DisasterSlides);
@@ -198,6 +205,7 @@ namespace Sim.Core.Town
             h.WriteLong(FireTarget);
             h.WriteLong(FireBill);
             h.WriteLong(FireAt);
+            h.WriteBool(FireInsured);
             h.WriteLong(LossTotal);
         }
 
@@ -222,6 +230,7 @@ namespace Sim.Core.Town
             for (int i = 0; i < n; i++) s.Effects.Add(EventEffect.ReadFrom(r));
             s.DisasterDef = r.ReadInt();
             s.DisasterTarget = r.ReadLong();
+            s.DisasterTarget2 = r.ReadLong();
             s.DisasterWarnedAt = r.ReadLong();
             s.DisasterStrikeAt = r.ReadLong();
             s.DisasterSlides = r.ReadInt();
@@ -229,6 +238,7 @@ namespace Sim.Core.Town
             s.FireTarget = r.ReadLong();
             s.FireBill = r.ReadLong();
             s.FireAt = r.ReadLong();
+            s.FireInsured = r.ReadBool();
             s.LossTotal = r.ReadLong();
             return s;
         }

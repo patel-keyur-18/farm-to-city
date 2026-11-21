@@ -310,6 +310,10 @@ namespace Sim.Core.Commands
 
         /// <summary>That choice can't be taken now (a repair the cash can't cover is not offered).</summary>
         ChoiceNotAvailable,
+
+        // Spec 027 §3.6 (property insurance, US-155)
+        /// <summary>No building of yours stands that a property policy could cover.</summary>
+        NoBuildings,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

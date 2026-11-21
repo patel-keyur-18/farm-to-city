@@ -178,6 +178,7 @@ namespace Sim.Core.Town
             {
                 s.DisasterDef = def;
                 s.DisasterTarget = t1;
+                s.DisasterTarget2 = t2;
                 s.DisasterWarnedAt = now;
                 s.DisasterStrikeAt = p.ExpiresAt;
                 s.DisasterSlides = 0;
@@ -383,12 +384,21 @@ namespace Sim.Core.Town
                 {
                     var homes = new List<Building>();
                     foreach (Building b in sim.State.Land.Buildings) if (b.Owner == 0 && b.TileId >= 0 && b.Cost > 0) homes.Add(b);
-                    if (homes.Count == 0 || !summer || now - s.LastHeatAt > Day) return false;
+                    List<Business.Business> shops = OpenBusinesses(sim).FindAll(x => InsuranceRules.BusinessBook(x) > 0); // a shop or mill burns like a house (§3.4)
+                    if ((homes.Count == 0 && shops.Count == 0) || !summer || now - s.LastHeatAt > Day) return false;
                     long sum = 0;
                     foreach (Building b in homes) sum += b.BookValue;
+                    foreach (Business.Business b in shops) sum += InsuranceRules.BusinessBook(b);
                     long r = (long)Rng.Below(Roll(sim, def, 1), (ulong)System.Math.Max(1, sum));
-                    foreach (Building b in homes) { if (r < b.BookValue) { target = b.Id; break; } r -= b.BookValue; }
-                    if (target == 0) target = homes[0].Id;
+                    bool picked = false;
+                    foreach (Building b in homes) { if (r < b.BookValue) { target = b.Id; picked = true; break; } r -= b.BookValue; }
+                    if (!picked)
+                        foreach (Business.Business b in shops) { long v = InsuranceRules.BusinessBook(b); if (r < v) { target = b.Id; target2 = 1; picked = true; break; } r -= v; }
+                    if (!picked)
+                    {
+                        if (homes.Count > 0) target = homes[0].Id;
+                        else { target = shops[0].Id; target2 = 1; }
+                    }
                     Mul(ev.Mod("summer"), 1);
                     break;
                 }
@@ -555,6 +565,7 @@ namespace Sim.Core.Town
                 Account account = ev.Id == EventsDef.FireRepair ? Account.DisasterLoss : Account.EventCosts;
                 sim.State.Ledger.Post(now, sim.Period, ev.Id == EventsDef.FireRepair ? "ledger.fireRepair" : "ledger.eventCost", "event:" + ev.Id, new Posting(account, cost), new Posting(Account.Cash, -cost));
                 s.LossTotal += cost;
+                if (ev.Id == EventsDef.FireRepair) InsuranceRules.OnRepair(sim, s, p, choice, cost, now); // an insured fire pays back its share of what was paid (spec 027 §3.6)
             }
             Apply(sim, s, p, ev, choice, now);
             long cash = -cost;
@@ -573,7 +584,7 @@ namespace Sim.Core.Town
                 switch (e.Kind)
                 {
                     case EffectKind.CropHealth:
-                        foreach (Crop c in InFilter(sim, e.Filter, p)) c.EventHealth = c.EventHealth * e.Factor;
+                        foreach (Crop c in InFilter(sim, e.Filter, p)) { c.EventHealth = c.EventHealth * e.Factor; c.HitBy = p.Def + 1; }
                         break;
                     case EffectKind.PriceShift:
                         s.Effects.Add(new EventEffect { Kind = EventEffect.Price, Code = (int)p.Target, Percent = e.Percent, Until = now + e.Days * Day, Def = p.Def });
@@ -613,7 +624,11 @@ namespace Sim.Core.Town
                             Machine m = sim.State.Equipment.Machines.Find(x => x.Id == p.Target);
                             if (m != null) m.BrokenUntil = System.Math.Max(m.BrokenUntil, until);
                         }
-                        else s.Effects.Add(new EventEffect { Kind = EventEffect.Shut, Code = EventEffect.ShutBusiness, Target = p.Target, Until = until, Def = p.Def });
+                        else
+                        {
+                            s.Effects.Add(new EventEffect { Kind = EventEffect.Shut, Code = EventEffect.ShutBusiness, Target = p.Target, Until = until, Def = p.Def });
+                            if (ev.Id == "supplier_strike") InsuranceRules.OnPause(sim, p, e.Hours, now); // business insurance pays the lost days of a pause
+                        }
                         break;
                     }
                     case EffectKind.Offer:
@@ -676,7 +691,7 @@ namespace Sim.Core.Town
             var order = new List<KeyValuePair<ulong, Crop>>();
             foreach (Crop c in all) order.Add(new KeyValuePair<ulong, Crop>(Rng.Next(sim.State.Seed, RngStream.Events, (ulong)(p.RaisedAt / Day), (ulong)(5000 + c.Id)), c));
             order.Sort((a, b) => a.Key != b.Key ? a.Key.CompareTo(b.Key) : a.Value.Id.CompareTo(b.Value.Id));
-            for (int i = 0; i < hit && i < order.Count; i++) order[i].Value.EventHealth = order[i].Value.EventHealth * ev.Mod("damage");
+            for (int i = 0; i < hit && i < order.Count; i++) { order[i].Value.EventHealth = order[i].Value.EventHealth * ev.Mod("damage"); order[i].Value.HitBy = p.Def + 1; }
             return hit;
         }
 
@@ -842,19 +857,33 @@ namespace Sim.Core.Town
         {
             EventsDef d = Def(sim);
             FireDef f = d.FireDef;
-            Building b = sim.State.Land.Buildings.Find(x => x.Id == s.DisasterTarget);
-            if (b == null || b.TileId < 0) return; // sold or gone: nothing to burn
-            bool tower = UtilityRules.Covers(sim, UtilityDef.Tower, b.TileId);
+            bool business = s.DisasterTarget2 == 1;
+            long id, book;
+            int tile;
+            if (business)
+            {
+                Business.Business shop = sim.State.Businesses?.Find(s.DisasterTarget);
+                if (shop == null || shop.Status != BusinessStatus.Open) return; // closed or gone: nothing to burn
+                id = shop.Id; tile = shop.TileId; book = InsuranceRules.BusinessBook(shop);
+            }
+            else
+            {
+                Building b = sim.State.Land.Buildings.Find(x => x.Id == s.DisasterTarget);
+                if (b == null || b.TileId < 0) return; // sold or gone: nothing to burn
+                id = b.Id; tile = b.TileId; book = b.BookValue;
+            }
+            bool tower = UtilityRules.Covers(sim, UtilityDef.Tower, tile);
             bool prepared = s.DisasterChoice == 1;
             Fixed share = f.DamageShare * (tower ? f.TowerFactor : Fixed.One) * (prepared ? f.PrepareFactor : Fixed.One);
-            long bill = Money.MulRate(b.BookValue, share);
-            s.FireTarget = b.Id;
+            long bill = Money.MulRate(book, share);
+            s.FireTarget = id;
             s.FireBill = bill;
             s.FireAt = now;
-            s.Effects.Add(new EventEffect { Kind = EventEffect.Shut, Code = EventEffect.ShutBuilding, Target = b.Id, Until = now + f.DowntimeDays * Day, Def = d.IndexOf(EventsDef.Fire) });
-            sim.Emit(new FireStruck(now, b.Id, bill, tower, prepared));
+            s.FireInsured = InsuranceRules.CoversFire(sim, business, id, s.DisasterWarnedAt);
+            s.Effects.Add(new EventEffect { Kind = EventEffect.Shut, Code = business ? EventEffect.ShutBusiness : EventEffect.ShutBuilding, Target = id, Until = now + f.DowntimeDays * Day, Def = d.IndexOf(EventsDef.Fire) });
+            sim.Emit(new FireStruck(now, id, bill, tower, prepared, business));
             int repair = d.IndexOf(EventsDef.FireRepair);
-            s.Waiting.Add(new PendingEvent { Id = s.NextId++, Def = repair, RaisedAt = now, ExpiresAt = now + d.Engine.RepairHours * Hour, Target = b.Id, Param = bill });
+            s.Waiting.Add(new PendingEvent { Id = s.NextId++, Def = repair, RaisedAt = now, ExpiresAt = now + d.Engine.RepairHours * Hour, Target = id, Target2 = business ? 1 : 0, Param = bill });
             sim.Emit(new EventRaised(now, s.Waiting[s.Waiting.Count - 1].Id, repair, false));
         }
 
@@ -863,8 +892,10 @@ namespace Sim.Core.Town
         {
             FireDef f = Def(sim).FireDef;
             if (choice != 1) return;
+            int fire = Def(sim).IndexOf(EventsDef.Fire);
+            int code = p.Target2 == 1 ? EventEffect.ShutBusiness : EventEffect.ShutBuilding;
             foreach (EventEffect e in s.Effects)
-                if (e.Kind == EventEffect.Shut && e.Code == EventEffect.ShutBuilding && e.Target == p.Target) e.Until = System.Math.Max(e.Until, s.FireAt + f.SlowRepairDays * Day);
+                if (e.Kind == EventEffect.Shut && e.Code == code && e.Target == p.Target && e.Def == fire) e.Until = System.Math.Max(e.Until, s.FireAt + f.SlowRepairDays * Day);
         }
 
         private static void EpidemicStrikes(Simulation sim, EventsState s, long now)

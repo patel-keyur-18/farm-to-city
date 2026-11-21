@@ -68,7 +68,10 @@ namespace Sim.Core.Events
         public bool Tower { get; }
         public bool Prepared { get; }
 
-        public FireStruck(long simTime, long building, long bill, bool tower, bool prepared) : base(simTime) { Building = building; Bill = bill; Tower = tower; Prepared = prepared; }
+        /// <summary>True when the burning place is a business (<see cref="Building"/> is then its id).</summary>
+        public bool Business { get; }
+
+        public FireStruck(long simTime, long building, long bill, bool tower, bool prepared, bool business = false) : base(simTime) { Building = building; Bill = bill; Tower = tower; Prepared = prepared; Business = business; }
 
         protected override string Describe() { return "FireStruck(building " + Building + ", bill " + Bill + ", tower " + Tower + ", prepared " + Prepared + ")"; }
     }
@@ -99,5 +102,66 @@ namespace Sim.Core.Events
         public RegionalGrantPaid(long simTime, long amount) : base(simTime) { Amount = amount; }
 
         protected override string Describe() { return "RegionalGrantPaid(" + Amount + ")"; }
+    }
+
+    /// <summary>A policy's cover began (a close charged its first premium, or its premium again after a lapse): 0 crop, 1 property, 2 business; the business, if one.</summary>
+    public sealed class InsuranceStarted : SimEvent
+    {
+        public int Policy { get; }
+        public long Business { get; }
+
+        public InsuranceStarted(long simTime, int policy, long business) : base(simTime) { Policy = policy; Business = business; }
+
+        protected override string Describe() { return "InsuranceStarted(policy " + Policy + ", business " + Business + ")"; }
+    }
+
+    /// <summary>A policy's premium could not be paid at the close, so it ended (never a debt).</summary>
+    public sealed class InsuranceLapsed : SimEvent
+    {
+        public int Policy { get; }
+        public long Business { get; }
+        public long Premium { get; }
+
+        public InsuranceLapsed(long simTime, int policy, long business, long premium) : base(simTime) { Policy = policy; Business = business; Premium = premium; }
+
+        protected override string Describe() { return "InsuranceLapsed(policy " + Policy + ", business " + Business + ", premium " + Premium + ")"; }
+    }
+
+    /// <summary>A premium was charged: at a sowing (crop), or at the close (property, business).</summary>
+    public sealed class PremiumCharged : SimEvent
+    {
+        public int Policy { get; }
+        public long Business { get; }
+        public long Amount { get; }
+
+        public PremiumCharged(long simTime, int policy, long business, long amount) : base(simTime) { Policy = policy; Business = business; Amount = amount; }
+
+        protected override string Describe() { return "PremiumCharged(policy " + Policy + ", business " + Business + ", " + Amount + ")"; }
+    }
+
+    /// <summary>A claim was paid. <c>Cause</c> is an event's definition + 1, 0 the season's weather, −1 pests; <c>Target</c> the crop's definition, the building or the business; <c>Days</c> the days shut paid for.</summary>
+    public sealed class ClaimPaid : SimEvent
+    {
+        public int Policy { get; }
+        public int Cause { get; }
+        public long Target { get; }
+        public long Amount { get; }
+        public int Days { get; }
+
+        public ClaimPaid(long simTime, int policy, int cause, long target, long amount, int days) : base(simTime) { Policy = policy; Cause = cause; Target = target; Amount = amount; Days = days; }
+
+        protected override string Describe() { return "ClaimPaid(policy " + Policy + ", cause " + Cause + ", target " + Target + ", " + Amount + ", days " + Days + ")"; }
+    }
+
+    /// <summary>A crop was sown uninsured because the cash could not pay its premium.</summary>
+    public sealed class CropNotInsured : SimEvent
+    {
+        public int TileId { get; }
+        public int Crop { get; }
+        public long Premium { get; }
+
+        public CropNotInsured(long simTime, int tileId, int crop, long premium) : base(simTime) { TileId = tileId; Crop = crop; Premium = premium; }
+
+        protected override string Describe() { return "CropNotInsured(tile " + TileId + ", crop " + Crop + ", premium " + Premium + ")"; }
     }
 }

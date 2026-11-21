@@ -523,6 +523,9 @@ namespace Sim.Core.Definitions
         /// <summary>Events (spec 027, <c>events.json</c>), from the Township's content, or null.</summary>
         public EventsDef Events { get; internal set; }
 
+        /// <summary>Insurance (spec 027 §3.5–§3.6, <c>insurance.json</c>), with the events, or null.</summary>
+        public InsuranceDef Insurance { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

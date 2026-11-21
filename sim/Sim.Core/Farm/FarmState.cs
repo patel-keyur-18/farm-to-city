@@ -103,6 +103,14 @@ namespace Sim.Core.Farm
         /// <summary>What events did to the standing crop (spec 027 §3.2): a multiplier on its health, 1 untouched. Save schema 22.</summary>
         public Fixed EventHealth { get; internal set; } = Fixed.One;
 
+        /// <summary>The event that last hurt it (an event's definition + 1, 0 none), so a claim can say what hit it (spec 027 §3.5). Save schema 22.</summary>
+        public int HitBy { get; internal set; }
+
+        /// <summary>Crop insurance fixed at sowing (spec 027 §3.5): insured, the sum insured and the premium paid. Save schema 22.</summary>
+        public bool Insured { get; internal set; }
+        public long SumInsured { get; internal set; }
+        public long Premium { get; internal set; }
+
         /// <summary>What a harvest would move into the store now.</summary>
         public long HarvestGrams { get { return Breakdown == null ? 0 : Breakdown.Grams - SpoiledGrams - TakenGrams; } }
 
@@ -144,6 +152,12 @@ namespace Sim.Core.Farm
             if (!h.Hashing || LastCut != 0) h.WriteLong(LastCut); // fodder only (spec 012): other crops hash as before
             if (h.Hashing ? TakenGrams != 0 : !(h is SaveWriter tw) || tw.Schema >= 17) h.WriteLong(TakenGrams); // a part-harvested crop only: every other crop hashes as before
             if (h.Hashing ? EventHealth != Fixed.One : !(h is SaveWriter ew) || ew.Schema >= 22) h.WriteFixed(EventHealth); // schema 22: a crop an event hit only
+            if (h.Hashing ? HitBy != 0 : !(h is SaveWriter hw) || hw.Schema >= 22) h.WriteInt(HitBy);
+            if (h.Hashing ? Insured : !(h is SaveWriter iw) || iw.Schema >= 22)
+            {
+                h.WriteBool(Insured); // schema 22: a crop that was insured at sowing only
+                if (Insured) { h.WriteLong(SumInsured); h.WriteLong(Premium); }
+            }
         }
 
         internal static Crop ReadFrom(SaveReader r)
@@ -167,7 +181,13 @@ namespace Sim.Core.Farm
             c.PestJobId = r.ReadLong();
             if (r.Schema >= 7) c.LastCut = r.ReadLong();
             if (r.Schema >= 17) c.TakenGrams = r.ReadLong();
-            if (r.Schema >= 22) c.EventHealth = r.ReadFixed();
+            if (r.Schema >= 22)
+            {
+                c.EventHealth = r.ReadFixed();
+                c.HitBy = r.ReadInt();
+                c.Insured = r.ReadBool();
+                if (c.Insured) { c.SumInsured = r.ReadLong(); c.Premium = r.ReadLong(); }
+            }
             return c;
         }
     }

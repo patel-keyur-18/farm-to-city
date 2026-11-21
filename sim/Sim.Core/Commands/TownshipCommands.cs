@@ -139,4 +139,54 @@ namespace Sim.Core.Commands
             return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
         }
     }
+
+    /// <summary>Crop insurance on or off (US-155, spec 027 §3.5): it covers the field crops sown after now; a crop already sown keeps the policy it was sown with.</summary>
+    public sealed class SetCropInsurance : TimedCommand
+    {
+        public bool On { get; }
+
+        public SetCropInsurance(long at, bool on) : base(at) { On = on; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (!InsuranceRules.Available(sim)) return CommandResult.Reject(RejectReason.NoTownship);
+            InsuranceRules.State(sim).CropOn = On;
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>Property insurance on or off (US-155, spec 027 §3.6): on, it starts at the next close; off, it ends at once with no refund.</summary>
+    public sealed class SetPropertyInsurance : TimedCommand
+    {
+        public bool On { get; }
+
+        public SetPropertyInsurance(long at, bool on) : base(at) { On = on; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (!InsuranceRules.Available(sim)) return CommandResult.Reject(RejectReason.NoTownship);
+            if (On && InsuranceRules.PropertyValue(sim) <= 0) return CommandResult.Reject(RejectReason.NoBuildings);
+            InsuranceRules.SetProperty(sim, On);
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>One business's insurance on or off (US-155, spec 027 §3.6): the same rules; the business pays its own premium.</summary>
+    public sealed class SetBusinessInsurance : TimedCommand
+    {
+        public long BusinessId { get; }
+        public bool On { get; }
+
+        public SetBusinessInsurance(long at, long businessId, bool on) : base(at) { BusinessId = businessId; On = on; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (!InsuranceRules.Available(sim)) return CommandResult.Reject(RejectReason.NoTownship);
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (b.Status != Business.BusinessStatus.Open && b.Status != Business.BusinessStatus.Building) return CommandResult.Reject(RejectReason.BusinessClosed);
+            InsuranceRules.SetBusiness(sim, b, On);
+            return CommandResult.Ok;
+        }
+    }
 }

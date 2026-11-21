@@ -52,6 +52,9 @@ namespace Sim.Core.Finance
 
         /// <summary>What neighbours pay for your tractor's days on their fields (US-256, ADR 0137): farm income, matching the diesel and repairs it costs. Schema 21.</summary>
         MachineHire = 4040,
+
+        /// <summary>What crop insurance paid when luck took more than the excess (spec 027 §3.5, schema 22): farm income, never passive.</summary>
+        InsuranceClaims = 4045,
         DayLabourEarnings = 4100,
         RentReceived = 4200,
 
@@ -70,6 +73,9 @@ namespace Sim.Core.Finance
         /// <summary>A regional grant paid at a close after you applied (spec 027 §3.2, schema 22): other income, never farm profit.</summary>
         RegionalGrants = 4350,
 
+        /// <summary>What property and business insurance paid after a fire or a pause (spec 027 §3.6, schema 22): other income, outside farm profit.</summary>
+        InsuranceClaimsReceived = 4355,
+
         /// <summary>A kept calf's and a growing heifer's rise in worth (spec 025 §3.8, ADR 0135): not cash, outside farm profit. Schema 21.</summary>
         HerdGrowth = 4810,
         DebtWrittenOff = 4900,
@@ -78,6 +84,9 @@ namespace Sim.Core.Finance
         FertiliserAndSpraying = 5010,
         AnimalFeed = 5020,
         VetAndBreeding = 5030,
+
+        /// <summary>Crop insurance's premiums, charged at each sowing (spec 027 §3.5, schema 22): a farm cost.</summary>
+        CropInsurancePremiums = 5035,
         HiredLabour = 5100,
         LivingCosts = 5200,
         HealthCosts = 5250,
@@ -90,6 +99,9 @@ namespace Sim.Core.Finance
 
         /// <summary>What you paid to soften an event: tankers, drains, a fine, a second supplier (spec 027 §3.2, schema 22): outside farm profit.</summary>
         EventCosts = 5285,
+
+        /// <summary>Property and business insurance's premiums, charged at the close (spec 027 §3.6, schema 22): outside farm profit.</summary>
+        InsurancePremiums = 5287,
 
         /// <summary>The founder's gifts to the village: the school, its upkeep, adult classes (spec 018, ADR 0095 §5). Outside farm profit.</summary>
         GiftsToVillage = 5260,
@@ -162,6 +174,7 @@ namespace Sim.Core.Finance
             Account.TaxOwed, Account.HouseTax, Account.BusinessTax, // spec 022 (save schema 19, after the treasury's)
             Account.Festivals, // spec 026 (save schema 22)
             Account.RegionalGrants, Account.DisasterLoss, Account.EventCosts, // spec 027 (save schema 22)
+            Account.InsuranceClaims, Account.InsuranceClaimsReceived, Account.CropInsurancePremiums, Account.InsurancePremiums,
         };
 
         /// <summary>
@@ -186,7 +199,8 @@ namespace Sim.Core.Finance
                 case Account.StartUpGrant: case Account.GrantUntied: case Account.GrantTied: case Account.PitchRents: case Account.HouseTaxIncome: case Account.BusinessTaxIncome:
                 case Account.Fees: case Account.GiftsFromFounder: case Account.DeptOffice: case Account.DeptHealth: case Account.DeptEducation: case Account.DeptRoads:
                 case Account.DeptSafety: case Account.DeptUtilities: case Account.DeptPolicies: case Account.TaxOwed: case Account.HouseTax: case Account.BusinessTax: return 19;
-                case Account.Festivals: case Account.RegionalGrants: case Account.DisasterLoss: case Account.EventCosts: return 22;
+                case Account.Festivals: case Account.RegionalGrants: case Account.DisasterLoss: case Account.EventCosts:
+                case Account.InsuranceClaims: case Account.InsuranceClaimsReceived: case Account.CropInsurancePremiums: case Account.InsurancePremiums: return 22;
                 default: return 0;
             }
         }

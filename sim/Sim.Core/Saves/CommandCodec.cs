@@ -60,6 +60,7 @@ namespace Sim.Core.Saves
             AnswerPetition,
             ScheduleFestival,
             AnswerEvent,
+            SetCropInsurance, SetPropertyInsurance, SetBusinessInsurance,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -194,6 +195,9 @@ namespace Sim.Core.Saves
                 case DismissStaff c: At(c, Tag.DismissStaff); w.WriteInt(c.Civic); break;
                 case ScheduleFestival c: At(c, Tag.ScheduleFestival); w.WriteInt(c.Venue); w.WriteInt(c.Payer); w.WriteInt(c.DaysAhead); break;
                 case AnswerEvent c: At(c, Tag.AnswerEvent); w.WriteInt(c.EventId); w.WriteInt(c.Choice); break;
+                case SetCropInsurance c: At(c, Tag.SetCropInsurance); w.WriteBool(c.On); break;
+                case SetPropertyInsurance c: At(c, Tag.SetPropertyInsurance); w.WriteBool(c.On); break;
+                case SetBusinessInsurance c: At(c, Tag.SetBusinessInsurance); w.WriteLong(c.BusinessId); w.WriteBool(c.On); break;
                 case AnswerPetition c: At(c, Tag.AnswerPetition); w.WriteInt(c.PetitionId); w.WriteInt(c.Closes); break;
                 case ListParcel c: At(c, Tag.ListParcel); w.WriteString(c.ParcelId); break;
                 case CancelSale c: At(c, Tag.CancelSale); w.WriteString(c.ParcelId); break;
@@ -371,6 +375,9 @@ namespace Sim.Core.Saves
                 case Tag.DismissStaff: return new DismissStaff(at, r.ReadInt());
                 case Tag.ScheduleFestival: return new ScheduleFestival(at, r.ReadInt(), r.ReadInt(), r.ReadInt());
                 case Tag.AnswerEvent: return new AnswerEvent(at, r.ReadInt(), r.ReadInt());
+                case Tag.SetCropInsurance: return new SetCropInsurance(at, r.ReadBool());
+                case Tag.SetPropertyInsurance: return new SetPropertyInsurance(at, r.ReadBool());
+                case Tag.SetBusinessInsurance: return new SetBusinessInsurance(at, r.ReadLong(), r.ReadBool());
                 case Tag.AnswerPetition: return new AnswerPetition(at, r.ReadInt(), r.ReadInt());
                 case Tag.ListParcel: return new ListParcel(at, r.ReadString());
                 case Tag.CancelSale: return new CancelSale(at, r.ReadString());

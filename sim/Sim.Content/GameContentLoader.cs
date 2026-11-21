@@ -62,6 +62,7 @@ namespace Sim.Content
                 if (game.Treasury != null) CheckTaxGuard(game.Treasury.Taxes, buildings, population);
                 if (game.Treasury != null) game.Township = LoadTownship(read("township.json"), market.Region, map, buildings, onboarding, game.Treasury, market); // the Township's road comes with the treasury (spec 023 §4)
                 if (game.Township != null) game.Events = LoadEvents(read("events.json")); // events start at the Township (spec 027)
+                if (game.Events != null) game.Insurance = LoadInsurance(read("insurance.json")); // and so does insurance (spec 027 §3.5)
             }
             return game;
         }
