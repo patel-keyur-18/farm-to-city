@@ -595,39 +595,55 @@ namespace Game.Presentation.Map
 
         // ---- a fire (spec 027 §3.4): flames and rising smoke on the acre of a building a fire has shut ----
 
-        private readonly Dictionary<int, SpriteRenderer[]> _fires = new Dictionary<int, SpriteRenderer[]>();
+        private readonly Dictionary<long, SpriteRenderer[]> _fires = new Dictionary<long, SpriteRenderer[]>();
+        private readonly Dictionary<long, Vector3> _fireAt = new Dictionary<long, Vector3>();
+
+        /// <summary>Where a fire burns: on the burning house or business sprite (US-154.T7), the acre's centre if its sprite isn't drawn.</summary>
+        private Vector3 FireSpot(FireVm f)
+        {
+            if (f.BuildingId != 0 && _houses.TryGetValue(f.BuildingId, out SpriteRenderer house)) return house.transform.position + new Vector3(0f, 0.12f, 0f);
+            if (f.BusinessId != 0 && _businesses.TryGetValue(f.BusinessId, out SpriteRenderer shop)) return shop.transform.position + new Vector3(0f, 0.12f, 0f);
+            return TileCentre(f.TileId) + new Vector3(0f, 0.1f, 0f);
+        }
 
         private void RefreshFires(MapVm map)
         {
-            var burning = new HashSet<int>();
-            foreach (FireVm f in map.Fires) burning.Add(f.TileId);
-            foreach (int tile in burning)
+            var burning = new HashSet<long>();
+            foreach (FireVm f in map.Fires)
             {
-                if (_fires.ContainsKey(tile)) continue;
-                Vector3 at = TileCentre(tile) + new Vector3(0f, 0.1f, 0f);
-                SpriteRenderer flames = NewRenderer("fire" + tile, SpriteBank.Rendered("fire_flames"), at, Order(tile, _width, 90));
-                SpriteRenderer smoke = NewRenderer("fireSmoke" + tile, SpriteBank.Rendered("fire_smoke"), at + new Vector3(0f, 0.25f, 0f), Order(tile, _width, 91));
-                _fires[tile] = new[] { flames, smoke };
+                burning.Add(f.Key);
+                Vector3 at = FireSpot(f);
+                if (_fires.ContainsKey(f.Key))
+                {
+                    _fireAt[f.Key] = at;
+                    continue;
+                }
+                SpriteRenderer flames = NewRenderer("fire" + f.Key, SpriteBank.Rendered("fire_flames"), at, Order(f.TileId, _width, 90));
+                SpriteRenderer smoke = NewRenderer("fireSmoke" + f.Key, SpriteBank.Rendered("fire_smoke"), at + new Vector3(0f, 0.25f, 0f), Order(f.TileId, _width, 91));
+                _fires[f.Key] = new[] { flames, smoke };
+                _fireAt[f.Key] = at;
             }
-            var gone = new List<int>();
-            foreach (int tile in _fires.Keys) if (!burning.Contains(tile)) gone.Add(tile);
-            foreach (int tile in gone)
+            var gone = new List<long>();
+            foreach (long key in _fires.Keys) if (!burning.Contains(key)) gone.Add(key);
+            foreach (long key in gone)
             {
-                foreach (SpriteRenderer r in _fires[tile]) Destroy(r.gameObject);
-                _fires.Remove(tile);
+                foreach (SpriteRenderer r in _fires[key]) Destroy(r.gameObject);
+                _fires.Remove(key);
+                _fireAt.Remove(key);
             }
         }
 
         private void AnimateFires()
         {
             float t = Time.unscaledTime;
-            foreach (KeyValuePair<int, SpriteRenderer[]> kv in _fires)
+            foreach (KeyValuePair<long, SpriteRenderer[]> kv in _fires)
             {
                 SpriteRenderer flames = kv.Value[0], smoke = kv.Value[1];
-                float wob = Mathf.Sin(t * 9f + kv.Key) * 0.06f;
+                flames.transform.position = _fireAt[kv.Key];
+                float wob = Mathf.Sin(t * 9f + (float)(kv.Key % 97)) * 0.06f;
                 flames.transform.localScale = new Vector3(0.75f * (1f + wob * 0.5f), 0.75f * (1f - wob), 1f); // the flames lick up and down
-                float loop = (t * 0.35f + kv.Key * 0.37f) % 1f; // smoke drifts up and fades, then starts again
-                Vector3 baseAt = TileCentre(kv.Key) + new Vector3(0f, 0.35f, 0f);
+                float loop = (t * 0.35f + (kv.Key % 97) * 0.37f) % 1f; // smoke drifts up and fades, then starts again
+                Vector3 baseAt = _fireAt[kv.Key] + new Vector3(0f, 0.25f, 0f);
                 smoke.transform.position = baseAt + new Vector3(0.05f * Mathf.Sin(loop * 6f), loop * 0.6f, 0f);
                 smoke.color = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - loop) * 0.85f);
                 smoke.transform.localScale = Vector3.one * (0.8f + loop * 0.6f);

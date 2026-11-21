@@ -202,10 +202,19 @@ namespace Sim.View.Views
         public bool Upgrading { get; internal set; }
     }
 
-    /// <summary>A burning building (spec 027 §3.4): the acre it stands on, drawn with flames and smoke for the days it is shut.</summary>
+    /// <summary>A burning building or business (spec 027 §3.4): the acre it stands on and which of the two it is, so the flames are drawn on it, for the days it is shut (US-154.T7).</summary>
     public sealed class FireVm
     {
         public int TileId { get; internal set; }
+
+        /// <summary>The burning house's building id, or 0.</summary>
+        public long BuildingId { get; internal set; }
+
+        /// <summary>The burning business's id, or 0.</summary>
+        public long BusinessId { get; internal set; }
+
+        /// <summary>One key for the fire: the building's id, or the business's id negated.</summary>
+        public long Key { get { return BuildingId != 0 ? BuildingId : -BusinessId; } }
     }
 
     /// <summary>A hand's hut being built (spec 006 §3.4): drawn as its building stage on the acre's edge.</summary>
@@ -610,7 +619,12 @@ namespace Sim.View.Views
                 if (fx.Kind == Sim.Core.Town.EventEffect.Shut && fx.Code == Sim.Core.Town.EventEffect.ShutBuilding && fx.Until > sim.State.Clock.SimTime)
                 {
                     Building burning = land.Buildings.Find(q => q.Id == fx.Target);
-                    if (burning != null && burning.TileId >= 0) map.Fires.Add(new FireVm { TileId = burning.TileId });
+                    if (burning != null && burning.TileId >= 0) map.Fires.Add(new FireVm { TileId = burning.TileId, BuildingId = burning.Id });
+                }
+                else if (fx.Kind == Sim.Core.Town.EventEffect.Shut && fx.Code == Sim.Core.Town.EventEffect.ShutBusiness && fx.Until > sim.State.Clock.SimTime)
+                {
+                    Sim.Core.Business.Business burningBusiness = sim.State.Businesses?.Businesses.Find(q => q.Id == fx.Target);
+                    if (burningBusiness != null && burningBusiness.TileId >= 0) map.Fires.Add(new FireVm { TileId = burningBusiness.TileId, BusinessId = burningBusiness.Id });
                 }
             AddSchool(ctx, map);
             AddClinic(ctx, map);

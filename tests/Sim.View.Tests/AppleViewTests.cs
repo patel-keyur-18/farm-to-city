@@ -96,5 +96,23 @@ namespace Sim.View.Tests
             Assert.That(vm.Lines.Single(l => l.Label == "Apple" && l.Note != null).Note, Does.StartWith("Keeps 96 of every 100 kg over a season (85 in the hut)"));
             Assert.That(vm.Lines.Any(l => l.Label == "Apple, Monsoon to Summer" && l.Value.StartsWith("+")), Is.True, "the worked answer: apples picked in the Monsoon fetch the Summer price");
         }
+
+        // US-154.T7: a fire carries what burns (a house's building id or a business's id), so the flames are drawn on that sprite, not the acre's centre.
+        [Test]
+        public void Fire_Knows_What_Burns()
+        {
+            Simulation sim = Situations.Insured();
+            var st = Sim.Core.Town.EventRules.State(sim);
+            Sim.Core.Business.Business shop = sim.State.Businesses.Businesses.Last();
+            long house = sim.State.Land.Buildings.First(x => x.Owner == 0 && x.TileId >= 0 && x.Cost > 0).Id;
+            long until = sim.State.Clock.SimTime + 86400;
+            st.Effects.Add(new Sim.Core.Town.EventEffect { Kind = Sim.Core.Town.EventEffect.Shut, Code = Sim.Core.Town.EventEffect.ShutBuilding, Target = house, Until = until });
+            st.Effects.Add(new Sim.Core.Town.EventEffect { Kind = Sim.Core.Town.EventEffect.Shut, Code = Sim.Core.Town.EventEffect.ShutBusiness, Target = shop.Id, Until = until });
+            MapVm map = MapView.Build(ViewKit2.Context(sim));
+            Assert.That(map.Fires.Count, Is.EqualTo(2));
+            Assert.That(map.Fires.Single(f => f.BuildingId == house).Key, Is.EqualTo(house));
+            Assert.That(map.Fires.Single(f => f.BusinessId == shop.Id).Key, Is.EqualTo(-shop.Id));
+            Assert.That(map.Fires.Single(f => f.BusinessId == shop.Id).TileId, Is.EqualTo(shop.TileId));
+        }
     }
 }
