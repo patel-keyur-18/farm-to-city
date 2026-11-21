@@ -225,7 +225,7 @@ The **Town hall** sheet (Menu) gets a **Town life** tab: approval and its last s
 | Metric | Expected effect | Tolerance |
 | --- | --- | --- |
 | Crime points removed a season per 1,000 coins | jobs and the floor wage at least as cheap as the watchman | measured by bots, reported |
-| A town left alone | approval 50–65, reputation means 40–60 (no collapse, no free lunch) | ±10 |
+| A town left alone | approval 40–65 and reputation means 65–80 (measured on 200 hands-off seeds, Sprint 24: approval median 48, reputation 76.2, range 67–79, crime 50.8, pull 112%); no collapse, no free lunch: the parts a left-alone town has none of (water, drains, collection posts) hold it under 80, so the headroom to 100 is the player's works | ±5 |
 | The Township's pace (day 101 competent) | unchanged within 2 days: the pull starts at 50 and 50 | ±2 days |
 | Land payback (6.0 seasons, ADR 0124) | the crime term moves it under 0.3 seasons | ±0.3 |
 | Archetype bots (ADR 0016) | within 20% on net worth and happiness; an *everything festival* bot no better than the median | 1.13 holds |

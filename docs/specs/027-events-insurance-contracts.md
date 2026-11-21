@@ -296,7 +296,7 @@ Both previews are exact artifacts that look like the game, approved before any U
 | AC-16 | Every number has a *Why?* in words; no raw factors | `WhyTests.EveryNumberHasWhy` (over the event, insurance and contracts situations) |
 | AC-17 | The sheets and cards respond to scripted touch in the Editor | the stories' Editor tours |
 | AC-18 | A town that answers nothing (every default) still works: it levels, no state goes negative, no zero-time loop over the new commands | `RiskTests.LeftAlone`, `GateTests.Risk` |
-| AC-19 | An *insure everything* bot and an *accept every contract* bot are no better on the median than an uninsured, uncontracted one | `GateTests.InsureEverything`, `GateTests.AcceptEveryContract` |
+| AC-19 | An *insure everything* bot and an *accept every contract* bot are no better on the median than an uninsured, uncontracted one | `GateTests.RiskExploits` |
 
 ## 9. Balancing hooks
 

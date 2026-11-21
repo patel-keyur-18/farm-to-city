@@ -21,4 +21,4 @@ Spec 027 §3.7 sets the trader's fixed-price contracts (G7, closed by the owner)
 
 - Save schema 22 gains `ContractsState`; the fixtures are regenerated. A town that never harvested a staple at the Township hashes as before.
 - The spec's tests are `ForwardContractTests` (`ContractTests` is spec 006's hiring contracts); AC-13's names are corrected.
-- Whether a contract is worth it is for the balance pass: the 3% discount, the 40% share and the average-price settlement, measured with `GateTests.AcceptEveryContract` (an accept-every-contract bot no better than the median).
+- Whether a contract is worth it is for the balance pass: the 3% discount, the 40% share and the average-price settlement, measured with `GateTests.RiskExploits` (an accept-every-contract bot no better than the median).

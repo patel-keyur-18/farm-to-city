@@ -23,4 +23,4 @@ Spec 027 sets crop, property and business insurance. Preview 13 drew six screens
 
 - Save schema 22 gains `InsuranceState` and the crop's insurance fields; the fixture is regenerated. A town with nothing switched on hashes as before.
 - Solar panels, listed in spec 027 among the buildings, are not buildings in the sim and are not covered or burned.
-- `eventPart` (1.5%), the loadings and the 0.2% rates are placeholders for the balance pass, with the *insure everything* bot (`GateTests.InsureEverything`).
+- `eventPart` (1.5%), the loadings and the 0.2% rates are placeholders for the balance pass, with the *insure everything* bot (`GateTests.RiskExploits`).
