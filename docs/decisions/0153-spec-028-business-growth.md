@@ -1,6 +1,6 @@
 # 0153. Spec 028: business growth, gaps closed
 
-- Status: Proposed (the owner closed G1–G11 one per message, 2026-11-20 and 2026-11-21, each on my recommendation; accepted when the owner approves the whole spec)
+- Status: Accepted (the owner closed G1–G11 one per message, 2026-11-20 and 2026-11-21, each on my recommendation, and approved the whole spec on 2026-11-21)
 - Date: 2026-11-21
 - Deciders: Keyur Patel
 - Related ADRs: 0057, 0068, 0069, 0074, 0082, 0107, 0141, 0144

@@ -1,6 +1,6 @@
 # 028. Business growth: invoices, managers, sell or expand, investors, the Township's businesses and your people
 
-- Status: In review (G1–G11 closed with the owner one per message, 2026-11-20 and 2026-11-21, each on my recommendation; the whole spec awaits approval, then ADR 0153). The five UI previews (16–20, §7) are shown as artifacts that look exactly like the game and approved before any UI code.
+- Status: Approved by the owner (2026-11-21): G1–G11 closed one per message on my recommendations, the whole spec approved; ADR 0153. The five UI previews (16–20, §7) are shown as artifacts that look exactly like the game and approved before any UI code.
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (credit and payment terms, delegation, exit and valuation, Township businesses); People (hours and shifts, structure and span of control, benefits); Economy (Engel's law, services)
