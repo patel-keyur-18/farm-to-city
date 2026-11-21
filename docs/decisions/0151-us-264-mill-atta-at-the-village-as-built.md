@@ -1,6 +1,6 @@
 # 0151. US-264 the mill's atta at the village market as built: after the bakery and the trader, never below the truck, only what the village can take
 
-- Status: Proposed (awaiting the owner's review of US-264)
+- Status: Accepted (the owner approved US-264, 2026-11-21)
 - Date: 2026-11-21
 - Deciders: Keyur Patel
 - Related: spec 016 §3.5c, ADR 0140, ADR 0144 §3, ADR 0073
