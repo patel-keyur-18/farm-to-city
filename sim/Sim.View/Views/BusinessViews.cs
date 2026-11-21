@@ -349,7 +349,9 @@ namespace Sim.View.Views
                 ActionVm.Open("tab:" + Settings, s.Get("business.tabSettings"), new SheetRequest("Business", id, Settings)),
             };
             if (t.IsShop) vm.Tabs.Insert(1, ActionVm.Open("tab:" + ShopSheet.Customers, s.Get("shop.tabCustomers"), new SheetRequest("Business", id, ShopSheet.Customers)));
-            if (tab == ShopSheet.Customers && t.IsShop) ShopSheet.AddCustomers(ctx, vm, b, t);
+            if (InvoiceSheet.Applies(ctx, b)) vm.Tabs.Insert(t.IsShop ? 2 : 1, ActionVm.Open("tab:" + InvoiceSheet.Tab, s.Get("business.tabOrders"), new SheetRequest("Business", id, InvoiceSheet.Tab))); // spec 028 §3.1, from the Township
+            if (tab == InvoiceSheet.Tab && InvoiceSheet.Applies(ctx, b)) InvoiceSheet.AddOrders(ctx, vm, b, t);
+            else if (tab == ShopSheet.Customers && t.IsShop) ShopSheet.AddCustomers(ctx, vm, b, t);
             else if (tab == Settings) AddSettings(ctx, vm, b, t);
             else if (tab == Books) BusinessBooksSheet.AddBooks(ctx, vm, b);
             else AddToday(ctx, vm, b, t);

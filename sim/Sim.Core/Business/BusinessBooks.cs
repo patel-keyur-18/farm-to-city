@@ -232,6 +232,7 @@ namespace Sim.Core.Business
             Loan loan = LoanOf(sim, b);
             if (loan != null && loan.IsOpen) CreditSystem.Accrue(sim, loan, sim.Period);
             BusinessRules.LoseWorker(sim, b);
+            InvoiceRules.CollectAll(sim, b); // what its customers owe it, now (spec 028 §3.1)
 
             KilnRules.Clear(sim, b); // a closing kiln's yard goes to the trader
             for (int g = 0; g < b.Stock.Length; g++)
@@ -245,10 +246,11 @@ namespace Sim.Core.Business
 
             long overdraft = Overdrawn(b), owed = loan != null && loan.IsOpen ? CreditRules.OwedNow(sim, loan) : 0;
             long taxOwed = -l.Balance(Account.TaxOwed); // spec 022 §3.2: closing the business never wipes the tax it still owes
+            long suppliers = InvoiceRules.Payables(b); // and what it owes other businesses on terms (spec 028 §3.1)
             long guaranteed = 0;
-            if (overdraft + owed + taxOwed > l.Cash)
+            if (overdraft + owed + taxOwed + suppliers > l.Cash)
             {
-                long shortfall = overdraft + owed + taxOwed - l.Cash;
+                long shortfall = overdraft + owed + taxOwed + suppliers - l.Cash;
                 guaranteed = (shortfall + Money.Coin - 1) / Money.Coin * Money.Coin;
                 CreditSystem.Create(sim, sim.Config.Game.Credit.IndexOfLender(d.LenderId), guaranteed, d.GuaranteeTermSeasons);
                 sim.State.Ledger.Post(now, sim.Period, "ledger.guarantee", reference, new Posting(Account.InvestmentInBusinesses, guaranteed), new Posting(Account.Cash, -guaranteed));
@@ -257,6 +259,7 @@ namespace Sim.Core.Business
             if (overdraft > 0) l.Post(now, sim.Period, "ledger.overdraftRepaid", reference, new Posting(Account.Overdraft, overdraft), new Posting(Account.Cash, -overdraft));
             if (owed > 0) CreditSystem.Pay(sim, loan, owed, "ledger.loanPayment", out _, out _, out _);
             if (taxOwed > 0) Town.TaxRules.PayOwed(sim, l, reference, Town.TaxKind.Business, now);
+            if (suppliers > 0) InvoiceRules.PayAll(sim, b);
 
             long toYou = l.Cash;
             if (toYou > 0) Withdraw(sim, b, toYou);

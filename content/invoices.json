@@ -1,0 +1,13 @@
+{
+  "terms": [
+    { "id": "cash",   "nameKey": "invoice.term.cash",   "days": 0 },
+    { "id": "half",   "nameKey": "invoice.term.half",   "days": 2 },
+    { "id": "season", "nameKey": "invoice.term.season", "days": 4 }
+  ],
+  "defaultTerm": "half",
+  "lateTerms": 1,
+  "buyers": [
+    { "rival": "grocer",      "goods": ["pav", "paneer", "curd"] },
+    { "rival": "village_tea", "goods": ["pav"] }
+  ]
+}

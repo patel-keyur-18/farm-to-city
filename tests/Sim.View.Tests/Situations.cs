@@ -321,6 +321,25 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>A Township with a flour mill and a bakery trading on terms (spec 028 §3.1, US-123): invoices standing between them and to the village shops, one gone overdue.</summary>
+        public static Simulation Invoicing()
+        {
+            Simulation sim = Township();
+            SetCash(sim, 3_000_000_00);
+            int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "flour_mill", tile, 300_000_00, false));
+            Hire(sim);
+            int tile2 = sim.State.Land.Tiles.First(t => t.Id != tile && Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "bakery", tile2, 300_000_00, false));
+            Hire(sim);
+            sim.State.Market.Stock[sim.Config.Game.Market.IndexOf("wheat")] += 20_000_000;
+            sim.AdvanceTo((T(sim) / 86_400 + 3) * 86_400 + 14 * 3600);
+            var open = sim.State.Township.Invoices.Open;
+            Assert.That(open.Count, Is.GreaterThan(0));
+            open.First(i => i.Buyer != 0).Stage = Sim.Core.Business.InvoiceStage.Overdue; // the bakery's atta, long unpaid
+            return sim;
+        }
+
         /// <summary>The Township with its works built and land in use: the clinic and quarters, the civic works, and three bought parcels leased, zoned and listed (spec 023, 024).</summary>
         /// <summary>The built Township with a card waiting for every kind of event, and some answered (US-154).</summary>
         public static Simulation Events()
@@ -456,6 +475,7 @@ namespace Sim.View.Tests
             yield return Irrigated();
             yield return Equipped();
             yield return Township();
+            yield return Invoicing();
             yield return TownshipBuilt();
             yield return Kiln();
             yield return Promises();

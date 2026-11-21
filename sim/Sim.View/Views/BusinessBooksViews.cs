@@ -17,12 +17,15 @@ namespace Sim.View.Views
         public const int Fees = 0, Sales = 1, Goods = 2, Margin = 3, Wages = 4, Power = 5, Repairs = 6, Depreciation = 7, Interest = 8, Profit = 9,
             CashStart = 10, CashIn = 11, CashOut = 12, CashEnd = 13, Cash = 14, Stock = 15, Fixed = 16, Debts = 17, Capital = 18, Kept = 19, Worth = 20,
             Rent = 21, // a shop's pitch (spec 017 §3.4)
-            Tax = 22, Before = 23, Owed = 24; // spec 022 §3.2: the business tax, profit before it, tax owed to the town
+            Tax = 22, Before = 23, Owed = 24, // spec 022 §3.2: the business tax, profit before it, tax owed to the town
+            Receivable = 25, Payable = 26, // spec 028 §3.1: what customers owe it, what it owes suppliers on terms
+            BridgeProfit = 27, BridgeWear = 28, BridgeCustomers = 29, BridgeSuppliers = 30, BridgeStock = 31, BridgeTax = 32, BridgeRunning = 33, BridgeOther = 34; // why cash moved, from profit
 
         internal static readonly string[] Names =
         {
             "fees", "sales", "goods", "margin", "wages", "power", "repairs", "depreciation", "interest", "profit",
             "cashStart", "cashIn", "cashOut", "cashEnd", "cash", "stock", "fixed", "debts", "capital", "kept", "worth", "rent", "tax", "before", "owed",
+            "receivable", "payable", "bridgeProfit", "bridgeWear", "bridgeCustomers", "bridgeSuppliers", "bridgeStock", "bridgeTax", "bridgeRunning", "bridgeOther",
         };
 
         private static readonly int[] PlanLines = { Fees, Sales, Goods, Wages, Power, Repairs, Depreciation, Interest, Profit };
@@ -72,8 +75,43 @@ namespace Sim.View.Views
                 case Tax: return r.Balance(Account.BusinessTax);
                 case Before: return BusinessBooks.NetProfit(r) + r.Balance(Account.BusinessTax);
                 case Owed: return -r.Balance(Account.TaxOwed);
+                case Receivable: return r.Balance(Account.OwedByBuyers);
+                case Payable: return -r.Balance(Account.TradePayable);
                 default: return Total(r, AccountGroup.Assets) - Total(r, AccountGroup.Liabilities);
             }
+        }
+
+        /// <summary>A line's amount on the report <paramref name="back"/> seasons ago, the why-cash-moved lines (spec 028 §3.1) from the change since the season before.</summary>
+        public static long Amount(ViewContext ctx, Business b, int back, int line)
+        {
+            BusinessReport r = ReportOf(ctx, b, back);
+            if (line < BridgeProfit || line > BridgeOther) return Amount(r, line);
+            BusinessReport before = back + 1 <= b.Reports.Count ? ReportOf(ctx, b, back + 1) : null; // none: the business's first season
+            long Was(Account a) { return before == null ? 0 : before.Balance(a); }
+            long customers = -(r.Balance(Account.OwedByBuyers) - Was(Account.OwedByBuyers));
+            long suppliers = -(r.Balance(Account.TradePayable) - Was(Account.TradePayable));
+            long stock = -(r.Balance(Account.BusinessStock) - Was(Account.BusinessStock));
+            long tax = -(r.Balance(Account.TaxOwed) - Was(Account.TaxOwed));
+            long running = BusinessBooks.NetProfit(r) + r.Balance(Account.Depreciation) + customers + suppliers + stock + tax;
+            switch (line)
+            {
+                case BridgeProfit: return BusinessBooks.NetProfit(r);
+                case BridgeWear: return r.Balance(Account.Depreciation);
+                case BridgeCustomers: return customers;
+                case BridgeSuppliers: return suppliers;
+                case BridgeStock: return stock;
+                case BridgeTax: return tax;
+                case BridgeRunning: return running;
+                default: return r.Closing - r.Opening - running; // put in, borrowed or bought: the rest of what moved
+            }
+        }
+
+        /// <summary>Whether a business has traded on terms, so its books show what customers owe and why cash is not profit.</summary>
+        internal static bool Trades(ViewContext ctx, Business b, BusinessReport r)
+        {
+            if (r.Balance(Account.OwedByBuyers) != 0 || r.Balance(Account.TradePayable) != 0) return true;
+            foreach (BusinessReport x in b.Reports) if (x.Balance(Account.OwedByBuyers) != 0 || x.Balance(Account.TradePayable) != 0) return true;
+            return false;
         }
 
         private static long Total(BusinessReport r, AccountGroup g)
@@ -90,13 +128,13 @@ namespace Sim.View.Views
             return ctx.Strings.Get(BusinessWords.Key(ctx, "books." + Names[line], t), "good", t.ByRecipe || t.IsKiln || t.Input < 0 ? "" : BusinessWords.Good(ctx, t.Input));
         }
 
-        private static bool IsCost(int line) { return line == Goods || line == Tax || (line >= Wages && line <= Interest) || line == CashOut || line == Debts; }
+        private static bool IsCost(int line) { return line == Goods || line == Tax || (line >= Wages && line <= Interest) || line == CashOut || line == Debts || line == Payable; }
 
-        private static string Value(ViewContext ctx, int line, long amount) { return (IsCost(line) && amount != 0 ? "−" : "") + ctx.Fmt.Coins(amount); }
+        private static string Value(ViewContext ctx, int line, long amount) { return (IsCost(line) && amount != 0 ? "−" : line >= BridgeWear && line <= BridgeTax && amount > 0 ? "+" : "") + ctx.Fmt.Coins(amount); }
 
         private static void Add(ViewContext ctx, SheetVm vm, Business b, BusinessReport r, int back, int line)
         {
-            long amount = Amount(r, line);
+            long amount = Amount(ctx, b, back, line);
             var l = new LineVm(Label(ctx, b, line), Value(ctx, line, amount), "booksLine", WhyId(b, back, line));
             if (line == Profit || line == Worth) l.NoteTone = amount > 0 ? Tone.Good : Tone.Warn;
             vm.Lines.Add(l);
@@ -121,9 +159,20 @@ namespace Sim.View.Views
             vm.Lines.Add(LineVm.Header(s.Get(back == 0 ? "books.cashFlowNow" : "books.cashFlow")));
             foreach (int line in new[] { CashStart, CashIn, CashOut, CashEnd })
                 Add(ctx, vm, b, r, back, line);
+            if (Trades(ctx, b, r)) // spec 028 §3.1: profit is not cash: what customers have not paid, what suppliers are owed
+            {
+                vm.Lines.Add(LineVm.Header(s.Get(back == 0 ? "books.bridgeNow" : "books.bridge")));
+                foreach (int line in new[] { BridgeProfit, BridgeWear, BridgeCustomers, BridgeSuppliers, BridgeStock })
+                    Add(ctx, vm, b, r, back, line);
+                if (Amount(ctx, b, back, BridgeTax) != 0) Add(ctx, vm, b, r, back, BridgeTax);
+                Add(ctx, vm, b, r, back, BridgeRunning);
+                if (Amount(ctx, b, back, BridgeOther) != 0) Add(ctx, vm, b, r, back, BridgeOther);
+            }
             vm.Lines.Add(LineVm.Header(s.Get(back == 0 ? "books.balanceNow" : "books.balance")));
             foreach (int line in new[] { Cash, Stock, Fixed })
                 Add(ctx, vm, b, r, back, line);
+            if (Amount(r, Receivable) != 0) Add(ctx, vm, b, r, back, Receivable);
+            if (Amount(r, Payable) != 0) Add(ctx, vm, b, r, back, Payable);
             if (Amount(r, Debts) != 0) Add(ctx, vm, b, r, back, Debts);
             if (Amount(r, Owed) != 0) Add(ctx, vm, b, r, back, Owed);
             foreach (int line in new[] { Capital, Kept, Worth })

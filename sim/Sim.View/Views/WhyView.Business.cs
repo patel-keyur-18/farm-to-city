@@ -191,7 +191,7 @@ namespace Sim.View.Views
             Business b = BusinessBooksSheet.BusinessOf(ctx, id, out int back, out int line);
             BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
             Sim.Core.Business.BusinessReport r = BusinessBooksSheet.ReportOf(ctx, b, back);
-            long Amount(int l) { return BusinessBooksSheet.Amount(r, l); }
+            long Amount(int l) { return BusinessBooksSheet.Amount(ctx, b, back, l); }
             Fixed index = sim.State.Market.PriceIndex;
             string when = back == 0 ? ctx.Strings.Get("why.books.now") : ReportSheet.PeriodName(ctx, r.Period);
             WhyVm vm = New(ctx, "why.books.title", Money(ctx, Amount(line)), "line", BusinessBooksSheet.Label(ctx, b, line), "period", when);
@@ -208,7 +208,13 @@ namespace Sim.View.Views
                     Row(vm, ctx, "why.books.rowRunning", "−" + Money(ctx, Amount(BusinessBooksSheet.Wages) + Amount(BusinessBooksSheet.Power) + Amount(BusinessBooksSheet.Repairs)
                         + Amount(BusinessBooksSheet.Depreciation) + Amount(BusinessBooksSheet.Interest) + Amount(BusinessBooksSheet.Rent)));
             }
-            if (line >= BusinessBooksSheet.CashStart && line <= BusinessBooksSheet.CashEnd)
+            if (line >= BusinessBooksSheet.BridgeProfit && line <= BusinessBooksSheet.BridgeOther)
+            {
+                foreach (int l in new[] { BusinessBooksSheet.BridgeProfit, BusinessBooksSheet.BridgeWear, BusinessBooksSheet.BridgeCustomers, BusinessBooksSheet.BridgeSuppliers, BusinessBooksSheet.BridgeStock, BusinessBooksSheet.BridgeTax })
+                    if (l != BusinessBooksSheet.BridgeTax || Amount(l) != 0) Row(vm, ctx, "why.books.rowBridge", Money(ctx, Amount(l)), "line", BusinessBooksSheet.Label(ctx, b, l));
+                vm.Footnote = ctx.Strings.Get("why.books.cashLesson");
+            }
+            else if (line >= BusinessBooksSheet.CashStart && line <= BusinessBooksSheet.CashEnd)
             {
                 Row(vm, ctx, "why.books.rowStart", Money(ctx, r.Opening));
                 Row(vm, ctx, "why.books.rowIn", Money(ctx, r.Inflows));

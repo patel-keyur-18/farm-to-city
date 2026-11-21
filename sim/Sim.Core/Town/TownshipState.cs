@@ -75,6 +75,9 @@ namespace Sim.Core.Town
         /// <summary>The trader's forward contracts (spec 027 §3.7, save schema 22); default until a staple is harvested at the Township.</summary>
         public ContractsState Contracts { get; internal set; } = new ContractsState();
 
+        /// <summary>Sales between businesses on terms (spec 028 §3.1, save schema 23); default until a sale is made on terms or a term is set.</summary>
+        public Business.InvoicesState Invoices { get; internal set; } = new Business.InvoicesState();
+
         private bool ConstructionDefault { get { return Projects.Count == 0 && NextProjectId == 0 && StockDay == -1 && TakenBricks == 0 && TakenCement == 0 && TakenTimber == 0 && KilnBricks == 0 && KilnDay == -1; } }
 
         private static CivicPost[] NewCivic() { return new[] { new CivicPost(), new CivicPost(), new CivicPost() }; }
@@ -82,13 +85,13 @@ namespace Sim.Core.Town
         private bool CivicDefault { get { foreach (CivicPost p in Civic) if (!p.IsDefault) return false; return true; } }
 
         /// <summary>Nothing of the Township has started.</summary>
-        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0 && LanesBuilt == 0 && UtilitiesBuilt == 0 && ConstructionDefault && TownLife.IsDefault && Events.IsDefault && Insurance.IsDefault && Contracts.IsDefault; } }
+        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0 && LanesBuilt == 0 && UtilitiesBuilt == 0 && ConstructionDefault && TownLife.IsDefault && Events.IsDefault && Insurance.IsDefault && Contracts.IsDefault && Invoices.IsDefault; } }
 
         internal TownshipState Clone()
         {
             var civic = new CivicPost[Civic.Length];
             for (int i = 0; i < civic.Length; i++) civic[i] = Civic[i].Clone();
-            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes, LanesBuilt = LanesBuilt, UtilitiesBuilt = UtilitiesBuilt, Projects = Projects.ConvertAll(x => x.Clone()), NextProjectId = NextProjectId, StockDay = StockDay, TakenBricks = TakenBricks, TakenCement = TakenCement, TakenTimber = TakenTimber, KilnBricks = KilnBricks, KilnDay = KilnDay, TownLife = TownLife.Clone(), Events = Events.Clone(), Insurance = Insurance.Clone(), Contracts = Contracts.Clone() };
+            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes, LanesBuilt = LanesBuilt, UtilitiesBuilt = UtilitiesBuilt, Projects = Projects.ConvertAll(x => x.Clone()), NextProjectId = NextProjectId, StockDay = StockDay, TakenBricks = TakenBricks, TakenCement = TakenCement, TakenTimber = TakenTimber, KilnBricks = KilnBricks, KilnDay = KilnDay, TownLife = TownLife.Clone(), Events = Events.Clone(), Insurance = Insurance.Clone(), Contracts = Contracts.Clone(), Invoices = Invoices.Clone() };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -124,10 +127,14 @@ namespace Sim.Core.Town
             if (h.Hashing ? !Events.IsDefault : !(h is SaveWriter ew && ew.Schema < TownLifeSchema)) Events.WriteTo(h); // schema 22; the engine, once it has seen the Township
             if (h.Hashing ? !Insurance.IsDefault : !(h is SaveWriter iw && iw.Schema < TownLifeSchema)) Insurance.WriteTo(h); // schema 22; once a policy was ever switched on
             if (h.Hashing ? !Contracts.IsDefault : !(h is SaveWriter xw && xw.Schema < TownLifeSchema)) Contracts.WriteTo(h); // schema 22; once a staple was harvested at the Township
+            if (h.Hashing ? !Invoices.IsDefault : !(h is SaveWriter nw && nw.Schema < GrowthSchema)) Invoices.WriteTo(h); // schema 23; once a sale was made on terms
         }
 
         /// <summary>The save schema that added town life (spec 026, Sprint 24).</summary>
         public const int TownLifeSchema = 22;
+
+        /// <summary>The save schema that added business growth (spec 028, Sprint 25): invoices first.</summary>
+        public const int GrowthSchema = 23;
 
         internal static TownshipState ReadFrom(SaveReader r)
         {
@@ -149,6 +156,7 @@ namespace Sim.Core.Town
                 s.NextProjectId = r.ReadLong(); s.StockDay = r.ReadLong(); s.TakenBricks = r.ReadLong(); s.TakenCement = r.ReadLong(); s.TakenTimber = r.ReadLong(); s.KilnBricks = r.ReadLong(); s.KilnDay = r.ReadLong();
             }
             if (r.Schema >= TownLifeSchema) { s.TownLife = TownLifeState.ReadFrom(r); s.Events = EventsState.ReadFrom(r); s.Insurance = InsuranceState.ReadFrom(r); s.Contracts = ContractsState.ReadFrom(r); }
+            if (r.Schema >= GrowthSchema) s.Invoices = Business.InvoicesState.ReadFrom(r);
             return s;
         }
     }

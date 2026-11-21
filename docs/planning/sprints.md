@@ -1158,7 +1158,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-123 | Invoices | [F12.5](features/F12.5-invoices-and-payment-terms.md) | 5 | Must | To do |
+| US-123 | Invoices | [F12.5](features/F12.5-invoices-and-payment-terms.md) | 5 | Must | Built 2026-11-21, for the owner's review (ADR 0156) |
 | US-124 | Managers | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 8 | Must | To do |
 | US-125 | Sell or expand | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 5 | Should | To do |
 | US-247 | Investors, partners and buy-outs | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 5 | Should | To do |
@@ -1184,7 +1184,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Every story checked against spec 028 and the code at `main` (c32cecb4); ten gaps listed with recommendations (ADR 0155)
 - [x] Spec 028 approved (ADR 0153)
 - [x] This section approved by the owner (2026-11-21)
-- [ ] Each story's gaps closed before its code (1 to 4 before US-123, and so on)
+- [ ] Each story's gaps closed before its code (1 to 4 closed for US-123, 2026-11-21; 5 to 8 before US-124, and so on)
 
 **Sprint end checklist**
 

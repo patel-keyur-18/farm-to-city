@@ -260,4 +260,26 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>
+    /// The payment term a seller offers one buyer (spec 028 §3.1): a business of yours (<see cref="BuyerId"/>) or a village shop (<see cref="BuyerRival"/>, its content id,
+    /// with <see cref="BuyerId"/> 0). The term is one of <c>invoices.json</c>'s ids; it applies to sales from then on.
+    /// </summary>
+    public sealed class SetTerms : TimedCommand
+    {
+        public long SellerId { get; }
+        public long BuyerId { get; }
+        public string BuyerRival { get; }
+        public string Term { get; }
+
+        public SetTerms(long at, long sellerId, long buyerId, string buyerRival, string term) : base(at)
+        {
+            SellerId = sellerId;
+            BuyerId = buyerId;
+            BuyerRival = buyerRival ?? "";
+            Term = term;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return InvoiceRules.SetTerms(sim, SellerId, BuyerId, BuyerRival, Term); }
+    }
 }

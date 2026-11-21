@@ -719,16 +719,12 @@ namespace Sim.Core.Business
             long got = 0;
             foreach (Business from in sim.State.Businesses.Businesses)
             {
-                if (from == to || from.Status != BusinessStatus.Open || from.Stock[g] <= 0 || !BusinessRules.TypeOf(sim, from).Makes(g)) continue;
+                if (from == to || from.Status != BusinessStatus.Open || from.Stock[g] <= 0 || !BusinessRules.TypeOf(sim, from).Makes(g) || InvoiceRules.Blocked(sim, from, to)) continue;
                 Fixed price = MarketRules.Floor(sim, g);
                 long q = System.Math.Min(System.Math.Min(need - got, from.Stock[g]), Money.QuantityFor(System.Math.Max(0, BusinessBooks.CanSpend(sim, to)), price, 1000));
                 if (q <= 0) continue;
                 long value = MarketRules.Value(sim, g, q, price);
-                BusinessBooks.Draw(sim, to, value);
-                to.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.boughtFromBusiness", "business:" + to.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
-                to.Stock[g] += q;
-                to.StockCost[g] += value;
-                BusinessRules.Sold(sim, from, g, q, value);
+                InvoiceRules.Sale(sim, from, to, g, q, value);
                 BusinessBooks.Sweep(sim, from);
                 took[g] += q;
                 got += q;

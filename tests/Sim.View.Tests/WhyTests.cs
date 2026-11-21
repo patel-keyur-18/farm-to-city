@@ -56,6 +56,7 @@ namespace Sim.View.Tests
                     yield return Named("business books " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Books));
                     yield return Named("business settings " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Settings));
                     yield return Named("business customers " + b.Id, BusinessSheet.Build(ctx, b.Id, ShopSheet.Customers));
+                    yield return Named("business orders " + b.Id, BusinessSheet.Build(ctx, b.Id, InvoiceSheet.Tab));
                     yield return Named("put cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Put));
                     yield return Named("take cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Take));
                     yield return Named("close " + b.Id, BusinessCloseSheet.Build(ctx, b.Id));

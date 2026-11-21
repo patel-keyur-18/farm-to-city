@@ -43,8 +43,8 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin, indexed by the pri
 
 | Rule | Behaviour |
 | --- | --- |
-| Which sales are invoiced | From the Township, a sale between two businesses: your mill to your bakery, your bakery or dairy to your stalls, neighbours' milk to your dairy, and your goods to or from the village grocer and tea stall. The farm's own wheat and milk stay cash (the farm is you, not a business with books). Households, the trader and the supermarket stay cash. |
-| Wholesale buyers | The village grocer and tea stall buy your pav, paneer and curd on terms at the trader's price for the good, shared by the shop score with their present supplier, up to 20 kg a day each. They pay at term end and never default or close (ADR 0074). |
+| Which sales are invoiced | From the Township, a sale between two businesses: your mill to your bakery and sweet shop, your bakery or dairy to your stalls, and your products to the village grocer and tea stall. The farm's own wheat and milk stay cash (the farm is you, not a business with books), and so do neighbours' milk to your dairy, a purchase from your store, households, the trader and the supermarket (owner, 2026-11-21, ADR 0155 gaps 3 and 4). A buyer can take only what it could pay for today, its cash and overdraft, as before (gap 1). |
+| Village shops | The village shops' morning collection of your pav, paneer and curd (ADR 0091 §2, at the trader's price, what the village buys of it) is the grocer's and the tea stall's: each good goes to the shops that stock it (the grocer all three, the tea stall pav), split evenly, each on the term you set for that shop. They pay at term end and never default or close (ADR 0074). *Amended while building US-123 (ADR 0156): the first draft made them new buyers of up to 20 kg a day each, but the village shops already collected these goods in cash, so the spec's 20 kg and its score share would have added demand from nothing.* |
 | Terms | The seller sets Cash, Half-season (2 real days) or Season (4 real days) for each buyer. Default Half-season. Longer terms win nothing and cost the seller cash. |
 | Paying | An invoice is paid at term end from the buyer's cash, then its overdraft. If neither covers it, it ages: **current** (before due), **late** (up to one term past due), **overdue** (more than one term). No late fee, no write-off; it carries over each close. |
 | The stop rule | A seller stops delivering to a buyer with an overdue invoice until it is paid. A stopped supplier means a bakery with no atta: a profitable business can run out of cash and halt. |
@@ -110,7 +110,7 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin, indexed by the pri
 | --- | --- |
 | Business | From the Township, on a rented pitch (3,000) or an acre. Building 30,000, equipment 20,000, a cook from the board at 20,000 (crafting skill) or you run it. Open 11:00 to 15:00 and 18:00 to 22:00. |
 | Menu | **Thali** 60: rice 0.12 kg, lentils 0.05, vegetables 0.15, fuel 6, supplies 14. **Paratha plate** 45: atta 0.15 kg, ghee 0.02, curd 0.1, fuel 4, supplies 10. |
-| Buying | From your store first, at the trader's price (an invoiced sale under §3.1), then the market at +15%. |
+| Buying | From your store first, at the trader's price (a cash sale, as for every shop: owner, 2026-11-21), then the market at +15%. |
 | Demand | A household with income of at least 20,000 a season sets aside 25% of its leisure budget and buys `floor(that ÷ price)` portions a season, spread over the days; below 20,000 it eats at home. Shared by the score with any rival (a newcomer may open when your prices run 10% above the reference). Good quality: +10% on the price, lifts stars. |
 | Capacity | 15 portions an hour a cook, 120 a day. |
 | Money | About 1,000 portions × 53, against a 20,000 wage, about 25,000 ingredients and supplies and 3,000 rent: about +5,000 hired, +25,000 run by you; needs about 35 households with the income. Targets hired 3,000 to 8,000, run by you 18,000 to 28,000. |
@@ -173,9 +173,9 @@ A **place** is one employer: all your farm hands together, or one business. The 
 
 | Schema | Entity | Field | Notes |
 | --- | --- | --- | --- |
-| 23 | Business | `Invoices` (list: seller, buyer, good, amount, issued, due), `Terms[buyer]`, `Receivable`, `Payable` | hashed only when used |
+| 23 | Township | `Invoices` (open invoices: seller, buyer or village shop, good, grams, amount, issued, term, stage; one a day for each seller, buyer and good), `Terms` (seller, buyer, term); the ledger account 2350 Trade payable (a receivable is the existing 1300) | hashed only when used (built, ADR 0156) |
 | 23 | Business | `ManagerId`, `Target`, `Report`, `Style`, `StarsSeasons` | |
-| 23 | Business | `ValueHistory`, `Listing` (price, buyer kind, completes at, rushed), `BranchOf` | |
+| 23 | Business | `Listing` (price, buyer kind, completes at, rushed), `BranchOf` | a valuation is computed from the four kept reports: no `ValueHistory` (ADR 0155 gap 9) |
 | 23 | Business | `Investor` (share, cash, since), `Partner` (citizen, stake, share), `OutsideEquity` | |
 | 23 | Business | `Pupils`, `TuitionStars`; `Benefits` (4 flags, per employer), `NightShift` | |
 | 23 | Equipment | `Tempo` (state, leased or owned, let-out switch), `Trips` | |
@@ -313,6 +313,7 @@ Each was closed with the owner, one per message, with my recommendation, before 
 - **G8 Benefits and night shifts. Closed (owner, 2026-11-21, my recommendation):** per employer, four benefits, a night shift on the grid.
 - **G9 Supervisors, associations, conflicts and accidents. Closed (owner, 2026-11-21, my recommendation):** the pay-the-wage and let-it-be defaults.
 - **G10 Kirana, marketing and khata. Closed (owner, 2026-11-21, my recommendation):** khata's 8, 4 and 1% losses and the 0.15 marketing cap.
+- **G12 US-123's four gaps. Closed (owner, 2026-11-21, my recommendation, ADR 0155 and 0156):** a buyer's limit stays its cash and overdraft at the moment of buying; the village shops' wholesale is their existing morning collection on terms (corrected while building: no new 20 kg demand); neighbours' milk stays cash; farm to shop stays cash.
 - **G11 Screens, scale and schema. Closed (owner, 2026-11-21, my recommendation):** five previews, the build order and cut line of §11, schema 23 in Sprint 25 and 24 in Sprint 26.
 
 **Values I filled in while drafting (placeholders for the balance pass, ADR 0027; tell me if you want any changed before approving):** the valuation's base multiple 4.5 and its +1 manager bonus; the sale's buyer range 90 to 105%; the sale taking the building off your acre and the acre clearing; the gain over book taxed as business income; at most 2 branches a kind; the investor's offer sizes (10 to 30% in 5% steps), the 40% outside cap, the 50,000 value floor and the 48 h open card; the partner's 20% stake for a 20% profit share and "sets no prices"; the wholesale buyers' 20 kg a day at the trader's price; the mis-set chances between 1 and 5 stars (linear). None changes a rule the owner approved.

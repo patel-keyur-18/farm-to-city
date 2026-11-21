@@ -496,6 +496,7 @@ namespace Sim.Core.Business
         {
             bool morning = MarketRules.HourOfDay(sim) == (sim.Config.Game.Market.Truck?.ArriveHour ?? 6);
             long[] took = null;
+            InvoiceRules.Hourly(sim); // spec 028 §3.1: invoices at their term's end are paid before the hour's work
             if (sim.State.Shops != null) ShopRules.NewDay(sim, (sim.State.Clock.SimTime - Hour) / Day); // yesterday's stars, then today's counts
             if (morning)
             {
@@ -882,7 +883,7 @@ namespace Sim.Core.Business
                 foreach (int p in t.Products)
                 {
                     long q = System.Math.Min(b.Stock[p], ShopGramsPerDay(sim, t, p) - (took == null ? 0 : took[p])); // less what your stalls took (ADR 0091 §2)
-                    if (q > 0) Sold(sim, b, p, q, SalePrice(sim, b, MarketRules.Value(sim, p, q, MarketRules.Floor(sim, p))));
+                    if (q > 0) InvoiceRules.VillageShops(sim, b, p, q, SalePrice(sim, b, MarketRules.Value(sim, p, q, MarketRules.Floor(sim, p)))); // the grocer and tea stall, on terms from the Township (spec 028 §3.1)
                 }
                 foreach (int p in t.Products)
                 {
@@ -975,18 +976,14 @@ namespace Sim.Core.Business
         {
             foreach (Business to in sim.State.Businesses.Businesses)
             {
-                if (to == from || to.Status != BusinessStatus.Open || from.Stock[good] <= 0) continue;
+                if (to == from || to.Status != BusinessStatus.Open || from.Stock[good] <= 0 || InvoiceRules.Blocked(sim, from, to)) continue;
                 long need = NeedOf(sim, to, good);
                 long q = System.Math.Min(from.Stock[good], need);
                 if (q <= 0) continue;
                 long value = MarketRules.Value(sim, good, q, MarketRules.Floor(sim, good));
                 q = System.Math.Min(q, BusinessBooks.CanSpend(sim, to) >= value ? q : 0);
                 if (q <= 0) continue;
-                BusinessBooks.Draw(sim, to, value);
-                to.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.boughtFromBusiness", "business:" + to.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
-                to.Stock[good] += q;
-                to.StockCost[good] += value;
-                Sold(sim, from, good, q, value);
+                InvoiceRules.Sale(sim, from, to, good, q, value);
             }
         }
 
@@ -1046,14 +1043,15 @@ namespace Sim.Core.Business
             b.StockCost[good] += value;
         }
 
-        internal static void Sold(Simulation sim, Business b, int good, long grams, long amount)
+        /// <summary>A business sells grams of a good: its stock leaves at cost, the sale is booked against <paramref name="paidTo"/> (cash, or Owed by buyers for a sale on terms).</summary>
+        internal static void Sold(Simulation sim, Business b, int good, long grams, long amount, Account paidTo = Account.Cash)
         {
             long cost = (long)((System.Numerics.BigInteger)b.StockCost[good] * grams / b.Stock[good]);
             b.Stock[good] -= grams;
             b.StockCost[good] -= cost;
             long now = sim.State.Clock.SimTime;
             string reference = "business:" + b.Id;
-            if (amount > 0) b.Ledger.Post(now, sim.Period, "ledger.sales", reference, new Posting(Account.Cash, amount), new Posting(Account.Sales, -amount));
+            if (amount > 0) b.Ledger.Post(now, sim.Period, "ledger.sales", reference, new Posting(paidTo, amount), new Posting(Account.Sales, -amount));
             if (cost > 0) b.Ledger.Post(now, sim.Period, "ledger.costOfGoods", reference, new Posting(Account.CostOfGoodsSold, cost), new Posting(Account.BusinessStock, -cost));
         }
 
