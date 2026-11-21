@@ -162,7 +162,7 @@ namespace Game.Presentation.Ui
                 case "place_house": return SpriteBank.Rendered("place_house_0");
                 case "field": return SpriteBank.SoilTile;
                 case "tree": return SpriteBank.Tree("mango", TreeStage.Mature);
-                case "banana": case "papaya": case "guava": case "mango": return SpriteBank.Tree(icon, TreeStage.Mature);
+                case "banana": case "papaya": case "guava": case "mango": case "apple": return SpriteBank.Tree(icon, TreeStage.Mature);
                 default:
                     if (icon.StartsWith("weather_", StringComparison.Ordinal)) return IconBank.Weather(icon.Substring(8));
                     if (icon.StartsWith("utility_", StringComparison.Ordinal)) return SpriteBank.Rendered("village_" + icon.Substring(8) + "_e"); // the utilities (spec 025 §3.1)
@@ -1404,7 +1404,7 @@ namespace Game.Presentation.Ui
 
         public void Show(SheetVm vm, bool refresh = false)
         {
-            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.Tab).Append('|').Append(vm.SwitchOn);
+            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.Tab).Append('|').Append(vm.SwitchOn).Append(vm.Amber);
             foreach (LineVm l in vm.Lines)
             {
                 if (l.Trend != null) foreach (long v in l.Trend.Values) key.Append('|').Append(v);
@@ -1422,6 +1422,13 @@ namespace Game.Presentation.Ui
             if (!refresh) _amounts.Clear();
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, vm.Icon, Close);
+            if (vm.Amber) // a warning (spec 027 §7): an amber frame and title
+            {
+                UiKit.Border(sheet, 5, Painter.Hex(0xC8741E));
+                sheet.style.borderBottomWidth = 9;
+                sheet.style.backgroundColor = Painter.Hex(0xFFF2D2);
+                sheet.Query<Label>().Where(l => l.text == vm.Title).ForEach(l => l.style.color = Painter.Hex(0xA8520E));
+            }
             if (vm.Tabs != null) sheet.Add(TabStrip(vm.Tabs, vm.Tab));
             if (vm.Switch != null)
             {
@@ -1571,7 +1578,7 @@ namespace Game.Presentation.Ui
                 key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SuitsText).Append(r.HarvestText)
                    .Append(r.SpendText).Append(r.GetText).Append(r.ProfitText).Append(r.InputsText)
                    .Append(r.LabourText).Append(r.SoilText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason)
-                   .Append(r.ReadyText).Append(r.PerHourText).Append(r.NoteText);
+                   .Append(r.ReadyText).Append(r.PerHourText).Append(r.NoteText).Append(r.InsuranceText);
             key.Append('|').Append(vm.AllCrops != null);
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, null, Close);
@@ -1672,6 +1679,19 @@ namespace Game.Presentation.Ui
                         Label cropNote = UiKit.Text(r.NoteText, 27, UiKit.Wood, UiKit.Body);
                         cropNote.style.whiteSpace = WhiteSpace.Normal;
                         info.Add(cropNote);
+                    }
+                    if (r.InsuranceText != null) // crop insurance on (spec 027 §7): the premium and when it pays, with its ?
+                    {
+                        var insuranceRow = new VisualElement { pickingMode = PickingMode.Ignore };
+                        insuranceRow.style.flexDirection = FlexDirection.Row;
+                        insuranceRow.style.alignItems = Align.Center;
+                        Label insured = UiKit.Text(r.InsuranceText, 27, r.InsuranceWarn ? UiKit.Warn : UiKit.GreenDark, UiKit.Body);
+                        insured.style.whiteSpace = WhiteSpace.Normal;
+                        insured.style.flexShrink = 1;
+                        insuranceRow.Add(insured);
+                        Button insuredWhy = AddWhyChip(insuranceRow, r.InsuranceWhyKey, r.InsuranceWhyId);
+                        if (insuredWhy != null) insuredWhy.name = "why:" + r.InsuranceWhyKey + ":" + r.CropId; // one per crop, for scripted touch
+                        info.Add(insuranceRow);
                     }
                     info.Add(UiKit.Text(r.InputsText + " · " + r.LabourText, 27, UiKit.Wood, UiKit.Body));
                     info.Add(UiKit.Text(r.SoilText, 27, r.SoilFalls ? UiKit.Warn : UiKit.GreenDark, UiKit.Body));

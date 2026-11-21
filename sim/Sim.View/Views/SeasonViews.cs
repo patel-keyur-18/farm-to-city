@@ -66,7 +66,7 @@ namespace Sim.View.Views
         {
             Account.CropSales, Account.FruitSales, Account.MilkSales, Account.LivestockSales, Account.SeedsAndPlanting, Account.FertiliserAndSpraying,
             Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent, Account.Depreciation, Account.TransportAndSelling,
-            Account.Power, Account.Repairs, Account.MachineHire,
+            Account.Power, Account.Repairs, Account.MachineHire, Account.InsuranceClaims, Account.CropInsurancePremiums, Account.ContractSettlement,
         };
 
         // The *why your cash moved* lines, in the order shown.
@@ -244,6 +244,8 @@ namespace Sim.View.Views
             {
                 case Account.MilkSales: return "milk";
                 case Account.MachineHire: return "tractor";
+                case Account.InsuranceClaims: case Account.InsuranceClaimsReceived: case Account.CropInsurancePremiums: case Account.InsurancePremiums: return "shield";
+                case Account.ContractSettlement: return "scroll";
                 case Account.LivestockSales: case Account.AnimalFeed: case Account.VetAndBreeding: return "animal_buffalo";
                 case Account.RentReceived: return "family_house";
                 case Account.LandRentReceived: return "land";
@@ -332,6 +334,12 @@ namespace Sim.View.Views
                         Owe(new SeasonLineVm { Key = due.Key, Label = s.Plural("season.due.houseTax", due.Id), Icon = "coin", Amount = due.Amount, WhyText = s.Get("season.due.houseTax.why") },
                             s.Get("season.short.houseTax"));
                         break;
+                    case DueKind.Contract:
+                        Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.contract"), Icon = "scroll", Amount = due.Amount, WhyText = s.Get("season.due.contract.why") }, s.Get("season.short.contract"));
+                        break;
+                    case DueKind.Insurance:
+                        Owe(new SeasonLineVm { Key = due.Key, Label = s.Get("season.due.insurance"), Icon = "shield", Amount = due.Amount, WhyText = s.Get("season.due.insurance.why") }, s.Get("season.short.insurance"));
+                        break;
                     case DueKind.Machine:
                     {
                         string part = due.Key.Substring(due.Key.LastIndexOf(':') + 1), machine = s.Get("machine." + due.What);
@@ -350,6 +358,7 @@ namespace Sim.View.Views
                 if (due.Loan > 0) line.Why.Add(new WhyRowVm(s.Get("season.own.loan"), ctx.Fmt.Coins(due.Loan)));
                 if (due.Wage > 0) line.Why.Add(new WhyRowVm(s.Get("season.own.wage"), ctx.Fmt.Coins(due.Wage)));
                 if (due.Rent > 0) line.Why.Add(new WhyRowVm(s.Get("season.own.rent"), ctx.Fmt.Coins(due.Rent)));
+                if (due.Insurance > 0) line.Why.Add(new WhyRowVm(s.Get("season.own.insurance"), ctx.Fmt.Coins(due.Insurance)));
                 line.Why.Add(new WhyRowVm(s.Get("season.own.canSpend"), ctx.Fmt.Coins(due.CanSpend)));
                 line.Warn = !due.Covered;
                 line.Note = due.Covered ? s.Get("season.own.covered") : s.Get("season.own.short", "amount", ctx.Fmt.Coins(due.Short));

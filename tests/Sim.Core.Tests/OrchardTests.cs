@@ -118,7 +118,7 @@ namespace Sim.Core.Tests
             Ok(sim, new Sow(T(sim), Beside, "radish", SeedSource.Certified, "none"));
             Assert.That(sim.Execute(new PlantOrchard(T(sim), Beside, "mango")).Reason, Is.EqualTo(RejectReason.TileOccupied), "something growing");
             Assert.That(sim.Execute(new PlantOrchard(T(sim), 104, "mango")).Reason, Is.EqualTo(RejectReason.NotFarmTile), "the cattle acre");
-            Assert.That(sim.Execute(new PlantOrchard(T(sim), Field, "apple")).Reason, Is.EqualTo(RejectReason.UnknownTree));
+            Assert.That(sim.Execute(new PlantOrchard(T(sim), Field, "apple")).Reason, Is.EqualTo(RejectReason.HillOnly), "apple is hill land only (US-147)");
             Ok(sim, new PlantOrchard(T(sim), Field, "mango"));
             Assert.That(sim.State.Orchards.Orchards.Single().Trees, Is.EqualTo(40));
             Assert.That(People.HouseRules.Place(sim, Field), Is.EqualTo(RejectReason.TileOccupied));

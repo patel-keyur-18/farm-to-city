@@ -17,6 +17,7 @@ namespace Sim.Core.People
         public static void Run(Simulation sim)
         {
             PeopleState s = sim.State.People;
+            if (Sim.Core.Town.FestivalRules.Resting(sim)) return; // a festival's day: nobody works (owner, 2026-11-20)
             foreach (Hand h in s.Hands)
             {
                 if (h.Contract != ContractState.Active || WorkRules.Away(h)) continue; // away on a course or sick: orders wait
@@ -34,7 +35,7 @@ namespace Sim.Core.People
         /// </summary>
         public static void ActNow(Simulation sim, Hand h, StandingOrder o)
         {
-            if (h.Contract == ContractState.Active && !WorkRules.Away(h) && HasActionLeft(sim, h)) Act(sim, h, o);
+            if (h.Contract == ContractState.Active && !WorkRules.Away(h) && !Sim.Core.Town.FestivalRules.Resting(sim) && HasActionLeft(sim, h)) Act(sim, h, o);
         }
 
         private static bool HasActionLeft(Simulation sim, Hand h)

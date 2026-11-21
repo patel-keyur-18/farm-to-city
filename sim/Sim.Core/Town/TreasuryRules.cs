@@ -380,8 +380,9 @@ namespace Sim.Core.Town
         {
             TreasuryDef d = Def(sim);
             int residents = Residents(sim);
-            untied = MarketRules.Indexed(sim, d.GrantUntied * residents);
-            long fullTied = MarketRules.Indexed(sim, d.GrantTied * residents);
+            Fixed bonus = TownLifeRules.GrantFactor(sim); // spec 026 §3.4: a good name adds up to 10%, never lowers
+            untied = MarketRules.Indexed(sim, Finance.Money.MulRate(d.GrantUntied * residents, bonus));
+            long fullTied = MarketRules.Indexed(sim, Finance.Money.MulRate(d.GrantTied * residents, bonus));
             tied = ClinicStaffed(sim) ? fullTied : 0;
             tiedWithheld = fullTied - tied;
             return untied + tied;
@@ -572,6 +573,7 @@ namespace Sim.Core.Town
             TreasuryRules.Close(sim);
             ClinicRules.Close(sim); // spec 023 §3.10: after the treasury's close, the doctor's leaving and return
             CohortRules.AtClose(sim); // the old village's happiness and leaving
+            TownLifeRules.AtClose(sim); // spec 026: the town read once (reputation, crime, inequality)
         }
     }
 }

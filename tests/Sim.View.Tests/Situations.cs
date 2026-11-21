@@ -322,6 +322,96 @@ namespace Sim.View.Tests
         }
 
         /// <summary>The Township with its works built and land in use: the clinic and quarters, the civic works, and three bought parcels leased, zoned and listed (spec 023, 024).</summary>
+        /// <summary>The built Township with a card waiting for every kind of event, and some answered (US-154).</summary>
+        public static Simulation Events()
+        {
+            Simulation sim = TownshipBuilt();
+            Sim.Core.Town.EventsState st = Sim.Core.Town.EventRules.State(sim);
+            Sim.Core.Definitions.EventsDef defs = sim.Config.Game.Events;
+            long hh = sim.State.Citizens.Households[0].Id, hh2 = sim.State.Citizens.Households.Count > 1 ? sim.State.Citizens.Households[1].Id : hh;
+            st.Waiting.Clear();
+            for (int i = 0; i < defs.Events.Count; i++)
+            {
+                if (defs.Events[i].Disaster && i != defs.IndexOf("fire")) continue;
+                Sim.Core.Town.EventRules.Raise(sim, st, i, defs.Events[i].Id == "wedding" || defs.Events[i].Id == "dispute" ? hh : 0, hh2, 0, sim.State.Clock.SimTime, defs.Events[i].Major);
+            }
+            st.History.Add(new Sim.Core.Town.EventRecord(defs.IndexOf("heatwave"), 1, false, sim.State.Clock.SimTime - 3 * Day, -24_000, 0));
+            st.History.Add(new Sim.Core.Town.EventRecord(defs.IndexOf("fuel_spike"), 0, true, sim.State.Clock.SimTime - 9 * Day, 0, 0));
+            return sim;
+        }
+
+        /// <summary>The Township with a hill parcel (rh6) bought beside the acres you own, an apple orchard bearing on one acre and a guava orchard on the other (US-147, Preview 15).</summary>
+        public static Simulation Hills()
+        {
+            Simulation sim = TownshipBuilt();
+            MapDef map = sim.Config.Game.Map;
+            int parcel = map.IndexOfParcel("rh8");
+            foreach (int t in map.Parcels[parcel].Tiles) // the acres beside it become yours, as a run of purchases would
+                foreach ((int dx, int dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                {
+                    int n = map.TileAt(map.X(t) + dx, map.Y(t) + dy);
+                    if (n >= 0 && map.Parcels[sim.State.Land.Tiles[n].ParcelId].Opens != "hills") sim.State.Land.Parcels[sim.State.Land.Tiles[n].ParcelId].Owned = true;
+                }
+            Ok(sim, new BuyParcel(T(sim), "rh8"));
+            Ok(sim, new PlantOrchard(T(sim), map.Parcels[parcel].Tiles[0], "apple"));
+            Ok(sim, new PlantOrchard(T(sim), map.Parcels[parcel].Tiles[1], "guava"));
+            return sim;
+        }
+
+        /// <summary>The Township with crop insurance on, the property and a tea stall's policies covering, and the last claims (spec 027 §7): every insurance sheet and Why? in one place.</summary>
+        public static Simulation Insured()
+        {
+            Simulation sim = TownshipBuilt();
+            Sim.Core.Town.InsuranceState st = Sim.Core.Town.InsuranceRules.State(sim);
+            string tea = Sim.Core.Business.BusinessRules.Defs(sim).Types.First(t => t.Kind == Sim.Core.Definitions.ShopKind.Chai).Id;
+            Ok(sim, new FoundBusiness(T(sim), tea, 0, 60_000 * 100, true, null, 0));
+            Sim.Core.Business.Business b = sim.State.Businesses.Businesses.Last();
+            b.Status = Sim.Core.Business.BusinessStatus.Open;
+            b.ReadyAt = T(sim);
+            Ok(sim, new Sim.Core.Commands.SetCropInsurance(T(sim), true));
+            st.Property.On = true;
+            st.Property.PaidSeason = sim.Period;
+            Sim.Core.Town.Policy bp = st.BusinessPolicyOrNew(b.Id);
+            bp.On = true;
+            bp.PaidSeason = sim.Period;
+            int fire = sim.Config.Game.Events.IndexOf("fire") + 1, hail = sim.Config.Game.Events.IndexOf("hailstorm") + 1, strike = sim.Config.Game.Events.IndexOf("supplier_strike") + 1;
+            long house = sim.State.Land.Buildings.First(x => x.Owner == 0 && x.TileId >= 0 && x.Cost > 0).Id;
+            int wheat = sim.Config.Game.Farm.IndexOfCrop("wheat");
+            st.Claims.Add(new Sim.Core.Town.Claim(Sim.Core.Town.Claim.CropPolicy, hail, wheat, 4_896_00, T(sim) - 3 * Day, 0, 28_800_00, 63));
+            st.Claims.Add(new Sim.Core.Town.Claim(Sim.Core.Town.Claim.PropertyPolicy, fire, house, 12_600_00, T(sim) - 2 * Day, 0, 14_000_00, 90));
+            st.Claims.Add(new Sim.Core.Town.Claim(Sim.Core.Town.Claim.BusinessPolicy, fire, b.Id, 16_100_00, T(sim) - Day, 2, 14_000_00, 90));
+            st.Claims.Add(new Sim.Core.Town.Claim(Sim.Core.Town.Claim.BusinessPolicy, strike, b.Id, 6_000_00, T(sim) - Day / 2, 3, 35_000_00, 80));
+            return sim;
+        }
+
+        /// <summary>The Township with the trader's offers (wheat, maize), a contract running (rice, 300 of 800 kg in, the price risen), one waiting and one settled (spec 027 §7): every contract sheet and Why? in one place.</summary>
+        public static Simulation Contracted()
+        {
+            Simulation sim = TownshipBuilt();
+            Sim.Core.Town.ContractsState st = Sim.Core.Town.ContractRules.State(sim);
+            int next = (int)((sim.Period + 1) % 4);
+            Sim.Core.Town.Contract Make(string good, long kg, long delivery)
+            {
+                int g = sim.Config.Game.Market.IndexOf(good);
+                Sim.Core.Maths.Fixed expected = Sim.Core.Town.ContractRules.Expected(sim, g, (int)(delivery % 4));
+                return new Sim.Core.Town.Contract { Id = st.NextId++, Good = good, Quantity = kg * 1000, Expected = expected, Price = Sim.Core.Town.ContractRules.OfferPrice(sim, expected), Delivery = delivery };
+            }
+            Sim.Core.Town.ContractsState.Add(st.HarvestLast, "wheat", 1_000_000);
+            Sim.Core.Town.ContractsState.Add(st.HarvestLast, "maize", 800_000);
+            st.Offers.Add(Make("wheat", 400, sim.Period + 1));
+            st.Offers.Add(Make("maize", 300, sim.Period + 1));
+            Sim.Core.Town.Contract run = Make("rice", 800, sim.Period);
+            run.Filled = 300_000;
+            run.Gain = -1_200_00;
+            run.Samples = 3;
+            run.FloorSum = (run.Price + Sim.Core.Maths.Fixed.FromInt(2)) * Sim.Core.Maths.Fixed.FromInt(3);
+            st.Open.Add(run);
+            st.Open.Add(Make("potato", 500, sim.Period + 1));
+            st.History.Add(new Sim.Core.Town.ContractRecord("wheat", 400_000, 400_000, run.Price, sim.Period - 1, 0, 1_800_00));
+            st.History.Add(new Sim.Core.Town.ContractRecord("mustard", 300_000, 100_000, run.Price, sim.Period - 2, 2_400_00, -1_000_00));
+            return sim;
+        }
+
         public static Simulation TownshipBuilt()
         {
             Simulation sim = Township();
@@ -369,6 +459,9 @@ namespace Sim.View.Tests
             yield return TownshipBuilt();
             yield return Kiln();
             yield return Promises();
+            yield return Events();
+            yield return Insured();
+            yield return Contracted();
         }
     }
 }
@@ -403,6 +496,13 @@ namespace Sim.View.Tests
                 for (int m = 0; m < sim.Config.Game.Equipment.Machines.Count; m++) yield return N("machine loan " + m, MachineLoanSheet.Build(ctx, m));
             }
             if (sim.State.Livestock != null && Sim.Core.Livestock.LivestockRules.Shed(sim) != null) yield return N("shed", ShedSheet.Build(ctx)); // US-254, US-255
+            if (Sim.Core.Town.TownLifeRules.On(sim)) yield return N("town life", TreasurySheet.Build(ctx, TreasurySheet.LifeTab)); // US-151: every town-life number has a Why?
+            if (Sim.Core.Town.FestivalRules.On(sim)) { yield return N("festival", FestivalSheet.Build(ctx, null)); yield return N("festival you", FestivalSheet.Build(ctx, "1:1:2")); } // US-149: every festival number has a Why?
+            if (Sim.Core.Town.EventRules.On(sim)) // US-154: every card's numbers have a Why?
+            {
+                foreach (Sim.Core.Town.PendingEvent p in Sim.Core.Town.EventRules.State(sim).Waiting) yield return N("event " + sim.Config.Game.Events.Events[p.Def].Id, EventSheet.Card(ctx, p.Id));
+                yield return N("events", EventSheet.List(ctx));
+            }
             yield return N("money", MoneySheet.Build(ctx));
             yield return N("money wealth", MoneySheet.Build(ctx, MoneySheet.Wealth));
             yield return N("money last", MoneySheet.Build(ctx, MoneySheet.LastSeason));

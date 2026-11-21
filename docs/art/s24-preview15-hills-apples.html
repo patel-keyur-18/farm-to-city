@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 15 Hills and apples</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen, scaled to fit, with a tab bar for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink);cursor:pointer}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.sheet.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:700px}
+.card.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.card h3{margin:0;font:700 32px var(--display);text-align:center}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.cost.hi{background:var(--cream2);border-radius:10px;border:0;margin-top:6px}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.btnrow .btn{flex:1}
+.pic{width:170px;height:128px;border-radius:14px;border:3px solid var(--wood);overflow:hidden;flex:none}
+.tag{display:inline-block;font:700 14px var(--body);padding:2px 9px;border-radius:9px;background:#e9d9a8;border:2px solid var(--wood);color:var(--wood);vertical-align:middle;margin-left:8px}
+.tag.major{background:var(--saffron,#E8892A);border-color:#9b5412;color:#fff}
+.tag.warn{background:#fde2cf;border-color:var(--warn);color:var(--warn)}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice.def{background:#efe2bd;border-color:#d8c68e}
+.choice .tx{flex:1;font-size:21px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px;font-weight:400}
+.choice .btn{min-width:190px}
+.note{font-size:17px;color:var(--wood);margin:10px 4px 0;line-height:1.4}
+.note.warn{color:var(--warn);font-weight:600}
+.timer{font:600 19px var(--body);color:var(--warn)}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:760px;text-align:center}
+.banner{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fde2cf;border:4px solid var(--warn);border-radius:16px;padding:9px 20px;font:600 21px var(--body);color:var(--warn);cursor:pointer}
+@keyframes flick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) translateY(-2px)}}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick .5s infinite}
+@media (prefers-reduced-motion:reduce){.flame{animation:none}}
+
+.maplabel{position:absolute;background:rgba(59,38,20,.88);color:#fff;border-radius:12px;padding:6px 12px;font:600 17px var(--body);border:2px solid #fff3d1}
+.hillrow{display:flex;gap:8px}
+.seg{display:flex;gap:10px;margin:0 0 4px}
+.seg .btn{min-width:0;padding:6px 16px 8px;font-size:18px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 15: hills and apples</h1>
+  <p class="lead">Sprint 24, US-147 (spec 025 §3.5, the figures closed with the owner on 2026-11-21). Every screen is drawn at the game's own 1280 × 720 size with its palette and type, in the layouts the game already uses for land, orchards and the cold store. Tap the tabs, the hill / valley switch on the planting sheet, and the ? chips. Prices are today's, for a Township in its third year (price index about 1.10).</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const I={
+ sign:'<svg viewBox="0 0 30 30"><rect x="13" y="8" width="4" height="18" fill="#8a5a2b"/><rect x="6" y="3" width="18" height="11" rx="2" fill="#f3c777" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="8.5" r="2.6" fill="#8a5a2b"/></svg>',
+ tree:'<svg viewBox="0 0 30 30"><rect x="13" y="16" width="4" height="11" fill="#8a5a2b"/><circle cx="15" cy="12" r="9" fill="#3f8a2a"/><circle cx="11" cy="11" r="2" fill="#e0342b"/><circle cx="18" cy="14" r="2" fill="#e0342b"/><circle cx="15" cy="7" r="2" fill="#e0342b"/></svg>',
+ apple:'<svg viewBox="0 0 30 30"><path d="M15 9c-6-4-12 0-11 8 1 6 6 10 11 8 5 2 10-2 11-8 1-8-5-12-11-8z" fill="#d9362d"/><path d="M15 9c0-3 1-5 3-6" stroke="#6b4423" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M17 5c3-2 6-1 6 1-3 1-5 1-6-1z" fill="#4c9a2a"/></svg>',
+ banana:'<svg viewBox="0 0 30 30"><path d="M7 22c4 3 12 1 16-9-2-1-4-1-5 1-2 5-6 7-11 8z" fill="#f2cf3a" stroke="#a88a12" stroke-width="1.5"/></svg>',
+ mango:'<svg viewBox="0 0 30 30"><path d="M8 12c4-6 14-4 15 5 0 6-6 10-11 8-5-3-6-8-4-13z" fill="#f09a2a"/></svg>',
+ guava:'<svg viewBox="0 0 30 30"><circle cx="15" cy="16" r="9" fill="#c8d98a"/><circle cx="15" cy="16" r="9" fill="none" stroke="#7f9a3a" stroke-width="2"/></svg>',
+ papaya:'<svg viewBox="0 0 30 30"><ellipse cx="15" cy="16" rx="8" ry="11" fill="#f2a63a"/></svg>',
+ store:'<svg viewBox="0 0 30 30"><rect x="4" y="12" width="22" height="14" fill="#cfd8e0" stroke="#6b7a88" stroke-width="2"/><path d="M2 13l13-9 13 9z" fill="#8aa0b4"/><path d="M15 16v6M12 19h6" stroke="#4a9bd6" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ coin:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#c9962a" stroke-width="2.5"/><path d="M10 18l10-6" stroke="#c9962a" stroke-width="3" stroke-linecap="round"/></svg>'
+};
+const WHY={
+ hill:{t:'The price of hill land',h:'3,30,857 coins',rows:[['What 4 acres of sandy valley land cost today','4,41,144 coins'],['Hills sit far from the road and the market: a quarter off','−1,10,286 coins'],['Hill land costs','3,30,857 coins']],foot:'Hill land is only worth buying for what grows on it. The soil is poor and dry, so field crops give little here; apples do well.'},
+ apple:{t:'What an apple orchard gives',h:'3,000 kg a harvest',rows:[['Trees on an acre','100 trees'],['A grown tree gives a season','30 kg'],['A full harvest, once a year, in the Monsoon','3,000 kg'],['The trader pays for it in the Monsoon','52.80 /kg'],['Sold at once, an acre brings about','1,58,400 coins']],foot:'India\'s orchards average about 3 tonnes an acre. The harvest comes when every orchard has fruit, so the price is lowest then.'},
+ sapling:{t:'Planting an apple orchard',h:'27,500 coins',rows:[['Saplings: 100 of them at 250','27,500 coins'],['Young trees take 8 seasons to bear: about 2 years','32 days'],['Short crops between the young rows give half their yield','while waiting']],foot:'Trees bear fruit only in the Monsoon. Until then the acre earns only what grows between the rows.'},
+ payback:{t:'When the orchard pays for itself',h:'around the 2nd harvest',rows:[['The land: 1 hill acre','82,714 coins'],['The saplings','27,500 coins'],['Care while the trees grow: 8 seasons','about 40,000 coins'],['Everything before the first harvest','1,50,214 coins'],['A harvest sold at once, less a year\'s care of 14,000','1,44,400 coins']],foot:'So the first harvest nearly pays it off and the second does. Kept in the cold store until Spring, the same fruit brings about 20% more.'},
+ keeps:{t:'How well apples keep',h:'92 of every 100 kg',rows:[['In the hut, over two seasons','72 of 100 kg'],['In the cold store, over two seasons','92 of 100 kg'],['The cold store rent for 2 seasons','2.20 /kg']],foot:'An apple spoils 4 in 100 a day in the hut and 1 in 100 in the cold store.'},
+ worth:{t:'Apples from the Monsoon to Spring',h:'+11.80 /kg',rows:[['The trader pays in the Monsoon','52.80 /kg'],['The trader pays in Spring','72.60 /kg'],['What is left of each kilo after two seasons in the cold store','66.80 /kg'],['Rent for two seasons','−2.20 /kg'],['Gain over selling at once','+11.80 /kg']],foot:'Kept in the hut, only 72 of 100 kg would be left, and the gain disappears.'},
+ price:{t:'The price of apples through the year',h:'52.80 /kg now',rows:[['The base price','60 /kg'],['Monsoon: every orchard is picking at once','−15%'],['Winter','0%'],['Spring','+15%'],['Summer','+25%']],foot:'Mango is the other way round for the Monsoon, so the two never glut the stall together.'}
+};
+const qb=k=>`<button class="q" data-why="${k}" aria-label="Why?">?</button>`;
+const row=(ic,t,sub,right,k)=>`<div class="row">${ic?`<div class="ico">${ic}</div>`:''}<div class="grow">${t}<small>${sub||''}</small></div>${right}${k?qb(k):''}</div>`;
+const plain=(t,right,k)=>`<div class="row" style="min-height:54px"><div class="grow">${t}</div><div class="val">${right}</div>${k?qb(k):''}</div>`;
+let tab='map',state={hill:true};
+function mapSvg(){
+ let t='';
+ // hills in the north-west (cols 0-5, rows 0-4), valley elsewhere
+ for(let r=0;r<10;r++)for(let c=0;c<14;c++){
+  const x=520+(c-r)*92,y=70+(c+r)*46;
+  const hill=(c<7&&r<4)||(c<5&&r<5);
+  const f=hill?['#9a9a6a','#8c8a5e','#a8a278','#7e7c58'][(c*3+r)%4]:['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][(c*7+r*3)%5];
+  t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="${hill?'#6b6a48':'#3f6a2a'}" stroke-width="2" opacity=".96"/>`;
+  if(hill&&(c+r)%3==0)t+=`<g transform="translate(${x},${y+34})"><polygon points="-22,10 0,-22 22,10" fill="#8a8574"/><polygon points="0,-22 22,10 6,10" fill="#6e6a5c"/></g>`;
+ }
+ // apple orchard on two hill acres: rows of small trees
+ let o='';
+ for(const [c,r] of [[2,1],[3,1]]){
+  const x=520+(c-r)*92,y=70+(c+r)*46;
+  for(let i=0;i<4;i++)for(let j=0;j<4;j++){const px=x+(i-j)*18,py=y+40+(i+j)*9;o+=`<g transform="translate(${px},${py})"><rect x="-1.5" y="-4" width="3" height="8" fill="#6b4423"/><circle cx="0" cy="-8" r="7" fill="#3f8a2a"/><circle cx="-2" cy="-9" r="1.6" fill="#e0342b"/><circle cx="3" cy="-6" r="1.6" fill="#e0342b"/></g>`}
+ }
+ // lane that ends at the valley's edge: no lane up the hill yet
+ const lane='<path d="M230 600 L560 430 L690 372" stroke="#b9a37a" stroke-width="16" fill="none" stroke-linecap="round" opacity=".95"/><path d="M690 372 L760 336" stroke="#b9a37a" stroke-width="10" fill="none" stroke-dasharray="3 14" stroke-linecap="round" opacity=".9"/>';
+ const lab=`<g font-family="Noto Sans" font-weight="700" font-size="20"><rect x="330" y="100" rx="12" width="196" height="38" fill="#3b2614" opacity=".9"/><text x="344" y="126" fill="#fff">The hills · 14 parcels</text><rect x="672" y="156" rx="12" width="206" height="38" fill="#3b2614" opacity=".9"/><text x="686" y="182" fill="#ffd968">Your apple orchard</text><rect x="520" y="540" rx="12" width="252" height="38" fill="#3b2614" opacity=".9"/><text x="534" y="566" fill="#fff">The lane stops at the valley</text></g>`;
+ return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}${lane}${o}${lab}</svg>`;
+}
+function base(){
+ return `<div class="map">${mapSvg()}</div>
+ <div class="hud l"><div class="s">Monsoon · 2 days left</div><div class="big">09:40</div><div class="s">Clear until 18:00</div></div>
+ <div class="hud r"><div class="big" style="font-size:40px">2.84 L</div></div><div class="hud r2">Store 38%</div><div class="hud r3">212 people &nbsp;82</div>
+ <div class="roundbtn" style="left:20px;bottom:20px;width:110px;border-radius:22px;height:70px;background:#c9c2b0;border-color:#8a8372;color:#6e6858;align-items:center;padding:0">Collect all</div>
+ <div class="roundbtn" style="right:20px;bottom:20px"><span style="color:#fff;background:#b02a1e;position:absolute;top:18px;left:28px;width:42px;height:34px;border-radius:6px"></span>Menu</div>`;
+}
+function sheet(title,sub,icon,body,back){return `<div class="sheet"><div class="head">${back===false?'':'<div class="cbtn">←</div>'}<div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div><div class="body">${body}</div></div>`}
+const grey=(t,s)=>`<button class="btn grey" style="min-width:190px;padding:8px 16px 10px;cursor:not-allowed"><span>${t}</span><small style="color:#6e6858">${s}</small></button>`;
+const plant=(t,s)=>`<button class="btn" style="min-width:190px;padding:8px 16px 10px"><span>${t}</span><small>${s}</small></button>`;
+const views={
+ map:{label:'1 · The hills on the map',notes:[
+  ['What to check',['The hills are the grey-green ground in the north-west of the ring: 14 parcels, drawn since Sprint 23, open from the Township with the rest of the ring.','The gravel lane stops where the valley ends: nothing is built up the hills until the treasury lays a lane. There is no new road rule; land just costs less for it.','An apple orchard is drawn as small trees in rows with red fruit once bearing (a new sprite, rendered in Blender, one acre wide like the other orchards).']],
+  ['Open questions',['Hills only get farming and orchards in this story: no houses, no builders and no zoning on them.']]],
+  render:()=>base()},
+ buy:{label:'2 · Your land › For sale',notes:[
+  ['What to check',['Hill parcels are in the same list as the valley\'s, in the same layout: a name, the price, a Show button, and a ? that explains the price.','The price is the sandy valley price with a quarter off for the distance. The row says what the land is for.','Not next to your land yet: the same sentence the valley rows use. The hills touch your land only at their edge, so you buy through them acre by acre.']]],
+  render:()=>base()+'<div class="scrim"></div>'+sheet('Your land','Parcels for sale in the valley',I.sign,
+  `<div class="seg"><button class="btn sand" style="flex:1"><span>Yours</span></button><button class="btn" style="flex:1"><span>For sale</span></button></div>`+
+  `<div class="row" style="min-height:96px"><div class="grow"><b style="font:700 24px var(--display)">Hills · 2 acres</b><small style="font-size:19px">1,65,429 coins · sandy, dry, cool</small><small style="font-weight:700;color:var(--ink)">Apples grow here · no lane yet</small></div>${qb('hill')}<button class="btn" style="min-width:150px"><span>Show</span></button></div>`+
+  `<div class="row" style="min-height:96px"><div class="grow"><b style="font:700 24px var(--display)">Hills · 4 acres</b><small style="font-size:19px">3,30,857 coins · sandy, dry, cool</small><small style="font-weight:700;color:var(--ink)">Not next to your land yet: buy the acres between first</small></div>${qb('hill')}<button class="btn" style="min-width:150px"><span>Show</span></button></div>`+
+  `<div class="row" style="min-height:96px"><div class="grow"><b style="font:700 24px var(--display)">Loam · 2 acres</b><small style="font-size:19px">2,53,090 coins</small><small style="font-weight:700;color:var(--ink)">Not next to your land yet: buy the acres between first</small></div><button class="btn" style="min-width:150px"><span>Show</span></button></div>`)},
+ plant:{label:'3 · Plant an orchard',notes:[
+  ['What to check',['Apple is the first row on hill land: 100 trees, fruits in Monsoon, bears in 32 days (8 seasons), 27,500 coins to plant.','On valley land the apple row is greyed with "Hill land only", as the game already greys a mango where it does not belong. Tap the switch to compare.','The ? beside each tree explains its numbers in words: saplings, trees an acre, years, what a harvest gives.']]],
+  render:()=>{
+   const hillOn=state.hill;
+   return base()+'<div class="scrim"></div>'+sheet('Plant an orchard','A whole acre of one tree. Short crops can grow between the young rows at 50% of their yield.',I.tree,
+   `<div class="seg"><button class="btn ${hillOn?'':'sand'}" data-set="hill" style="min-width:0"><span>A hill acre</span></button><button class="btn ${hillOn?'sand':''}" data-set="valley" style="min-width:0"><span>A valley acre</span></button></div>`+
+   row(I.apple,'Apple','100 trees · fruits in Monsoon · bears in 32 d'+(hillOn?'':' · <b style="color:var(--warn)">Hill land only</b>'),hillOn?plant('Plant','27,500 coins'):grey('Hill land only','27,500 coins'),'sapling')+
+   row(I.banana,'Banana','400 trees · fruits in all seasons · bears in 7 d','<div></div>'+plant('Plant','26,400 coins'),'')+
+   row(I.guava,'Guava','100 trees · fruits in Monsoon and Winter · bears in 14 d',plant('Plant','19,800 coins'),'')+
+   row(I.mango,'Mango','40 trees · fruits in Summer · bears in 24 d',plant('Plant','15,400 coins'),''))}},
+ young:{label:'4 · A young orchard',notes:[
+  ['What to check',['The same sheet the other orchards have, with apples\' own words: bears fruit in, the batch to come, the cost, and when it pays for itself (around the second harvest).','Sow between the rows is there, at half yield, so the acre earns while the trees grow.','Once bearing it shades the field beside it a little, as every orchard does (ADR 0090).']]],
+  render:()=>base()+'<div class="scrim"></div>'+sheet('Apple orchard','100 young trees',I.apple,
+   plain('Bears fruit in','23 d 6 h','')+plain('The harvest to come','about 3,000 kg, in the Monsoon','apple')+plain('Shade','Once bearing, it shades each field beside it a little.')+plain('Cost','27,500 coins','sapling')+plain('Earned so far','4,120 coins','')+plain('Pays for itself','around the 2nd harvest','payback')+
+   `<div class="btnrow" style="margin-top:14px"><button class="btn"><span>Sow between the rows</span></button><button class="btn" style="background:#e8604c;border-color:#b02a1e"><span>Clear the orchard</span></button></div>`)},
+ ripe:{label:'5 · The Monsoon harvest',notes:[
+  ['What to check',['The ripe-fruit sheet keeps its three choices. Apples keep for days, not hours: "waiting" says when they start to spoil, and spoilage is 4 in 100 a day.','The new third choice is to put what the store cannot hold into the cold store in town (see the next tab).','The contractor on the trees pays 70% of the trader\'s price, the same rule as every orchard.']]],
+  render:()=>base()+'<div class="scrim"></div>'+sheet('Apple orchard','100 trees, fruit is ripe',I.apple,
+   plain('Fruits in','Monsoon','')+plain('Ripe fruit on the trees','3,000 kg','apple')+plain('Fruit waiting','spoils in 2 d 11 h','keeps')+plain('You can pick today','1,520 kg','')+plain('Price today','52.80 /kg','price')+
+   `<div class="btnrow" style="margin-top:12px;flex-wrap:wrap"><button class="btn" style="min-width:230px"><span>Pick what can go today</span><small>1,520 kg</small></button><button class="btn sand" style="min-width:230px"><span>Sell it all on the trees</span><small>1,10,880 coins</small></button></div>`+
+   `<div class="btnrow" style="margin-top:8px"><button class="btn" style="background:#e8604c;border-color:#b02a1e;min-width:230px;flex:none"><span>Clear the orchard</span></button></div>`)},
+ cold:{label:'6 · The cold store',notes:[
+  ['What to check',['Apple gets a row in "Is it worth it?" with the sim\'s own prices: Monsoon to Spring, +11.80 a kg, about 22% on the money kept.','"Keeps 92 of every 100 kg over two seasons (72 in the hut)" is the whole reason: in the hut, the gain disappears.','Guava still says "Not worth it", and mango keeps its Summer to Monsoon row.']]],
+  render:()=>base()+'<div class="scrim"></div>'+sheet('Cold store in the mandi town','Potatoes and fruit keep far longer here than in the hut',I.store,
+   `<div class="sec">Is it worth it?</div>`+
+   `<div class="row" style="min-height:104px"><div class="grow"><b style="font:700 24px var(--display)">Apple, Monsoon to Spring</b><small style="font-size:19px">+11.80 /kg</small><small style="font-weight:700;color:var(--ink)">Sells at 52.80 /kg now and 72.60 /kg later. About 22% on the money kept.</small></div>${qb('worth')}</div>`+
+   `<div class="row" style="min-height:104px"><div class="grow"><b style="font:700 24px var(--display)">Mango, Summer to Monsoon</b><small style="font-size:19px">+2.99 /kg</small><small style="font-weight:700;color:var(--ink)">Sells at 46.83 /kg now and 62.44 /kg later. About 6.4% on the money kept.</small></div>${qb('keeps')}</div>`+
+   `<div class="row" style="min-height:104px"><div class="grow"><b style="font:700 24px var(--display)">Guava</b><small style="font-size:19px">Not worth it</small><small style="font-weight:700;color:var(--ink)">Its price is best at once, so keeping it only costs rent.</small></div>${qb('keeps')}</div>`)}
+};
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:760px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 28px var(--display)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}${w.foot?`<div class="note" style="font-size:18px">${w.foot}</div>`:''}<div class="btnrow"><button class="btn" data-close="1" style="max-width:220px;margin:0 auto"><span>OK</span></button></div></div>`}
+function render(){
+ const v=views[tab];let html=v.render();
+ if(state.why)html+=whyCard(state.why);
+ $('#stage').innerHTML=html;
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;state.why=null;render()});
+$('#stage').addEventListener('click',e=>{
+ const t=e.target.closest('[data-why],[data-close],[data-set]');if(!t)return;
+ if(t.dataset.why)state.why=t.dataset.why;else if(t.dataset.close)state.why=null;else if(t.dataset.set)state.hill=t.dataset.set==='hill';
+ render();
+});
+addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>

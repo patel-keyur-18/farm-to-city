@@ -366,6 +366,7 @@ namespace Sim.View.Views
             else if (!t.IsShop) AddMillToday(ctx, vm, b, t);
             if (!t.IsShop && ShopRules.Rated(t) && ShopRules.Defs(sim) != null) vm.Lines.Add(ShopSheet.StarsLine(ctx, b)); // the mill earns stars too (ADR 0092)
             AddMoney(ctx, vm, b, t);
+            InsuranceSheet.AddBusiness(ctx, vm, b); // spec 027 §7: its own policy, paid from its own cash
         }
 
         private static void AddMillToday(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
@@ -383,6 +384,8 @@ namespace Sim.View.Views
             {
                 GoodDef g = sim.Config.Game.Market.Goods[o.Good];
                 vm.Lines.Add(new LineVm(s.Get("business.stock", "good", s.Get(g.NameKey)), ctx.Fmt.Kg(b.Stock[o.Good]), "businessTrader", o.Good) { Icon = g.Id });
+                if (BusinessRules.Defs(sim).VillageGoods.Contains(g.Id)) // US-264: what went to the village's stall today
+                    vm.Lines.Add(new LineVm(s.Get("business.village", "good", s.Get(g.NameKey)), ctx.Fmt.Kg(today ? b.VillageToday : 0), "businessVillage", o.Good) { Icon = g.Id });
             }
         }
 

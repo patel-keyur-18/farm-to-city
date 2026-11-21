@@ -67,7 +67,7 @@ namespace Sim.View.Views
             { "orchardBears", OrchardBears }, { "orchardBatch", OrchardBatch }, { "orchardSpoils", OrchardSpoils }, { "orchardToday", OrchardToday },
             { "orchardContractor", OrchardContractor }, { "orchardPayback", OrchardPayback }, { "orchardPlant", OrchardPlant },
             // Money and the market (specs 004, 005).
-            { "cash", Cash }, { "store", StoreFill }, { "price", Price }, { "marketPrice", MarketPrice }, { "traderPrice", TraderPrice },
+            { "cash", Cash }, { "store", StoreFill }, { "price", Price }, { "marketPrice", MarketPrice }, { "traderPrice", TraderPrice }, { "businessVillage", BusinessVillage },
             { "traderRoom", TraderRoom }, { "spoilage", Spoilage }, { "input", Input }, { "inputPrice", InputPrice }, { "mandi", Mandi },
             { "godown", Godown }, { "godownLet", GodownLet }, { "warehouse", Warehouse }, { "coldRent", ColdRent }, { "coldGood", ColdGood }, { "coldWorth", ColdWorth }, { "godownGood", GodownGood },
             { "netWorth", NetWorth }, { "creditLimit", CreditLimitWhy }, { "loan", LoanWhy }, { "borrow", BorrowWhy },
@@ -124,6 +124,12 @@ namespace Sim.View.Views
             { "treasuryBalance", TreasuryBalance }, { "treasuryUntied", TreasuryUntied }, { "treasuryTied", TreasuryTied }, { "treasuryRents", TreasuryRents },
             { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryWindow", TreasuryWindow }, { "policy", PolicyWhy }, { "taxHouse", TaxHouseWhy }, { "taxBusiness", TaxBusinessWhy }, { "taxCollected", TaxCollectedWhy }, { "treasuryAccount", TreasuryAccount },
             { "treasuryFund", TreasuryFund },
+            // Town life (spec 026).
+            { "event", EventWhy }, { "eventHist", EventHistWhy },
+            // Insurance (spec 027 §3.5-§3.6).
+            { InsuranceSheet.CropWhy, InsuranceCropWhy }, { InsuranceSheet.PropertyWhy, InsurancePropertyWhy }, { InsuranceSheet.BusinessWhy, InsuranceBusinessWhy }, { InsuranceSheet.ClaimWhy, InsuranceClaimWhy }, { InsuranceSheet.PremiumWhy, InsurancePremiumWhy }, { InsuranceSheet.DueWhy, InsuranceDueWhy },
+            { ContractSheet.OfferWhy, ContractOfferWhy }, { ContractSheet.OpenWhy, ContractOpenWhy }, { ContractSheet.DoneWhy, ContractDoneWhy }, { ContractSheet.DueWhy, ContractDueWhy },
+            { "lifeApproval", LifeApproval }, { "lifePetition", LifePetition }, { "festival", Festival }, { "lifeScore", LifeScore }, { "lifePull", LifePull }, { "lifeCrime", LifeCrime }, { "lifeRatio", LifeRatio }, { "lifeCrimeAcre", LifeCrimeAcre },
             // Equipment (spec 013 §3.2).
             { "machine", Machine }, { "machineValue", MachineValue }, { "hireFee", HireFee }, { "hireCost", HireCost }, { "hirePays", HirePays }, { "fieldTools", FieldTools },
         };

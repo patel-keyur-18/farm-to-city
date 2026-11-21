@@ -152,6 +152,9 @@ namespace Sim.Core.Business
         public long OwnToday { get; internal set; }
         public long AreaToday { get; internal set; }
 
+        /// <summary>The atta a mill sold at the village market today, grams (US-264; schema 22): the sheet says what went where.</summary>
+        public long VillageToday { get; internal set; }
+
         /// <summary>The bank's business loan's id, or 0 (spec 016 §3.8, US-117).</summary>
         public long LoanId { get; internal set; }
 
@@ -292,6 +295,7 @@ namespace Sim.Core.Business
             if (h.Hashing ? ProfitableSeasons != 0 : !(h is SaveWriter p15 && p15.Schema < 15)) h.WriteInt(ProfitableSeasons);
             if (h.Hashing ? KilnUsed : !(h is SaveWriter k21 && k21.Schema < Saves.MapMigration.RingSchema)) // schema 21; hashed once a kiln has fired
                 foreach (long v in new[] { Yard, YardCost, KilnMade, KilnToBuilds, KilnSold, KilnSeason }) h.WriteLong(v);
+            if (h.Hashing ? VillageToday != 0 : !(h is SaveWriter v22 && v22.Schema < Town.TownshipState.TownLifeSchema)) h.WriteLong(VillageToday); // schema 22; hashed once a mill has sold at the village
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -358,6 +362,7 @@ namespace Sim.Core.Business
             {
                 b.Yard = r.ReadLong(); b.YardCost = r.ReadLong(); b.KilnMade = r.ReadLong(); b.KilnToBuilds = r.ReadLong(); b.KilnSold = r.ReadLong(); b.KilnSeason = r.ReadLong();
             }
+            if (r.Schema >= Town.TownshipState.TownLifeSchema) b.VillageToday = r.ReadLong();
             return b;
         }
     }

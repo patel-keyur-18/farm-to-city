@@ -39,7 +39,7 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin and indexed by the 
 | --- | --- | --- | --- |
 | Four festivals, one a season | Spring *Seed Fair*, Summer *Mango Mela*, Monsoon *Rain Night*, Winter *Harvest Mela*. The player chooses the venue, the payer and the day; the kind follows the season. | festival | one scheduled or held a season |
 | Venue | The **community hall** (built, caretaker in post) or the **banyan square** (always). The venue sets the reach (hall `reach` 1,000 m, square `squareReach` 500 m, Manhattan, an acre is 100 m). | venue | 2 |
-| Day | One of the next 3 real days (starts at 0:00, so a 72 h absence never skips it); the festival is that whole day. | day | 1–3 days ahead |
+| Day | One of the next 3 real days (starts at 0:00, so a 72 h absence never skips it); the festival is that whole day. A festival scheduled in a season's last days can fall in the next season; it keeps the kind of the season it was scheduled in and counts against that season's one. | day | 1–3 days ahead |
 | Cost | `perPerson` × your town's people (your households and the old village's cohort) × the price index. Seed Fair 80, Mango Mela 100, Rain Night 80, Harvest Mela 120 a person. Paid at once to suppliers outside the town. | coins | 250 people: 20,000 to 30,000 |
 | Payer | **The treasury** (from its cash, never below zero, with the same budget guard as a work: would the town still pay its bills at the next close) **or your gift** (your cash, booked to *Gifts to the village*, outside farm profit). Nothing flows back to you. | payer | 2 |
 | Happiness lift | On the festival day a household's happiness is raised by `inReach` **8** points inside the venue's reach and `outside` **3** points elsewhere in the town. The next day it is gone. | points | 0–100 after the lift |
@@ -209,23 +209,23 @@ The **Town hall** sheet (Menu) gets a **Town life** tab: approval and its last s
 | AC-3 | A festival held is recorded and announced; a 72 h absence does not skip a scheduled day | `FestivalTests.Record_Away` |
 | AC-4 | A petition is raised only when 3 families (or a fifth) share a need and no petition for that topic is open; the cohort never raises one | `PetitionTests.Raised_Threshold_Cohort` |
 | AC-5 | Promise kept, promise broken, declined, ignored and done end as 3.2 says, with the approval change | `PetitionTests.Endings` |
-| AC-6 | Approval moves with happiness and petitions, stays 0–100, and changes only migration (no tax, policy slot or election) | `ApprovalTests.Moves`, `ApprovalTests.OnlyMigration` |
-| AC-7 | The five scores equal their weighted parts; each part has a *Why?*; before the Township none is read | `ReputationTests.Parts`, `ReputationTests.NotBeforeTownship` |
-| AC-8 | The pull changes the wait for a family (12–36 h), and at 50 and 50 changes nothing; the grants rise 0–10% above a mean of 50 and are never lowered | `ReputationTests.Pull`, `ReputationTests.Grants` |
-| AC-9 | Crime follows unemployment and inequality; the watchman lowers it in his reach only; at crime 50 the Safety part is today's | `CrimeTests.Formula`, `CrimeTests.SafetyPart`, `CrimeTests.WatchmanReach` |
-| AC-10 | Land value has the crime term within ±0.10 and the crime overlay equals the sim's numbers | `LandValueTests.Crime`, `OverlayViewTests.Crime` |
-| AC-11 | The ratio is the richest tenth over the poorest, from 10 households, capped at 10; below the median lose happiness above 4; the poorest leave a season sooner at 6 | `InequalityTests.Ratio`, `InequalityTests.Effects` |
+| AC-6 | Approval moves with happiness and petitions, stays 0–100, and changes only migration (no tax, policy slot or election) | `PetitionTests.Moves`, `PetitionTests.OnlyMigration` |
+| AC-7 | The five scores equal their weighted parts; each part has a *Why?*; before the Township none is read | `TownLifeTests.Parts`, `TownLifeTests.NotBeforeTownship` |
+| AC-8 | The pull changes the wait for a family (12–36 h), and at 50 and 50 changes nothing; the grants rise 0–10% above a mean of 50 and are never lowered | `TownLifeTests.Pull`, `TownLifeTests.Grants` |
+| AC-9 | Crime follows unemployment and inequality; the watchman lowers it in his reach only; at crime 50 the Safety part is today's | `TownLifeTests.Formula`, `TownLifeTests.SafetyPart`, `TownLifeTests.WatchmanReach` |
+| AC-10 | Land value has the crime term within ±0.10 and the crime overlay equals the sim's numbers | `TownLifeTests.LandValueCrime`, `TownLifeViewTests.Overlay` |
+| AC-11 | The ratio is the richest tenth over the poorest, from 10 households, capped at 10; below the median lose happiness above 4; the poorest leave a season sooner at 6 | `TownLifeTests.Ratio`, `TownLifeTests.InequalityEffects` |
 | AC-12 | Schema 22 round-trips; an older save loads with approval 50 and no petitions; the fixture carries on through two closes | `MigrationTests.Schema22_TownLife` |
 | AC-13 | Every number has a *Why?* in words; no raw factors | `WhyTests.EveryNumberHasWhy` (over the Town life situation) |
 | AC-14 | The sheets and cards respond to scripted touch in the Editor | the stories' Editor tours |
-| AC-15 | A town left alone (no festival, no answers) still works: it levels and no state goes negative; no zero-time loop over the new commands | `TownLifeTests.LeftAlone`, `GateTests.TownLife` |
+| AC-15 | A town left alone (no festival, no answers) still works: it levels and no state goes negative; no zero-time loop over the new commands | `TownLifeTests.LeftAlone`, `TownLifeGateTests.Measure` (the 200-seed hands-off Township) |
 
 ## 9. Balancing hooks
 
 | Metric | Expected effect | Tolerance |
 | --- | --- | --- |
 | Crime points removed a season per 1,000 coins | jobs and the floor wage at least as cheap as the watchman | measured by bots, reported |
-| A town left alone | approval 50–65, reputation means 40–60 (no collapse, no free lunch) | ±10 |
+| A town left alone | approval 40–65 and reputation means 65–80 (measured on 200 hands-off seeds, Sprint 24: approval median 48, reputation 76.2, range 67–79, crime 50.8, pull 112%); no collapse, no free lunch: the parts a left-alone town has none of (water, drains, collection posts) hold it under 80, so the headroom to 100 is the player's works | ±5 |
 | The Township's pace (day 101 competent) | unchanged within 2 days: the pull starts at 50 and 50 | ±2 days |
 | Land payback (6.0 seasons, ADR 0124) | the crime term moves it under 0.3 seasons | ±0.3 |
 | Archetype bots (ADR 0016) | within 20% on net worth and happiness; an *everything festival* bot no better than the median | 1.13 holds |
@@ -252,3 +252,11 @@ Each is closed with the owner, one per message, with my recommendation, before c
 3. The festival's shop lift (the happiness lift stays).
 4. The *Rent too high* and *No work* topics (service topics stay).
 5. The *Environment* score's drains and collection parts (they wait for spec 025's buildings).
+
+## 12. As built
+
+**US-151 (Sprint 24, ADR 0145):** the town is read at each close from the Township (`TownLifeRules.AtClose`, `TownLifeState` in save schema 22, in `township.json` `townLife`). Differences from the plan above: inequality is **income a person among households with someone of working age** (§3.6; a retired household is left out), because raw household income measured household size and capped the ratio in most bot towns; `crimeBase` stays 20 (measured median 49); nothing is read or applied until the first close from the Township. The Town life tab is the third tab of the town treasury's sheet; the crime overlay lights up once the town is read. Approval, petitions and festivals are US-150 and US-149.
+
+**US-150 (Sprint 24, ADR 0146):** petitions and approval. Differences from the plan above: **eight topics** (the table listed eight and said nine); all start at the Township (the closes are read from there); a promise is judged at its own close only (kept +6 or broken −8, never early); a petition ends Done when fewer than the raising number of families (3, or a fifth) still share the need; approval is a whole number moving `(happiness − 65) ÷ 5` (neutral 65, not 70, and *ignored* −2, not −4: tuned so a hands-off town sits at 43–51, ADR 0146 §9) toward zero, at most 4 a close, with its last six closes kept (`townLife.petitions` in `township.json`). Decline is a card; Promise is a choice sheet of 1, 2 or 4 closes with no card. Approval and petitions live on the Town life tab, and each open petition rings the bell.
+
+**US-149 (Sprint 24, ADR 0147):** festivals. Differences from the plan above: a festival is a day of the clock (nothing starts or ends it; a job at the day's end writes the record); one a season counted from the season it is scheduled in; the treasury's payment goes into a new **Festivals** expense account (schema 22), outside every department; the budget guard is a row on the card, not a block; the choices are on their own sheet (tab strips) opened from the hall's or the square's, not inline; on the day **nobody works** (owner's rule, 2026-11-20): hands, labourers, your day labour, outside wages, and every business but the stalls stop, everyone is drawn resting at the venue (7:00 to 22:00, at most 24), and a banner marks the day (ADR 0147 §8). The content is `townLife.festivals` in `township.json`.

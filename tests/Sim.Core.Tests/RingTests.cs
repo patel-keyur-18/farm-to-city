@@ -77,7 +77,7 @@ namespace Sim.Core.Tests
             _ = hill;
         }
 
-        // AC-8: the Township opens the ring, once, with an event; the hills stay closed; an acre still needs a neighbour you own.
+        // AC-8: the Township opens the ring and the hills (US-147), once, with an event; an acre still needs a neighbour you own.
         [Test]
         public void TheTownshipOpensIt()
         {
@@ -87,10 +87,10 @@ namespace Sim.Core.Tests
             MapDef map = sim.Config.Game.Map;
             Assert.That(LandRules.Locked(sim, map.IndexOfParcel("rw1a")), Is.False);
             Assert.That(LandRules.Locked(sim, map.IndexOfParcel("rs1")), Is.False);
-            Assert.That(LandRules.Locked(sim, map.IndexOfParcel("rh1")), Is.True, "the hills open with the apples, in Sprint 24");
+            Assert.That(LandRules.Locked(sim, map.IndexOfParcel("rh1")), Is.False, "the hills open with the ring (US-147)");
             Assert.That(sim.Execute(new BuyParcel(sim.State.Clock.SimTime, "rw1a")).Reason, Is.EqualTo(RejectReason.NotAdjacent), "open, but beside nothing of yours");
-            Assert.That(sim.Execute(new BuyParcel(sim.State.Clock.SimTime, "rh1")).Reason, Is.EqualTo(RejectReason.LandClosed));
-            Assert.That(LandRules.LockedParcels(sim).Count(x => x), Is.EqualTo(map.Parcels.Count(p => p.Opens == "hills")));
+            Assert.That(sim.Execute(new BuyParcel(sim.State.Clock.SimTime, "rh1")).Reason, Is.EqualTo(RejectReason.NotAdjacent));
+            Assert.That(LandRules.LockedParcels(sim).Count(x => x), Is.EqualTo(0));
         }
 
         // AC-1 (lanes): a section is a work the treasury commissions once; its acres become a road for the acres beside it.

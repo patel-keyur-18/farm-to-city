@@ -103,7 +103,9 @@ namespace Sim.Core.Business
         {
             ShopDefs d = Defs(sim);
             if (hour < d.OpenHour || hour >= d.CloseHour) return 0;
-            return DemandPerDay(sim, kind, good, g) / (d.CloseHour - d.OpenHour);
+            long hourly = DemandPerDay(sim, kind, good, g) / (d.CloseHour - d.OpenHour);
+            Fixed rise = Town.FestivalRules.ShopRise(sim, kind) + Town.EventRules.ShopRise(sim); // spec 026 §3.1: a festival's day brings the crowd; spec 027: a viral rush, a closure
+            return rise == Fixed.Zero ? hourly : System.Math.Max(0, hourly + (Fixed.FromInt((int)hourly) * rise).RoundToLong());
         }
 
         // ---- prices (§3.3) ----

@@ -71,6 +71,8 @@ namespace Sim.Core.Town
             Fixed smoke = SmokeRules.LandValue(sim, tileId, out int smokers);
             if (smoke > Fixed.Zero) list.Add(new LandPart("smoke", Fixed.Zero - smoke, smokers)); // a kiln or a generator's smoke (spec 025)
             if (UtilityRules.DrainsMissing(sim, tileId)) list.Add(new LandPart("drains", Fixed.Zero - UtilityRules.Defs(sim).DrainsLandValue, 0)); // a home with no drains (spec 025 §3.1)
+            Fixed crime = TownLifeRules.LandValueTerm(sim, tileId);
+            if (crime != Fixed.Zero) list.Add(new LandPart("crime", crime, 0)); // spec 026 §3.5: safe acres are worth more, unsafe ones less
             return list;
         }
 

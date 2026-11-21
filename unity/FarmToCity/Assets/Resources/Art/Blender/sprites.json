@@ -968,6 +968,20 @@
    "name": "fence_y"
   },
   {
+   "w": 398,
+   "h": 338,
+   "pivotX": 0.57949,
+   "pivotY": 0.19359,
+   "name": "fire_flames"
+  },
+  {
+   "w": 182,
+   "h": 266,
+   "pivotX": 0.42085,
+   "pivotY": 0.1373,
+   "name": "fire_smoke"
+  },
+  {
    "w": 390,
    "h": 320,
    "pivotX": 0.45638,
@@ -1392,6 +1406,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_flame"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_gear"
   },
   {
@@ -1400,6 +1421,13 @@
    "pivotX": 0.5,
    "pivotY": 0.5,
    "name": "icon_good_amaranth"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_good_apple"
   },
   {
    "w": 256,
@@ -1630,6 +1658,13 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_health"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_letter"
   },
   {
@@ -1686,7 +1721,21 @@
    "h": 256,
    "pivotX": 0.5,
    "pivotY": 0.5,
+   "name": "icon_scroll"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
    "name": "icon_seed"
+  },
+  {
+   "w": 256,
+   "h": 256,
+   "pivotX": 0.5,
+   "pivotY": 0.5,
+   "name": "icon_shield"
   },
   {
    "w": 256,
@@ -3227,6 +3276,34 @@
    "pivotX": 0.34827,
    "pivotY": 0.26045,
    "name": "tractor_trolley"
+  },
+  {
+   "w": 240,
+   "h": 286,
+   "pivotX": 0.45255,
+   "pivotY": 0.14914,
+   "name": "tree_apple_mature"
+  },
+  {
+   "w": 280,
+   "h": 286,
+   "pivotX": 0.48475,
+   "pivotY": 0.14914,
+   "name": "tree_apple_ripe"
+  },
+  {
+   "w": 180,
+   "h": 238,
+   "pivotX": 0.5,
+   "pivotY": 0.26494,
+   "name": "tree_apple_sapling"
+  },
+  {
+   "w": 190,
+   "h": 222,
+   "pivotX": 0.45769,
+   "pivotY": 0.18148,
+   "name": "tree_apple_young"
   },
   {
    "w": 224,

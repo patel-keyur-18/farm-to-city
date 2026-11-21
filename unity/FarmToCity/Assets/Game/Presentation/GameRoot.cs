@@ -303,6 +303,9 @@ namespace Game.Presentation
                             ? _strings.Get("toast.townHandHired", "name", _strings.Get(Sim.Config.Game.People.Names[hired.Name].NameKey))
                             : _strings.Get("toast.handHired"));
                         break;
+                    case EventRaised er: // spec 027: a card comes up on its own unless a sheet is open; closing it keeps it on the bell
+                        if (!away && !_open.HasValue) { long cardId = er.Id; _safeRoot.schedule.Execute(() => { if (!_open.HasValue) OpenSheet(new SheetRequest(EventSheet.CardKind, cardId)); }); }
+                        break;
                     case OrderCompleted _: Toast(_strings.Get("toast.orderDone")); break;
                     case ContractLapsed _: Toast(_strings.Get("toast.lapsed")); break;
                 }

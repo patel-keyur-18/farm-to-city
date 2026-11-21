@@ -13,6 +13,9 @@ namespace Sim.Core.Farm
 
         /// <summary>The season index (since t = 0) it paid back or is expected to, or null if it never will (harvest limit).</summary>
         public long? Season { get; internal set; }
+
+        /// <summary>The batches still to come before it pays back (0 once paid back or never): "around the 2nd harvest" for a tree that fruits once a year.</summary>
+        public int Harvests { get; internal set; }
     }
 
     public static class TreeRules
@@ -55,7 +58,7 @@ namespace Sim.Core.Farm
             for (long found = 0; ; period++)
             {
                 if (!def.FruitingSeasons[(int)(period % 4)]) continue;
-                if (++found == need) { p.Season = period; return p; }
+                if (++found == need) { p.Season = period; p.Harvests = (int)need; return p; }
             }
         }
     }

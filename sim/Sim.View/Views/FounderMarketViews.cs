@@ -123,7 +123,7 @@ namespace Sim.View.Views
             vm.Actions.Add(new ActionVm("offer", s.Get("good.offer"), null, ActionKind.Open, free > 0, free > 0 ? null : s.Get("good.nothingFree"), null, new SheetRequest("Offer", g)));
             if (offered > 0)
                 vm.Actions.Add(ActionVm.Checked(ctx, "withdraw", s.Get("action.withdrawRow"), ctx.Fmt.Kg(offered), ActionKind.Secondary, at => new Withdraw(at, id, offered)));
-            vm.Actions.Add(ActionVm.Checked(ctx, "sell", s.Get("good.sellTrader"), sell > 0 ? s.Get("store.sellDetail", "qty", ctx.Fmt.Kg(sell), "amount", ctx.Fmt.Coins(MarketRules.Value(sim, g, sell, floor))) : null,
+            vm.Actions.Add(ActionVm.Checked(ctx, "sell", s.Get("good.sellTrader"), sell > 0 ? s.Get("store.sellDetail", "qty", ctx.Fmt.Kg(sell), "amount", ctx.Fmt.Coins(Sim.Core.Town.ContractRules.SaleValue(sim, g, sell, floor))) : null,
                 ActionKind.Primary, at => new SellToTrader(at, id, sell > 0 ? sell : System.Math.Max(1, free))));
             return vm;
         }

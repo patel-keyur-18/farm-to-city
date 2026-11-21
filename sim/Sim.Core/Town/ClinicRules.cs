@@ -136,7 +136,8 @@ namespace Sim.Core.Town
         /// <summary>The chance of a sick day with the clinic's cut: <c>chance × (1 − sickCut × e)</c>.</summary>
         public static Fixed SickChance(Simulation sim, Fixed chance, Fixed e)
         {
-            return e == Fixed.Zero ? chance : chance * (Fixed.One - Def(sim).SickCut * e);
+            Fixed sick = e == Fixed.Zero ? chance : chance * (Fixed.One - Def(sim).SickCut * e);
+            return EventRules.EpidemicOn(sim) ? sick * EventRules.EpidemicFactor(sim, e != Fixed.Zero) : sick; // an epidemic (spec 027 §3.4)
         }
 
         /// <summary>The household's <i>Health care</i> need met (spec 023 §3.2): the chemist's share, and the rest by <c>e</c>.</summary>

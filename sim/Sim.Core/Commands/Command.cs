@@ -283,12 +283,54 @@ namespace Sim.Core.Commands
         /// <summary>The parcel is not leased out.</summary>
         NotLeased,
 
-        /// <summary>The land is closed: the ring until the Township, the hills until they open (spec 025 §3.4).</summary>
+        /// <summary>The land is closed: the ring and the hills until the Township (spec 025 §3.4).</summary>
         LandClosed,
 
         // Spec 024 §3.7 (pucca upgrades, US-152)
         /// <summary>No such building.</summary>
         UnknownBuilding,
+
+        // Spec 026 §3.2 (petitions, US-150)
+        /// <summary>No such petition.</summary>
+        UnknownPetition,
+
+        /// <summary>The petition is already answered or ended.</summary>
+        PetitionClosed,
+
+        // Spec 026 §3.1 (festivals, US-149)
+        /// <summary>This season's festival is already scheduled or held.</summary>
+        FestivalThisSeason,
+
+        /// <summary>The venue isn't ready: the community hall has no caretaker.</summary>
+        VenueNotReady,
+
+        // Spec 027 §3.1 (events, US-154)
+        /// <summary>The card has gone: answered, or its clock ran out and its default was taken.</summary>
+        EventClosed,
+
+        /// <summary>That choice can't be taken now (a repair the cash can't cover is not offered).</summary>
+        ChoiceNotAvailable,
+
+        // Spec 027 §3.6 (property insurance, US-155)
+        /// <summary>No building of yours stands that a property policy could cover.</summary>
+        NoBuildings,
+
+        // Spec 027 §3.7 (forward contracts, US-156)
+        /// <summary>No such offer.</summary>
+        UnknownOffer,
+
+        /// <summary>The offer was withdrawn at the close.</summary>
+        OfferLapsed,
+
+        /// <summary>The delivery season already holds the most contracts.</summary>
+        TooManyContracts,
+
+        /// <summary>That crop already has a contract for the season (or the offer is already accepted).</summary>
+        AlreadyContracted,
+
+        // Spec 025 §3.5 (hills and apples, US-147)
+        /// <summary>The tree grows on hill land only.</summary>
+        HillOnly,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

@@ -79,7 +79,7 @@ namespace Game.Presentation.Map
             public int PatrolIndex, PointsLeft;
             public int WorkTile = -1; // the field being worked, or −1 at home
             public float WorkStart = -1f, WorkFor;
-            public bool Leaving;
+            public bool Leaving, Festival; // Festival: standing in the festival's crowd (spec 026 §3.1)
             public Vector3? LeaveTo; // a labourer's way out: the west edge for a neighbour, their house for your people; else off to the west
             public float Phase;
         }
@@ -507,6 +507,7 @@ namespace Game.Presentation.Map
             RefreshMachines(map);
             RefreshOrchards(map, animate);
             RefreshHandHuts(map, animate);
+            RefreshFires(map);
             RefreshHouses(map, animate);
             RefreshBusinesses(map, animate);
             RefreshPitches(map, animate);
@@ -592,6 +593,63 @@ namespace Game.Presentation.Map
             return _handHuts.TryGetValue(hutId, out SpriteRenderer r) ? r.transform.position + new Vector3(-0.04f, -0.09f, 0) * HandHutScale : TileCentre(tile);
         }
 
+        // ---- a fire (spec 027 §3.4): flames and rising smoke on the acre of a building a fire has shut ----
+
+        private readonly Dictionary<long, SpriteRenderer[]> _fires = new Dictionary<long, SpriteRenderer[]>();
+        private readonly Dictionary<long, Vector3> _fireAt = new Dictionary<long, Vector3>();
+
+        /// <summary>Where a fire burns: on the burning house or business sprite (US-154.T7), the acre's centre if its sprite isn't drawn.</summary>
+        private Vector3 FireSpot(FireVm f)
+        {
+            if (f.BuildingId != 0 && _houses.TryGetValue(f.BuildingId, out SpriteRenderer house)) return house.transform.position + new Vector3(0f, 0.12f, 0f);
+            if (f.BusinessId != 0 && _businesses.TryGetValue(f.BusinessId, out SpriteRenderer shop)) return shop.transform.position + new Vector3(0f, 0.12f, 0f);
+            return TileCentre(f.TileId) + new Vector3(0f, 0.1f, 0f);
+        }
+
+        private void RefreshFires(MapVm map)
+        {
+            var burning = new HashSet<long>();
+            foreach (FireVm f in map.Fires)
+            {
+                burning.Add(f.Key);
+                Vector3 at = FireSpot(f);
+                if (_fires.ContainsKey(f.Key))
+                {
+                    _fireAt[f.Key] = at;
+                    continue;
+                }
+                SpriteRenderer flames = NewRenderer("fire" + f.Key, SpriteBank.Rendered("fire_flames"), at, Order(f.TileId, _width, 90));
+                SpriteRenderer smoke = NewRenderer("fireSmoke" + f.Key, SpriteBank.Rendered("fire_smoke"), at + new Vector3(0f, 0.25f, 0f), Order(f.TileId, _width, 91));
+                _fires[f.Key] = new[] { flames, smoke };
+                _fireAt[f.Key] = at;
+            }
+            var gone = new List<long>();
+            foreach (long key in _fires.Keys) if (!burning.Contains(key)) gone.Add(key);
+            foreach (long key in gone)
+            {
+                foreach (SpriteRenderer r in _fires[key]) Destroy(r.gameObject);
+                _fires.Remove(key);
+                _fireAt.Remove(key);
+            }
+        }
+
+        private void AnimateFires()
+        {
+            float t = Time.unscaledTime;
+            foreach (KeyValuePair<long, SpriteRenderer[]> kv in _fires)
+            {
+                SpriteRenderer flames = kv.Value[0], smoke = kv.Value[1];
+                flames.transform.position = _fireAt[kv.Key];
+                float wob = Mathf.Sin(t * 9f + (float)(kv.Key % 97)) * 0.06f;
+                flames.transform.localScale = new Vector3(0.75f * (1f + wob * 0.5f), 0.75f * (1f - wob), 1f); // the flames lick up and down
+                float loop = (t * 0.35f + (kv.Key % 97) * 0.37f) % 1f; // smoke drifts up and fades, then starts again
+                Vector3 baseAt = _fireAt[kv.Key] + new Vector3(0f, 0.25f, 0f);
+                smoke.transform.position = baseAt + new Vector3(0.05f * Mathf.Sin(loop * 6f), loop * 0.6f, 0f);
+                smoke.color = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - loop) * 0.85f);
+                smoke.transform.localScale = Vector3.one * (0.8f + loop * 0.6f);
+            }
+        }
+
         private void RefreshHandHuts(MapVm map, bool animate)
         {
             var seen = new HashSet<long>();
@@ -651,7 +709,7 @@ namespace Game.Presentation.Map
                 if (p.TileId < 0) continue;
                 seen.Add(p.Key);
                 Vector3 home = HomeOf(p);
-                bool comes = p.Kind == PersonKind.Labourer || p.Kind == PersonKind.Worker || (p.Kind == PersonKind.Pupil && p.HomeHut != 0);
+                bool comes = !p.Festival && (p.Kind == PersonKind.Labourer || p.Kind == PersonKind.Worker || (p.Kind == PersonKind.Pupil && p.HomeHut != 0));
                 Vector3 fromHome = p.Kind == PersonKind.Pupil && p.HomeHut != 0 ? HouseYard(p.HomeHut, p.HomeTile) : home; // a pupil walks from home and back
                 if (!_people.TryGetValue(p.Key, out PersonView v))
                 {
@@ -669,9 +727,10 @@ namespace Game.Presentation.Map
                     _people[p.Key] = v;
                 }
                 v.Home = home;
-                v.LeaveTo = p.Kind == PersonKind.Pupil && p.HomeHut == 0 ? SchoolSpot(p) : !comes ? (Vector3?)null : p.HomeHut != 0 ? fromHome : WestEdge(p.TileId); // the teacher stays put
+                v.LeaveTo = p.Festival && p.HomeHut != 0 ? HouseYard(p.HomeHut, p.HomeTile) : p.Kind == PersonKind.Pupil && p.HomeHut == 0 ? SchoolSpot(p) : !comes ? (Vector3?)null : p.HomeHut != 0 ? fromHome : WestEdge(p.TileId); // the teacher stays put
                 v.Leaving = false;
-                bool changed = !SamePatrol(v.Patrol, p.Patrol);
+                bool changed = !SamePatrol(v.Patrol, p.Patrol) || v.Festival != p.Festival; // going to, or leaving, the festival is a change of place
+                v.Festival = p.Festival;
                 v.Patrol.Clear();
                 v.Patrol.AddRange(p.Patrol);
                 if (v.Patrol.Count == 0)
@@ -704,8 +763,16 @@ namespace Game.Presentation.Map
             return true;
         }
 
+        /// <summary>A place in the festival's crowd (spec 026 §3.1): a ring round the venue's acre, spread by the golden angle so no two stand together.</summary>
+        private Vector3 VenueSpot(PersonVm p)
+        {
+            float k = Mathf.Max(0, p.Spot), r = 0.07f + 0.21f * Mathf.Sqrt((k + 0.5f) / MapView.FestivalDrawn), a = k * 2.39996f;
+            return OnTile(p.TileId, new Vector2(r * Mathf.Cos(a), r * Mathf.Sin(a) * 0.8f));
+        }
+
         private Vector3 HomeOf(PersonVm p)
         {
+            if (p.Festival) return VenueSpot(p); // a festival's day: everyone rests at the venue
             switch (p.Kind)
             {
                 case PersonKind.Founder: return _hutWorld + new Vector2(-0.12f, -0.12f);
@@ -928,6 +995,7 @@ namespace Game.Presentation.Map
             if (_ring.gameObject.activeSelf) _ring.color = new Color(1f, 1f, 1f, 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f));
             if (_arrow.gameObject.activeSelf) _arrow.transform.position = ArrowAt(_arrowHit) + new Vector3(0, 0.05f + 0.05f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / 1.1f), 0);
             AnimatePeople();
+            AnimateFires();
             AnimateVehicles();
             Sway();
             if (_ghost != null && _ghost.gameObject.activeSelf)

@@ -189,7 +189,7 @@ namespace Sim.Core.Land
         {
             if (!On(sim) || (source == 1 ? Pump(sim) : Borewell(sim)) == null) return 0;
             PumpedDef d = source == 1 ? Def(sim).Pump : Def(sim).Borewell;
-            return MarketRules.Indexed(sim, d.PowerPerAcreSeason * Acres(sim, source).Count);
+            return Money.MulRate(MarketRules.Indexed(sim, d.PowerPerAcreSeason * Acres(sim, source).Count), Town.EventRules.CostFactor(sim, Town.EventEffect.Fuel, 0)); // a fuel spike (spec 027 §3.2)
         }
 
         // ---- solar panels (US-257, ADR 0138) ----
@@ -237,7 +237,7 @@ namespace Sim.Core.Land
 
         public static long CanalFee(Simulation sim) { return On(sim) ? MarketRules.Indexed(sim, Def(sim).Canal.FeePerAcreSeason * ChannelCount(sim)) : 0; }
 
-        public static long DripPower(Simulation sim) { return On(sim) ? MarketRules.Indexed(sim, Def(sim).Drip.PowerPerAcreSeason * DripCount(sim)) : 0; }
+        public static long DripPower(Simulation sim) { return On(sim) ? Money.MulRate(MarketRules.Indexed(sim, Def(sim).Drip.PowerPerAcreSeason * DripCount(sim)), Town.EventRules.CostFactor(sim, Town.EventEffect.Fuel, 0)) : 0; }
 
         /// <summary>Drip's upkeep: a share of what each acre's drip cost.</summary>
         public static long DripUpkeep(Simulation sim)

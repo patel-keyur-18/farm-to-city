@@ -15,7 +15,7 @@ namespace Sim.Content
         {
             const string root = "township";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke", "utilities", "upgrade", "coldStore");
+            OnlyFields(o, root, "road", "clinic", "quarters", "doctor", "gate", "cohort", "safetyBase", "civic", "landValue", "zoning", "construction", "smoke", "utilities", "upgrade", "coldStore", "townLife");
             string rp = Join(root, "road");
             JObject r = Object(Required(o, root, "road"), rp);
             OnlyFields(r, rp, "petitionHouseholds", "share", "days", "tier");
@@ -114,7 +114,7 @@ namespace Sim.Content
                 };
                 civic.Add(def);
             }
-            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root), Utilities = LoadUtilities(o, root, treasury, map), Upgrade = LoadUpgrade(o, root), ColdStore = LoadColdStore(o, root, market) };
+            return new TownshipDef(new RoadDef(households, share, days, tier), clinic, quarters, doctor, gate, cohort, civic, safetyBase, LoadLandValue(o, root, map), LoadZoning(o, root)) { Construction = LoadConstruction(o, root, treasury), Smoke = LoadSmoke(o, root), Utilities = LoadUtilities(o, root, treasury, map), Upgrade = LoadUpgrade(o, root), ColdStore = LoadColdStore(o, root, market), TownLife = o["townLife"] == null ? null : LoadTownLife(o, root) };
         }
 
         /// <summary>The utilities (spec 025 §3.1): each step's plot, work, lines, reach and capacity, and what going without costs.</summary>
@@ -225,6 +225,99 @@ namespace Sim.Content
                 BrickPrice = Money(Required(pr, pp, "brick"), Join(pp, "brick")), CementPrice = Money(Required(pr, pp, "cement"), Join(pp, "cement")), TimberPrice = Money(Required(pr, pp, "timber"), Join(pp, "timber")),
                 MasonDay = Money(Required(j, p, "masonDay"), Join(p, "masonDay")), GangPrice = Bounded(j, p, "gangPrice", "1", "3"), GangHours = Bounded(j, p, "gangHours", "1", "3"),
                 MaxMasons = BoundedInt(j, p, "maxMasons", 1, 10), RestockHour = BoundedInt(j, p, "restockHour", 0, 23), MasonShare = BoundedInt(j, p, "masonShare", 0, 100), Kinds = kinds,
+            };
+        }
+
+        /// <summary>Town life (spec 026 §4): the five scores' weights, the pull, the grants' bonus, approval, crime and inequality.</summary>
+        private static TownLifeDef LoadTownLife(JObject o, string root)
+        {
+            string p = Join(root, "townLife");
+            JObject j = Object(Required(o, root, "townLife"), p);
+            OnlyFields(j, p, "weights", "pullDivisor", "pullMin", "pullMax", "grantBonusDivisor", "roadTrack", "approvalStart", "crime", "inequality", "petitions", "festivals");
+            string wp = Join(p, "weights");
+            JObject w = Object(Required(j, p, "weights"), wp);
+            string[] names = { "livability", "business", "education", "health", "environment" };
+            OnlyFields(w, wp, names);
+            var weights = new System.Collections.Generic.List<int[]>();
+            for (int i = 0; i < names.Length; i++)
+            {
+                string np = Join(wp, names[i]);
+                var a = Array(Required(w, wp, names[i]), np);
+                if (a.Count != TownLifeDef.PartsEach) throw new ContentException(np, "three weights");
+                var row = new int[TownLifeDef.PartsEach];
+                int sum = 0;
+                for (int k = 0; k < row.Length; k++) { row[k] = Int(a[k], Index(np, k)); Range(row[k], 0, 100, Index(np, k)); sum += row[k]; }
+                if (sum != 100) throw new ContentException(np, "the weights must add up to 100");
+                weights.Add(row);
+            }
+            string cp = Join(p, "crime"), ip = Join(p, "inequality");
+            JObject c = Object(Required(j, p, "crime"), cp), q = Object(Required(j, p, "inequality"), ip);
+            OnlyFields(c, cp, "base", "perUnemployed", "inequalityShare", "landValueStep", "landValueMax");
+            OnlyFields(q, ip, "needsHouseholds", "happinessAbove", "maxPoints", "pushOutAt", "ratioCap");
+            var d = new TownLifeDef
+            {
+                Weights = weights, PullDivisor = BoundedInt(j, p, "pullDivisor", 1, 10), PullMin = BoundedInt(j, p, "pullMin", 10, 100), PullMax = BoundedInt(j, p, "pullMax", 100, 300),
+                GrantBonusDivisor = BoundedInt(j, p, "grantBonusDivisor", 1, 20), RoadTrack = BoundedInt(j, p, "roadTrack", 0, 100), ApprovalStart = BoundedInt(j, p, "approvalStart", 0, 100),
+                CrimeBase = BoundedInt(c, cp, "base", 0, 100), CrimePerUnemployed = Bounded(c, cp, "perUnemployed", "0", "5"), CrimeInequalityShare = Bounded(c, cp, "inequalityShare", "0", "1"),
+                CrimeLandValueStep = Bounded(c, cp, "landValueStep", "0", "0.1"), CrimeLandValueMax = Bounded(c, cp, "landValueMax", "0", "0.5"),
+                NeedsHouseholds = BoundedInt(q, ip, "needsHouseholds", 2, 100), HappinessAbove = BoundedInt(q, ip, "happinessAbove", 1, 10), MaxPoints = BoundedInt(q, ip, "maxPoints", 0, 20),
+                PushOutAt = BoundedInt(q, ip, "pushOutAt", 2, 10), RatioCap = BoundedInt(q, ip, "ratioCap", 5, 100),
+                Petition = LoadPetitions(j, p), Festival = LoadFestivals(j, p),
+            };
+            return d;
+        }
+
+        /// <summary>Festivals (spec 026 §3.1): one for each season, the venues' reach, the lift and the shops' rise.</summary>
+        private static FestivalDef LoadFestivals(JObject o, string root)
+        {
+            string p = Join(root, "festivals");
+            JObject j = Object(Required(o, root, "festivals"), p);
+            OnlyFields(j, p, "inReach", "outside", "squareReach", "daysAhead", "keep", "shops", "list");
+            string sp = Join(p, "shops");
+            JObject shops = Object(Required(j, p, "shops"), sp);
+            OnlyFields(shops, sp, "chai", "sweets", "veg");
+            string lp = Join(p, "list");
+            var arr = Array(Required(j, p, "list"), lp);
+            if (arr.Count != 4) throw new ContentException(lp, "four festivals, one for each season");
+            var kinds = new FestivalKindDef[4];
+            string[] seasons = { "spring", "summer", "monsoon", "winter" };
+            for (int i = 0; i < arr.Count; i++)
+            {
+                string ip = Index(lp, i);
+                JObject k = Object(arr[i], ip);
+                OnlyFields(k, ip, "id", "season", "perPerson");
+                string season = String(Required(k, ip, "season"), Join(ip, "season"));
+                int at = System.Array.IndexOf(seasons, season);
+                if (at < 0) throw new ContentException(Join(ip, "season"), "spring, summer, monsoon or winter");
+                if (kinds[at] != null) throw new ContentException(Join(ip, "season"), "two festivals in " + season);
+                kinds[at] = new FestivalKindDef { Id = String(Required(k, ip, "id"), Join(ip, "id")), Season = at, PerPerson = BoundedInt(k, ip, "perPerson", 20, 300) };
+            }
+            return new FestivalDef
+            {
+                Kinds = System.Array.AsReadOnly(kinds), InReach = BoundedInt(j, p, "inReach", 0, 20), Outside = BoundedInt(j, p, "outside", 0, 20), SquareReach = BoundedInt(j, p, "squareReach", 100, 5000),
+                DaysAhead = BoundedInt(j, p, "daysAhead", 1, 3), Keep = BoundedInt(j, p, "keep", 1, 50),
+                ShopChai = Bounded(shops, sp, "chai", "0", "0.5"), ShopSweets = Bounded(shops, sp, "sweets", "0", "0.5"), ShopVeg = Bounded(shops, sp, "veg", "0", "0.5"),
+            };
+        }
+
+        /// <summary>Petitions and approval (spec 026 §3.2, §3.3).</summary>
+        private static PetitionDef LoadPetitions(JObject o, string root)
+        {
+            string p = Join(root, "petitions");
+            JObject j = Object(Required(o, root, "petitions"), p);
+            OnlyFields(j, p, "minHouseholds", "minShare", "rentShare", "promiseCloses", "done", "kept", "declined", "ignored", "broken", "quietCloses", "declinedQuietCloses", "ignoredAfter", "neutralHappiness", "step", "stepMax", "keepEnded", "keepHistory");
+            string cp = Join(p, "promiseCloses");
+            var arr = Array(Required(j, p, "promiseCloses"), cp);
+            var closes = new System.Collections.Generic.List<int>();
+            for (int i = 0; i < arr.Count; i++) { int n = Int(arr[i], Index(cp, i)); Range(n, 1, 12, Index(cp, i)); closes.Add(n); }
+            if (closes.Count == 0) throw new ContentException(cp, "at least one choice");
+            return new PetitionDef
+            {
+                MinHouseholds = BoundedInt(j, p, "minHouseholds", 1, 50), MinShare = Bounded(j, p, "minShare", "0", "1"), RentShare = Bounded(j, p, "rentShare", "0.1", "0.3"), PromiseCloses = closes.AsReadOnly(),
+                Done = BoundedInt(j, p, "done", 0, 20), Kept = BoundedInt(j, p, "kept", 0, 20), Declined = BoundedInt(j, p, "declined", -20, 0), Ignored = BoundedInt(j, p, "ignored", -20, 0), Broken = BoundedInt(j, p, "broken", -20, 0),
+                QuietCloses = BoundedInt(j, p, "quietCloses", 0, 12), DeclinedQuietCloses = BoundedInt(j, p, "declinedQuietCloses", 0, 12), IgnoredAfter = BoundedInt(j, p, "ignoredAfter", 1, 12),
+                NeutralHappiness = BoundedInt(j, p, "neutralHappiness", 0, 100), Step = BoundedInt(j, p, "step", 1, 50), StepMax = BoundedInt(j, p, "stepMax", 0, 20),
+                KeepEnded = BoundedInt(j, p, "keepEnded", 1, 50), KeepHistory = BoundedInt(j, p, "keepHistory", 2, 24),
             };
         }
 

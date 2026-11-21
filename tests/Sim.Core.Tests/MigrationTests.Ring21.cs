@@ -74,6 +74,12 @@ namespace Sim.Core.Tests
             Assert.That(r.State.Township.LandValues.Length, Is.EqualTo(432), "the ring is read too");
             Assert.That(r.State.Township.UtilitiesBuilt & 0b10, Is.EqualTo(0b10), "the generator (US-144) stands");
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
+            // Sprint 24 (spec 027 AC-15, spec 026 AC-12): a town saved before schema 22 loads with the engine idle, no policy, no offers and no town life read.
+            Assert.That((r.State.Township.Events.StartedAt, r.State.Township.Events.Waiting.Count, r.State.Township.Events.IsDefault), Is.EqualTo((-1L, 0, true)), "the event engine is idle");
+            Assert.That((r.State.Township.Insurance.CropOn, r.State.Township.Insurance.Property.On, r.State.Township.Insurance.IsDefault), Is.EqualTo((false, false, true)), "no policy");
+            Assert.That((r.State.Township.Contracts.Offers.Count, r.State.Township.Contracts.Open.Count), Is.EqualTo((0, 0)), "no offers");
+            Assert.That((r.State.Township.TownLife.Read, r.State.Township.TownLife.Petitions.Count), Is.EqualTo((false, 0)), "no town life read yet");
+            Assert.That(r.State.Farm.Crops.All(c => c.EventHealth == Sim.Core.Maths.Fixed.One && !c.Insured), Is.True, "every crop whole and uninsured");
             // the other parts of the sprint (US-243, US-242, US-254, US-255, US-256, US-257)
             Business.Business kiln = r.State.Businesses.Businesses.Single(x => config.Game.Businesses.Types[x.Type].IsKiln);
             Assert.That(kiln.KilnMade, Is.GreaterThanOrEqualTo(0), "the kiln and its counts");
@@ -87,7 +93,7 @@ namespace Sim.Core.Tests
             Simulation sim = Simulation.FromState(config, r.State);
             MapDef map = config.Game.Map;
             Assert.That(LandRules.Locked(sim, map.IndexOfParcel("rw1a")), Is.False, "the ring is open");
-            Assert.That(LandRules.Locked(sim, map.IndexOfParcel("rh1")), Is.True, "the hills are not");
+            Assert.That(LandRules.Locked(sim, map.IndexOfParcel("rh1")), Is.False, "the hills open with the ring (US-147)");
             Assert.That(LaneRules.Built(sim, map.TileAt(2, 6)), Is.True);
             Assert.That(LaneRules.Built(sim, map.TileAt(2, 12)), Is.False);
             sim.AdvanceTo(sim.State.Clock.SimTime + 2 * sim.Clock.SecondsPerSeason);

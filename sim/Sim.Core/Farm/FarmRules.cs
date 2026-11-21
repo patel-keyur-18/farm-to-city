@@ -112,6 +112,36 @@ namespace Sim.Core.Farm
                 fert.Good < 0 ? 0 : MarketRules.Value(sim, fert.Good, fertGrams, MarketRules.InputPrice(sim, fert.Good)), fertGrams);
         }
 
+        /// <summary>The new seed for one acre of a crop at the dealer's price now (a hail-struck field resown, spec 027 §3.2).</summary>
+        public static long SeedValue(Simulation sim, CropDef crop) { return MarketRules.Value(sim, crop.SeedGood, SeedGrams(sim.Clock, crop), MarketRules.InputPrice(sim, crop.SeedGood)); }
+
+        /// <summary>
+        /// A crop cleared and sown again where it stands (spec 027 §3.2, hail's second choice): its sums start from now, its health is whole, and its jobs are set again.
+        /// The seed's cost was charged by the event.
+        /// </summary>
+        internal static void Resow(Simulation sim, Crop c)
+        {
+            CropDef crop = sim.Config.Game.Farm.Crops[c.Def];
+            FarmSystem.Accrue(sim);
+            if (c.JobId != 0) sim.CompleteJob(sim.State.Jobs.Find(c.JobId));
+            if (c.PestJobId != 0) sim.CompleteJob(sim.State.Jobs.Find(c.PestJobId));
+            long t = sim.State.Clock.SimTime;
+            c.SownAt = t;
+            c.ReadyAt = t + crop.GrowthSeconds;
+            c.WaterSum = c.CareSum = c.WeatherSum = Fixed.Zero;
+            c.WetSeconds = 0;
+            c.Wet = false;
+            c.PestChecked = false;
+            c.Outbreak = Outbreak.None;
+            c.Spray = SprayState.None;
+            c.RolledHealth = Fixed.One;
+            c.EventHealth = Fixed.One;
+            c.HitBy = 0;
+            c.JobId = sim.ScheduleJob(FarmSystem.CropJob, c.Id, c.ReadyAt).Id;
+            c.PestJobId = sim.ScheduleJob(FarmSystem.PestJob, c.Id, t + crop.GrowthSeconds / 2).Id;
+            FarmSystem.Refresh(sim);
+        }
+
         /// <summary>What sowing one cycle would buy now: certified seed not in the store, and fertiliser not in the store (spec 003 §3.2).</summary>
         public static long SowingCost(Simulation sim, CropDef crop, SeedSource seed, FertiliserDef fert)
         {

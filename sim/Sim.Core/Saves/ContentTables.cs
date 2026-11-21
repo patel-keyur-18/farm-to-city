@@ -8,7 +8,7 @@ namespace Sim.Core.Saves
     /// <summary>The ids of each content list a state can point into, in the running content's order (spec 007 §3.1).</summary>
     public static class ContentTables
     {
-        public const int Count = (int)ContentTable.Machine + 1;
+        public const int Count = (int)ContentTable.Event + 1;
 
         public static string[] Ids(SimConfig config, ContentTable table)
         {
@@ -36,6 +36,7 @@ namespace Sim.Core.Saves
                 case ContentTable.Animal: return g?.Livestock == null ? None : Of(g.Livestock.Animals, d => d.Id);
                 case ContentTable.Village: return g?.Population == null ? None : Of(g.Population.Villages, d => d);
                 case ContentTable.Machine: return g?.Equipment == null ? None : Of(g.Equipment.Machines, d => d.Id);
+                case ContentTable.Event: return g?.Events == null ? None : Of(g.Events.Events, d => d.Id);
                 default: throw new ArgumentOutOfRangeException(nameof(table));
             }
         }

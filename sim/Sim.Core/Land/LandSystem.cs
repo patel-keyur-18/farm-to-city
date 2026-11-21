@@ -64,7 +64,7 @@ namespace Sim.Core.Land
             parcel.AcquiredAt = t;
             foreach (Tile tile in land.Tiles)
             {
-                if (tile.ParcelId != parcel.Id || tile.Terrain != Terrain.Farm) continue;
+                if (tile.ParcelId != parcel.Id || !LandRules.Tillable(tile.Terrain)) continue;
                 for (int k = 0; k < defs.Land.FieldEdgeSlotsPerAcre; k++) AddSlot(land, SlotKind.FieldEdge, tile.Id);
             }
         }
@@ -267,7 +267,7 @@ namespace Sim.Core.Land
                     {
                         Fixed change = Fixed.Zero;
                         foreach (Fixed f in tile.Changes) change += f;
-                        if ((change < Fixed.Zero || tile.DrySeconds > 0) && tile.Terrain == Terrain.Farm && land.Parcels[tile.ParcelId].Owned)
+                        if ((change < Fixed.Zero || tile.DrySeconds > 0) && LandRules.Tillable(tile.Terrain) && land.Parcels[tile.ParcelId].Owned)
                             sim.Emit(new FieldSeasonClosed(t, tile.Id, change, tile.Fertility, tile.DrySeconds / 3600));
                         System.Array.Clear(tile.Changes, 0, Tile.ReasonCount);
                         tile.DrySeconds = 0;
@@ -363,7 +363,7 @@ namespace Sim.Core.Land
         /// </summary>
         private static void RecoverFallow(Simulation sim, Tile tile, long t)
         {
-            if (tile.Terrain != Terrain.Farm || tile.Occupied || tile.VacantSince > t - ClockDef.SecondsPerDay) return;
+            if (!LandRules.Tillable(tile.Terrain) || tile.Occupied || tile.VacantSince > t - ClockDef.SecondsPerDay) return;
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned || sim.State.Land.Parcels[tile.ParcelId].Leased) return; // a tenant neither wears the soil out nor builds it up (spec 024 §3.6)
             GameDefs defs = sim.Config.Game;
             Fixed cap = defs.Soils[tile.Soil].FallowCap;

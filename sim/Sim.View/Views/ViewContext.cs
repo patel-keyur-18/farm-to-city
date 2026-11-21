@@ -399,6 +399,9 @@ namespace Sim.View.Views
 
         /// <summary>The picture beside the title: a sprite id the presentation knows (a crop, a tree, "hut", "land").</summary>
         public string Icon { get; internal set; }
+
+        /// <summary>Drawn in amber, a warning (a disaster's card, spec 027 §7).</summary>
+        public bool Amber { get; internal set; }
         public System.Collections.Generic.List<LineVm> Lines { get; } = new System.Collections.Generic.List<LineVm>();
         public System.Collections.Generic.List<ActionVm> Actions { get; } = new System.Collections.Generic.List<ActionVm>();
     }

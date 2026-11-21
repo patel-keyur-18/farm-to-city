@@ -153,7 +153,7 @@ namespace Sim.Core.Equipment
         public static long Hire(Simulation sim, MachineDef d) { return MarketRules.Indexed(sim, d.HirePerDay); }
 
         /// <summary>A season's diesel for <paramref name="acres"/> fields.</summary>
-        public static long Diesel(Simulation sim, MachineDef d, int acres) { return MarketRules.Indexed(sim, d.DieselPerAcreSeason) * acres; }
+        public static long Diesel(Simulation sim, MachineDef d, int acres) { return Money.MulRate(MarketRules.Indexed(sim, d.DieselPerAcreSeason) * acres, Town.EventRules.CostFactor(sim, Town.EventEffect.Fuel, 0)); } // a fuel spike (spec 027 §3.2)
 
         /// <summary>A season's maintenance: a share of what it cost.</summary>
         public static long Maintenance(Simulation sim, Machine m) { return Money.RoundToCoin(Money.MulRate(m.Cost, Defs(sim).Machines[m.Kind].MaintenanceShare)); }
@@ -224,7 +224,7 @@ namespace Sim.Core.Equipment
         }
 
         /// <summary>Working for neighbours on the coming mornings: the switch on, yours (not leased), running, with a hand to drive it.</summary>
-        public static bool HiringOut(Simulation sim, Machine m) { return m.HireOut && !m.Leased && Running(sim, m) && HasDriver(sim); }
+        public static bool HiringOut(Simulation sim, Machine m) { return m.HireOut && !m.Leased && Running(sim, m) && HasDriver(sim) && !Town.EventRules.AnyFlag(sim, Town.EventRules.TractorParked); } // a fuel spike's parked tractor (spec 027 §3.2)
 
         /// <summary>What neighbours pay for a day at the cap: the share of the day's hire for the acres they want (spec 025 §3.8).</summary>
         public static long HireFee(Simulation sim, MachineDef d)

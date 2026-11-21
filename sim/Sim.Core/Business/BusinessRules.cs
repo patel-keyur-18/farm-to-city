@@ -200,6 +200,9 @@ namespace Sim.Core.Business
             return MarketRules.Ceiling(sim, good);
         }
 
+        /// <summary>The import price a business pays for an input: the market's, and a supplier strike's rise while one runs (spec 027 §3.2).</summary>
+        public static Fixed ImportPrice(Simulation sim, Business b, int good) { return MarketRules.Ceiling(sim, good) * Town.EventRules.CostFactor(sim, Town.EventEffect.Inputs, b.Id); }
+
         /// <summary>The livestock kind whose milk <paramref name="good"/> is, or −1.</summary>
         public static int MilkKind(Simulation sim, int good)
         {
@@ -508,7 +511,7 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
                 if (b.Status == BusinessStatus.Open)
                 {
-                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln) Morning(sim, b, took);
+                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln && !Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour) && !Town.EventRules.Shut(sim, b)) Morning(sim, b, took);
                     Work(sim, b);
                 }
             ShopRules.Hourly(sim); // the customers (spec 017 §3.8), after the businesses' hour
@@ -518,6 +521,8 @@ namespace Sim.Core.Business
         public static bool OpenAt(Simulation sim, Business b, int hour)
         {
             if (b.Worker == WorkerKind.None || hour < b.OpenHour || hour >= b.CloseHour) return false;
+            if (Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour)) return false; // a festival's day: only the stalls stay open (owner, 2026-11-20)
+            if (Town.EventRules.Shut(sim, b)) return false; // a strike's pause or a fire's repair (spec 027)
             Worker w = HiredWorker(sim, b);
             return w == null || !WorkRules.Away(w);
         }
@@ -584,6 +589,7 @@ namespace Sim.Core.Business
                 b.Day = start / Day;
                 b.OwnToday = 0;
                 b.AreaToday = 0;
+                b.VillageToday = 0;
                 b.KilnMade = b.KilnToBuilds = b.KilnSold = 0;
             }
             int hour = (int)(start % Day / Hour);
@@ -654,7 +660,7 @@ namespace Sim.Core.Business
             // Then the market's, if allowed: at the local import price (wheat bought in is dearer than your own).
             if (b.BuyFromMarket && left > 0)
             {
-                Fixed price = MarketRules.Ceiling(sim, t.Input);
+                Fixed price = ImportPrice(sim, b, t.Input);
                 long bought = Affordable(sim, b, t.Input, System.Math.Min(left, MarketRoom(sim, b, t)), price);
                 if (bought > 0)
                 {
@@ -819,7 +825,7 @@ namespace Sim.Core.Business
             {
                 // As the batch will cost it: what it holds at its book cost, the rest bought at the import price.
                 long need = Need(kv.Value, q, r.OutputGrams), held = System.Math.Min(need, b.Stock[kv.Key]), buy = need - held;
-                long bought = buy > 0 ? MarketRules.Value(sim, kv.Key, buy, MarketRules.Ceiling(sim, kv.Key)) : 0;
+                long bought = buy > 0 ? MarketRules.Value(sim, kv.Key, buy, ImportPrice(sim, b, kv.Key)) : 0;
                 cost += bought;
                 inputs += bought + (held <= 0 ? 0 : (long)((System.Numerics.BigInteger)b.StockCost[kv.Key] * held / b.Stock[kv.Key]));
             }
@@ -836,7 +842,7 @@ namespace Sim.Core.Business
                 long need = Need(kv.Value, q, r.OutputGrams), buy = need - b.Stock[g];
                 if (buy > 0)
                 {
-                    long value = MarketRules.Value(sim, g, buy, MarketRules.Ceiling(sim, g));
+                    long value = MarketRules.Value(sim, g, buy, ImportPrice(sim, b, g));
                     BusinessBooks.Draw(sim, b, value);
                     if (value > 0) b.Ledger.Post(now, sim.Period, "ledger.boughtAtMarket", reference, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                     b.Stock[g] += buy;
@@ -913,16 +919,64 @@ namespace Sim.Core.Business
         /// Your mill's atta goes to your bakeries first (§3.9c), up to what their mix still needs today less what they hold, as an
         /// internal sale at the trader's price (the mill's sales, the bakery's stock).
         /// </summary>
+        /// <summary>What a business of yours still needs of a good today for its mix, less what it holds (a bakery's atta).</summary>
+        private static long NeedOf(Simulation sim, Business to, int good)
+        {
+            BusinessTypeDef t = TypeOf(sim, to);
+            long need = -to.Stock[good];
+            foreach (RecipeDef r in t.Recipes)
+                foreach (KeyValuePair<int, long> kv in r.Inputs)
+                    if (kv.Key == good) need += Need(kv.Value, System.Math.Max(0, to.Mix[r.Output] - to.MadeToday[r.Output]), r.OutputGrams);
+            return need;
+        }
+
+        /// <summary>
+        /// What a mill offers the village market this hour (US-264, spec 016 §3.5c): its unsold atta after what your bakeries still need and the trader's room
+        /// (what he still takes today while the truck is here, else tomorrow's whole day). 0 for any other business or good.
+        /// </summary>
+        internal static long VillageOffer(Simulation sim, Business b, int good)
+        {
+            if (b.Status != BusinessStatus.Open || b.Stock[good] <= 0) return 0;
+            BusinessTypeDef t = TypeOf(sim, b);
+            if (t.IsShop || t.ByRecipe || t.IsKiln) return 0;
+            bool makes = false;
+            foreach (BusinessOutput o in t.Outputs) if (o.Good == good) makes = true;
+            if (!makes) return 0;
+            string id = sim.Config.Game.Market.Goods[good].Id;
+            if (!Defs(sim).VillageGoods.Contains(id)) return 0;
+            long reserve = MarketRules.TraderBuys(sim) ? MarketRules.TraderCapacityLeft(sim, good) : sim.Config.Game.Market.Region.TraderBuyPerDay(good);
+            foreach (Business to in sim.State.Businesses.Businesses)
+                if (to != b && to.Status == BusinessStatus.Open) reserve += System.Math.Max(0, NeedOf(sim, to, good));
+            return System.Math.Max(0, b.Stock[good] - reserve);
+        }
+
+        /// <summary>The open mills offering this good to the village now, in id order, with what each offers.</summary>
+        internal static List<KeyValuePair<Business, long>> VillageOffers(Simulation sim, int good)
+        {
+            var list = new List<KeyValuePair<Business, long>>();
+            if (sim.State.Businesses == null) return list;
+            foreach (Business b in sim.State.Businesses.Businesses)
+            {
+                long q = VillageOffer(sim, b, good);
+                if (q > 0) list.Add(new KeyValuePair<Business, long>(b, q));
+            }
+            return list;
+        }
+
+        /// <summary>A mill's atta sold at the village market (and what the clearing passed on to the trader's floor): its sales, at the price the market paid.</summary>
+        internal static void SoldToVillage(Simulation sim, Business b, int good, long local, long localAmount, long toTrader, long traderAmount)
+        {
+            if (local + toTrader <= 0) return;
+            Sold(sim, b, good, local + toTrader, SalePrice(sim, b, localAmount + traderAmount));
+            b.VillageToday += local + toTrader;
+        }
+
         private static void ToYourBusinesses(Simulation sim, Business from, int good)
         {
             foreach (Business to in sim.State.Businesses.Businesses)
             {
                 if (to == from || to.Status != BusinessStatus.Open || from.Stock[good] <= 0) continue;
-                BusinessTypeDef t = TypeOf(sim, to);
-                long need = -to.Stock[good];
-                foreach (RecipeDef r in t.Recipes)
-                    foreach (KeyValuePair<int, long> kv in r.Inputs)
-                        if (kv.Key == good) need += Need(kv.Value, System.Math.Max(0, to.Mix[r.Output] - to.MadeToday[r.Output]), r.OutputGrams);
+                long need = NeedOf(sim, to, good);
                 long q = System.Math.Min(from.Stock[good], need);
                 if (q <= 0) continue;
                 long value = MarketRules.Value(sim, good, q, MarketRules.Floor(sim, good));
@@ -1087,6 +1141,7 @@ namespace Sim.Core.Business
                     }
                 }
                 if (b.Status == BusinessStatus.Open || b.Status == BusinessStatus.Building) ShopRules.PayRent(sim, b, sim.Period); // the new season's pitch rent, upfront (spec 017 §3.4)
+                Town.InsuranceRules.CloseBusiness(sim, b); // spec 027 §3.6: its premium from its own cash, or the policy ends
                 BusinessBooks.Sweep(sim, b);
                 b.Ledger.DropEntriesBefore(closing - sim.Config.Game.Ledger.RetainSeasons + 1);
             }

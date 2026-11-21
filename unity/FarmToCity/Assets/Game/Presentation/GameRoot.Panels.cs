@@ -197,6 +197,10 @@ namespace Game.Presentation
                 case RoadSheet.LoanKind: _sheet.Show(RoadSheet.LoanSheet(_ctx), refreshOnly); break; // spec 023 §3.3
                 case ClinicSheet.ClinicLoanKind: _sheet.Show(ClinicSheet.LoanSheet(_ctx, false), refreshOnly); break; // spec 023 §3.1
                 case ClinicSheet.QuartersLoanKind: _sheet.Show(ClinicSheet.LoanSheet(_ctx, true), refreshOnly); break;
+                case EventSheet.CardKind: _sheet.Show(EventSheet.Card(_ctx, r.Id), refreshOnly); break; // spec 027: one card, its choices and what each costs
+                case EventSheet.ListKind: _sheet.Show(EventSheet.List(_ctx), refreshOnly); break; // Menu → Events
+                case FestivalSheet.Kind: _sheet.Show(FestivalSheet.Build(_ctx, r.Arg), refreshOnly); break; // spec 026 §3.1: where, who pays, which day
+                case TownLifeSheet.PromiseKind: _sheet.Show(TownLifeSheet.Promise(_ctx, r.Id), refreshOnly); break; // spec 026 §3.2: when to keep a petition by
                 case EquipmentSheet.Kind: _sheet.Show(EquipmentSheet.Build(_ctx), refreshOnly); break; // spec 013 §7
                 case MachineLoanSheet.Kind: _sheet.Show(MachineLoanSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "Animal":
@@ -217,8 +221,9 @@ namespace Game.Presentation
             SheetRequest r = _open.Value;
             switch (r.Kind)
             {
-                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case TreasurySheet.Kind: case TaxSheet.Kind: case PolicySheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case ColdStoreSheet.Kind: case EquipmentSheet.Kind: case BuildingSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
+                case "Store": case "People": case "Hand": case "Town": case "Household": case "Citizen": case "Business": case "Founder": case "Money": case "Good": case "Alerts": case SavingsSheet.Kind: case TreasurySheet.Kind: case TaxSheet.Kind: case PolicySheet.Kind: case "Settings": case "Orders": case GodownSheet.Kind: case ColdStoreSheet.Kind: case EquipmentSheet.Kind: case BuildingSheet.Kind: case FestivalSheet.Kind: return; // the godown's sheet stays: see what moved there (ADR 0087)
                 case "Offer": Return(new SheetRequest("Good", r.Id)); return;
+                case TownLifeSheet.PromiseKind: Return(new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.LifeTab)); return; // promised: back to the Town life tab, the petition marked
                 case TreasurySheet.GiveKind: Return(new SheetRequest(TreasurySheet.Kind, 0)); return; // given: back to the treasury to see its balance
                 case TreasurySheet.BudgetKind: Return(new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)); return; // set: back to the Budget tab, the new figure there
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0, MoneySheet.Wealth)); return;
@@ -232,6 +237,7 @@ namespace Game.Presentation
                 case MachineLoanSheet.Kind: Return(new SheetRequest(EquipmentSheet.Kind, 0)); return; // bought: see it among yours
                 case "Hire": if (_back.Count > 0) Back(); else Return(new SheetRequest("People", 0)); return; // back to People: who's working
                 case "Word": return; // the board stays: the post, a reference asked, a talk
+                case EventSheet.CardKind: if (_back.Count > 0) Back(); else _sheet.Close(); return; // answered: the card is gone; back to the Events list or the bell it came from
                 case "HrEvent": if (_back.Count > 0) Back(); else _sheet.Close(); return; // answered: back to the alerts it came from
                 case "TownOffer": Return(new SheetRequest("Citizen", r.Id)); return; // back to their card: hired, countered or not
                 case "JobOffer": Return(new SheetRequest("Word", r.Arg == null ? 0 : long.Parse(r.Arg, System.Globalization.CultureInfo.InvariantCulture))); return; // back to the job's tab: hired, countered or gone

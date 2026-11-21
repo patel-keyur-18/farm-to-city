@@ -13,13 +13,15 @@ namespace Game.Presentation.Map
             new[] { 0xFDF1CF, 0xF8DC92, 0xEFBD4C, 0xD38A16, 0x9A5A05 }, // land value: amber
             new[] { 0xE6EEF8, 0xC1D6EE, 0x8FB4DE, 0x4F84C0, 0x1F4F8F }, // coverage: blue
             new[] { 0xF0E8F7, 0xD9C6EC, 0xB996D8, 0x8F5CBF, 0x5E2D95 }, // happiness: violet
+            new[] { 0xF9E3DA, 0xF1C0AD, 0xE59470, 0xCB5E3C, 0x93321D }, // crime: terracotta red, once the town is read (spec 026)
         };
 
         private const int CrimeGrey = 0xCFCFC8;
 
-        public static Color Step(OverlayKind kind, int step)
+        /// <param name="live">False for crime before the town's first reading: one grey step, nothing to read.</param>
+        public static Color Step(OverlayKind kind, int step, bool live = true)
         {
-            if (kind == OverlayKind.Crime) return Painter.Hex(CrimeGrey);
+            if (kind == OverlayKind.Crime && !live) return Painter.Hex(CrimeGrey);
             int[] ramp = Ramps[(int)kind - 1];
             return Painter.Hex(ramp[Mathf.Clamp(step, 0, ramp.Length - 1)]);
         }
@@ -91,7 +93,7 @@ namespace Game.Presentation.Map
             {
                 int step = t < vm.Steps.Length ? vm.Steps[t] : OverlayVm.NoStep;
                 Color32 c = Dimmed;
-                if (step >= 0) { Color col = OverlayColours.Step(vm.Kind, step); col.a = TintAlpha; c = col; }
+                if (step >= 0) { Color col = OverlayColours.Step(vm.Kind, step, vm.Labels.Count > 0); col.a = TintAlpha; c = col; }
                 for (int k = 0; k < 4; k++) _tintColours[t * 4 + k] = c;
             }
             _tintMesh.colors32 = _tintColours;

@@ -262,7 +262,8 @@ namespace Sim.Core.People
         public static int Patience(Simulation sim, Household x)
         {
             PopulationDefs p = P(sim);
-            return System.Math.Min(p.SettledMax, p.LeaveSeasons + YearsHere(sim, x) * p.SettledPerYear);
+            int patience = System.Math.Min(p.SettledMax, p.LeaveSeasons + YearsHere(sim, x) * p.SettledPerYear);
+            return Sim.Core.Town.TownLifeRules.PushedOut(sim, x) ? System.Math.Max(1, patience - 1) : patience; // spec 026 §3.6: the poorest tenth of an unequal town
         }
 
         /// <summary>A schema-17 town (§3.14, AC-23): each tenant's lease starts now at its present rent; every household settles now.</summary>

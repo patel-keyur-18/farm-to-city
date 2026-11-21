@@ -57,6 +57,7 @@ namespace Sim.Core
                 if (config.Game.Businesses != null) AddSystem(new Business.BusinessSystem());
                 if (config.Game.Equipment != null) AddSystem(new Equipment.EquipmentSystem());
                 if (config.Game.Treasury != null) AddSystem(new Town.TreasurySystem());
+                if (config.Game.Events != null) AddSystem(new Town.EventsSystem()); // spec 027: last, after the treasury
             }
             foreach (ISimSystem s in config.ExtraSystems) AddSystem(s);
             var handlers = new List<IJobHandler>();
@@ -78,6 +79,7 @@ namespace Sim.Core
                 handlers.Add(new Town.ClinicRules.BuildQuarters());
                 handlers.Add(new Town.ClinicRules.Arrive());
                 handlers.Add(new Town.CivicRules.Arrive());
+                handlers.Add(new Town.FestivalRules.Held());
                 handlers.Add(new Town.ConstructionRules.Done());
             }
             handlers.AddRange(config.JobHandlers);
@@ -338,6 +340,7 @@ namespace Sim.Core
             Emit(new AwayAdvanceCompleted(State.Clock.SimTime, from, State.Clock.SimTime, requested, applied, capped));
             _awayReport.Clear();
             for (int i = firstEvent; i < _events.Count; i++) _awayReport.Add(_events[i]);
+            Town.EventRules.OnReturn(this); // today's roll, for a player who is now here (after the away report: its cards are new, not something that happened while away)
         }
 
         // ---- Processing ----

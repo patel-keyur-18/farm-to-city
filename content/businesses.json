@@ -4,7 +4,8 @@
     "grainPerPersonPerRealDay": 0.40,
     "nextVillageFee": 4,
     "feeTolerance": 1,
-    "marketStockDays": 2
+    "marketStockDays": 2,
+    "villageGoods": ["atta"]
   },
   "funding": {
     "businessLtv": 0.6,

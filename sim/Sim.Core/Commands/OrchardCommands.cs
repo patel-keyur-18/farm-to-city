@@ -28,7 +28,7 @@ namespace Sim.Core.Commands
             int d = sim.Config.Game.Farm.IndexOfTree(TreeId);
             if (d < 0 || OrchardRules.TreesPerAcre(sim, d) == 0) return CommandResult.Reject(RejectReason.UnknownTree);
             TreeDef def = sim.Config.Game.Farm.Trees[d];
-            if (def.HillOnly) return CommandResult.Reject(RejectReason.TerrainNotAllowed);
+            if (def.HillOnly && sim.State.Land.Tiles[TileId].Terrain != Terrain.Hill) return CommandResult.Reject(RejectReason.HillOnly);
             long cost = OrchardRules.Price(sim, d);
             if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
 

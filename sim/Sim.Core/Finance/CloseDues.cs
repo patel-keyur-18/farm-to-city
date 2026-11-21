@@ -8,7 +8,7 @@ using Sim.Core.People;
 
 namespace Sim.Core.Finance
 {
-    public enum DueKind { Loan, Living, Hand, Warehouse, Water, School, Machine, HouseTax, ColdStore }
+    public enum DueKind { Loan, Living, Hand, Warehouse, Water, School, Machine, HouseTax, ColdStore, Insurance, Contract }
 
     /// <summary>One charge the next season close takes from the founder's cash (ADR 0101 §1).</summary>
     public sealed class CloseDue
@@ -41,7 +41,8 @@ namespace Sim.Core.Finance
         public long Loan { get; internal set; }
         public long Wage { get; internal set; }
         public long Rent { get; internal set; }
-        public long Total { get { return Loan + Wage + Rent; } }
+        public long Insurance { get; internal set; }
+        public long Total { get { return Loan + Wage + Rent + Insurance; } }
 
         /// <summary>Its cash plus what's left of its overdraft.</summary>
         public long CanSpend { get; internal set; }
@@ -129,6 +130,10 @@ namespace Sim.Core.Finance
                     if (diesel > 0) list.Add(MachineDue(m, d, "diesel", diesel));
                 }
             }
+            long contract = atClose ? 0 : Town.ContractRules.Due(sim); // a shortfall as it stands, and what was carried
+            if (contract > 0) list.Add(new CloseDue { Key = "contract", Kind = DueKind.Contract, Amount = contract });
+            long insurance = Town.InsuranceRules.NextProperty(sim);
+            if (insurance > 0) list.Add(new CloseDue { Key = "insurance", Kind = DueKind.Insurance, Amount = insurance }); // last: a premium that cash cannot pay ends the policy, never a debt
             return list;
         }
 
@@ -146,6 +151,7 @@ namespace Sim.Core.Finance
                 Worker w = sim.State.People?.WorkerAt(b.Id);
                 if (b.Status == BusinessStatus.Open && w != null && !HrRules.Leaves(sim, w)) due.Wage = System.Math.Max(0, Town.PolicyRules.WageFloor(sim, w.Wage, People.HiringRules.MarketWage(sim, b.Id)) - w.Hr.Advance);
                 if (b.Pitch >= 0 && sim.Config.Game.Shops != null) due.Rent = MarketRules.Indexed(sim, sim.Config.Game.Shops.PitchRent);
+                due.Insurance = Town.InsuranceRules.NextBusiness(sim, b);
                 if (due.Total > 0) list.Add(due);
             }
             return list;

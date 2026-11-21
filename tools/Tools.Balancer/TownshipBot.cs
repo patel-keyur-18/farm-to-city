@@ -36,11 +36,16 @@ namespace Tools.Balancer
         /// <summary>A policy to enact as soon as the town can (spec 022: the policy-affordability measurement, US-263 item 8), or null.</summary>
         public PolicyId? Policy { get; set; }
 
+        /// <summary>The risk exploit bots (specs 026 and 027 §9, AC-19): every policy on, every forward contract accepted, every festival held with the treasury paying.</summary>
+        public enum RiskUse { None, Insure, Contracts, Festivals }
+
+        public RiskUse Risk { get; set; }
+
         private readonly List<int> _houseAcres = new List<int>();
 
         public TownshipBot(bool saver = false) : base(saver, "HMS", "flour_mill", "tea_stall", "veg_stall") { }
 
-        public override string Name { get { return (Saver ? "township-saver" : "township") + (Land == LandUse.None ? "" : "-" + Land.ToString().ToLowerInvariant()) + (Policy == null ? "" : "-" + Policy.Value.ToString().ToLowerInvariant()); } }
+        public override string Name { get { return (Saver ? "township-saver" : "township") + (Land == LandUse.None ? "" : "-" + Land.ToString().ToLowerInvariant()) + (Policy == null ? "" : "-" + Policy.Value.ToString().ToLowerInvariant()) + (Risk == RiskUse.None ? "" : "-" + Risk.ToString().ToLowerInvariant()); } }
 
         /// <summary>A bought acre kept for houses is never sown.</summary>
         protected override bool KeepsClear(Simulation sim, int tile) { return _houseAcres.Contains(tile) || base.KeepsClear(sim, tile); }
@@ -56,6 +61,27 @@ namespace Tools.Balancer
             MoreHomes(sim, t);
             if (Policy != null && sim.State.Treasury.Opened && PolicyRules.CanEnact(sim, Policy.Value) == RejectReason.None && !PolicyRules.Of(sim, Policy.Value).Repealing) Ok(sim, new EnactPolicy(t, Policy.Value));
             if (Land != LandUse.None && sim.State.Township != null && sim.State.Township.Cohort.Joined) UseLand(sim, t);
+            if (Risk != RiskUse.None && sim.State.Township != null && TownshipRules.Reached(sim)) UseRisk(sim, t);
+        }
+
+        /// <summary>The risk exploit bots: once a day at 10:00, whatever the Township offers of that kind is taken.</summary>
+        private void UseRisk(Simulation sim, long t)
+        {
+            if (t % 86_400 / 3600 != 10) return;
+            if (Risk == RiskUse.Insure)
+            {
+                Ok(sim, new SetCropInsurance(t, true));
+                Ok(sim, new SetPropertyInsurance(t, true));
+                foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses) Ok(sim, new SetBusinessInsurance(t, b.Id, true));
+            }
+            else if (Risk == RiskUse.Contracts)
+            {
+                foreach (var offer in sim.State.Township.Contracts.Offers.ToList()) Ok(sim, new AcceptContract(t, offer.Id));
+            }
+            else if (!FestivalRules.DoneThisSeason(sim))
+            {
+                foreach (int venue in new[] { 0, 1 }) if (Ok(sim, new ScheduleFestival(t, venue, 0, 1))) return;
+            }
         }
 
         /// <summary>The land stress bots: idle parcels leased or zoned; and each buys one serviced parcel a season to do it with (the holder sells it slowly once its value has risen a tenth).</summary>

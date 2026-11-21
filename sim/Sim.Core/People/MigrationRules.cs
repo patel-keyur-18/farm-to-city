@@ -110,6 +110,16 @@ namespace Sim.Core.People
             s.NextFamilyAt = 0;
         }
 
+        /// <summary>A family welcomed now (spec 027 §3.2, the "new family" event): it moves into a free house of yours at once. False if none is free.</summary>
+        internal static bool ArriveNow(Simulation sim)
+        {
+            Building free = PopulationRules.FreeHouse(sim);
+            if (free == null || free.Builders) return false;
+            Arrive(sim, free);
+            sim.State.Citizens.NextFamilyAt = 0;
+            return true;
+        }
+
         private static void CloseOffer(CitizensState s)
         {
             s.OfferHandId = 0;
@@ -123,7 +133,9 @@ namespace Sim.Core.People
             PopulationDefs p = sim.Config.Game.Population;
             int jitter = p.FamilyJitterHours;
             long hours = p.FamilyEveryHours - jitter + (long)Rng.Below(PopulationRules.Roll(sim, RngStream.Migration, 0, WaitKey, t), (ulong)(2 * jitter + 1));
-            return hours * Hour;
+            long secs = hours * Hour;
+            Fixed pull = Sim.Core.Town.TownLifeRules.Pull(sim);
+            return pull == Fixed.FromInt(100) ? secs : (Fixed.FromInt(secs) * Fixed.FromInt(100) / pull).FloorToLong(); // spec 026 §3.7: a name that draws families shortens the wait
         }
 
         private const long ForHousehold = 1, ForCitizen = 2, ForAnswer = 3;

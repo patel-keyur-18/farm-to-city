@@ -263,6 +263,7 @@ namespace Sim.Core.People
         internal static void PayOutsideWork(Simulation sim)
         {
             long t = sim.State.Clock.SimTime, dayStart = t - ClockDef.SecondsPerDay, pay = OutsideDayPay(sim);
+            if (Sim.Core.Town.FestivalRules.WasFestival(sim, (t - 1) / ClockDef.SecondsPerDay)) return; // the day that ended was a festival's: nobody went out to work (owner, 2026-11-20)
             foreach (Household x in sim.State.Citizens.Households)
                 foreach (long id in x.Members)
                 {

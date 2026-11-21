@@ -56,12 +56,29 @@
     "drains": { "place": "drains_plot", "work": "drains", "upkeepLine": "drains", "reach": 500, "capacity": 300 },
     "collection": { "place": "collection_plot", "work": "collection_post", "upkeepLine": "collection", "extraLine": "collector", "reach": 100000, "capacity": 400 }
   },
-  "coldStore": { "rentPerKgSeason": 1.00, "maxRentTonnes": 20, "goods": { "potato": 0.1, "mango": 0.25, "guava": 0.25 } },
+  "coldStore": { "rentPerKgSeason": 1.00, "maxRentTonnes": 20, "goods": { "potato": 0.1, "mango": 0.25, "guava": 0.25, "apple": 0.25 } },
   "upgrade": { "puccaMinLandValue": 1.15, "puccaRent": 7000 },
   "zoning": { "familiesPerAcre": 2, "homesPerAcre": 2, "parcelsPerSeason": 1, "permitFee": 0.02, "turnedAwayMax": 16 },
   "civic": {
     "watchman": { "place": "watchman_plot", "work": "watchman_post", "upkeepLine": "watchmanPost", "wageLine": "watchman", "reach": 700, "capacity": 300, "gain": 0.5, "staffHours": 24, "leaveCloses": 2 },
     "hall": { "place": "hall_plot", "work": "community_hall", "upkeepLine": "hall", "wageLine": "caretaker", "reach": 1000, "capacity": 250, "gain": 0.2, "staffHours": 24, "leaveCloses": 2 },
     "playground": { "place": "playground_plot", "work": "playground", "upkeepLine": "playground", "reach": 600, "capacity": 60, "gain": 0.3, "staffHours": 0, "leaveCloses": 2 }
+  },
+  "townLife": {
+    "weights": { "livability": [50, 30, 20], "business": [40, 30, 30], "education": [50, 30, 20], "health": [40, 30, 30], "environment": [40, 30, 30] },
+    "pullDivisor": 2, "pullMin": 50, "pullMax": 150, "grantBonusDivisor": 5, "roadTrack": 40, "approvalStart": 50,
+    "crime": { "base": 20, "perUnemployed": 2, "inequalityShare": 0.3, "landValueStep": 0.02, "landValueMax": 0.10 },
+    "inequality": { "needsHouseholds": 10, "happinessAbove": 4, "maxPoints": 6, "pushOutAt": 6, "ratioCap": 10 },
+    "petitions": { "minHouseholds": 3, "minShare": 0.20, "rentShare": 0.25, "promiseCloses": [1, 2, 4], "done": 4, "kept": 6, "declined": -2, "ignored": -2, "broken": -8, "quietCloses": 1, "declinedQuietCloses": 4, "ignoredAfter": 2, "neutralHappiness": 65, "step": 5, "stepMax": 4, "keepEnded": 6, "keepHistory": 6 },
+    "festivals": {
+      "inReach": 8, "outside": 3, "squareReach": 500, "daysAhead": 3, "keep": 8,
+      "shops": { "chai": 0.30, "sweets": 0.30, "veg": 0.10 },
+      "list": [
+        { "id": "seed_fair", "season": "spring", "perPerson": 80 },
+        { "id": "mango_mela", "season": "summer", "perPerson": 100 },
+        { "id": "rain_night", "season": "monsoon", "perPerson": 80 },
+        { "id": "harvest_mela", "season": "winter", "perPerson": 120 }
+      ]
+    }
   }
 }

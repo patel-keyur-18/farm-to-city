@@ -37,7 +37,7 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuildSilagePit), typeof(BuyChaffCutter), typeof(FitSolarPanel), typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(AnswerEvent), typeof(AcceptContract), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition), typeof(ScheduleFestival));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
@@ -46,7 +46,7 @@ namespace Sim.View.Views
                 typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetStandingOrder),
                 typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(UnzoneParcel), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
                 typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(PostCivicJob), typeof(DismissStaff), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
-                typeof(CompleteStep), typeof(SkipFirstSession), typeof(FindCodexCards), typeof(ReadCodexCard), typeof(HearAdvisors));
+                typeof(CompleteStep), typeof(SkipFirstSession), typeof(FindCodexCards), typeof(ReadCodexCard), typeof(HearAdvisors), typeof(SetCropInsurance), typeof(SetPropertyInsurance), typeof(SetBusinessInsurance));
             Add(ConfirmKind.System, typeof(AdvanceTo), typeof(DebugAdvance), typeof(DebugNextEra), typeof(LiveRun), typeof(NewGame), typeof(Sync));
             return k;
         }
@@ -110,6 +110,7 @@ namespace Sim.View.Views
         {
             ConfirmKind kind = ConfirmRules.Of(c);
             if (kind != ConfirmKind.Tap && kind != ConfirmKind.Hold) return null;
+            if (c is AnswerPetition promise && promise.Closes != 0) return null; // a promise costs nothing and ends nothing: it is its own choice sheet
             if (c is RepealPolicy undo && ctx.Sim.State.Treasury != null && ctx.Sim.State.Treasury.Policies[(int)undo.Policy].PaidCloses == 0) return null; // never paid: taking it back costs nothing and ends at once
             if (c is EndLease cancel && Sim.Core.Town.LandLeaseRules.StatusOf(ctx.Sim.State.Land.Parcels[ctx.Sim.Config.Game.Map.IndexOfParcel(cancel.ParcelId)]) == Sim.Core.Land.LeaseStatus.Starting) return null; // not started: cancelling costs nothing and ends at once
             if (c is EnactPolicy keep && ctx.Sim.State.Treasury != null && ctx.Sim.State.Treasury.Policies[(int)keep.Policy].Repealing) return null; // keeping a policy that is ending costs nothing new
@@ -119,6 +120,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             string name = c.GetType().Name;
             long cash = after.State.Ledger.Cash - sim.State.Ledger.Cash;
+            if (c is AnswerEvent && cash == 0) return null; // a choice that costs nothing is just answered (spec 027 §3.1)
             if ((c is RentWarehouse || c is RentColdStore) && cash == 0) return null; // stopping or cutting the rent spends nothing: no card (ADR 0103)
             if (c is SetSavingsCover cover && !cover.Always) return null; // back to Ask me: nothing can move, so nothing to ask
             long owedBefore = Owed(sim), owedAfter = Owed(after);
@@ -136,12 +138,18 @@ namespace Sim.View.Views
             else if (c is CommissionWorks works) Works(ctx, vm, sim, after, works);
             else if (c is EnactPolicy enact) Enacting(ctx, vm, sim, after, enact);
             else if (c is PetitionRoad || c is BuildClinic || c is BuildDoctorQuarters) Road(ctx, vm, cash, taken, after, newest, name);
+            else if (c is AnswerPetition) Declining(ctx, vm);
+            else if (c is AnswerEvent insured && Sim.Core.Town.EventRules.State(sim)?.Waiting.Find(x => x.Id == insured.EventId) is Sim.Core.Town.PendingEvent repair && Sim.Core.Town.InsuranceRules.RepairPays(sim, repair, insured.Choice) > 0) InsuredRepair(ctx, vm, sim, after, repair, insured.Choice); // US-155: an insured fire's bill, the refund and what you pay
+            else if (c is AcceptContract accept) Contracting(ctx, vm, sim, accept);
+            else if (c is ScheduleFestival fest) Festival(ctx, vm, sim, after, fest);
             else if (c is RepealPolicy repeal) Repealing(ctx, vm, sim, repeal);
             else if (c is ListParcel || c is CancelSale) Listing(ctx, vm, c);
             else if (c is ZoneParcel zp) Zoning(ctx, vm, zp);
             else if (c is LeaseOutLand || c is EndLease) Leasing(ctx, vm, c);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + (c is BuyParcel && Sim.Core.Town.LandValueRules.On(sim) ? ".warnTownship" : ".warn"), "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
+            if (c is ScheduleFestival fw) vm.Warning = FestivalWarning(ctx, after, fw);
+            if (c is AcceptContract ac) vm.Warning = ContractWarning(ctx, sim, ac);
             if (c is CommissionWorks cw) { if (Sim.Core.Town.LaneRules.OfWork(sim, cw.WorkId) >= 0) LaneSheet.Guard(ctx, vm, after); else if (Sim.Core.Town.UtilityRules.OfWork(sim, cw.WorkId) >= 0) UtilitySheet.Guard(ctx, vm, after, cw.WorkId); else { CivicSheet.Guard(ctx, vm, cw.WorkId); if (Sim.Core.Town.ConstructionRules.On(sim) && Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(cw.WorkId) != null) vm.Warning = BuildingSheet.Timing(ctx, after, false) + " " + vm.Warning; } }
             if (c is FoundBusiness kiln && kiln.Pitch < 0 && sim.Config.Game.Businesses.IndexOfType(kiln.TypeId) >= 0 && sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)].IsKiln)
                 vm.Warning = KilnSheet.Smoke(ctx, sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)], kiln.TileId); // US-243: the smoke's footprint, counted
@@ -166,6 +174,36 @@ namespace Sim.View.Views
             }
             if (c is CommissionWorks lw && Sim.Core.Town.LaneRules.OfWork(sim, lw.WorkId) >= 0) vm.GoLabel = s.Get("lane.cardGo", "amount", ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash));
             return vm;
+        }
+
+        /// <summary>A forward contract (spec 027 §3.7): the crop and quantity, the fixed price beside the expected one, when it is delivered. Nothing is paid now.</summary>
+        private static void Contracting(ViewContext ctx, ConfirmCardVm vm, Simulation sim, AcceptContract c)
+        {
+            var s = ctx.Strings;
+            Sim.Core.Town.Contract o = Sim.Core.Town.ContractRules.State(sim).Offers.Find(x => x.Id == c.OfferId);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AcceptContract.qty"), ctx.Fmt.Kg(o.Quantity)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AcceptContract.expected"), ctx.Fmt.PricePerKg(o.Expected)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AcceptContract.price"), ctx.Fmt.PricePerKg(o.Price), total: true));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AcceptContract.when"), FieldSheets.SeasonName(ctx, o.Delivery)));
+        }
+
+        /// <summary>It is binding: the first kilos you sell are paid at the price, and a shortfall pays the difference if the market rose.</summary>
+        private static string ContractWarning(ViewContext ctx, Simulation sim, AcceptContract c)
+        {
+            Sim.Core.Town.Contract o = Sim.Core.Town.ContractRules.State(sim).Offers.Find(x => x.Id == c.OfferId);
+            Sim.Core.Definitions.GoodDef good = sim.Config.Game.Market.Goods[sim.Config.Game.Market.IndexOf(o.Good)];
+            return ctx.Strings.Get("confirm.AcceptContract.binding", "qty", ctx.Fmt.Kg(o.Quantity), "crop", ctx.Strings.Get(good.NameKey).ToLowerInvariant(), "season", FieldSheets.SeasonName(ctx, o.Delivery));
+        }
+
+        /// <summary>An insured fire's repair (spec 027 §3.6): the bill, what the policy pays back, what you pay, the cash after.</summary>
+        private static void InsuredRepair(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after, Sim.Core.Town.PendingEvent repair, int choice)
+        {
+            var s = ctx.Strings;
+            long bill = Sim.Core.Town.EventRules.ChoiceCost(sim, repair.Def, choice, repair), back = Sim.Core.Town.InsuranceRules.RepairPays(sim, repair, choice);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.insuredBill"), ctx.Fmt.Coins(bill)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.insuredBack"), ctx.Fmt.Coins(back)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.insuredYouPay"), ctx.Fmt.Coins(System.Math.Max(0, sim.State.Ledger.Cash - after.State.Ledger.Cash))));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
         }
 
         /// <summary>What you pay and what is borrowed: the cost, the loan, what you pay now, the first payment, the cash after.</summary>
@@ -208,6 +246,40 @@ namespace Sim.View.Views
         }
 
         /// <summary>Offering a parcel to builders (spec 024 §3.3): its land value, the families a builder waits for, what you receive; nothing is paid by you and it can be taken back.</summary>
+        /// <summary>Declining a petition (spec 026 §3.2): approval falls and the families don't raise it again for a while.</summary>
+        private static void Declining(ViewContext ctx, ConfirmCardVm vm)
+        {
+            var s = ctx.Strings;
+            Sim.Core.Definitions.PetitionDef d = Sim.Core.Town.PetitionRules.Def(ctx.Sim);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AnswerPetition.approval"), TownLifeSheet.Signed(ctx, d.Declined)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AnswerPetition.again"), s.Get("confirm.AnswerPetition.againValue", "n", ctx.Fmt.Integer(d.DeclinedQuietCloses)), total: true));
+        }
+
+        /// <summary>Holding a festival (spec 026 §3.1): where, which day, the cost, who pays, what is left, and whether the town would still pay its bills.</summary>
+        private static void Festival(ViewContext ctx, ConfirmCardVm vm, Simulation sim, Simulation after, ScheduleFestival f)
+        {
+            var s = ctx.Strings;
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.where"), FestivalSheet.VenueName(ctx, f.Venue)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.day"), FestivalSheet.DayName(ctx, f.DaysAhead)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.cost"), ctx.Fmt.Coins(Sim.Core.Town.TownLifeRules.State(after).FestivalCost)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.paidBy"), s.Get(f.Payer == Sim.Core.Definitions.FestivalDef.Town ? "festival.theTown" : "festival.youGift")));
+            if (f.Payer == Sim.Core.Definitions.FestivalDef.Town)
+            {
+                long shortBy = Sim.Core.Town.TreasuryRules.Forecast(after).Short;
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.guard"), shortBy > 0 ? s.Get("confirm.ScheduleFestival.guardShort", "short", ctx.Fmt.Coins(shortBy)) : s.Get("confirm.ScheduleFestival.guardOk")));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ScheduleFestival.treasuryAfter"), ctx.Fmt.Coins(after.State.Treasury.Cash), total: true));
+            }
+            else vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.cashAfter"), ctx.Fmt.Coins(after.State.Ledger.Cash), total: true));
+        }
+
+        /// <summary>The line under a festival card: whether the town would still pay its bills (or that a gift is outside farm profit), and that it can't be undone.</summary>
+        private static string FestivalWarning(ViewContext ctx, Simulation after, ScheduleFestival f)
+        {
+            var s = ctx.Strings;
+            string first = f.Payer == Sim.Core.Definitions.FestivalDef.Town ? null : s.Get("confirm.ScheduleFestival.giftNote");
+            return first == null ? s.Get("confirm.ScheduleFestival.warn") : first + " " + s.Get("confirm.ScheduleFestival.warn");
+        }
+
         private static void Zoning(ViewContext ctx, ConfirmCardVm vm, ZoneParcel c)
         {
             var s = ctx.Strings;
@@ -381,6 +453,16 @@ namespace Sim.View.Views
             {
                 Sim.Core.People.Hand hand = ctx.Sim.State.People?.Hand(dh.HandId);
                 return hand == null ? null : Sim.View.Views.PeopleWords.Name(ctx, hand.Name);
+            }
+            if (c is AnswerPetition pa)
+            {
+                Sim.Core.Town.TownPetition pet = Sim.Core.Town.TownLifeRules.State(ctx.Sim)?.Petitions.Find(x => x.Id == pa.PetitionId);
+                return pet == null ? null : TownLifeSheet.Text(ctx, pet);
+            }
+            if (c is AcceptContract ctr)
+            {
+                Sim.Core.Town.Contract o = Sim.Core.Town.ContractRules.State(ctx.Sim)?.Offers.Find(x => x.Id == ctr.OfferId);
+                return o == null ? null : ctx.Strings.Get(ctx.Sim.Config.Game.Market.Goods[defs.Market.IndexOf(o.Good)].NameKey);
             }
             if (c is FitSolarPanel fs) return ctx.Strings.Get(fs.Source == 1 ? "water.pump" : "water.borewell"); // which source the panel is for
             string id = c is BuyParcel b ? b.ParcelId : c is SellParcel sp ? sp.ParcelId : c is ListParcel lp ? lp.ParcelId : c is CancelSale cs ? cs.ParcelId : c is ZoneParcel zp2 ? zp2.ParcelId : c is LeaseOutLand lo ? lo.ParcelId : c is EndLease el ? el.ParcelId : null;

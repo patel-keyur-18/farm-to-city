@@ -288,4 +288,88 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "BuildFinished(" + ProjectId + ", " + Kind + ", owner=" + Owner + ", tile=" + TileId + ")"; }
     }
+
+    /// <summary>The town was read at a close (spec 026 §3.4, §3.5, §3.6): the mean of the five reputation scores, crime and the inequality ratio (whole units; known only from 10 households).</summary>
+    public sealed class ReputationRead : SimEvent
+    {
+        public long Mean { get; }
+        public long Crime { get; }
+        public bool RatioKnown { get; }
+        public long Ratio { get; }
+
+        public ReputationRead(long simTime, long mean, long crime, bool ratioKnown, long ratio) : base(simTime)
+        {
+            Mean = mean;
+            Crime = crime;
+            RatioKnown = ratioKnown;
+            Ratio = ratio;
+        }
+
+        protected override string Describe() { return "ReputationRead(mean " + Mean + ", crime " + Crime + (RatioKnown ? ", ratio " + Ratio : "") + ")"; }
+    }
+
+    /// <summary>Your households raised a petition at a close (spec 026 §3.2): its topic, the side of the town and how many families.</summary>
+    public sealed class PetitionRaised : SimEvent
+    {
+        public int Id { get; }
+        public int Topic { get; }
+        public int Side { get; }
+        public int Households { get; }
+
+        public PetitionRaised(long simTime, int id, int topic, int side, int households) : base(simTime) { Id = id; Topic = topic; Side = side; Households = households; }
+
+        protected override string Describe() { return "PetitionRaised(" + Id + ", topic " + Topic + ", side " + Side + ", " + Households + " families)"; }
+    }
+
+    /// <summary>A petition ended (spec 026 §3.2): done, kept, declined, ignored or broken, and what it did to approval.</summary>
+    public sealed class PetitionEnded : SimEvent
+    {
+        public int Id { get; }
+        public int Topic { get; }
+        public Town.PetitionStatus Status { get; }
+        public int Points { get; }
+
+        public PetitionEnded(long simTime, int id, int topic, Town.PetitionStatus status, int points) : base(simTime) { Id = id; Topic = topic; Status = status; Points = points; }
+
+        protected override string Describe() { return "PetitionEnded(" + Id + ", topic " + Topic + ", " + Status + ", approval " + Points + ")"; }
+    }
+
+    /// <summary>Approval moved (spec 026 §3.3): at a close, or when you declined a petition.</summary>
+    public sealed class ApprovalMoved : SimEvent
+    {
+        public long From { get; }
+        public long To { get; }
+
+        public ApprovalMoved(long simTime, long from, long to) : base(simTime) { From = from; To = to; }
+
+        protected override string Describe() { return "ApprovalMoved(" + From + " to " + To + ")"; }
+    }
+
+    /// <summary>A festival was scheduled (spec 026 §3.1): its kind (a season), venue, who paid, the day and the cost.</summary>
+    public sealed class FestivalScheduled : SimEvent
+    {
+        public int Kind { get; }
+        public int Venue { get; }
+        public int Payer { get; }
+        public long Day { get; }
+        public long Cost { get; }
+
+        public FestivalScheduled(long simTime, int kind, int venue, int payer, long day, long cost) : base(simTime) { Kind = kind; Venue = venue; Payer = payer; Day = day; Cost = cost; }
+
+        protected override string Describe() { return "FestivalScheduled(kind " + Kind + ", venue " + Venue + ", payer " + Payer + ", day " + Day + ", cost " + Cost + ")"; }
+    }
+
+    /// <summary>A festival's day is over (spec 026 §3.1): kept in the record, and for the Chronicle (spec 029).</summary>
+    public sealed class FestivalHeld : SimEvent
+    {
+        public int Kind { get; }
+        public int Venue { get; }
+        public int Payer { get; }
+        public long Day { get; }
+        public long Cost { get; }
+
+        public FestivalHeld(long simTime, int kind, int venue, int payer, long day, long cost) : base(simTime) { Kind = kind; Venue = venue; Payer = payer; Day = day; Cost = cost; }
+
+        protected override string Describe() { return "FestivalHeld(kind " + Kind + ", venue " + Venue + ", payer " + Payer + ", day " + Day + ", cost " + Cost + ")"; }
+    }
 }

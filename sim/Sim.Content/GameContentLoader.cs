@@ -61,6 +61,9 @@ namespace Sim.Content
                 if (onboarding != null && System.Linq.Enumerable.Any(onboarding.Eras, e => e.Id == "township")) game.Treasury = LoadTreasury(read("treasury.json"), onboarding);
                 if (game.Treasury != null) CheckTaxGuard(game.Treasury.Taxes, buildings, population);
                 if (game.Treasury != null) game.Township = LoadTownship(read("township.json"), market.Region, map, buildings, onboarding, game.Treasury, market); // the Township's road comes with the treasury (spec 023 §4)
+                if (game.Township != null) game.Events = LoadEvents(read("events.json")); // events start at the Township (spec 027)
+                if (game.Events != null) game.Insurance = LoadInsurance(read("insurance.json")); // and so does insurance (spec 027 §3.5)
+                if (game.Events != null) game.Contracts = LoadContracts(read("contracts.json"), market); // and the trader's forward contracts (spec 027 §3.7)
             }
             return game;
         }

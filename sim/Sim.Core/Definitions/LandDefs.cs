@@ -520,6 +520,15 @@ namespace Sim.Core.Definitions
         /// <summary>The Township's road, with <c>township.json</c> beside the treasury (spec 023 §4); else null.</summary>
         public TownshipDef Township { get; internal set; }
 
+        /// <summary>Events (spec 027, <c>events.json</c>), from the Township's content, or null.</summary>
+        public EventsDef Events { get; internal set; }
+
+        /// <summary>Insurance (spec 027 §3.5–§3.6, <c>insurance.json</c>), with the events, or null.</summary>
+        public InsuranceDef Insurance { get; internal set; }
+
+        /// <summary>Forward contracts (spec 027 §3.7, <c>contracts.json</c>), with the events, or null.</summary>
+        public ContractsDef Contracts { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

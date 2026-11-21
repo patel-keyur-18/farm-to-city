@@ -177,6 +177,9 @@ namespace Sim.Core.Definitions
         /// <summary>A mill buys wheat at the market only while its unsold atta and bran stay under this many days of what the trader takes (ADR 0140).</summary>
         public int MarketStockDays { get; internal set; }
 
+        /// <summary>The goods a mill's unsold output is also offered to the village market (US-264, spec 016 §3.5c): atta.</summary>
+        public System.Collections.Generic.List<string> VillageGoods { get; internal set; } = new System.Collections.Generic.List<string>();
+
         public Fixed BusinessLtv { get; internal set; }
         public int TermSeasons { get; internal set; }
         public Fixed OverdraftLimit { get; internal set; }

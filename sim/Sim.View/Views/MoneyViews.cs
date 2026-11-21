@@ -33,6 +33,7 @@ namespace Sim.View.Views
             if (ctx.Sim.State.Businesses != null) Add("businesses", new SheetRequest("Businesses", 0), "flour_mill"); // spec 016 §3.3
             if (Sim.Core.Town.TreasuryRules.IsOpen(ctx.Sim)) Add("treasury", new SheetRequest(TreasurySheet.Kind, 0), "place_council_hall"); // spec 021 §7: from the Township
             if (Sim.Core.Town.ConstructionRules.On(ctx.Sim)) Add("building", new SheetRequest(BuildingSheet.Kind, 0), "brick"); // spec 025 §3.2: from the Township
+            if (Sim.Core.Town.EventRules.On(ctx.Sim)) Add("events", new SheetRequest(EventSheet.ListKind, 0), "bell"); // spec 027: what waits and what you chose
             Add("land", new SheetRequest("Lands", 0), "sign");
             if (Sim.Core.Equipment.EquipmentRules.On(ctx.Sim)) Add("equipment", new SheetRequest(EquipmentSheet.Kind, 0), "tractor"); // spec 013 §3.2
             Add("calendar", new SheetRequest(CropCalendar.Sheet, 0), "seed_wheat"); // every crop by season (spec 020 §3.6b)
@@ -79,10 +80,12 @@ namespace Sim.View.Views
                 if (p.Owned || p.BuilderOwned || !d.ForSale) continue; // the village's land and neighbours not selling yet are not for sale (ADR 0104)
                 int tile = d.Tiles[0];
                 string soil = ctx.Strings.Get(defs.Soils[sim.State.Land.Tiles[tile].Soil].NameKey);
-                var line = new LineVm(ctx.Strings.Get("lands.parcel", "soil", soil, "acres", ctx.Strings.Plural("land.acres", d.Tiles.Count)),
-                    ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
+                bool hills = d.Opens == "hills"; // spec 025 §3.5: sandy, dry, cool; apples grow here
+                var line = new LineVm(ctx.Strings.Get(hills ? "lands.hills" : "lands.parcel", "soil", soil, "acres", ctx.Strings.Plural("land.acres", d.Tiles.Count)),
+                    hills ? ctx.Strings.Get("lands.hillsValue", "price", ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p))) : ctx.Fmt.Coins(LandRules.ParcelPrice(sim, p)), "landPrice", tile)
                 { Action = ActionVm.Open("show:" + tile, ctx.Strings.Get("action.show"), new SheetRequest("ShowTile", tile)) };
                 if (!LandSystem.IsAdjacentToOwned(sim, p.Id)) { line.Note = ctx.Strings.Get("lands.notNext"); }
+                else if (hills) line.Note = ctx.Strings.Get("lands.hillsNote");
                 vm.Lines.Add(line);
             }
             if (vm.Lines.Count == 0) vm.Subtitle = ctx.Strings.Get("lands.none");
@@ -259,6 +262,7 @@ namespace Sim.View.Views
                     { Action = ActionVm.Open("report", s.Get("money.seeReport"), new SheetRequest("Report", season.Period)) });
                 return vm;
             }
+            InsuranceSheet.Add(ctx, vm); // spec 027 §7: the switches and the last claims, beside what the close will take
             Block(s.Get("season.due"), season.DueTotal, season.Due, DueBlock, false);
             if (season.Due.Count == 0) vm.Lines.Add(new LineVm(s.Get("season.nothingDue"), null));
             else if (season.Short == 0)

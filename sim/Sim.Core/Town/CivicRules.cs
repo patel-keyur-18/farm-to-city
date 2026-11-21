@@ -112,11 +112,13 @@ namespace Sim.Core.Town
         /// <summary>The <i>Safety</i> part: <c>safetyBase</c> (0.5) with a post built, rising to 1.0 with a watchman in reach.</summary>
         public static Fixed Safety(Simulation sim, Household x)
         {
+            if (TownLifeRules.Known(sim)) return Fixed.One - TownLifeRules.CrimeAt(sim, x).MulRatio(1, 100); // spec 026 §3.5: 1 − crime ÷ 100, the watchman's gain in his reach
             return Cap(sim.Config.Game.Township.SafetyBase + Def(sim, CivicDef.Watchman).Gain * Effect(sim, CivicDef.Watchman, x));
         }
 
         public static Fixed SafetyTown(Simulation sim)
         {
+            if (TownLifeRules.Known(sim)) return Fixed.One - TownLifeRules.CrimeTown(sim).MulRatio(1, 100);
             return Cap(sim.Config.Game.Township.SafetyBase + Def(sim, CivicDef.Watchman).Gain * EffectTown(sim, CivicDef.Watchman));
         }
 

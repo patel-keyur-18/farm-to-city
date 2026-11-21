@@ -37,6 +37,9 @@ namespace Sim.Core.Definitions
         /// <summary>Cold-store space in the mandi town (spec 025 §3.6, US-242).</summary>
         public ColdStoreDef ColdStore { get; set; }
 
+        /// <summary>Town life (spec 026): reputation, approval, crime and inequality. Null in content without it.</summary>
+        public TownLifeDef TownLife { get; set; }
+
         public TownshipDef(RoadDef road, ClinicDef clinic, QuartersDef quarters, DoctorDef doctor, GateDef gate, CohortDef cohort,
             System.Collections.Generic.IReadOnlyList<CivicDef> civic, Fixed safetyBase, LandValueDef landValue, ZoningDef zoning)
         {

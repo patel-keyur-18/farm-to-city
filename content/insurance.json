@@ -1,0 +1,12 @@
+{
+  "crop": {
+    "threshold": 0.8,
+    "pestShortfall": 0.0065,
+    "eventPart": 0.0004,
+    "loading": 1.3,
+    "wetShare": [0.17, 0.12, 0.65, 0.04]
+  },
+  "property": { "rate": 0.0001, "excess": 0.1 },
+  "business": { "rate": 0.0001, "profitShare": 0.0005, "excess": 0.1, "dailyProfitShare": 0.8 },
+  "keepClaims": 4
+}

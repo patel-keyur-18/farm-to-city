@@ -32,7 +32,7 @@ namespace Sim.Core.Commands
             Tile tile = sim.State.Land.Tiles[TileId];
             if (!sim.State.Land.Parcels[tile.ParcelId].Owned) return CommandResult.Reject(RejectReason.NotOwned);
             if (sim.State.Land.Parcels[tile.ParcelId].Locked) return CommandResult.Reject(sim.State.Land.Parcels[tile.ParcelId].LockReason); // a listed acre is locked (spec 024 §3.4)
-            if (tile.Terrain != Terrain.Farm) return CommandResult.Reject(RejectReason.NotFarmTile);
+            if (!Land.LandRules.Tillable(tile.Terrain)) return CommandResult.Reject(RejectReason.NotFarmTile);
             if (tile.Occupied) return CommandResult.Reject(RejectReason.TileOccupied);
             int c = defs.Farm.IndexOfCrop(CropId);
             if (c < 0) return CommandResult.Reject(RejectReason.UnknownCrop);
@@ -83,6 +83,7 @@ namespace Sim.Core.Commands
             Equipment.EquipmentRules.Sown(sim, sown); // the Tools factor of timely sowing under a machine (spec 013 §3.2)
             LandSystem.SetOccupied(sim, TileId, true);
             FarmSystem.Refresh(sim);
+            Town.InsuranceRules.OnSown(sim, sown, tile, crop, fert); // crop insurance, if it is on: the policy is fixed now (spec 027 §3.5)
             sim.Emit(new CropSown(t, TileId, CropId, sown.ReadyAt, cost));
             return CommandResult.Ok;
         }
@@ -115,12 +116,14 @@ namespace Sim.Core.Commands
                 Store.Add(sim, def.OutputGood, part, Overflow.StoreOnly, "crop:" + c.Id);
                 Livestock.LivestockSystem.AddStraw(sim, def, part);
                 c.TakenGrams += part;
+                Town.ContractRules.Harvested(sim, def.OutputGood, part);
                 sim.Emit(new CropHarvested(sim.State.Clock.SimTime, TileId, def.Id, part, c.Breakdown));
                 return CommandResult.Ok;
             }
             RejectReason r = Store.Add(sim, def.OutputGood, grams, Overflow == Overflow.StorePart ? Overflow.StoreOnly : Overflow, "crop:" + c.Id);
             if (r != RejectReason.None) return CommandResult.Reject(r);
             Livestock.LivestockSystem.AddStraw(sim, def, grams); // wheat and rice give straw to the stack (spec 012 §3.8)
+            Town.ContractRules.Harvested(sim, def.OutputGood, grams); // the trader's offers read the season's harvest (spec 027 §3.7)
 
             // The harvest's saved seed is one cycle older than the seed it grew from (§3.9).
             FarmState farm = sim.State.Farm;

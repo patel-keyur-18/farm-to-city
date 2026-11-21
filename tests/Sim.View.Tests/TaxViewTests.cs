@@ -39,6 +39,7 @@ namespace Sim.View.Tests
         public void Preview()
         {
             Simulation sim = Situations.Township();
+            Sim.Core.Town.LandValueRules.Read(sim); // the first reading of crime adds its term to land value at the next close: settle it before the preview
             ViewContext ctx = ViewKit2.Context(sim);
             LineVm house = TaxSheet.Build(ctx).Lines.Single(l => l.Label == "House tax");
             AmountPick same = house.Amount.Pick(16), up = house.Amount.Pick(24);

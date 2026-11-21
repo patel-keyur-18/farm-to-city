@@ -198,12 +198,31 @@ namespace Sim.Core.Market
                 Maths.Fixed transport = MarketRules.TransportCost(sim, g); // the floor and the ceiling are the regional price either side of it
                 Maths.Fixed floor = regional - transport;
                 bool hasMin = m.MinPrice[g] != Maths.Fixed.Zero;
+                // A mill's unsold atta joins the founder's offer (US-264, spec 016 §3.5c): only while the market pays at least the trader's floor, never below the truck.
+                var mills = paused || m.Price[g] < floor ? null : Business.BusinessRules.VillageOffers(sim, g);
+                long millEligible = 0;
+                if (mills != null) foreach (var kv in mills) millEligible += kv.Value;
+                long founderEligible = paused ? 0 : !hasMin || m.MinPrice[g] <= m.Price[g] ? m.Offered[g] : 0;
+                long demandDay = defs.Region.DemandPerDay(g) + TownAtMarket(sim, g, ref eaters);
+                long otherDay = (defs.Goods[g].Sales == Definitions.SalesKind.Crop ? (Maths.Fixed.FromInt((int)defs.Region.ValleySupplyPerDay(g)) * Town.PolicyRules.SupplyFactor(sim)).RoundToLong() : defs.Region.ValleySupplyPerDay(g)) + defs.Region.ImportCapacityPerDay(g);
+                if (millEligible > 0)
+                {
+                    // Only what the village can take without its price falling under the truck's: the supply at which the price just reaches the floor, less what is already there.
+                    long supplyAtFloor = (Maths.Fixed.FromInt(demandDay) * Maths.Fixed.Pow(regional / floor, defs.Goods[g].Elasticity)).RoundToLong();
+                    long room = supplyAtFloor - otherDay - founderEligible / defs.Market.OfferSpreadHours * 24;
+                    long cap = room <= 0 ? 0 : System.Math.Min(millEligible, room * defs.Market.OfferSpreadHours / 24);
+                    if (cap < millEligible)
+                    {
+                        for (int i = 0; i < mills.Count; i++) mills[i] = new System.Collections.Generic.KeyValuePair<Business.Business, long>(mills[i].Key, (long)(new System.Numerics.BigInteger(mills[i].Value) * cap / millEligible)); // each mill's share of what the village can take
+                        millEligible = cap;
+                    }
+                }
                 var input = new ClearingInput
                 {
                     Price = m.Price[g], Regional = regional, Floor = floor, Ceiling = regional + transport,
-                    Elasticity = defs.Goods[g].Elasticity, DemandPerDay = defs.Region.DemandPerDay(g) + TownAtMarket(sim, g, ref eaters), // spec 014 §3.7
-                    OtherSupplyPerDay = (defs.Goods[g].Sales == Definitions.SalesKind.Crop ? (Maths.Fixed.FromInt((int)defs.Region.ValleySupplyPerDay(g)) * Town.PolicyRules.SupplyFactor(sim)).RoundToLong() : defs.Region.ValleySupplyPerDay(g)) + defs.Region.ImportCapacityPerDay(g), // spec 022 §3.5: the subsidy, on field crops only
-                    Eligible = paused ? 0 : !hasMin || m.MinPrice[g] <= m.Price[g] ? m.Offered[g] : 0,
+                    Elasticity = defs.Goods[g].Elasticity, DemandPerDay = demandDay, // spec 014 §3.7: your people buy here too
+                    OtherSupplyPerDay = otherDay, // spec 022 §3.5: the subsidy, on field crops only
+                    Eligible = founderEligible + millEligible,
                     TraderMayTake = !hasMin || m.MinPrice[g] <= floor,
                     TraderCapacityLeft = defs.Truck != null && !m.TruckHere ? 0 : MarketRules.TraderCapacityLeft(sim, g),
                 };
@@ -212,6 +231,8 @@ namespace Sim.Core.Market
                 m.Unmet[g][m.UnmetHead] = r.UnmetKg;
                 if (r.RailHit) m.RailHits[g]++;
 
+                if (r.Sold + r.ToTrader == 0) continue;
+                if (millEligible > 0) SellMills(sim, g, mills, millEligible, founderEligible, ref r, floor);
                 if (r.Sold + r.ToTrader == 0) continue;
                 long local = MarketRules.Value(sim, g, r.Sold, r.Price);
                 long trader = MarketRules.Value(sim, g, r.ToTrader, floor);
@@ -228,6 +249,29 @@ namespace Sim.Core.Market
             }
             m.UnmetHead = (m.UnmetHead + 1) % defs.Market.UnmetWindowHours;
             m.Hours++;
+        }
+
+        /// <summary>
+        /// What the hour's sales belong to the mills (US-264): the clearing sold the founder's offer and the mills' together, so each side takes its share of what sold
+        /// (and of what went on to the trader's floor) by the kilos it offered, and each mill its share of that. <paramref name="r"/> is left with the founder's part only.
+        /// </summary>
+        private static void SellMills(Simulation sim, int g, System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<Business.Business, long>> mills, long millEligible, long founderEligible, ref ClearingResult r, Maths.Fixed floor)
+        {
+            long total = millEligible + founderEligible;
+            long millSold = (long)(new System.Numerics.BigInteger(r.Sold) * millEligible / total), millTrader = (long)(new System.Numerics.BigInteger(r.ToTrader) * millEligible / total);
+            long soldLeft = millSold, traderLeft = millTrader, offerLeft = millEligible;
+            for (int i = 0; i < mills.Count; i++)
+            {
+                long offer = mills[i].Value;
+                bool last = i == mills.Count - 1;
+                long s = last ? soldLeft : (long)(new System.Numerics.BigInteger(millSold) * offer / millEligible), t = last ? traderLeft : (long)(new System.Numerics.BigInteger(millTrader) * offer / millEligible);
+                s = System.Math.Min(s, System.Math.Min(offer, soldLeft)); t = System.Math.Min(t, System.Math.Min(offer - s, traderLeft));
+                soldLeft -= s; traderLeft -= t; offerLeft -= offer;
+                Business.BusinessRules.SoldToVillage(sim, mills[i].Key, g, s, MarketRules.Value(sim, g, s, r.Price), t, MarketRules.Value(sim, g, t, floor));
+                if (t > 0) { Town.RoadRules.Earn(sim, g, t); Store.CountTraderPurchase(sim, g, t); }
+            }
+            r.Sold -= millSold; // a rounding crumb a mill could not take is simply not sold
+            r.ToTrader -= millTrader;
         }
 
         /// <summary>

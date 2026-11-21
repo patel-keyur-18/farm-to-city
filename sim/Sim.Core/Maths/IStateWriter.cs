@@ -24,6 +24,7 @@ namespace Sim.Core.Maths
         Animal = 18,
         Village = 19,
         Machine = 20,
+        Event = 21,
     }
 
     /// <summary>

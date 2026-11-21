@@ -112,7 +112,7 @@ namespace Sim.View.Tests
                 foreach (WhyRowVm r in why.Rows) Assert.That((r.Label ?? "") + (r.Value ?? ""), Does.Not.Contain("{"), l.WhyKey);
                 n++;
             }
-            Assert.That(n, Is.EqualTo(7), "the rent, three goods keeps, three worked answers");
+            Assert.That(n, Is.EqualTo(9), "the rent, four goods keeps (apple joined, US-147), four worked answers");
         }
 
         [Test]
