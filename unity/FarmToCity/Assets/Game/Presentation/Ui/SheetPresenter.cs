@@ -1404,7 +1404,7 @@ namespace Game.Presentation.Ui
 
         public void Show(SheetVm vm, bool refresh = false)
         {
-            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.Tab).Append('|').Append(vm.SwitchOn);
+            var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.Tab).Append('|').Append(vm.SwitchOn).Append(vm.Amber);
             foreach (LineVm l in vm.Lines)
             {
                 if (l.Trend != null) foreach (long v in l.Trend.Values) key.Append('|').Append(v);
@@ -1422,6 +1422,13 @@ namespace Game.Presentation.Ui
             if (!refresh) _amounts.Clear();
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, vm.Icon, Close);
+            if (vm.Amber) // a warning (spec 027 §7): an amber frame and title
+            {
+                UiKit.Border(sheet, 5, Painter.Hex(0xC8741E));
+                sheet.style.borderBottomWidth = 9;
+                sheet.style.backgroundColor = Painter.Hex(0xFFF2D2);
+                sheet.Query<Label>().Where(l => l.text == vm.Title).ForEach(l => l.style.color = Painter.Hex(0xA8520E));
+            }
             if (vm.Tabs != null) sheet.Add(TabStrip(vm.Tabs, vm.Tab));
             if (vm.Switch != null)
             {

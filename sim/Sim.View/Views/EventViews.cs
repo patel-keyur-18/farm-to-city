@@ -108,7 +108,7 @@ namespace Sim.View.Views
             Add("closeDays", ctx.Fmt.Integer(Defs(ctx).EpidemicDef.CloseDays));
             Add("fireDays", ctx.Fmt.Integer(Defs(ctx).FireDef.DowntimeDays));
             Add("slowDays", ctx.Fmt.Integer(Defs(ctx).FireDef.SlowRepairDays));
-            Add("acres", ctx.Fmt.Integer(EventRules.RainFedAcres(sim)));
+            Add("acres", ctx.Strings.Plural("land.acres", EventRules.RainFedAcres(sim)));
             Add("fields", ctx.Fmt.Integer(sim.State.Farm == null ? 0 : sim.State.Farm.Crops.Count));
             Add("hit", ctx.Fmt.Integer(p.Param));
             switch (ev.Id)
@@ -205,7 +205,7 @@ namespace Sim.View.Views
             EventsDef d = Defs(ctx);
             EventDef ev = d.Events[p.Def];
             string name = ev.Id;
-            var vm = new SheetVm { Icon = Icon(ctx, p.Def), Title = Title(ctx, p.Def), Subtitle = Tag(ctx, p.Def) };
+            var vm = new SheetVm { Icon = Icon(ctx, p.Def), Title = Title(ctx, p.Def), Subtitle = Tag(ctx, p.Def), Amber = ev.Disaster || ev.Id == EventsDef.FireRepair };
             vm.Lines.Add(new LineVm(s.Get("event." + name + ".about", About(ctx, p, -1)), null, "event", p.Id));
             for (int c = 0; c < ev.Choices.Count; c++)
             {

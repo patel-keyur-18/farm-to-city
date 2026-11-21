@@ -621,7 +621,7 @@ namespace Sim.View.Views
                     case GridConnected _: rows.Add(Row(s.Get("away.town"), s.Get("away.gridConnected"), "place_grid_plot")); break;
                     case FestivalHeld fh: rows.Add(Row(s.Get("away.town"), s.Get("away.festival", "name", s.Get("festival." + FestivalRules.Def(sim).Kinds[fh.Kind].Id), "venue", FestivalSheet.VenueName(ctx, fh.Venue)), "place_council_hall")); break; // spec 026 §3.1
                     case EventDefaulted ed:
-                        rows.Add(Row(EventSheet.Title(ctx, ed.Def), s.Get("away.eventDefault", "choice", EventSheet.ChoiceName(ctx, ed.Def, ed.Choice), "effect", EventSheet.Outcome(ctx, ed.Def, ed.Choice)), EventSheet.Icon(ctx, ed.Def)));
+                        rows.Add(new LineVm(EventSheet.Title(ctx, ed.Def), null, "away", (long)AwayRow.Town) { Icon = EventSheet.Icon(ctx, ed.Def), Note = s.Get("away.eventDefault", "choice", EventSheet.ChoiceName(ctx, ed.Def, ed.Choice), "effect", EventSheet.Outcome(ctx, ed.Def, ed.Choice)) });
                         eventLines = true;
                         break;
                     case DisasterPassed dp: rows.Add(Row(EventSheet.Title(ctx, dp.Def), s.Get("away.disasterPassed", "name", s.Get("event." + EventSheet.IdOf(ctx, dp.Def) + ".risk")), EventSheet.Icon(ctx, dp.Def))); eventLines = true; break;

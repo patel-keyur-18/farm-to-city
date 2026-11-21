@@ -439,5 +439,8 @@
   {"label":"Sprint 23 end (the whole sprint)","view":"farm","date":"2026-11-20","drawCalls":351,"batches":351,"setPassCalls":9,"triangles":9471,"visibleSprites":397,"sprites":2250},
   {"label":"US-151","view":"all","date":"2026-11-20","drawCalls":1049,"batches":1047,"setPassCalls":12,"triangles":22846,"visibleSprites":1295,"sprites":2186},
   {"label":"US-151","view":"village","date":"2026-11-20","drawCalls":455,"batches":453,"setPassCalls":9,"triangles":9532,"visibleSprites":540,"sprites":2186},
-  {"label":"US-151","view":"farm","date":"2026-11-20","drawCalls":327,"batches":325,"setPassCalls":9,"triangles":6585,"visibleSprites":364,"sprites":2186}
+  {"label":"US-151","view":"farm","date":"2026-11-20","drawCalls":327,"batches":325,"setPassCalls":9,"triangles":6585,"visibleSprites":364,"sprites":2186},
+  {"label":"US-154 events (a fire is two sprites and the banner one panel; a fire was burning)","view":"all","date":"2026-11-21","drawCalls":1022,"batches":1022,"setPassCalls":11,"triangles":23325,"visibleSprites":1255,"sprites":2192},
+  {"label":"US-154 events (a fire is two sprites and the banner one panel; a fire was burning)","view":"village","date":"2026-11-21","drawCalls":457,"batches":457,"setPassCalls":9,"triangles":10107,"visibleSprites":544,"sprites":2192},
+  {"label":"US-154 events (a fire is two sprites and the banner one panel; a fire was burning)","view":"farm","date":"2026-11-21","drawCalls":332,"batches":332,"setPassCalls":9,"triangles":7197,"visibleSprites":371,"sprites":2192}
 ]

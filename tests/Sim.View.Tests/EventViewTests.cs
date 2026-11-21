@@ -98,7 +98,7 @@ namespace Sim.View.Tests
             var events = new System.Collections.Generic.List<SimEvent> { new EventDefaulted(sim.State.Clock.SimTime, 5, sim.Config.Game.Events.IndexOf("wedding"), 0, 0) };
             var rows = TownAway.Rows(ctx, events);
             Assert.That(rows.First().Label, Is.EqualTo("Wedding"));
-            Assert.That(rows.First().Value, Does.Contain("the safe choice was taken: Send regards"));
+            Assert.That(rows.First().Note, Does.Contain("the safe choice was taken: Send regards"));
             Assert.That(rows.Last().Label, Is.EqualTo("No big event or disaster can start while you are away."));
         }
     }
