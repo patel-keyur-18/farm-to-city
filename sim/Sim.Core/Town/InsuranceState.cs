@@ -50,7 +50,14 @@ namespace Sim.Core.Town
         /// <summary>For a business claim, the days shut it paid for (0 for the repair share).</summary>
         public int Days { get; }
 
-        public Claim(int policy, int cause, long target, long amount, long at, int days = 0) { Policy = policy; Cause = cause; Target = target; Amount = amount; At = at; Days = days; }
+        /// <summary>What the claim was worked from, for its <em>Why?</em>: a crop's sum insured, a repair bill paid, a business's last season's profit; and the whole points it was judged by (a crop's insured index, the share paid).</summary>
+        public long Basis { get; }
+        public int Points { get; }
+
+        public Claim(int policy, int cause, long target, long amount, long at, int days = 0, long basis = 0, int points = 0)
+        {
+            Policy = policy; Cause = cause; Target = target; Amount = amount; At = at; Days = days; Basis = basis; Points = points;
+        }
 
         internal void WriteTo(IStateWriter h)
         {
@@ -60,9 +67,11 @@ namespace Sim.Core.Town
             h.WriteLong(Amount);
             h.WriteLong(At);
             h.WriteInt(Days);
+            h.WriteLong(Basis);
+            h.WriteInt(Points);
         }
 
-        internal static Claim ReadFrom(SaveReader r) { return new Claim(r.ReadInt(), r.ReadInt(), r.ReadLong(), r.ReadLong(), r.ReadLong(), r.ReadInt()); }
+        internal static Claim ReadFrom(SaveReader r) { return new Claim(r.ReadInt(), r.ReadInt(), r.ReadLong(), r.ReadLong(), r.ReadLong(), r.ReadInt(), r.ReadLong(), r.ReadInt()); }
     }
 
     /// <summary>

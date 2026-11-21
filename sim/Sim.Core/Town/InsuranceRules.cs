@@ -79,7 +79,7 @@ namespace Sim.Core.Town
             if (pay <= 0) return;
             sim.State.Ledger.Post(now, sim.Period, "ledger.cropClaim", "crop:" + c.Id, new Posting(Account.Cash, pay), new Posting(Account.InsuranceClaims, -pay));
             int cause = Cause(sim, c);
-            Paid(sim, new Claim(Claim.CropPolicy, cause, c.Def, pay, now));
+            Paid(sim, new Claim(Claim.CropPolicy, cause, c.Def, pay, now, 0, c.SumInsured, (int)(index * Fixed.FromInt(100)).RoundToLong()));
         }
 
         /// <summary>What hurt the crop most: an event (its definition + 1), the pests (−1) or the season's weather (0).</summary>
@@ -247,7 +247,7 @@ namespace Sim.Core.Town
             if (lost > 0) b.Ledger.Post(now, sim.Period, "ledger.lostDaysClaim", "business:" + b.Id, new Posting(Account.Cash, lost), new Posting(Account.InsuranceClaimsReceived, -lost));
             if (repair + lost <= 0) return;
             int cause = EventRules.Def(sim).IndexOf(EventsDef.Fire) + 1;
-            Paid(sim, new Claim(business ? Claim.BusinessPolicy : Claim.PropertyPolicy, cause, p.Target, repair + lost, now, days));
+            Paid(sim, new Claim(business ? Claim.BusinessPolicy : Claim.PropertyPolicy, cause, p.Target, repair + lost, now, days, paid, (int)((Fixed.One - (business ? d.Business.Excess : d.Property.Excess)) * Fixed.FromInt(100)).RoundToLong()));
         }
 
         /// <summary>A supplier strike's <em>Pause the line</em>: the policy pays its share of the lost profit for the hours shut (not a risk signalled before the cover began).</summary>
@@ -260,7 +260,7 @@ namespace Sim.Core.Town
             long lost = LostPaid(sim, b, hours * 3600L);
             if (lost <= 0) return;
             b.Ledger.Post(now, sim.Period, "ledger.lostDaysClaim", "business:" + b.Id, new Posting(Account.Cash, lost), new Posting(Account.InsuranceClaimsReceived, -lost));
-            Paid(sim, new Claim(Claim.BusinessPolicy, EventRules.Def(sim).IndexOf("supplier_strike") + 1, b.Id, lost, now, (hours + 23) / 24));
+            Paid(sim, new Claim(Claim.BusinessPolicy, EventRules.Def(sim).IndexOf("supplier_strike") + 1, b.Id, lost, now, (hours + 23) / 24, System.Math.Max(0, LastProfit(b)), (int)(Def(sim).Business.DailyProfitShare * Fixed.FromInt(100)).RoundToLong()));
         }
 
         private static void Paid(Simulation sim, Claim c)

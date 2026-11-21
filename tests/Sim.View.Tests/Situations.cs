@@ -340,6 +340,32 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>The Township with crop insurance on, the property and a tea stall's policies covering, and the last claims (spec 027 §7): every insurance sheet and Why? in one place.</summary>
+        public static Simulation Insured()
+        {
+            Simulation sim = TownshipBuilt();
+            Sim.Core.Town.InsuranceState st = Sim.Core.Town.InsuranceRules.State(sim);
+            string tea = Sim.Core.Business.BusinessRules.Defs(sim).Types.First(t => t.Kind == Sim.Core.Definitions.ShopKind.Chai).Id;
+            Ok(sim, new FoundBusiness(T(sim), tea, 0, 60_000 * 100, true, null, 0));
+            Sim.Core.Business.Business b = sim.State.Businesses.Businesses.Last();
+            b.Status = Sim.Core.Business.BusinessStatus.Open;
+            b.ReadyAt = T(sim);
+            Ok(sim, new Sim.Core.Commands.SetCropInsurance(T(sim), true));
+            st.Property.On = true;
+            st.Property.PaidSeason = sim.Period;
+            Sim.Core.Town.Policy bp = st.BusinessPolicyOrNew(b.Id);
+            bp.On = true;
+            bp.PaidSeason = sim.Period;
+            int fire = sim.Config.Game.Events.IndexOf("fire") + 1, hail = sim.Config.Game.Events.IndexOf("hailstorm") + 1, strike = sim.Config.Game.Events.IndexOf("supplier_strike") + 1;
+            long house = sim.State.Land.Buildings.First(x => x.Owner == 0 && x.TileId >= 0 && x.Cost > 0).Id;
+            int wheat = sim.Config.Game.Farm.IndexOfCrop("wheat");
+            st.Claims.Add(new Sim.Core.Town.Claim(Sim.Core.Town.Claim.CropPolicy, hail, wheat, 4_896_00, T(sim) - 3 * Day, 0, 28_800_00, 63));
+            st.Claims.Add(new Sim.Core.Town.Claim(Sim.Core.Town.Claim.PropertyPolicy, fire, house, 12_600_00, T(sim) - 2 * Day, 0, 14_000_00, 90));
+            st.Claims.Add(new Sim.Core.Town.Claim(Sim.Core.Town.Claim.BusinessPolicy, fire, b.Id, 16_100_00, T(sim) - Day, 2, 14_000_00, 90));
+            st.Claims.Add(new Sim.Core.Town.Claim(Sim.Core.Town.Claim.BusinessPolicy, strike, b.Id, 6_000_00, T(sim) - Day / 2, 3, 35_000_00, 80));
+            return sim;
+        }
+
         public static Simulation TownshipBuilt()
         {
             Simulation sim = Township();
@@ -388,6 +414,7 @@ namespace Sim.View.Tests
             yield return Kiln();
             yield return Promises();
             yield return Events();
+            yield return Insured();
         }
     }
 }

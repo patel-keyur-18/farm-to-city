@@ -260,6 +260,7 @@ namespace Sim.View.Views
                     { Action = ActionVm.Open("report", s.Get("money.seeReport"), new SheetRequest("Report", season.Period)) });
                 return vm;
             }
+            InsuranceSheet.Add(ctx, vm); // spec 027 §7: the switches and the last claims, beside what the close will take
             Block(s.Get("season.due"), season.DueTotal, season.Due, DueBlock, false);
             if (season.Due.Count == 0) vm.Lines.Add(new LineVm(s.Get("season.nothingDue"), null));
             else if (season.Short == 0)

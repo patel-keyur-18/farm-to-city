@@ -366,6 +366,7 @@ namespace Sim.View.Views
             else if (!t.IsShop) AddMillToday(ctx, vm, b, t);
             if (!t.IsShop && ShopRules.Rated(t) && ShopRules.Defs(sim) != null) vm.Lines.Add(ShopSheet.StarsLine(ctx, b)); // the mill earns stars too (ADR 0092)
             AddMoney(ctx, vm, b, t);
+            InsuranceSheet.AddBusiness(ctx, vm, b); // spec 027 §7: its own policy, paid from its own cash
         }
 
         private static void AddMillToday(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)

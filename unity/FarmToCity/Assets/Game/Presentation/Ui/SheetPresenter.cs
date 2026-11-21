@@ -1578,7 +1578,7 @@ namespace Game.Presentation.Ui
                 key.Append('|').Append(r.Name).Append(r.TimeText).Append(r.SuitsText).Append(r.HarvestText)
                    .Append(r.SpendText).Append(r.GetText).Append(r.ProfitText).Append(r.InputsText)
                    .Append(r.LabourText).Append(r.SoilText).Append(r.CostText).Append(r.Sow == null ? "" : r.Sow.Enabled + r.Sow.DisabledReason)
-                   .Append(r.ReadyText).Append(r.PerHourText).Append(r.NoteText);
+                   .Append(r.ReadyText).Append(r.PerHourText).Append(r.NoteText).Append(r.InsuranceText);
             key.Append('|').Append(vm.AllCrops != null);
             if (Unchanged(key.ToString(), refresh)) return;
             VisualElement sheet = NewSheet(vm.Title, vm.Subtitle, null, Close);
@@ -1679,6 +1679,19 @@ namespace Game.Presentation.Ui
                         Label cropNote = UiKit.Text(r.NoteText, 27, UiKit.Wood, UiKit.Body);
                         cropNote.style.whiteSpace = WhiteSpace.Normal;
                         info.Add(cropNote);
+                    }
+                    if (r.InsuranceText != null) // crop insurance on (spec 027 §7): the premium and when it pays, with its ?
+                    {
+                        var insuranceRow = new VisualElement { pickingMode = PickingMode.Ignore };
+                        insuranceRow.style.flexDirection = FlexDirection.Row;
+                        insuranceRow.style.alignItems = Align.Center;
+                        Label insured = UiKit.Text(r.InsuranceText, 27, r.InsuranceWarn ? UiKit.Warn : UiKit.GreenDark, UiKit.Body);
+                        insured.style.whiteSpace = WhiteSpace.Normal;
+                        insured.style.flexShrink = 1;
+                        insuranceRow.Add(insured);
+                        Button insuredWhy = AddWhyChip(insuranceRow, r.InsuranceWhyKey, r.InsuranceWhyId);
+                        if (insuredWhy != null) insuredWhy.name = "why:" + r.InsuranceWhyKey + ":" + r.CropId; // one per crop, for scripted touch
+                        info.Add(insuranceRow);
                     }
                     info.Add(UiKit.Text(r.InputsText + " · " + r.LabourText, 27, UiKit.Wood, UiKit.Body));
                     info.Add(UiKit.Text(r.SoilText, 27, r.SoilFalls ? UiKit.Warn : UiKit.GreenDark, UiKit.Body));

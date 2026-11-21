@@ -125,7 +125,10 @@ namespace Sim.View.Views
             { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryWindow", TreasuryWindow }, { "policy", PolicyWhy }, { "taxHouse", TaxHouseWhy }, { "taxBusiness", TaxBusinessWhy }, { "taxCollected", TaxCollectedWhy }, { "treasuryAccount", TreasuryAccount },
             { "treasuryFund", TreasuryFund },
             // Town life (spec 026).
-            { "event", EventWhy }, { "eventHist", EventHistWhy }, { "lifeApproval", LifeApproval }, { "lifePetition", LifePetition }, { "festival", Festival }, { "lifeScore", LifeScore }, { "lifePull", LifePull }, { "lifeCrime", LifeCrime }, { "lifeRatio", LifeRatio }, { "lifeCrimeAcre", LifeCrimeAcre },
+            { "event", EventWhy }, { "eventHist", EventHistWhy },
+            // Insurance (spec 027 §3.5-§3.6).
+            { InsuranceSheet.CropWhy, InsuranceCropWhy }, { InsuranceSheet.PropertyWhy, InsurancePropertyWhy }, { InsuranceSheet.BusinessWhy, InsuranceBusinessWhy }, { InsuranceSheet.ClaimWhy, InsuranceClaimWhy }, { InsuranceSheet.PremiumWhy, InsurancePremiumWhy }, { InsuranceSheet.DueWhy, InsuranceDueWhy },
+            { "lifeApproval", LifeApproval }, { "lifePetition", LifePetition }, { "festival", Festival }, { "lifeScore", LifeScore }, { "lifePull", LifePull }, { "lifeCrime", LifeCrime }, { "lifeRatio", LifeRatio }, { "lifeCrimeAcre", LifeCrimeAcre },
             // Equipment (spec 013 §3.2).
             { "machine", Machine }, { "machineValue", MachineValue }, { "hireFee", HireFee }, { "hireCost", HireCost }, { "hirePays", HirePays }, { "fieldTools", FieldTools },
         };

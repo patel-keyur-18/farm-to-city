@@ -75,6 +75,12 @@ namespace Sim.View.Views
 
         /// <summary>One line about the crop from strings (<c>crop.&lt;id&gt;.note</c>), or null.</summary>
         public string NoteText { get; internal set; }
+
+        /// <summary>Crop insurance's line (spec 027 §7): the premium and when it pays, or that the cash won't cover it; null when it is off. With a ? (<see cref="InsuranceWhyKey"/>).</summary>
+        public string InsuranceText { get; internal set; }
+        public bool InsuranceWarn { get; internal set; }
+        public string InsuranceWhyKey { get; internal set; }
+        public long InsuranceWhyId { get; internal set; }
     }
 
     public sealed class FertiliserVm
@@ -187,6 +193,7 @@ namespace Sim.View.Views
                 row.PerHourText = PerHourText(ctx, row.PerHour);
                 row.PerHourWhyKey = PerHourWhy;
                 row.PerHourWhyId = PerHourId(tileId, ci, fertIndex);
+                InsuranceSheet.SowLine(ctx, row, tile, ci, e.Get, buy, fertIndex); // crop insurance, if it is on (spec 027 §7)
                 row.Sow = ActionVm.Checked(ctx, "sow:" + c.Id, ctx.Strings.Get("action.sowCrop", "crop", name), row.CostText, ActionKind.Primary,
                     at => new Sow(at, tileId, c.Id, seed, fertiliserId), "crop", name, "seasons", FieldSheets.SeasonsText(ctx, c.SowSeasons));
                 if (c.Fodder) FodderView.Card(ctx, row, tile, c, fert); // cut daily for your animals: its own figures (spec 012 §3.8b)
