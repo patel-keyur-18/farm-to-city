@@ -1079,15 +1079,15 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
 - [ ] Spec 025 approved; specs 026 and 027 written and approved
 - [ ] Save schema 21: migration, fixtures for every new part, every older schema loads
 - [ ] Sheets, cards and the ring's layout previewed to and approved by the owner before each story's code
 - [ ] Balance: the 20% rule, the Village 28–45 days, the Township's pace, the kiln, the generator and grid, the cold store, land payback, the land stress bots, contradictions flagged
 - [ ] Render statistics read for each visible story, growth over 10% reported
 - [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone (the owner)
-- [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
-- [ ] `STATUS.md`, feature files and this file updated
+- [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR (ADR 0154)
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it
 
 ## Sprint 24 · 26 Jul – 8 Aug 2027 · Phase 3 (town life, events, insurance and contracts; the mill's atta; hills and apples; spec 028; 2 weeks, ADR 0144)
@@ -1137,11 +1137,11 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
 - [x] Spec 028 written and approved; the apple figures re-approved
-- [ ] Save schema 22: migration, fixtures for every new part, every older schema loads
-- [ ] Sheets and cards previewed to and approved by the owner before each story's code
-- [ ] Balance: the 20% rule, the Village, the Township's pace, crime, `eventPart`, the exploit bots, the mill, the 200-seed Township
-- [ ] Render statistics read for each visible story, growth over 10% reported
-- [ ] Test checklist with device-only rows marked; Development build
+- [x] Save schema 22: migration, fixtures for every new part (`schema22.ftc`, `schema22-townlife.ftc`, `schema22-risk.ftc`), every older schema loads
+- [x] Sheets and cards previewed to and approved by the owner before each story's code
+- [x] Balance: the 20% rule, the Village, the Township's pace, crime, `eventPart`, the exploit bots, the mill, the 200-seed Township (ADR 0154)
+- [x] Render statistics read for each visible story, growth over 10% reported (`docs/planning/render-stats.json`; the review's changes are numbers and text only)
+- [x] Test checklist with device-only rows marked (`docs/test-checklists/s24-town-life-events.md`); the Development build is the owner's to make
 - [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
 - [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it

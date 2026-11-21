@@ -264,6 +264,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0151 | US-264 the mill's atta at the village as built: offered after the bakery and the trader, never below the truck's price, only what the village can take (a thin outlet), the mill's targets unchanged |
 | 0152 | US-147 hills and apples as built: the hills open with the Township and the ring, apple orchards on hill land only (100 trees an acre, 3,000 kg in the Monsoon, 4% a day spoilage, a quarter of it in the cold store), hill acres are fields for farming and orchards only |
 | 0153 | Spec 028 (business growth): invoices between businesses with half-season and season terms and a stop rule, managers (4,000 + 10% of profit, three styles), valuation 3–6× profit, selling and branches, investors, partners and buy-outs, a tuition centre, a tempo and a restaurant, benefits and night shifts, supervisors, associations, conflicts and accidents, your kirana, marketing and khata; schema 23 in Sprint 25 and 24 in Sprint 26 |
+| 0154 | Sprint 24 balance and the independent review: events and disasters roll at the first live hour from 6:00 and on return from away, insurance repriced to the measured claims (about 0.1–0.3% of a crop's value), saves name events by id, a land auction's bid charged once, a left-alone town's reputation 65–80 |
 
 ## Current status
 
