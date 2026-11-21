@@ -1,6 +1,6 @@
 # 0146. US-150 petitions as built: eight topics, judged at each close, approval moves a close and changes only migration
 
-- Status: Proposed (awaiting the owner's review of US-150)
+- Status: Accepted (the owner approved US-150, 2026-11-20; the §9 tuning still to be confirmed with the owner)
 - Date: 2026-11-20
 - Deciders: Keyur Patel
 - Related: spec 026 §3.2, §3.3, §3.7, ADR 0004, 0127, 0145

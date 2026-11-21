@@ -101,7 +101,6 @@ namespace Sim.Core.Definitions
         public Fixed DamageShare { get; internal set; }
         public Fixed TowerFactor { get; internal set; }
         public Fixed PrepareFactor { get; internal set; }
-        public long PrepareCost { get; internal set; }
         public int DowntimeDays { get; internal set; }
         public Fixed SlowRepairShare { get; internal set; }
         public int SlowRepairDays { get; internal set; }
@@ -114,7 +113,6 @@ namespace Sim.Core.Definitions
         public Fixed ClinicFactor { get; internal set; }
         public Fixed CampFactor { get; internal set; }
         public Fixed CloseFactor { get; internal set; }
-        public long CampPerPerson { get; internal set; }
         public int CloseDays { get; internal set; }
         public Fixed CloseShopsDemand { get; internal set; }
     }

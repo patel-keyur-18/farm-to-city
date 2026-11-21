@@ -109,7 +109,7 @@ namespace Sim.View.Views
             Add("fireDays", ctx.Fmt.Integer(Defs(ctx).FireDef.DowntimeDays));
             Add("slowDays", ctx.Fmt.Integer(Defs(ctx).FireDef.SlowRepairDays));
             Add("acres", ctx.Strings.Plural("land.acres", EventRules.RainFedAcres(sim)));
-            Add("fields", ctx.Fmt.Integer(sim.State.Farm == null ? 0 : sim.State.Farm.Crops.Count));
+            Add("fields", ctx.Fmt.Integer(EventRules.Standing(sim).Count)); // the fields a heatwave cost counts: the standing crops, not the fodder
             Add("hit", ctx.Fmt.Integer(p.Param));
             switch (ev.Id)
             {
@@ -118,7 +118,13 @@ namespace Sim.View.Views
                 case "breakdown": Add("what", p.Target2 == 1 ? BusinessName(ctx, p.Target) : ctx.Strings.Get("event.breakdown.machine")); break;
                 case "wedding": Add("family", Family(ctx, p.Target)); break;
                 case "dispute": Add("a", Family(ctx, p.Target)); Add("b", Family(ctx, p.Target2)); break;
-                case "regional_grant": Add("grant", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(sim, 6000 * Sim.Core.Finance.Money.Coin))); break;
+                case "regional_grant":
+                {
+                    long grant = 0;
+                    foreach (EventChoiceDef c in ev.Choices) foreach (EffectDef e in c.Effects) if (e.Kind == EffectKind.Grant) grant = e.Amount; // the amount the content pays, not a number of the view's
+                    Add("grant", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(sim, grant * Sim.Core.Finance.Money.Coin)));
+                    break;
+                }
                 case "land_auction":
                     Add("price", ctx.Fmt.Coins(EventRules.BidPrice(sim, (int)p.Target)));
                     Add("size", ctx.Strings.Plural("land.acres", Defs(ctx) == null ? 1 : sim.Config.Game.Map.Parcels[(int)p.Target].Tiles.Count));
@@ -128,10 +134,10 @@ namespace Sim.View.Views
                     int total = Buildings(sim, out int tower);
                     Add("n", ctx.Fmt.Integer(total));
                     Add("tower", ctx.Fmt.Integer(tower));
-                    Add("building", Building(ctx, p.Target));
+                    Add("building", p.Target2 == 1 ? BusinessName(ctx, p.Target) : Building(ctx, p.Target)); // a business burns by its own id, which can equal a building's
                     break;
                 }
-                case EventsDef.FireRepair: Add("building", Building(ctx, p.Target)); Add("bill", ctx.Fmt.Coins(p.Param)); break;
+                case EventsDef.FireRepair: Add("building", p.Target2 == 1 ? BusinessName(ctx, p.Target) : Building(ctx, p.Target)); Add("bill", ctx.Fmt.Coins(p.Param)); break;
             }
             {
                 foreach (EffectDef e in ev.Choices[choice >= 0 ? choice : 0].Effects)
@@ -297,6 +303,7 @@ namespace Sim.View.Views
             EventsState st = EventRules.State(sim);
             if (st == null || st.DisasterDef < 0) return null;
             long left = System.Math.Max(0, st.DisasterStrikeAt - sim.State.Clock.SimTime);
+            if (left == 0) return ctx.Strings.Get("event.bannerDue", "name", ctx.Strings.Get("event." + IdOf(ctx, st.DisasterDef) + ".risk")); // slid past its hour while you were away: it comes at your next 6:00 here
             return ctx.Strings.Get("event.banner", "name", ctx.Strings.Get("event." + IdOf(ctx, st.DisasterDef) + ".risk"), "time", ctx.Fmt.Duration(left));
         }
     }

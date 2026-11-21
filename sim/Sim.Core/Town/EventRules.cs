@@ -39,8 +39,6 @@ namespace Sim.Core.Town
 
         private static long SeasonEnd(Simulation sim) { return (SeasonNow(sim) + 1) * sim.Clock.SecondsPerSeason; }
 
-        private static Fixed Index(Simulation sim, long coins) { return Fixed.FromInt((int)coins); }
-
         // ---- the clock ----
 
         /// <summary>The engine's hourly pass: the weather log, the clocks, what has run its course, and at 6:00 a disaster's strike and the day's roll.</summary>
@@ -52,10 +50,39 @@ namespace Sim.Core.Town
             Track(sim, s, now);
             ExpireCards(sim, s, now);
             ExpireEffects(sim, s, now);
-            if (MarketRules.HourOfDay(sim) != 6) return;
-            ContractRules.Sample(sim);
+            int hour = MarketRules.HourOfDay(sim);
+            if (hour == 6) ContractRules.Sample(sim);
+            if (hour < 6) return;
+            long day = now / Day;
+            if (sim.State.Clock.IsAway)
+            {
+                if (hour != 6) return;
+                Strike(sim, s, now); // a disaster's hour passed while you were away: it slides
+                Roll(sim, s, now, minors: true, majors: false); // a minor takes its default at once; nothing big starts while you are away
+                s.AwayRollDay = day;
+                return;
+            }
+            Strike(sim, s, now); // the first live hour at or after the strike time
+            LiveRoll(sim, s, now, day);
+        }
+
+        /// <summary>The day's roll for someone who is here: once a day, at the first live hour from 6:00 (a roll tied to 6:00 sharp would almost never find a real player in the app).</summary>
+        private static void LiveRoll(Simulation sim, EventsState s, long now, long day)
+        {
+            if (s.RollDay >= day) return;
+            s.RollDay = day;
+            Roll(sim, s, now, minors: s.AwayRollDay != day, majors: true);
+        }
+
+        /// <summary>Back from an away advance: if today's roll has not run for you yet and it is past 6:00, it runs now, so a player who opens the app meets the day's cards at once.</summary>
+        internal static void OnReturn(Simulation sim)
+        {
+            if (!On(sim)) return;
+            EventsState s = State(sim);
+            if (MarketRules.HourOfDay(sim) < 6) return;
+            long now = sim.State.Clock.SimTime;
             Strike(sim, s, now);
-            Roll(sim, s, now);
+            LiveRoll(sim, s, now, now / Day);
         }
 
         private static bool Weather(Simulation sim, string id) { return sim.CurrentWeather.Id == id; }
@@ -100,29 +127,28 @@ namespace Sim.Core.Town
 
         // ---- the day's roll (§3.1) ----
 
-        private static void Roll(Simulation sim, EventsState s, long now)
+        private static void Roll(Simulation sim, EventsState s, long now, bool minors, bool majors)
         {
             EventsDef d = Def(sim);
             if (s.StartedAt < 0) { s.StartedAt = now; return; }
             if (now < s.StartedAt + d.Engine.GraceDays * Day) return;
-            bool away = sim.State.Clock.IsAway;
-            if (!away && s.Waiting.Count >= d.Engine.MaxWaiting) return; // a third day's roll is skipped: nothing piles up
+            if (majors && s.Waiting.Count >= d.Engine.MaxWaiting) return; // a third day's roll is skipped: nothing piles up
             if (PromiseDay(sim)) return;
             long day = now / Day;
             ulong seed = sim.State.Seed;
-            if (!away && Rng.Chance(Rng.Next(seed, RngStream.Events, (ulong)day, 1), d.Engine.MajorChance))
+            if (majors && Rng.Chance(Rng.Next(seed, RngStream.Events, (ulong)day, 1), d.Engine.MajorChance))
                 if (Draw(sim, s, true, day, now)) return; // a major came: no minor today
-            if (Rng.Chance(Rng.Next(seed, RngStream.Events, (ulong)day, 2), d.Engine.MinorChance)) Draw(sim, s, false, day, now);
+            if (minors && Rng.Chance(Rng.Next(seed, RngStream.Events, (ulong)day, 2), d.Engine.MinorChance)) Draw(sim, s, false, day, now);
         }
 
-        /// <summary>The close's petition promises fall due on a season's first day: no event on it (§3.1 mercy rule 3).</summary>
+        /// <summary>The day a promise was judged at the close (kept or broken in the last day): no event on it, so the town's verdict is the one thing that day (§3.1 mercy rule 3).</summary>
         private static bool PromiseDay(Simulation sim)
         {
             long now = sim.State.Clock.SimTime;
-            if (now % sim.Clock.SecondsPerSeason >= Day) return false;
             TownLifeState life = TownLifeRules.State(sim);
             if (life == null) return false;
-            foreach (TownPetition p in life.Petitions) if (p.Status == PetitionStatus.Promised) return true;
+            foreach (TownPetition p in life.Petitions)
+                if ((p.Status == PetitionStatus.Kept || p.Status == PetitionStatus.Broken) && now - p.ClosedAt < Day) return true;
             return false;
         }
 
@@ -173,7 +199,11 @@ namespace Sim.Core.Town
             if (major) s.MajorSeason = season;
             if (IsCropMajor(ev)) s.CropQuietUntil = season + 1;
             long hours = ev.Disaster ? d.Engine.WarningHours : major ? d.Engine.MajorHours : d.Engine.MinorHours;
-            var p = new PendingEvent { Id = s.NextId++, Def = def, RaisedAt = now, ExpiresAt = now + hours * Hour, Target = t1, Target2 = t2, Why = why };
+            long expires = now + hours * Hour;
+            if (ev.Disaster) expires = expires / Day * Day + 6 * Hour; // a disaster strikes at a 6:00 (a warning given later in the day gives a little less than the full hours)
+            var p = new PendingEvent { Id = s.NextId++, Def = def, RaisedAt = now, ExpiresAt = expires, Target = t1, Target2 = t2, Why = why };
+            if (ev.Id == "price_boom" || ev.Id == "price_slump") p.TargetTable = (int)ContentTable.Good; // a good's index
+            else if (ev.Id == "land_auction") p.TargetTable = (int)ContentTable.Parcel; // a parcel's index
             if (ev.Id == "hailstorm") p.Param = Hail(sim, s, p);
             if (ev.Disaster)
             {
@@ -193,7 +223,7 @@ namespace Sim.Core.Town
 
         // ---- gates and weights (§3.3) ----
 
-        private static List<Crop> Standing(Simulation sim)
+        public static List<Crop> Standing(Simulation sim)
         {
             var r = new List<Crop>();
             if (sim.State.Farm == null) return r;
@@ -558,9 +588,13 @@ namespace Sim.Core.Town
             if (choice < 0 || choice >= ev.Choices.Count) return RejectReason.InvalidArgument;
             long now = sim.State.Clock.SimTime;
             long cost = ChoiceCost(sim, p.Def, choice, p);
-            if (!defaulted && cost > 0 && !sim.State.Ledger.CanAfford(cost)) return RejectReason.InsufficientFunds;
-            if (defaulted && cost > sim.State.Ledger.Cash) cost = System.Math.Max(0, sim.State.Ledger.Cash); // a repair that can't be paid in full is paid as far as it goes
+            bool asFarAsItGoes = defaulted || ev.Id == EventsDef.FireRepair && choice == ev.Default; // the slow repair is always open to you: it pays as far as cash goes
+            if (!asFarAsItGoes && cost > 0 && !sim.State.Ledger.CanAfford(cost)) return RejectReason.InsufficientFunds;
+            if (asFarAsItGoes && cost > sim.State.Ledger.Cash) cost = System.Math.Max(0, sim.State.Ledger.Cash); // a repair that can't be paid in full is paid as far as it goes
             s.Waiting.Remove(p);
+            long bid = 0; // a land bid is paid to Land by the offer itself, once; it is in the choice's cost to be shown and to be afforded, not to be posted here
+            foreach (EffectDef e in ev.Choices[choice].Effects) if (e.Kind == EffectKind.Offer && e.What == "parcel") bid += BidPrice(sim, (int)p.Target);
+            cost -= bid;
             if (cost > 0)
             {
                 Account account = ev.Id == EventsDef.FireRepair ? Account.DisasterLoss : Account.EventCosts;
@@ -569,8 +603,8 @@ namespace Sim.Core.Town
                 if (ev.Id == EventsDef.FireRepair) InsuranceRules.OnRepair(sim, s, p, choice, cost, now); // an insured fire pays back its share of what was paid (spec 027 §3.6)
             }
             Apply(sim, s, p, ev, choice, now);
-            long cash = -cost;
-            s.History.Add(new EventRecord(p.Def, choice, defaulted, now, cash, p.Target));
+            long cash = -(cost + (bid > 0 && sim.State.Land.Parcels[(int)p.Target].Owned ? bid : 0)); // the history shows what it cost you, a won bid included
+            s.History.Add(new EventRecord(p.Def, choice, defaulted, now, cash, p.Target, p.TargetTable));
             while (s.History.Count > d.Engine.KeepHistory) s.History.RemoveAt(0);
             if (ev.Disaster) s.DisasterChoice = choice;
             if (defaulted) sim.Emit(new EventDefaulted(now, p.Id, p.Def, choice, cash));
@@ -806,8 +840,9 @@ namespace Sim.Core.Town
             EventsState s = State(sim);
             if (s == null || s.Effects.Count == 0) return Fixed.Zero;
             Fixed r = Fixed.Zero;
-            if (AnyFlag(sim, RushStocked)) r += Fixed.FromRatio(40, 100); // stocked up: everyone who comes is served
-            else if (AnyFlag(sim, Rush)) r += Fixed.FromRatio(20, 100); // carrying on: the stock you have serves about half of them
+            EventDef rush = Def(sim).Events[Def(sim).IndexOf("viral_rush")];
+            if (AnyFlag(sim, RushStocked)) r += rush.Mod("stockedRise"); // stocked up: everyone who comes is served
+            else if (AnyFlag(sim, Rush)) r += rush.Mod("carryRise"); // carrying on: the stock you have serves about half of them
             if (AnyFlag(sim, CloseShops)) r -= Def(sim).EpidemicDef.CloseShopsDemand;
             return r;
         }

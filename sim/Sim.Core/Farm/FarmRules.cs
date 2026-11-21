@@ -112,7 +112,6 @@ namespace Sim.Core.Farm
                 fert.Good < 0 ? 0 : MarketRules.Value(sim, fert.Good, fertGrams, MarketRules.InputPrice(sim, fert.Good)), fertGrams);
         }
 
-        /// <summary>What sowing one cycle would buy now: certified seed not in the store, and fertiliser not in the store (spec 003 §3.2).</summary>
         /// <summary>The new seed for one acre of a crop at the dealer's price now (a hail-struck field resown, spec 027 §3.2).</summary>
         public static long SeedValue(Simulation sim, CropDef crop) { return MarketRules.Value(sim, crop.SeedGood, SeedGrams(sim.Clock, crop), MarketRules.InputPrice(sim, crop.SeedGood)); }
 
@@ -143,6 +142,7 @@ namespace Sim.Core.Farm
             FarmSystem.Refresh(sim);
         }
 
+        /// <summary>What sowing one cycle would buy now: certified seed not in the store, and fertiliser not in the store (spec 003 §3.2).</summary>
         public static long SowingCost(Simulation sim, CropDef crop, SeedSource seed, FertiliserDef fert)
         {
             long seedCost = seed == SeedSource.Certified ? Store.ShortfallCost(sim, crop.SeedGood, SeedGrams(sim.Clock, crop)) : 0;

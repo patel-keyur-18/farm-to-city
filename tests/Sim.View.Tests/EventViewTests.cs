@@ -59,6 +59,48 @@ namespace Sim.View.Tests
             Assert.That(EventSheet.Card(ctx, 77).Title, Does.Contain("gone"));
         }
 
+        // The *Why?* of a card never shows a raw key: every event raised with every "why it came" code its weighing can produce (a review found six sentences missing).
+        [Test]
+        public void Why_Came_Every_Code()
+        {
+            Simulation sim = Situations.Events();
+            EventsState st = EventRules.State(sim);
+            EventsDef defs = sim.Config.Game.Events;
+            long hh = sim.State.Citizens.Households[0].Id;
+            for (int i = 0; i < defs.Events.Count; i++)
+            {
+                if (defs.Events[i].Disaster && i != defs.IndexOf("fire")) continue;
+                for (int why = 0; why < 4; why++)
+                {
+                    st.Waiting.Clear();
+                    EventRules.Raise(sim, st, i, defs.Events[i].Id == "wedding" || defs.Events[i].Id == "dispute" ? hh : 0, hh, why, sim.State.Clock.SimTime, defs.Events[i].Major);
+                    var ctx = ViewKit2.Context(sim);
+                    WhyVm vm = WhyView.Build(ctx, "event", st.Waiting.Last().Id);
+                    foreach (WhyRowVm row in vm.Rows) Assert.That((row.Label ?? "") + (row.Value ?? "") + (row.Note ?? ""), Does.Not.Contain("\u27E6"), defs.Events[i].Id + " why " + why);
+                }
+            }
+        }
+
+        // A business fire: the card and the *Why?* name the business and its book value, not a building that happens to share its id (a review found they did).
+        [Test]
+        public void Fire_On_A_Business()
+        {
+            Simulation sim = Situations.Insured();
+            EventsState st = EventRules.State(sim);
+            st.Waiting.Clear();
+            Sim.Core.Business.Business shop = sim.State.Businesses.Businesses.Last();
+            EventsDef d = sim.Config.Game.Events;
+            EventRules.Raise(sim, st, d.IndexOf(EventsDef.FireRepair), shop.Id, 1, 0, sim.State.Clock.SimTime, false);
+            PendingEvent p = st.Waiting.Last();
+            p.Param = 500_000;
+            var ctx = ViewKit2.Context(sim);
+            string name = ctx.Strings.Get(sim.Config.Game.Businesses.Types[shop.Type].NameKey);
+            SheetVm card = EventSheet.Card(ctx, p.Id);
+            Assert.That(string.Join(" ", card.Lines.Select(l => (l.Label ?? "") + (l.Note ?? ""))) + card.Subtitle + card.Title, Does.Contain(name).IgnoreCase.Or.Contain(name.ToLowerInvariant()));
+            WhyVm why = WhyView.Build(ctx, "event", p.Id);
+            Assert.That(why.Rows.Any(r => r.Value != null && r.Value.Contains(ctx.Fmt.Coins(Sim.Core.Town.InsuranceRules.BusinessBook(shop)))), Is.True, "its own book value is the worth");
+        }
+
         [Test]
         public void Events_Sheet_Bell_Banner()
         {
@@ -74,7 +116,10 @@ namespace Sim.View.Tests
             var alerts = Alerts.Build(ctx);
             Assert.That(alerts.Count(a => a.Text.Contains("warning")), Is.EqualTo(1), "a disaster's countdown on the bell");
             Assert.That(alerts.First(a => a.Text.Contains("warning")).Level, Is.EqualTo(AlertLevel.Urgent));
-            Assert.That(EventSheet.DisasterNote(ctx), Is.EqualTo("A fire risk in 2 d"));
+            Assert.That(EventSheet.DisasterNote(ctx), Does.StartWith("A fire risk in 2 d"), "a strike always falls on a 6:00, so the time left is the 48 hours less the hours since 6:00");
+            EventRules.State(sim).DisasterStrikeAt = sim.State.Clock.SimTime - 3600; // slid past its hour while you were away
+            Assert.That(EventSheet.DisasterNote(ViewKit2.Context(sim)), Is.EqualTo("A fire risk at your next 6:00 here"), "never \"in 0 min\"");
+            EventRules.State(sim).DisasterStrikeAt = sim.State.Clock.SimTime + 2 * 86400;
             SheetVm card = EventSheet.Card(ctx, fire.Id);
             Assert.That(card.Subtitle, Is.EqualTo("Disaster"));
             Assert.That(card.Lines.Last().Label, Does.Contain("never strikes while you are away"));

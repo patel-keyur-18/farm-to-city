@@ -33,21 +33,21 @@ namespace Sim.Content
 
             string fp = Join(root, "fire");
             JObject f = Object(Required(o, root, "fire"), fp);
-            OnlyFields(f, fp, "damageShare", "towerFactor", "prepareFactor", "prepareCost", "downtimeDays", "slowRepairShare", "slowRepairDays");
+            OnlyFields(f, fp, "damageShare", "towerFactor", "prepareFactor", "downtimeDays", "slowRepairShare", "slowRepairDays");
             var fire = new FireDef
             {
                 DamageShare = Bounded(f, fp, "damageShare", "0.05", "1"), TowerFactor = Bounded(f, fp, "towerFactor", "0", "1"), PrepareFactor = Bounded(f, fp, "prepareFactor", "0", "1"),
-                PrepareCost = BoundedInt(f, fp, "prepareCost", 0, 100000), DowntimeDays = BoundedInt(f, fp, "downtimeDays", 0, 30), SlowRepairShare = Bounded(f, fp, "slowRepairShare", "0.1", "1"),
+                DowntimeDays = BoundedInt(f, fp, "downtimeDays", 0, 30), SlowRepairShare = Bounded(f, fp, "slowRepairShare", "0.1", "1"),
                 SlowRepairDays = BoundedInt(f, fp, "slowRepairDays", 1, 60),
             };
 
             string pp = Join(root, "epidemic");
             JObject p = Object(Required(o, root, "epidemic"), pp);
-            OnlyFields(p, pp, "days", "sickFactor", "clinicFactor", "campFactor", "closeFactor", "campPerPerson", "closeDays", "closeShopsDemand");
+            OnlyFields(p, pp, "days", "sickFactor", "clinicFactor", "campFactor", "closeFactor", "closeDays", "closeShopsDemand");
             var epidemic = new EpidemicDef
             {
                 Days = BoundedInt(p, pp, "days", 1, 30), SickFactor = Bounded(p, pp, "sickFactor", "1", "10"), ClinicFactor = Bounded(p, pp, "clinicFactor", "0", "1"),
-                CampFactor = Bounded(p, pp, "campFactor", "1", "10"), CloseFactor = Bounded(p, pp, "closeFactor", "1", "10"), CampPerPerson = BoundedInt(p, pp, "campPerPerson", 0, 1000),
+                CampFactor = Bounded(p, pp, "campFactor", "1", "10"), CloseFactor = Bounded(p, pp, "closeFactor", "1", "10"),
                 CloseDays = BoundedInt(p, pp, "closeDays", 1, 30), CloseShopsDemand = Bounded(p, pp, "closeShopsDemand", "0", "1")
             };
 
@@ -68,7 +68,7 @@ namespace Sim.Content
                 if (j["mods"] != null)
                 {
                     JObject m = Object(j["mods"], Join(ip, "mods"));
-                    foreach (KeyValuePair<string, JToken> kv in m) mods[kv.Key] = Number(kv.Value, Join(Join(ip, "mods"), kv.Key));
+                    foreach (KeyValuePair<string, JToken> kv in m) { mods[kv.Key] = Number(kv.Value, Join(Join(ip, "mods"), kv.Key)); Range(mods[kv.Key], kv.Key.EndsWith("Divisor") || kv.Key == "share" ? Fixed.One : Fixed.Zero, Fixed.FromInt(100000), Join(Join(ip, "mods"), kv.Key)); } // a divisor, or the hail's "one field in so many", is never below 1 (the code divides by it)
                 }
                 string cp = Join(ip, "choices");
                 var carr = Array(Required(j, ip, "choices"), cp);
@@ -98,6 +98,22 @@ namespace Sim.Content
             return d;
         }
 
+        /// <summary>The words an effect's text fields may hold: a typo would otherwise match nothing, silently (flag code 0, a filter of no crop).</summary>
+        private static readonly Dictionary<string, string[]> Words = new Dictionary<string, string[]>
+        {
+            { "unit", new[] { "bill", "field", "flat", "halfBill", "person", "rainfedAcre" } },
+            { "filter", new[] { "all", "rainfed", "wet" } },
+            { "target", new[] { "fuel", "inputs", "business", "machine" } },
+            { "who", new[] { "both", "one", "other" } },
+            { "what", new[] { "family", "parcel", "worker" } },
+            { "name", new[] { "kitchenFixed", "rush", "rushStocked", "secondSupplier", "tractorParked" } },
+        };
+
+        private static void Known(string field, string value, string path)
+        {
+            if (System.Array.IndexOf(Words[field], value) < 0) throw new ContentException(path, "unknown " + field + " '" + value + "' (one of " + string.Join(", ", Words[field]) + ")");
+        }
+
         private static EffectDef LoadEffect(JObject j, string p)
         {
             OnlyFields(j, p, "kind", "unit", "amount", "filter", "factor", "percent", "days", "target", "who", "points", "what", "name", "hours");
@@ -105,17 +121,17 @@ namespace Sim.Content
             int kind = System.Array.IndexOf(EffectKinds, k);
             if (kind < 0) throw new ContentException(Join(p, "kind"), "unknown effect '" + k + "'");
             var e = new EffectDef { Kind = (EffectKind)kind };
-            if (j["unit"] != null) e.Unit = String(j["unit"], Join(p, "unit"));
+            if (j["unit"] != null) { e.Unit = String(j["unit"], Join(p, "unit")); Known("unit", e.Unit, Join(p, "unit")); }
             if (j["amount"] != null) { e.Amount = Int(j["amount"], Join(p, "amount")); Range((int)e.Amount, 0, 1000000, Join(p, "amount")); }
-            if (j["filter"] != null) e.Filter = String(j["filter"], Join(p, "filter"));
+            if (j["filter"] != null) { e.Filter = String(j["filter"], Join(p, "filter")); Known("filter", e.Filter, Join(p, "filter")); }
             if (j["factor"] != null) { e.Factor = Number(j["factor"], Join(p, "factor")); Range(e.Factor, Fixed.Parse("0.1"), Fixed.One, Join(p, "factor")); }
             if (j["percent"] != null) { e.Percent = Int(j["percent"], Join(p, "percent")); Range(e.Percent, -90, 300, Join(p, "percent")); }
             if (j["days"] != null) { e.Days = Int(j["days"], Join(p, "days")); Range(e.Days, 0, 400, Join(p, "days")); }
-            if (j["target"] != null) e.Target = String(j["target"], Join(p, "target"));
-            if (j["who"] != null) e.Who = String(j["who"], Join(p, "who"));
+            if (j["target"] != null) { e.Target = String(j["target"], Join(p, "target")); Known("target", e.Target, Join(p, "target")); }
+            if (j["who"] != null) { e.Who = String(j["who"], Join(p, "who")); Known("who", e.Who, Join(p, "who")); }
             if (j["points"] != null) { e.Points = Int(j["points"], Join(p, "points")); Range(e.Points, -20, 20, Join(p, "points")); }
-            if (j["what"] != null) e.What = String(j["what"], Join(p, "what"));
-            if (j["name"] != null) e.Name = String(j["name"], Join(p, "name"));
+            if (j["what"] != null) { e.What = String(j["what"], Join(p, "what")); Known("what", e.What, Join(p, "what")); }
+            if (j["name"] != null) { e.Name = String(j["name"], Join(p, "name")); Known("name", e.Name, Join(p, "name")); }
             if (j["hours"] != null) { e.Hours = Int(j["hours"], Join(p, "hours")); Range(e.Hours, 0, 720, Join(p, "hours")); }
             return e;
         }

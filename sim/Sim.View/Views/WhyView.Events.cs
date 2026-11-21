@@ -20,7 +20,7 @@ namespace Sim.View.Views
             if (ev.Id == EventsDef.FireRepair) return FireDamage(ctx, p);
             var s = ctx.Strings;
             WhyVm vm = New(ctx, "why.event.title", EventSheet.Title(ctx, p.Def));
-            Row(vm, ctx, "why.event.came", s.Get("event." + ev.Id + ".why." + p.Why));
+            Row(vm, ctx, "why.event.came", s.Get(s.Has("event." + ev.Id + ".why." + p.Why) ? "event." + ev.Id + ".why." + p.Why : "event." + ev.Id + ".why.0")); // a code with no sentence of its own reads as the event's general one
             for (int c = 0; c < ev.Choices.Count; c++)
             {
                 long cost = EventRules.ChoiceCost(sim, p.Def, c, p);
@@ -37,14 +37,18 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             FireDef f = sim.Config.Game.Events.FireDef;
-            Sim.Core.Land.Building b = sim.State.Land.Buildings.Find(x => x.Id == p.Target);
+            bool business = p.Target2 == 1; // a business burns by its own id, which can equal a building's
+            Sim.Core.Land.Building b = business ? null : sim.State.Land.Buildings.Find(x => x.Id == p.Target);
+            Sim.Core.Business.Business shop = business ? sim.State.Businesses.Businesses.Find(x => x.Id == p.Target) : null;
+            long book = business ? (shop == null ? 0 : InsuranceRules.BusinessBook(shop)) : b == null ? 0 : b.BookValue;
+            int tile = business ? (shop == null ? -1 : shop.TileId) : b == null ? -1 : b.TileId;
             EventsState st = EventRules.State(sim);
             WhyVm vm = New(ctx, "why.fire.title", Money(ctx, p.Param));
-            if (b != null)
+            if (tile >= 0)
             {
-                bool tower = UtilityRules.Covers(sim, UtilityDef.Tower, b.TileId);
-                Row(vm, ctx, "why.fire.worth", Money(ctx, b.BookValue));
-                Row(vm, ctx, "why.fire.share", Money(ctx, Sim.Core.Finance.Money.MulRate(b.BookValue, f.DamageShare)), "pct", Pct(ctx, f.DamageShare));
+                bool tower = UtilityRules.Covers(sim, UtilityDef.Tower, tile);
+                Row(vm, ctx, "why.fire.worth", Money(ctx, book));
+                Row(vm, ctx, "why.fire.share", Money(ctx, Sim.Core.Finance.Money.MulRate(book, f.DamageShare)), "pct", Pct(ctx, f.DamageShare));
                 Row(vm, ctx, "why.fire.tower", s.Get(tower ? "why.fire.towerYes" : "why.fire.towerNo"));
                 Row(vm, ctx, "why.fire.prepared", s.Get(st.DisasterChoice == 1 ? "why.fire.preparedYes" : "why.fire.preparedNo"));
             }

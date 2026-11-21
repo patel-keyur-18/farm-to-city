@@ -152,7 +152,7 @@ namespace Sim.Core.Farm
             if (!h.Hashing || LastCut != 0) h.WriteLong(LastCut); // fodder only (spec 012): other crops hash as before
             if (h.Hashing ? TakenGrams != 0 : !(h is SaveWriter tw) || tw.Schema >= 17) h.WriteLong(TakenGrams); // a part-harvested crop only: every other crop hashes as before
             if (h.Hashing ? EventHealth != Fixed.One : !(h is SaveWriter ew) || ew.Schema >= 22) h.WriteFixed(EventHealth); // schema 22: a crop an event hit only
-            if (h.Hashing ? HitBy != 0 : !(h is SaveWriter hw) || hw.Schema >= 22) h.WriteInt(HitBy);
+            if (h.Hashing ? HitBy != 0 : !(h is SaveWriter hw) || hw.Schema >= 22) h.WriteRef(ContentTable.Event, HitBy - 1); // the event + 1 that last hurt it (0 none): a content index
             if (h.Hashing ? Insured : !(h is SaveWriter iw) || iw.Schema >= 22)
             {
                 h.WriteBool(Insured); // schema 22: a crop that was insured at sowing only
@@ -184,7 +184,7 @@ namespace Sim.Core.Farm
             if (r.Schema >= 22)
             {
                 c.EventHealth = r.ReadFixed();
-                c.HitBy = r.ReadInt();
+                c.HitBy = r.ReadRef(ContentTable.Event) + 1;
                 c.Insured = r.ReadBool();
                 if (c.Insured) { c.SumInsured = r.ReadLong(); c.Premium = r.ReadLong(); }
             }

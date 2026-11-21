@@ -276,6 +276,27 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new SetBusinessInsurance(InsuranceKit.Now(sim), 9999, true)).Reason, Is.EqualTo(RejectReason.UnknownBusiness));
         }
 
+        // AC-12: a business that cannot pay its premium from its own cash and overdraft loses the policy at the close (no debt, no claim after).
+        [Test]
+        public void Premium_Unpaid_Lapses()
+        {
+            Simulation sim = InsuranceKit.AtSix();
+            Business.Business b = InsuranceKit.Shop(sim, 35_000);
+            Assert.That(sim.Execute(new SetBusinessInsurance(InsuranceKit.Now(sim), b.Id, true)).Accepted, Is.True);
+            long cash = b.Ledger.Cash; // all its cash spent, then all its overdraft drawn and spent
+            b.Ledger.Post(InsuranceKit.Now(sim), sim.Period, "test", "test", new Posting(Account.EventCosts, cash), new Posting(Account.Cash, -cash));
+            long limit = BusinessBooks.CanSpend(sim, b);
+            BusinessBooks.Draw(sim, b, limit);
+            b.Ledger.Post(InsuranceKit.Now(sim), sim.Period, "test", "test", new Posting(Account.EventCosts, b.Ledger.Cash), new Posting(Account.Cash, -b.Ledger.Cash));
+            Assert.That(BusinessBooks.CanSpend(sim, b), Is.LessThan(InsuranceRules.BusinessPremium(sim, b)), "it cannot pay");
+            InsuranceKit.Close(sim);
+            Policy p = InsuranceRules.State(sim).BusinessPolicy(b.Id);
+            Assert.That(p.On, Is.False, "the policy ended");
+            Assert.That(p.Covers(sim.Period), Is.False);
+            Assert.That(sim.PendingEvents.OfType<InsuranceLapsed>().Count(), Is.EqualTo(1));
+            Assert.That(b.Ledger.Balance(Account.InsurancePremiums), Is.EqualTo(0), "nothing was charged");
+        }
+
         // A fire on the shop: 90% of the repair bill paid, and 80% of its daily profit for each day shut into its own books.
         [Test]
         public void Claim_LostDays()

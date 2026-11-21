@@ -440,6 +440,34 @@ namespace Sim.Core.Tests
             }
         }
 
+        // Measures what insurance really pays (spec 027 §9: claims ÷ premiums should be 0.7 to 0.95 with the loading of 1.30): the insure-everything bot on 48 seeds to 60 seasons,
+        // premiums and claims pooled per policy. Used to set the crop premium's parts and the two rates (ADR 0149); run with `--filter RiskClaimCost`.
+        [Test, Explicit("measure")]
+        public void RiskClaimCost()
+        {
+            SimConfig config = LiveTownship();
+            const int Seeds = 48;
+            var prem = new long[Seeds, 3]; var claim = new long[Seeds, 3];
+            System.Threading.Tasks.Parallel.For(0, Seeds, i =>
+            {
+                Economy.RunBot(config, new TownshipBot(false) { Risk = TownshipBot.RiskUse.Insure }, 60, (ulong)(i + 1), sim =>
+                {
+                    foreach (Sim.Core.Events.SimEvent e in sim.PendingEvents)
+                    {
+                        if (e is Sim.Core.Events.PremiumCharged pc && pc.Policy >= 0 && pc.Policy < 3) prem[i, pc.Policy] += pc.Amount;
+                        if (e is Sim.Core.Events.ClaimPaid cp && cp.Policy >= 0 && cp.Policy < 3) claim[i, cp.Policy] += cp.Amount;
+                    }
+                });
+            });
+            string[] names = { "crop", "property", "business" };
+            for (int p = 0; p < 3; p++)
+            {
+                long pr = 0, cl = 0; int withClaim = 0;
+                for (int i = 0; i < Seeds; i++) { pr += prem[i, p]; cl += claim[i, p]; if (claim[i, p] > 0) withClaim++; }
+                TestContext.Out.WriteLine("CLAIMCOST " + names[p] + ": premiums " + pr / 100 + ", claims " + cl / 100 + ", ratio " + (pr == 0 ? 0 : (double)cl / pr).ToString("0.000") + ", seeds with a claim " + withClaim + " of " + Seeds);
+            }
+        }
+
         // Spec 023 §3.8, §9, AC-10 (US-100): a Township left alone at default taxes with no civic building breaks even within two years: the treasury
         // takes in what it pays out in the second year (measured −5,000 to +54,000 a second year, owner-approved 2026-11-18 with the clerk's wage 20,000, the
         // doctor's allowance 20,000 and the clinic's upkeep 1,500), every service stays at 100%, the doctor is in post and the old village stays.

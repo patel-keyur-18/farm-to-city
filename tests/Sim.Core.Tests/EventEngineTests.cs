@@ -144,7 +144,7 @@ namespace Sim.Core.Tests
 
         private static long MarketRulesIndexed(Simulation sim, long coins) { return Sim.Core.Market.MarketRules.Indexed(sim, coins * Coin); }
 
-        // AC-3: away, a minor takes its default at once and is reported; no major rolls and the day is not saved up.
+        // AC-3: away, a minor takes its default at once and is reported; no major rolls while you are away and the day is not saved up.
         [Test]
         public void AwayRules()
         {
@@ -154,12 +154,37 @@ namespace Sim.Core.Tests
             sim.DrainEvents();
             long now = sim.State.Clock.SimTime;
             sim.Execute(new AdvanceTo(now + 60 * Hour, AdvanceMode.Away));
-            var raised = sim.State.Township.Events;
             var report = sim.LastAwayReport;
             Assert.That(report.OfType<EventRaised>().All(e => !EventRules.Def(sim).Events[e.Def].Major), Is.True, "no major or disaster rolls while away");
             var defaulted = report.OfType<EventDefaulted>().Select(e => e.Id).ToList();
             foreach (EventRaised e in report.OfType<EventRaised>()) Assert.That(defaulted, Does.Contain(e.Id), "every minor took its default and is on the away card");
-            Assert.That(raised.Waiting, Is.Empty, "nothing waits after being away");
+            Assert.That(EventRules.State(sim).Waiting.All(p => !report.OfType<EventRaised>().Any(e => e.Id == p.Id)), Is.True, "what waits now was raised on your return, not while away");
+        }
+
+        // ADR 0154: a day rolls once, at your first live hour from 6:00. Away over the 6:00 and back at 9:00, the minor took its default at 6:00 and the day's live roll
+        // (majors) runs at 9:00; no second roll that day; and a player in the app at 6:00 gets it at 6:00 as before.
+        [Test]
+        public void RollsAtYourFirstLiveHour()
+        {
+            Simulation sim = Town(minor: "1", major: "1");
+            UntilSix(sim);
+            Pass(sim, 3); // live days: the grace is over
+            EventsState s = EventRules.State(sim);
+            s.Waiting.Clear();
+            s.LastSeason.Clear(); s.MajorSeason = -1; s.CropQuietUntil = -1; // the mercy rules' marks from the three live days: start the season's day fresh
+            sim.DrainEvents();
+            long day = sim.State.Clock.SimTime / Day + 1;
+            sim.Execute(new AdvanceTo(day * Day + 9 * Hour, AdvanceMode.Away));
+            Assert.That(s.AwayRollDay, Is.EqualTo(day), "the 6:00 ran while you were away");
+            Assert.That(s.RollDay, Is.EqualTo(day), "and your return at 9:00 ran the day's live roll");
+            Assert.That(s.Waiting.Count, Is.GreaterThan(0), "a card waits for you");
+            Assert.That(s.Waiting.All(p => p.RaisedAt == day * Day + 9 * Hour), Is.True, "raised on your return");
+            s.Waiting.Clear();
+            sim.DrainEvents();
+            sim.AdvanceTo(day * Day + 14 * Hour);
+            Assert.That(sim.PendingEvents.OfType<EventRaised>(), Is.Empty, "a day rolls once");
+            sim.AdvanceTo((day + 1) * Day + 6 * Hour + 1);
+            Assert.That(s.RollDay, Is.EqualTo(day + 1), "in the app at 6:00 the next day: rolled at 6:00 as before");
         }
 
         // AC-4: a kind doesn't repeat in a season; one major a season; the crop majors rest the next season; a major over 40% of cash isn't drawn.
@@ -178,19 +203,95 @@ namespace Sim.Core.Tests
             Assert.That(raised.Count(e => e.Major), Is.LessThanOrEqualTo(1), "at most one major a season");
         }
 
-        [Test]
-        public void MercyRule_CashCap()
+        // AC-4 rule 4: a major whose dearest choice is over 40% of your cash is not drawn (the review found the old check compared with cash plus a million coins and could not fail).
+        // Run for a pauper (100 coins) and for a rich town: the rich one meets majors, so the check is known to run.
+        [TestCase(100L, false)]
+        [TestCase(-1L, true)]
+        public void MercyRule_CashCap(long keepCoins, bool expectMajors)
         {
             Simulation sim = Town(minor: "0", major: "1");
             UntilSix(sim);
             Pass(sim, 3);
-            // A grant's paperwork or an auction's bid costs more than 40% of a pauper's cash: nothing that dear is drawn.
-            long cash = sim.State.Ledger.Cash;
-            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.EventCosts, cash - 100 * Coin), new Posting(Account.Cash, -(cash - 100 * Coin)));
+            if (keepCoins > 0)
+            {
+                long cash = sim.State.Ledger.Cash;
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.EventCosts, cash - keepCoins * Coin), new Posting(Account.Cash, -(cash - keepCoins * Coin)));
+            }
             sim.DrainEvents();
-            Pass(sim, 8);
-            foreach (EventRaised e in sim.PendingEvents.OfType<EventRaised>())
-                Assert.That(EventRules.ChoiceCost(sim, e.Def, EventRules.Def(sim).Events[e.Def].Choices.Count - 1, null), Is.LessThanOrEqualTo(Money.MulRate(sim.State.Ledger.Cash + 1_000_000 * Coin, Fixed.FromRatio(2, 5))), "never dearer than the cap");
+            int majors = 0;
+            for (int day = 0; day < 60; day++)
+            {
+                long before = sim.State.Ledger.Cash;
+                EventsState s = EventRules.State(sim);
+                s.Waiting.Clear();
+                UntilSix(sim);
+                foreach (PendingEvent p in s.Waiting.ToList())
+                {
+                    EventDef ev = EventRules.Def(sim).Events[p.Def];
+                    if (!ev.Major) continue;
+                    majors++;
+                    long dearest = 0;
+                    for (int c = 0; c < ev.Choices.Count; c++) dearest = System.Math.Max(dearest, EventRules.ChoiceCost(sim, p.Def, c, p));
+                    Assert.That(dearest, Is.LessThanOrEqualTo(Money.MulRate(before, Fixed.FromRatio(2, 5))), ev.Id + ": never dearer than 40% of the cash you had when it was drawn");
+                }
+            }
+            if (expectMajors) Assert.That(majors, Is.GreaterThan(0), "a rich town meets majors, so the check ran");
+        }
+
+        // AC-4 rule 2: after a crop major (drought, hail, waterlogging) the next season has none.
+        [Test]
+        public void MercyRule_CropMajorsRest()
+        {
+            Simulation sim = Town(minor: "0", major: "1");
+            UntilSix(sim);
+            Pass(sim, 3);
+            EventsState s = EventRules.State(sim);
+            long season = (sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason);
+            s.Waiting.Clear();
+            sim.DrainEvents();
+            EventRules.Raise(sim, s, EventRules.Def(sim).IndexOf("drought"), 0, 0, 0, sim.State.Clock.SimTime, true);
+            Assert.That(s.CropQuietUntil, Is.EqualTo(season + 1), "the next season is quiet for the crop majors");
+            sim.DrainEvents();
+            long end = (season + 2) * sim.Clock.SecondsPerSeason - 1;
+            while (sim.State.Clock.SimTime < end)
+            {
+                s.Waiting.Clear();
+                Pass(sim, 1);
+                foreach (EventRaised e in sim.PendingEvents.OfType<EventRaised>())
+                    Assert.That(EventRules.IsCropMajor(EventRules.Def(sim).Events[e.Def]), Is.False, "no drought, hail or waterlogging this season or the next");
+                sim.DrainEvents();
+            }
+        }
+
+        // AC-4 rule 3: no event on the day a promise was judged (kept or broken at the close); the day after, they come again.
+        [Test]
+        public void MercyRule_PromiseDay()
+        {
+            Simulation sim = Town(minor: "1", major: "0");
+            UntilSix(sim);
+            Pass(sim, 3);
+            EventsState s = EventRules.State(sim);
+            s.Waiting.Clear();
+            sim.DrainEvents();
+            TownLifeRules.State(sim).Petitions.Add(new TownPetition { Id = 99, Topic = 0, Status = PetitionStatus.Broken, ClosedAt = (sim.State.Clock.SimTime / Day + 1) * Day });
+            UntilSix(sim);
+            Assert.That(sim.PendingEvents.OfType<EventRaised>(), Is.Empty, "nothing on the day the promise was judged");
+            s.Waiting.Clear();
+            sim.DrainEvents();
+            for (int d = 0; d < 3; d++) { UntilSix(sim); s.Waiting.Clear(); } // live days, one at a time (a long jump is "away", which has its own rules)
+            Assert.That(sim.PendingEvents.OfType<EventRaised>().Any(), Is.True, "and the days after, they come again");
+        }
+
+        // The events file is checked at load: a misspelt word or a zero divisor is refused with its path, not silently ignored (a review found a typo became "no flag").
+        [Test]
+        public void Content_Refuses_Typos()
+        {
+            var typo = Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) => f == "events.json" ? j.Replace("\"name\": \"rushStocked\"", "\"name\": \"rushStokced\"") : j));
+            Assert.That(typo.Message, Does.Contain("unknown name 'rushStokced'"));
+            var filter = Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) => f == "events.json" ? j.Replace("\"filter\": \"rainfed\"", "\"filter\": \"rainfd\"") : j));
+            Assert.That(filter.Message, Does.Contain("unknown filter"));
+            var zero = Assert.Throws<Sim.Content.ContentException>(() => TestContent.Game((f, j) => f == "events.json" ? j.Replace("\"starsDivisor\": 5", "\"starsDivisor\": 0") : j));
+            Assert.That(zero.Message, Does.Contain("starsDivisor"));
         }
     }
 }

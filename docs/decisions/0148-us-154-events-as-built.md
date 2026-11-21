@@ -1,6 +1,6 @@
 # 0148. US-154 events as built: one roll at 6:00, cards with named defaults, two disasters warned two days ahead
 
-- Status: Proposed (awaiting the owner's review of US-154)
+- Status: Accepted (the owner approved US-154, 2026-11-21)
 - Date: 2026-11-21
 - Deciders: Keyur Patel
 - Related: spec 027 §3.1–§3.4, §7, Preview 12 (approved 2026-11-21), ADR 0002, 0063, 0141, 0147

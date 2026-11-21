@@ -340,6 +340,7 @@ namespace Sim.Core
             Emit(new AwayAdvanceCompleted(State.Clock.SimTime, from, State.Clock.SimTime, requested, applied, capped));
             _awayReport.Clear();
             for (int i = firstEvent; i < _events.Count; i++) _awayReport.Add(_events[i]);
+            Town.EventRules.OnReturn(this); // today's roll, for a player who is now here (after the away report: its cards are new, not something that happened while away)
         }
 
         // ---- Processing ----

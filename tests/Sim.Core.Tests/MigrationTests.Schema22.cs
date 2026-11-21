@@ -104,5 +104,30 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(sim.State.Clock.SimTime + 2 * sim.Clock.SecondsPerSeason);
             Assert.That(sim.State.Ledger.Reconcile(), Is.Null, "the town carries on through two more closes");
         }
+
+        // ADR 0041: a save names events, goods, parcels and crops by id, so an event added before the others in events.json changes nothing a saved card, answer, effect or claim means.
+        [Test]
+        public void Schema22_Risk_Survives_Reordered_Events()
+        {
+            SimConfig config = SaveTests.Config();
+            LoadResult r = SaveCodec.Read(File.ReadAllBytes(Risk22Fixture), config, MinSchema);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            string[] before = r.State.Township.Events.Waiting.Select(p => config.Game.Events.Events[p.Def].Id).Concat(r.State.Township.Events.History.Select(h => config.Game.Events.Events[h.Def].Id)).ToArray();
+            Assert.That(before, Is.Not.Empty, "the fixture has a card or an answer");
+            var seasonsBefore = Enumerable.Range(0, config.Game.Events.Events.Count).ToDictionary(i => config.Game.Events.Events[i].Id, i => r.State.Township.Events.LastSeasonOf(i));
+            // The same content with a new event first, so every event's position moves down by one.
+            string dummy = "{ \"id\": \"zz_dummy\", \"family\": \"weather\", \"major\": false, \"rolled\": false, \"choices\": [ { \"id\": \"a\", \"effects\": [] }, { \"id\": \"b\", \"effects\": [] } ] },";
+            TestContent.WithCohort = false;
+            SimConfig moved = new SimConfig(TestContent.Clock(), TestContent.Weather(), game: TestContent.Game((f, j) => f == "events.json" ? new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape("\"events\": [")).Replace(j, "\"events\": [\n" + dummy, 1) : j));
+            LoadResult m = SaveCodec.Read(File.ReadAllBytes(Risk22Fixture), moved, MinSchema);
+            Assert.That(m.Error, Is.EqualTo(SaveError.None), m.Detail);
+            string[] after = m.State.Township.Events.Waiting.Select(p => moved.Game.Events.Events[p.Def].Id).Concat(m.State.Township.Events.History.Select(h => moved.Game.Events.Events[h.Def].Id)).ToArray();
+            Assert.That(after, Is.EqualTo(before), "the same events, whatever their place in the list");
+            for (int i = 0; i < moved.Game.Events.Events.Count; i++)
+            {
+                string id = moved.Game.Events.Events[i].Id;
+                if (seasonsBefore.ContainsKey(id)) Assert.That(m.State.Township.Events.LastSeasonOf(i), Is.EqualTo(seasonsBefore[id]), id + ": its mercy-rule mark follows it");
+            }
+        }
     }
 }

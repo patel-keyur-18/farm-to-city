@@ -1,6 +1,6 @@
 # 0147. US-149 festivals as built: one a season, a day of the clock, the Festivals account
 
-- Status: Proposed (awaiting the owner's review of US-149)
+- Status: Accepted (the owner approved US-149, 2026-11-20)
 - Date: 2026-11-20
 - Deciders: Keyur Patel
 - Related: spec 026 §3.1, §7, Preview 14, ADR 0108, 0127, 0145, 0146

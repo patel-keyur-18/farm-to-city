@@ -52,7 +52,7 @@ namespace Sim.Core.Tests
             Building b = House(sim);
             PendingEvent warn = Force(sim, "fire", b.Id);
             EventsState s = EventRules.State(sim);
-            Assert.That(s.DisasterStrikeAt, Is.EqualTo(Now(sim) + 48 * Hour));
+            Assert.That(s.DisasterStrikeAt, Is.EqualTo(Now(sim) + 48 * Hour), "warned at 6:00: the full 48 hours, and a strike always falls on a 6:00");
             Assert.That(warn.ExpiresAt, Is.EqualTo(s.DisasterStrikeAt), "the card's clock is the warning");
             Assert.That(sim.PendingEvents.OfType<DisasterWarned>().Single().StrikeAt, Is.EqualTo(s.DisasterStrikeAt));
             sim.AdvanceTo(s.DisasterStrikeAt - 1);
@@ -61,18 +61,28 @@ namespace Sim.Core.Tests
             Assert.That(sim.PendingEvents.OfType<FireStruck>().Count(), Is.EqualTo(1), "at the 6:00 the warning ran out");
             Assert.That(s.DisasterDef, Is.EqualTo(-1));
 
-            // Away over the 6:00: it slides to the next live one, three days at most, then passes and nothing is lost.
+            // Away over the 6:00, then back: the strike comes at your first live hour (ADR 0154), not while you are away and not never.
             Simulation away = AtSix();
             Building b2 = House(away);
             Force(away, "fire", b2.Id);
             EventsState s2 = EventRules.State(away);
-            away.Execute(new AdvanceTo(s2.DisasterStrikeAt + 6 * Hour, AdvanceMode.Away));
-            Assert.That(away.PendingEvents.OfType<FireStruck>(), Is.Empty, "never fires while you are away");
-            Assert.That(s2.DisasterDef, Is.GreaterThanOrEqualTo(0), "it slid");
-            away.Execute(new AdvanceTo(Now(away) + 3 * Day + Hour, AdvanceMode.Away));
-            Assert.That(away.PendingEvents.OfType<FireStruck>(), Is.Empty);
-            Assert.That(away.PendingEvents.OfType<DisasterPassed>().Count(), Is.EqualTo(1), "after three days it passes");
+            long strike = s2.DisasterStrikeAt;
+            away.Execute(new AdvanceTo(strike - Hour, AdvanceMode.Live));
+            away.Execute(new AdvanceTo(strike + 6 * Hour, AdvanceMode.Away));
+            Assert.That(s2.DisasterSlides, Is.EqualTo(1), "the hour passed while you were away: it slid");
+            Assert.That(away.PendingEvents.OfType<FireStruck>().Single().SimTime, Is.EqualTo(strike + 6 * Hour), "and struck the moment you were back, not before");
             Assert.That(s2.DisasterDef, Is.EqualTo(-1));
+
+            // Away for days: it slides three times and the fourth 6:00 passes it by; nothing is lost.
+            Simulation gone = AtSix();
+            Force(gone, "fire", House(gone).Id);
+            EventsState s3 = EventRules.State(gone);
+            long at = s3.DisasterStrikeAt - Hour;
+            gone.Execute(new AdvanceTo(at, AdvanceMode.Live));
+            for (int d = 0; d < 4; d++) { at += Day; gone.Execute(new AdvanceTo(at, AdvanceMode.Away)); } // each at 5:00, so none ends on a live hour after 6:00
+            Assert.That(gone.PendingEvents.OfType<FireStruck>(), Is.Empty, "never fires while you are away");
+            Assert.That(gone.PendingEvents.OfType<DisasterPassed>().Count(), Is.EqualTo(1), "after three slides it passes");
+            Assert.That(s3.DisasterDef, Is.EqualTo(-1));
         }
 
         // AC-9: 35% of the book value, halved by preparing, a second card to repair at once or slowly, the bill in Disaster loss.
@@ -110,6 +120,24 @@ namespace Sim.Core.Tests
             d.AdvanceTo(r2.ExpiresAt + 1);
             Assert.That(EventRules.State(d).History.Last().Choice, Is.EqualTo(1), "the slow repair is the default");
             Assert.That(d.State.Ledger.Cash, Is.EqualTo(cash2 - Money.MulRate(r2.Param, Fixed.FromRatio(1, 2))));
+        }
+
+        // AC-9: with cash under half the bill the slow repair can still be chosen by hand (it pays as far as cash goes); the quick one is refused for want of cash.
+        [Test]
+        public void Fire_SlowRepair_ByHand_WhenPoor()
+        {
+            Simulation sim = AtSix();
+            Building b = House(sim);
+            Force(sim, "fire", b.Id);
+            sim.AdvanceTo(EventRules.State(sim).DisasterStrikeAt + 1);
+            PendingEvent repair = EventRules.State(sim).Waiting.Single(p => EventRules.Def(sim).Events[p.Def].Id == EventsDef.FireRepair);
+            InsuranceKit.SetCash(sim, 100 * Coin);
+            Assert.That(sim.Execute(new AnswerEvent(Now(sim), repair.Id, 0)).Reason, Is.EqualTo(RejectReason.InsufficientFunds), "the quick repair needs the bill");
+            long cash = sim.State.Ledger.Cash;
+            Assert.That(sim.Execute(new AnswerEvent(Now(sim), repair.Id, 1)).Accepted, Is.True, "the slow one is always open");
+            long half = Money.MulRate(repair.Param, Fixed.FromRatio(1, 2));
+            Assert.That(half, Is.GreaterThan(cash), "the test's cash is under half the bill");
+            Assert.That(sim.State.Ledger.Cash, Is.EqualTo(0), "it paid as far as cash went, and no further");
         }
 
         // AC-9: the water tower's reach halves the damage again.

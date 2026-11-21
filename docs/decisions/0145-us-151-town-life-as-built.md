@@ -1,6 +1,6 @@
 # 0145. US-151 as built: reputation, crime and inequality
 
-- Status: Accepted (owner approved Preview 14 and the story's rules, 2026-11-20; the story is for the owner's review)
+- Status: Accepted (the owner approved Preview 14 and US-151, 2026-11-20)
 - Date: 2026-11-20
 - Deciders: Keyur Patel
 - Amends: spec 026 §3.5 and §3.6 (inequality counts income a person); ADR 0143 §4 (the zero-tax test)

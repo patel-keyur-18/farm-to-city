@@ -20,7 +20,6 @@
     "damageShare": 0.35,
     "towerFactor": 0.5,
     "prepareFactor": 0.5,
-    "prepareCost": 800,
     "downtimeDays": 2,
     "slowRepairShare": 0.5,
     "slowRepairDays": 6
@@ -31,7 +30,6 @@
     "clinicFactor": 0.5,
     "campFactor": 1.5,
     "closeFactor": 1.5,
-    "campPerPerson": 25,
     "closeDays": 3,
     "closeShopsDemand": 0.3
   },
@@ -101,7 +99,7 @@
       ]
     },
     {
-      "id": "viral_rush", "family": "business", "major": false, "mods": { "starsDivisor": 5 },
+      "id": "viral_rush", "family": "business", "major": false, "mods": { "starsDivisor": 5, "stockedRise": 0.4, "carryRise": 0.2 },
       "choices": [
         { "id": "carry", "effects": [ { "kind": "flag", "name": "rush", "days": 1 } ] },
         { "id": "stock", "effects": [ { "kind": "cash", "unit": "flat", "amount": 1500 }, { "kind": "flag", "name": "rushStocked", "days": 1 } ] }
@@ -144,7 +142,7 @@
       ]
     },
     {
-      "id": "regional_grant", "family": "opportunity", "major": true, "mods": { "climateDivisor": 50, "paperwork": 400, "grant": 6000 },
+      "id": "regional_grant", "family": "opportunity", "major": true, "mods": { "climateDivisor": 50 },
       "choices": [
         { "id": "skip", "effects": [] },
         { "id": "apply", "effects": [ { "kind": "cash", "unit": "flat", "amount": 400 }, { "kind": "grant", "amount": 6000 } ] }

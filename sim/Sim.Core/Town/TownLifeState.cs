@@ -62,7 +62,7 @@ namespace Sim.Core.Town
         /// <summary>The festivals held, newest last, the last few kept.</summary>
         public List<FestivalRecord> Festivals { get; internal set; } = new List<FestivalRecord>();
 
-        internal bool IsDefault { get { return !Read; } }
+        internal bool IsDefault { get { return !Read && FestivalSeason < 0 && !FestivalOn && Festivals.Count == 0 && Petitions.Count == 0; } } // a festival can be scheduled before the first close has read the town: that is state too
 
         internal TownLifeState Clone()
         {

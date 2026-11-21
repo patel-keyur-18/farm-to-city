@@ -261,14 +261,16 @@ namespace Sim.Core.Tests
 
             // The auction: a parcel beside your land at 85% of its value, refused when it can't be paid.
             int parcel = EventRules.AuctionParcel(sim);
-            if (parcel >= 0)
-            {
-                PendingEvent a = Force(sim, "land_auction", parcel);
-                long bid = Money.MulRate(LandRules.ParcelPrice(sim, sim.State.Land.Parcels[parcel]), Fixed.FromRatio(85, 100));
-                Assert.That(EventRules.ChoiceCost(sim, a.Def, 1, a), Is.EqualTo(bid));
-                Answer(sim, a, 1);
-                Assert.That(sim.State.Land.Parcels[parcel].Owned, Is.True);
-            }
+            Assert.That(parcel, Is.GreaterThanOrEqualTo(0), "the Spring town has an acre beside yours at auction");
+            PendingEvent a = Force(sim, "land_auction", parcel);
+            long bid = Money.MulRate(LandRules.ParcelPrice(sim, sim.State.Land.Parcels[parcel]), Fixed.FromRatio(85, 100));
+            Assert.That(EventRules.ChoiceCost(sim, a.Def, 1, a), Is.EqualTo(bid));
+            long before = sim.State.Ledger.Cash, costs = sim.State.Ledger.Balance(Account.EventCosts), land = sim.State.Ledger.Balance(Account.Land);
+            Answer(sim, a, 1);
+            Assert.That(sim.State.Land.Parcels[parcel].Owned, Is.True);
+            Assert.That(before - sim.State.Ledger.Cash, Is.EqualTo(bid), "the bid is paid once (a review found it charged twice)");
+            Assert.That(sim.State.Ledger.Balance(Account.EventCosts), Is.EqualTo(costs), "it is land, not an event cost");
+            Assert.That(sim.State.Ledger.Balance(Account.Land) - land, Is.EqualTo(bid));
         }
 
         // AC-6 business events: a strike's price and pause, a second supplier, the inspection, a viral rush, a breakdown.

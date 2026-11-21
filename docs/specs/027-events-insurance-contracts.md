@@ -40,19 +40,19 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin and indexed by the 
 | Rule | Behaviour | Units | Bounds |
 | --- | --- | --- | --- |
 | Starts at the Township | No event before the Township unlocks (the Village and Hamlet paces are measured against Phase 2's gates, ADR 0097, 0110, 0120). None in the first 2 days after the unlock. | era | |
-| One roll a day, at 6:00 | A seeded roll (stream `Events`, key = day). A **minor** event comes with chance `minorChance` **0.9**; a **major** (★) with `majorChance` **1/16** (about one a game year). A major is drawn first; if one comes no minor that day. | chance | 0–1 |
+| One roll a day, at your first live hour from 6:00 | (Owner, 2026-11-21, ADR 0154: it was "at 6:00" sharp, which a player not in the app at that exact hour never met.) A seeded roll (stream `Events`, key = day), run **once a day at the first hour from 6:00 at which you are here**: at 6:00 if you are in the app, otherwise the moment you open it (the day's roll runs on your return). A day whose 6:00 passed while you were away has its minor roll taken at that 6:00 by default (below) and its major roll on your return. A **minor** event comes with chance `minorChance` **0.9**; a **major** (★) with `majorChance` **1/16** (about one a game year). A major is drawn first; if one comes no minor that day. | chance | 0–1 |
 | Which event | Drawn by weight among the events open to you now (§3.3). A kind does not repeat within a season. | weight | |
 | At most 2 waiting | A third day's roll is skipped, so nothing piles up. | cards | `maxWaiting` 2 |
 | A card, not a queue | A card shows 2–3 choices with their cost and a hint of the long-term effect, one marked **default** (the safest, named), and says what happens if you do not answer. | | |
 | The clock | A minor card waits **24 real hours**, then takes its default and says so. A major waits **48 hours**. A disaster's warning is 48 hours and its strike comes at the end (§3.4). | hours | 24 / 48 |
-| Away | A minor event takes its default at once and goes on the away card. Majors and disasters never roll while you are away; that day's roll is skipped, not saved up. | | |
+| Away | A minor event takes its default at once and goes on the away card. Majors and disasters never roll or strike *during* an away advance; the day's major roll runs when you are back (above), and days of an away advance are not saved up. | | |
 | Every choice is a command | `AnswerEvent(eventId, choice)`, checked like any spend: funds, a refusal in words. | | |
 | The four mercy rules | (1) A kind does not repeat within a season. (2) **At most one major a season**; after a major hits crops (drought, hail, waterlogging) no other crop major the next season. (3) No event in the first 2 days after the Township unlock, and none on a day a petition's promise falls due (spec 026). (4) A major that would cost over **40%** of your cash is not drawn: you can always afford the safe choice. | | |
 | Seeded and deterministic | The same seed and the same commands give the same events (Rng stream `Events` = 21, keys: day, slot, kind). | | |
 
 ### 3.2 The catalogue (US-154)
 
-An event is a row of data: a family, a gate, a weight (§3.3), 2–3 choices, a default. Each choice's effect is drawn from a **closed list of nine effect kinds**: `Cash`, `CropHealth` (an *event health* multiplier on the standing crops of a filter), `PriceShift` (a good, a percentage, days), `CostShift` (diesel, power or a business's inputs, a percentage, days or a season), `Happiness` (who, points, days), `Offer` (a worker, a family or a parcel offered), `Flag` (a named flag until a time), `Downtime` (a building or a machine shut for hours), `Grant` (an amount at the next close). No scripts: a new event is data and a string. ★ marks a major (48 h clock, one a season at most). **Default** in bold.
+An event is a row of data: a family, a gate, a weight (§3.3), 2–3 choices, a default. Each choice's effect is drawn from a **closed list of thirteen effect kinds** (the first nine, and `Resow`, `SellNow`, `Approval` and `Mediate` that the catalogue's choices needed): `Cash`, `CropHealth` (an *event health* multiplier on the standing crops of a filter), `PriceShift` (a good, a percentage, days), `CostShift` (diesel, power or a business's inputs, a percentage, days or a season), `Happiness` (who, points, days), `Offer` (a worker, a family or a parcel offered), `Flag` (a named flag until a time), `Downtime` (a building or a machine shut for hours), `Grant` (an amount at the next close). No scripts: a new event is data and a string. ★ marks a major (48 h clock, one a season at most). **Default** in bold.
 
 | Family | Event | Gate | Choices (cost → effect) |
 | --- | --- | --- | --- |
@@ -72,14 +72,14 @@ An event is a row of data: a family, a gate, a weight (§3.3), 2–3 choices, a 
 | | **Dispute** | two households within reach | **Let it pass** (both −1 happiness for a season) · Mediate (1 h of your day, both +2) · Side with one (+3 and −3) |
 | | **New family** | a free house | **Not now** · Welcome them (they move in) |
 | Opportunity | ★ **Regional grant** | a profitable last season | **Skip** · Apply (400 for the paperwork: 6,000 at the next close if your books and credit are sound; the odds in words) |
-| | ★ **Land auction** | a parcel for sale beside your land | **Pass** · Bid (85% of its land value; answer within a day) |
+| | ★ **Land auction** | a parcel for sale beside your land | **Pass** · Bid (85% of its land value; the card waits 48 hours) |
 | | *Investor's offer* | spec 028 | not built here |
 | Disaster | ★ **Fire** | §3.4 | §3.4 |
 | | ★ **Epidemic** | §3.4 | §3.4 |
 
 *Crop damage is one number:* an **event health** multiplier on a standing crop, multiplied into its CropHealth (ADR 0014). It is kept on the crop (`Crop.EventHealth`, 1 by default) and counts in the insured yield index (§3.5). Irrigated, drip and pumped fields are untouched by a drought; the card says why ("your pump keeps these 6 acres watered").
 
-*Why these:* every family in the GDD's table has its events, each cost is a small real number against a season's profit (the Village's median farm profit is 46,000), each has a preparation that softens it, and the default always costs nothing so the player learns what paying to prevent a loss buys.
+*Why these:* every family in the GDD's table has its events, each cost is a small real number against a season's profit (the Village's median farm profit is 46,000), each has a preparation that softens it, and the default costs nothing (the one exception is the health inspection: its default is the 1,000 fine, because a fine cannot be refused) so the player learns what paying to prevent a loss buys.
 
 ### 3.3 Weights by town state (US-154)
 
@@ -111,7 +111,7 @@ At 6:00 each eligible event has a weight `base × the modifiers below`, the prod
 
 Both are ★ majors in the same draw (weight 4 against 10), under the four mercy rules.
 
-**The warning.** The card is the warning, **48 hours** before the strike. Its choices are the preparation. The strike lands at the first **live 6:00** after the 48 hours. If you were away at that 6:00 it **slides** to your next live 6:00, at most 3 days, then it passes and nothing is lost. A disaster never fires while you are away. There is no push notification.
+**The warning.** The card is the warning, **48 hours** before the strike. Its choices are the preparation. The strike falls on a **6:00** (a warning given later in the day gives a little under 48 hours) and lands at the **first live hour at or after it**: in the app at 6:00 it strikes then; otherwise the moment you open the app. If the hour passes while you are away that 6:00 counts as a **slide**; after 3 slides (days away) it passes and nothing is lost. A disaster never fires during an away advance. There is no push notification.
 
 **Fire.**
 - **Gate:** you own at least one building. **Which:** seeded among your buildings (family houses, huts, the shed, the godown, business buildings, solar panels), weighted by book value. Civic buildings are the treasury's and are never picked.
@@ -135,11 +135,11 @@ A **season policy** by one switch on the Money page: *Crop insurance: On / Off* 
 | **What is insured: luck, not neglect.** | The insured yield index `I = Weather × CropHealth × EventHealth`. Soil, water, care, seed and fertiliser are not insured. |
 | Sum insured | The sow sheet's harvest value at the trader's floor price when sown. |
 | Trigger and payout | At readiness, if `I < threshold` (**0.80**, a 20% deductible), pay `sum insured × (0.80 − I)`, in cash, to farm income *Insurance claims*. |
-| Premium | `sum insured × (pest part + event part) × loading`, charged at sowing from your cash. **Pest part** = the crop's pest risk at sowing × **0.23** (the average shortfall in an outbreak: 95% × 0.20 + 5% × 0.80), the risk read as `PestRules.Risk` with the sowing's repeats and the season's usual wet share (Spring 0.17, Summer 0.12, Monsoon 0.65, Winter 0.04, from the weather's weights), unsprayed. **Event part** = a flat **1.5%** for hail, drought and waterlogging (a placeholder for the balance pass). **Loading** = **1.30**. |
+| Premium | `sum insured × (pest part + event part) × loading`, charged at sowing from your cash. **Pest part** = the crop's pest risk at sowing × **0.0065** (the part of an outbreak's shortfall the policy pays, that is the loss beyond the 20% deductible; it was 0.23, the whole shortfall, which priced the 20% the policy never pays: repriced from the measured claims, ADR 0154), the risk read as `PestRules.Risk` with the sowing's repeats and the season's usual wet share (Spring 0.17, Summer 0.12, Monsoon 0.65, Winter 0.04, from the weather's weights), unsprayed. **Event part** = a flat **0.04%** for hail, drought and waterlogging (measured, ADR 0154; it was a 1.5% placeholder). **Loading** = **1.30**. |
 | Cash short | If cash cannot pay the premium the sowing goes uninsured and the away card says so (`CropNotInsured`). |
 | Books | The premium is a farm cost *Crop insurance premiums*; a claim is farm income *Insurance claims* (not passive). Both on the season page with a *Why?*. |
 
-*Examples (my estimates, confirmed at the balance pass):* wheat in Winter, sum insured 28,800: premium about 3.8% (about 1,100); a pest outbreak at health 0.6 (`I` about 0.58) pays about 6,300; hail (`I` about 0.63) about 4,900; a severe outbreak pays 0.80 × the sum insured. Rice in the Monsoon, sum insured 36,000: premium about 6.9% (about 2,500).
+*Examples (first estimates, repriced by the Sprint 24 measurement, ADR 0154):* the premium is about 0.1 to 0.3% of the sum insured (wheat in Winter, sum insured 28,800: about 30; rice in the Monsoon, 36,000: about 90); a pest outbreak at health 0.6 (`I` about 0.58) pays about 6,300; hail (`I` about 0.63) about 4,900; a severe outbreak pays 0.80 × the sum insured. Measured on 48 hands-off seeds to 60 seasons: claims were 0.85 of premiums.
 
 ### 3.6 Property and business insurance (US-155)
 
@@ -147,10 +147,10 @@ Two policies; every building belongs to exactly one. Both are **season policies*
 
 | | Property insurance | Business insurance |
 | --- | --- | --- |
-| Covers | the buildings on **your own books** (yard, huts, family houses, the cattle shed, the godown; solar panels are not buildings in the sim and are not covered) | a business's own building and equipment, and its lost profit |
+| Covers | the buildings on **your own books** (yard, huts, family houses, the cattle shed; the godown has no acre and cannot burn, so it is not covered, and solar panels are not buildings in the sim) | a business's own building and equipment, and its lost profit |
 | Paid from | your cash | **that business's cash** |
 | Switch | the Money page | the business's sheet |
-| Premium a season | **0.2%** of the insured book value | **0.2%** of its building and equipment book value + **3%** of its last season's net profit |
+| Premium a season | **0.01%** of the insured book value | **0.01%** of its building and equipment book value + **0.05%** of its last season's net profit (all three were 0.2%, 0.2% and 3% before the measurement, ADR 0154) |
 | Pays on a fire | **90%** of the repair bill (a 10% excess) | **90%** of the repair bill |
 | Pays for lost days | none | **80%** of its average daily profit (last season's net profit ÷ days) for each day shut by a fire or by *Pause the line* |
 
@@ -182,12 +182,12 @@ Two policies; every building belongs to exactly one. Both are **season policies*
 | engine | `graceDaysAfterUnlock`, `cashShareCap` | | 2, 0.4 | | mercy rules |
 | engine | `weightClamp` | [Fixed, Fixed] | [0.25, 4] | | |
 | event | `id`, `family`, `major`, `baseWeight`, `gate`, `modifiers`, `choices`, `default` | | §3.2–3.3 | | strings `event.<id>.*` |
-| choice | `id`, `costKey`, `effects[]` | | | ≤ 3 per event | effects from the nine kinds |
+| choice | `id`, `costKey`, `effects[]` | | | ≤ 3 per event | effects from the thirteen kinds |
 | fire | `damageShare`, `towerFactor`, `prepareFactor`, `prepareCost`, `downtimeDays`, `slowRepairShare`, `slowRepairDays` | | 0.35, 0.5, 0.5, 800, 2, 0.5, 6 | | |
 | epidemic | `days`, `sickFactor`, `clinicFactor`, `campFactor`, `closeFactor`, `campPerPerson`, `closeDays`, `closeShopsDemand` | | 6, 2.5, 0.5, 1.5, 1.5, 25, 3, 0.3 | | |
-| cropInsurance | `threshold`, `pestShortfall`, `eventPart`, `loading` | Fixed | 0.80, 0.23, 0.015, 1.30 | | |
-| propertyInsurance | `rate`, `excess` | Fixed | 0.002, 0.10 | | |
-| businessInsurance | `rate`, `profitShare`, `excess`, `dailyProfitShare` | Fixed | 0.002, 0.03, 0.10, 0.80 | | |
+| cropInsurance | `threshold`, `pestShortfall`, `eventPart`, `loading` | Fixed | 0.80, 0.0065, 0.0004, 1.30 | | |
+| propertyInsurance | `rate`, `excess` | Fixed | 0.0001, 0.10 | | |
+| businessInsurance | `rate`, `profitShare`, `excess`, `dailyProfitShare` | Fixed | 0.0001, 0.0005, 0.10, 0.80 | | |
 | contracts | `crops`, `topCrops`, `shareOfHarvest`, `minKg`, `roundKg`, `discount`, `maxOpen` | | 6 staples, 2, 0.40, 300, 100, 0.03, 2 | | |
 
 **New state** (save schema 22, `EventsState`, `InsuranceState`, `ContractsState`; Sprint 24's single bump, shared with spec 026):
@@ -212,7 +212,7 @@ An older save loads with the engine idle (no event before the Township), no poli
 
 | Command | Parameters | Validation and rejection reasons | Effect |
 | --- | --- | --- | --- |
-| `AnswerEvent` | event id, choice | `UnknownEvent`; `EventClosed`; `InvalidStep`; `InsufficientFunds` | applies the choice's effects; removes the card |
+| `AnswerEvent` | event id, choice | `EventClosed`; `InvalidArgument` (no such choice); `InsufficientFunds` (the slow fire repair excepted: it pays as far as cash goes) | applies the choice's effects; removes the card |
 | `SetCropInsurance` | on | `NoTownship` | switches the policy for crops sown after now |
 | `SetPropertyInsurance` | on | `NoTownship`; `NoBuildings` | on from the next close; off at once |
 | `SetBusinessInsurance` | business id, on | `UnknownBusiness`; `BusinessClosed` | the same, for one business |
@@ -233,8 +233,8 @@ An older save loads with the engine idle (no event before the Township), no poli
 | --- | --- | --- | --- | --- |
 | Pay to prevent (tankers, drains, dawn watering) | 60–1,500 | no crop loss | cash lower now | none |
 | Let it ride (the default) | nothing | crop loss of 6–12% (hail 35%) | the claim, if insured | none |
-| Crop insurance on | a premium of about 4–7% of a crop's value at each sowing | a claim when luck takes more than 20% | cash lower at sowing | off for later sowings |
-| Property or business insurance on | 0.2% of book value (+3% of profit) a season | 90% of a fire's repair bill (+ 80% of lost days) | the premium is paid even if nothing happens | off at once; no refund |
+| Crop insurance on | a premium of about 0.1–0.3% of a crop's value at each sowing | a claim when luck takes more than 20% | cash lower at sowing | off for later sowings |
+| Property or business insurance on | 0.01% of book value (+0.05% of profit) a season | 90% of a fire's repair bill (+ 80% of lost days) | the premium is paid even if nothing happens | off at once; no refund |
 | Accept a forward contract | nothing now | the price fixed for 40% of last season's harvest | a shortfall costs the difference if the price rose | none |
 | Repair a fire at once or slowly | the bill, or half of it | 2 or 6 days out | the insured share comes back at once | none |
 
@@ -260,8 +260,8 @@ Both previews are exact artifacts that look like the game, approved before any U
 **Preview 13: insurance and contracts**
 ```
 +---------------------------- Insurance ---------------------------+
-| Crop insurance        On   about 4% of a crop's value             ? |
-| Property insurance    On   9 buildings · 2,100 a season           ? |
+| Crop insurance        On   about 0.2% of a crop's value           ? |
+| Property insurance    On   9 buildings · about 90 a season        ? |
 | Claims    Fire, the shed: 12,600 paid                             ? |
 +--------------------------- Trader's offers ----------------------+
 | Wheat  1,000 kg  22.0 a kg  (expected 22.7)  delivery Winter  [Accept] |
@@ -279,13 +279,13 @@ Both previews are exact artifacts that look like the game, approved before any U
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
 | AC-1 | One roll a day at 6:00, seeded: the same seed and commands give the same events; a minor about 9 days in 10 and a major about 1 in 16; none before the Township or in its first 2 days | `EventEngineTests.Roll_Deterministic_Rates`, `EventEngineTests.NotBeforeTownship`, `EventEngineTests.Grace_Days` |
-| AC-2 | At most 2 events wait (a third day's roll is skipped); a minor card takes its default after 24 h, a major after 48 h; the default is named and costs nothing | `EventEngineTests.Waiting_Defaults`, `EventEngineTests.Waiting_CapSkipsTheRoll`, `EventEngineTests.Answer_Pays_AndCloses` |
-| AC-3 | Away, a minor takes its default and is reported; no major or disaster rolls while away and the day is not saved up | `EventEngineTests.AwayRules` |
+| AC-2 | At most 2 events wait (a third day's roll is skipped); a minor card takes its default after 24 h, a major after 48 h; the default is named and costs nothing (the health inspection's default is its 1,000 fine) | `EventEngineTests.Waiting_Defaults`, `EventEngineTests.Waiting_CapSkipsTheRoll`, `EventEngineTests.Answer_Pays_AndCloses` |
+| AC-3 | Away, a minor takes its default and is reported; no major or disaster rolls during an away advance, and the day's roll runs once, at your first live hour from 6:00 (on your return if the 6:00 passed away) | `EventEngineTests.AwayRules`, `EventEngineTests.RollsAtYourFirstLiveHour` |
 | AC-4 | The four mercy rules: no repeat of a kind in a season; one major a season and the crop-major quiet; no event on a promise day; a major over 40% of cash is not drawn | `EventEngineTests.MercyRules`, `EventEngineTests.MercyRule_CashCap` |
 | AC-5 | Each event's gate and weight follow §3.3 (the modifiers, the clamp); a *Why?* names the modifier | `EventEffectTests.Modifiers`, `EventEffectTests.Clamp` |
 | AC-6 | Every choice's effect applies as §3.2 says and is refused in words when it cannot be paid; irrigated, pumped and drip fields are untouched by a drought | `EventEffectTests.Weather_Drought`, `EventEffectTests.Weather_Heatwave_Hail_Waterlogging`, `EventEffectTests.Economic`, `EventEffectTests.Social_Workforce_Opportunity`, `EventEffectTests.Opportunity_Grant_Auction`, `EventEffectTests.Business_Events` |
 | AC-7 | The event health multiplier is kept on the crop, reaches the yield, and is 1 by default (an old save) | `EventEffectTests.EventHealth_Yield` |
-| AC-8 | A disaster is signalled 48 h ahead, strikes at the first live 6:00, slides while you are away (at most 3 days, then passes), never fires while away | `DisasterTests.Warning_Strike_Slide` |
+| AC-8 | A disaster is signalled 48 h ahead, strikes at the first live hour at or after its 6:00, slides while you are away (at most 3 days, then passes), never fires during an away advance | `DisasterTests.Warning_Strike_Slide` |
 | AC-9 | Fire: the building by book value, 35% damage, halved by the tower's reach and by preparation, a business building shut 2 days, the repair choices, the books | `DisasterTests.Fire_Damage_Repair`, `DisasterTests.Fire_Tower` |
 | AC-10 | Epidemic: sick chance ×2.5 (×0.5 in a staffed clinic's reach), the camp and the closure, health never below 0.75, nobody dies of it | `DisasterTests.Epidemic` |
 | AC-11 | Crop insurance: the policy is fixed at sowing, the premium formula, the cash-short sowing goes uninsured, the claim at readiness, luck covered and neglect not | `CropInsuranceTests.Premium`, `CropInsuranceTests.Claim_Luck_NotNeglect`, `CropInsuranceTests.CashShort` |
@@ -295,7 +295,7 @@ Both previews are exact artifacts that look like the game, approved before any U
 | AC-15 | Schema 22 round-trips; an older save loads with the engine idle, no policy and no offers; the fixture carries on through two closes | `MigrationTests.Schema22_Risk` |
 | AC-16 | Every number has a *Why?* in words; no raw factors | `WhyTests.EveryNumberHasWhy` (over the event, insurance and contracts situations) |
 | AC-17 | The sheets and cards respond to scripted touch in the Editor | the stories' Editor tours |
-| AC-18 | A town that answers nothing (every default) still works: it levels, no state goes negative, no zero-time loop over the new commands | `RiskTests.LeftAlone`, `GateTests.Risk` |
+| AC-18 | A town that answers nothing (every default) still works: it levels, no state goes negative, no zero-time loop over the new commands | `RiskTests.LeftAlone`, `GateTests.RiskExploits` |
 | AC-19 | An *insure everything* bot and an *accept every contract* bot are no better on the median than an uninsured, uncontracted one | `GateTests.RiskExploits` |
 
 ## 9. Balancing hooks
@@ -304,20 +304,20 @@ Both previews are exact artifacts that look like the game, approved before any U
 | --- | --- | --- |
 | Minor and major event frequency | about 0.9 a day and about 1 a game year | ±0.1 a day, ±0.3 a year |
 | Cost of an unprepared year | a drought or hail year costs a farm 8–20% of a season's profit; insured it costs the premium | measured by bots, reported |
-| Crop insurance | premium 3–7% of the sum insured; expected payout below the premium (loading 1.30) | measured payout ÷ premium within 0.7–0.95 |
+| Crop insurance | premium about 0.1–0.3% of the sum insured; expected payout below the premium (loading 1.30) | measured payout ÷ premium within 0.7–0.95 (0.85 crop, 0.73 property measured in Sprint 24; business 0.11 on one claim in 48 seeds) |
 | Property and business insurance | expected payout below the premium; a fire year pays more than it cost | measured |
 | Forward contracts | the contract price 3% below the expected; the hedged median no better than the unhedged | ±1% |
 | The Township's pace (day 101 competent) | unchanged within 2 days: events start at the Township | ±2 days |
 | Archetype bots (ADR 0016) | within 20% on net worth and happiness | 1.13 holds |
 | A town left alone | solvent and levelled after a year of defaults | none short |
-| `eventPart` (1.5%) | set from the measured hail, drought and waterlogging shortfall | ±0.5 points |
+| `eventPart` (0.04%) | set from the measured hail, drought and waterlogging claims | ±0.05 points |
 
 ## 10. Open questions
 
 Each is closed with the owner, one per message, with my recommendation, before code.
 
 - **G1 Engine. Closed (owner, 2026-11-20, my recommendation):** one roll a day at 6:00, at most 2 waiting, defaults on a 24 h or 48 h clock, away rules (a minor takes its default, majors and disasters never roll away), every choice a command.
-- **G2 Catalogue. Closed (owner, 2026-11-20, my recommendation):** 19 events in seven families, effects from a closed list of nine kinds, the numbers of §3.2.
+- **G2 Catalogue. Closed (owner, 2026-11-20, my recommendation):** 19 events in seven families, effects from a closed list of thirteen kinds, the numbers of §3.2.
 - **G3 Weights and the start. Closed (owner, 2026-11-20, my recommendation):** the modifiers of §3.3 with the 0.25–4 clamp, the four mercy rules, events from the Township unlock only.
 - **G4 Disasters. Closed (owner, 2026-11-20, my recommendation):** fire (35%, the tower and preparation halve it, 2 days' downtime, two repair choices) and an epidemic that nobody dies of, each warned 48 h ahead and sliding while away.
 - **G5 Crop insurance. Closed (owner, 2026-11-20, my recommendation):** insured yield index of luck, 0.80 threshold, premium from the crop's own pest risk with a 1.30 loading, bought by a switch that covers later sowings.

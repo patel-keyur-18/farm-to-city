@@ -62,8 +62,8 @@ namespace Sim.Core.Town
         internal void WriteTo(IStateWriter h)
         {
             h.WriteInt(Policy);
-            h.WriteInt(Cause);
-            h.WriteLong(Target);
+            h.WriteRef(ContentTable.Event, Cause - 1); // an event's index + 1, the pests −1, the weather 0: a content index, kept as is when negative
+            if (Policy == CropPolicy) h.WriteRef(ContentTable.Crop, (int)Target); else h.WriteLong(Target); // a crop claim names the crop's definition
             h.WriteLong(Amount);
             h.WriteLong(At);
             h.WriteInt(Days);
@@ -71,7 +71,12 @@ namespace Sim.Core.Town
             h.WriteInt(Points);
         }
 
-        internal static Claim ReadFrom(SaveReader r) { return new Claim(r.ReadInt(), r.ReadInt(), r.ReadLong(), r.ReadLong(), r.ReadLong(), r.ReadInt(), r.ReadLong(), r.ReadInt()); }
+        internal static Claim ReadFrom(SaveReader r)
+        {
+            int policy = r.ReadInt(), cause = r.ReadRef(ContentTable.Event) + 1;
+            long target = policy == CropPolicy ? r.ReadRef(ContentTable.Crop) : r.ReadLong();
+            return new Claim(policy, cause, target, r.ReadLong(), r.ReadLong(), r.ReadInt(), r.ReadLong(), r.ReadInt());
+        }
     }
 
     /// <summary>

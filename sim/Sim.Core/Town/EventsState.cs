@@ -16,6 +16,9 @@ namespace Sim.Core.Town
         public long Target { get; internal set; }
         public long Target2 { get; internal set; }
 
+        /// <summary>The content table <see cref="Target"/> indexes when it is a content index and not an instance id (a price event's good, an auction's parcel), else −1: saved by id, not by position (ADR 0041).</summary>
+        public int TargetTable { get; internal set; } = -1;
+
         /// <summary>A number the card carries: a fire's repair bill, a grant's sum, a price shift's percent.</summary>
         public long Param { get; internal set; }
 
@@ -27,16 +30,26 @@ namespace Sim.Core.Town
         internal void WriteTo(IStateWriter h)
         {
             h.WriteInt(Id);
-            h.WriteInt(Def);
+            h.WriteRef(ContentTable.Event, Def);
             h.WriteLong(RaisedAt);
             h.WriteLong(ExpiresAt);
-            h.WriteLong(Target);
+            h.WriteInt(TargetTable);
+            if (TargetTable >= 0) h.WriteRef((ContentTable)TargetTable, (int)Target); else h.WriteLong(Target);
             h.WriteLong(Target2);
             h.WriteLong(Param);
             h.WriteInt(Why);
         }
 
-        internal static PendingEvent ReadFrom(SaveReader r) { return new PendingEvent { Id = r.ReadInt(), Def = r.ReadInt(), RaisedAt = r.ReadLong(), ExpiresAt = r.ReadLong(), Target = r.ReadLong(), Target2 = r.ReadLong(), Param = r.ReadLong(), Why = r.ReadInt() }; }
+        internal static PendingEvent ReadFrom(SaveReader r)
+        {
+            var p = new PendingEvent { Id = r.ReadInt(), Def = r.ReadRef(ContentTable.Event), RaisedAt = r.ReadLong(), ExpiresAt = r.ReadLong() };
+            p.TargetTable = r.ReadInt();
+            p.Target = p.TargetTable >= 0 ? r.ReadRef((ContentTable)p.TargetTable) : r.ReadLong();
+            p.Target2 = r.ReadLong();
+            p.Param = r.ReadLong();
+            p.Why = r.ReadInt();
+            return p;
+        }
     }
 
     /// <summary>What an event leaves running for a while: a price or cost shift, a happiness lift, a flag, a building or machine shut (spec 027 §3.2).</summary>
@@ -67,14 +80,18 @@ namespace Sim.Core.Town
         internal void WriteTo(IStateWriter h)
         {
             h.WriteInt(Kind);
-            h.WriteInt(Code);
+            if (Kind == Price) h.WriteRef(ContentTable.Good, Code); else h.WriteInt(Code); // a price shift names a good, any other effect a code of its own
             h.WriteLong(Target);
             h.WriteInt(Percent);
             h.WriteLong(Until);
-            h.WriteInt(Def);
+            h.WriteRef(ContentTable.Event, Def);
         }
 
-        internal static EventEffect ReadFrom(SaveReader r) { return new EventEffect { Kind = r.ReadInt(), Code = r.ReadInt(), Target = r.ReadLong(), Percent = r.ReadInt(), Until = r.ReadLong(), Def = r.ReadInt() }; }
+        internal static EventEffect ReadFrom(SaveReader r)
+        {
+            int kind = r.ReadInt();
+            return new EventEffect { Kind = kind, Code = kind == Price ? r.ReadRef(ContentTable.Good) : r.ReadInt(), Target = r.ReadLong(), Percent = r.ReadInt(), Until = r.ReadLong(), Def = r.ReadRef(ContentTable.Event) };
+        }
     }
 
     /// <summary>A card answered (or defaulted), kept for the Events sheet (spec 027 §3.1): the event, the choice, when, and what it cost (negative) or paid.</summary>
@@ -87,19 +104,31 @@ namespace Sim.Core.Town
         public long Cash { get; }
         public long Target { get; }
 
-        public EventRecord(int def, int choice, bool defaulted, long at, long cash, long target) { Def = def; Choice = choice; Defaulted = defaulted; At = at; Cash = cash; Target = target; }
+        /// <summary>The content table <see cref="Target"/> indexes, or −1 (see <see cref="PendingEvent.TargetTable"/>).</summary>
+        public int TargetTable { get; }
+
+        public EventRecord(int def, int choice, bool defaulted, long at, long cash, long target, int targetTable = -1) { Def = def; Choice = choice; Defaulted = defaulted; At = at; Cash = cash; Target = target; TargetTable = targetTable; }
 
         internal void WriteTo(IStateWriter h)
         {
-            h.WriteInt(Def);
+            h.WriteRef(ContentTable.Event, Def);
             h.WriteInt(Choice);
             h.WriteBool(Defaulted);
             h.WriteLong(At);
             h.WriteLong(Cash);
-            h.WriteLong(Target);
+            h.WriteInt(TargetTable);
+            if (TargetTable >= 0) h.WriteRef((ContentTable)TargetTable, (int)Target); else h.WriteLong(Target);
         }
 
-        internal static EventRecord ReadFrom(SaveReader r) { return new EventRecord(r.ReadInt(), r.ReadInt(), r.ReadBool(), r.ReadLong(), r.ReadLong(), r.ReadLong()); }
+        internal static EventRecord ReadFrom(SaveReader r)
+        {
+            int def = r.ReadRef(ContentTable.Event), choice = r.ReadInt();
+            bool defaulted = r.ReadBool();
+            long at = r.ReadLong(), cash = r.ReadLong();
+            int table = r.ReadInt();
+            long target = table >= 0 ? r.ReadRef((ContentTable)table) : r.ReadLong();
+            return new EventRecord(def, choice, defaulted, at, cash, target, table);
+        }
     }
 
     /// <summary>
@@ -152,6 +181,10 @@ namespace Sim.Core.Town
         /// <summary>Whether the fire that struck was insured when it struck (a policy whose cover began no later than the warning, spec 027 §3.6): its repair pays a claim.</summary>
         public bool FireInsured { get; internal set; }
 
+        /// <summary>The last day (a day number) whose roll ran while you were here, and the last whose minor roll ran while you were away: a day rolls once, at your first live hour from 6:00 (ADR 0154, spec 027 §3.1).</summary>
+        public long RollDay { get; internal set; } = -1;
+        public long AwayRollDay { get; internal set; } = -1;
+
         /// <summary>Money moved by events this year of play, for the *Why?* and the books (kept as totals).</summary>
         public long LossTotal { get; internal set; }
 
@@ -195,7 +228,7 @@ namespace Sim.Core.Town
             h.WriteLong(IndexBefore);
             h.WriteInt(Effects.Count);
             foreach (EventEffect e in Effects) e.WriteTo(h);
-            h.WriteInt(DisasterDef);
+            h.WriteRef(ContentTable.Event, DisasterDef);
             h.WriteLong(DisasterTarget);
             h.WriteLong(DisasterTarget2);
             h.WriteLong(DisasterWarnedAt);
@@ -207,6 +240,8 @@ namespace Sim.Core.Town
             h.WriteLong(FireAt);
             h.WriteBool(FireInsured);
             h.WriteLong(LossTotal);
+            h.WriteLong(RollDay);
+            h.WriteLong(AwayRollDay);
         }
 
         internal static EventsState ReadFrom(SaveReader r)
@@ -217,7 +252,11 @@ namespace Sim.Core.Town
             n = r.ReadInt();
             for (int i = 0; i < n; i++) s.History.Add(EventRecord.ReadFrom(r));
             n = r.ReadInt();
-            for (int i = 0; i < n; i++) s.LastSeason.Add(r.ReadLong());
+            for (int i = 0; i < n; i++) // the saved list is by the saved content's order: each season goes to its event's place in the running content
+            {
+                long season = r.ReadLong();
+                if (season >= 0) s.SetLastSeason(r.Slot(ContentTable.Event, i), season);
+            }
             s.MajorSeason = r.ReadLong();
             s.CropQuietUntil = r.ReadLong();
             s.LastRainAt = r.ReadLong();
@@ -228,7 +267,7 @@ namespace Sim.Core.Town
             s.IndexBefore = r.ReadLong();
             n = r.ReadInt();
             for (int i = 0; i < n; i++) s.Effects.Add(EventEffect.ReadFrom(r));
-            s.DisasterDef = r.ReadInt();
+            s.DisasterDef = r.ReadRef(ContentTable.Event);
             s.DisasterTarget = r.ReadLong();
             s.DisasterTarget2 = r.ReadLong();
             s.DisasterWarnedAt = r.ReadLong();
@@ -240,6 +279,8 @@ namespace Sim.Core.Town
             s.FireAt = r.ReadLong();
             s.FireInsured = r.ReadBool();
             s.LossTotal = r.ReadLong();
+            s.RollDay = r.ReadLong();
+            s.AwayRollDay = r.ReadLong();
             return s;
         }
     }
