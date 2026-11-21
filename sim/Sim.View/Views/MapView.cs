@@ -202,6 +202,12 @@ namespace Sim.View.Views
         public bool Upgrading { get; internal set; }
     }
 
+    /// <summary>A burning building (spec 027 §3.4): the acre it stands on, drawn with flames and smoke for the days it is shut.</summary>
+    public sealed class FireVm
+    {
+        public int TileId { get; internal set; }
+    }
+
     /// <summary>A hand's hut being built (spec 006 §3.4): drawn as its building stage on the acre's edge.</summary>
     public sealed class ConstructionVm
     {
@@ -358,6 +364,9 @@ namespace Sim.View.Views
         public List<OrchardVm> Orchards { get; } = new List<OrchardVm>();
         public List<BedVm> Beds { get; } = new List<BedVm>();
         public List<BuildingVm> Buildings { get; } = new List<BuildingVm>();
+
+        /// <summary>The buildings a fire has shut now (spec 027 §3.4).</summary>
+        public List<FireVm> Fires { get; } = new List<FireVm>();
         public List<ConstructionVm> Constructions { get; } = new List<ConstructionVm>();
 
         /// <summary>Family houses being built (spec 014), each with its progress.</summary>
@@ -597,6 +606,12 @@ namespace Sim.View.Views
 
             foreach (Building b in land.Buildings)
                 if (b.TileId >= 0 && !Sim.Core.Town.ClinicRules.IsQuarters(sim, b)) map.Buildings.Add(new BuildingVm { Id = b.Id, DefId = defs.Buildings[b.Def].Id, TileId = b.TileId, Pucca = b.Pucca, Upgrading = Sim.Core.Town.UpgradeRules.Underway(sim, b.Id) != null }); // the godown is in the mandi town (ADR 0087)
+            foreach (Sim.Core.Town.EventEffect fx in Sim.Core.Town.EventRules.State(sim)?.Effects ?? new List<Sim.Core.Town.EventEffect>())
+                if (fx.Kind == Sim.Core.Town.EventEffect.Shut && fx.Code == Sim.Core.Town.EventEffect.ShutBuilding && fx.Until > sim.State.Clock.SimTime)
+                {
+                    Building burning = land.Buildings.Find(q => q.Id == fx.Target);
+                    if (burning != null && burning.TileId >= 0) map.Fires.Add(new FireVm { TileId = burning.TileId });
+                }
             AddSchool(ctx, map);
             AddClinic(ctx, map);
             AddHouses(ctx, map);

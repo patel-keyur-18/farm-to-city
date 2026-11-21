@@ -197,6 +197,8 @@ namespace Game.Presentation
                 case RoadSheet.LoanKind: _sheet.Show(RoadSheet.LoanSheet(_ctx), refreshOnly); break; // spec 023 §3.3
                 case ClinicSheet.ClinicLoanKind: _sheet.Show(ClinicSheet.LoanSheet(_ctx, false), refreshOnly); break; // spec 023 §3.1
                 case ClinicSheet.QuartersLoanKind: _sheet.Show(ClinicSheet.LoanSheet(_ctx, true), refreshOnly); break;
+                case EventSheet.CardKind: _sheet.Show(EventSheet.Card(_ctx, r.Id), refreshOnly); break; // spec 027: one card, its choices and what each costs
+                case EventSheet.ListKind: _sheet.Show(EventSheet.List(_ctx), refreshOnly); break; // Menu → Events
                 case FestivalSheet.Kind: _sheet.Show(FestivalSheet.Build(_ctx, r.Arg), refreshOnly); break; // spec 026 §3.1: where, who pays, which day
                 case TownLifeSheet.PromiseKind: _sheet.Show(TownLifeSheet.Promise(_ctx, r.Id), refreshOnly); break; // spec 026 §3.2: when to keep a petition by
                 case EquipmentSheet.Kind: _sheet.Show(EquipmentSheet.Build(_ctx), refreshOnly); break; // spec 013 §7
@@ -235,6 +237,7 @@ namespace Game.Presentation
                 case MachineLoanSheet.Kind: Return(new SheetRequest(EquipmentSheet.Kind, 0)); return; // bought: see it among yours
                 case "Hire": if (_back.Count > 0) Back(); else Return(new SheetRequest("People", 0)); return; // back to People: who's working
                 case "Word": return; // the board stays: the post, a reference asked, a talk
+                case EventSheet.CardKind: if (_back.Count > 0) Back(); else _sheet.Close(); return; // answered: the card is gone; back to the Events list or the bell it came from
                 case "HrEvent": if (_back.Count > 0) Back(); else _sheet.Close(); return; // answered: back to the alerts it came from
                 case "TownOffer": Return(new SheetRequest("Citizen", r.Id)); return; // back to their card: hired, countered or not
                 case "JobOffer": Return(new SheetRequest("Word", r.Arg == null ? 0 : long.Parse(r.Arg, System.Globalization.CultureInfo.InvariantCulture))); return; // back to the job's tab: hired, countered or gone

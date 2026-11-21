@@ -19,8 +19,9 @@ namespace Game.Presentation.Ui
         private readonly StringTable _strings;
         private readonly Formatter _fmt;
         private readonly VisualElement _layer;
-        private readonly Label _date, _clock, _weather, _cash, _store, _forecast, _alertCount, _festivalText;
+        private readonly Label _date, _clock, _weather, _cash, _store, _forecast, _alertCount, _festivalText, _disasterText;
         private readonly VisualElement _festival; // spec 026 §3.1: a banner on a festival's day
+        private readonly VisualElement _disaster; // spec 027 §3.4: an amber banner counting down to a disaster
         private readonly VisualElement _alerts;
         private int _alertsShown = -1;
         private bool _urgentShown, _held;
@@ -288,6 +289,20 @@ namespace Game.Presentation.Ui
             _festival.Add(_festivalText);
             _festival.style.display = DisplayStyle.None;
             _layer.Add(_festival);
+            _disaster = new VisualElement { pickingMode = PickingMode.Ignore };
+            _disaster.style.position = Position.Absolute;
+            _disaster.style.top = 14;
+            _disaster.style.left = Length.Percent(50);
+            _disaster.style.translate = new Translate(Length.Percent(-50), 0);
+            _disaster.style.backgroundColor = Painter.Hex(0xFFEFC2);
+            UiKit.Border(_disaster, 4, Painter.Hex(0xC8741E));
+            UiKit.Radius(_disaster, 22);
+            UiKit.Padding(_disaster, 8, 28);
+            _disasterText = UiKit.Text("", 30, Painter.Hex(0xA8520E), UiKit.BodyBold);
+            _disasterText.style.whiteSpace = WhiteSpace.NoWrap;
+            _disaster.Add(_disasterText);
+            _disaster.style.display = DisplayStyle.None;
+            _layer.Add(_disaster);
 
             // HUD figures never wrap: on a phone's fractional UI scale the measured width can round a hair short, and the last
             // digit then dropped onto a hidden second line ("12:4", "4,38").
@@ -377,6 +392,8 @@ namespace Game.Presentation.Ui
             _forecast.text = hud.ForecastText;
             _festival.style.display = hud.FestivalText == null ? DisplayStyle.None : DisplayStyle.Flex;
             if (hud.FestivalText != null) _festivalText.text = hud.FestivalText;
+            _disaster.style.display = hud.DisasterText == null ? DisplayStyle.None : DisplayStyle.Flex; // spec 027: on the clock's top, over a festival's if both
+            if (hud.DisasterText != null) _disasterText.text = hud.DisasterText;
             _overlays.style.display = hud.OverlaysAvailable ? DisplayStyle.Flex : DisplayStyle.None;
             _store.text = _strings.Get("hud.store") + " " + hud.StoreText;
             if (_alertsShown != hud.AlertCount || _urgentShown != hud.AlertUrgent)

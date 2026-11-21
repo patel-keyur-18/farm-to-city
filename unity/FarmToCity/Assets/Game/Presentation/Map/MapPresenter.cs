@@ -507,6 +507,7 @@ namespace Game.Presentation.Map
             RefreshMachines(map);
             RefreshOrchards(map, animate);
             RefreshHandHuts(map, animate);
+            RefreshFires(map);
             RefreshHouses(map, animate);
             RefreshBusinesses(map, animate);
             RefreshPitches(map, animate);
@@ -590,6 +591,47 @@ namespace Game.Presentation.Map
         private Vector3 HutDoor(long hutId, int tile)
         {
             return _handHuts.TryGetValue(hutId, out SpriteRenderer r) ? r.transform.position + new Vector3(-0.04f, -0.09f, 0) * HandHutScale : TileCentre(tile);
+        }
+
+        // ---- a fire (spec 027 §3.4): flames and rising smoke on the acre of a building a fire has shut ----
+
+        private readonly Dictionary<int, SpriteRenderer[]> _fires = new Dictionary<int, SpriteRenderer[]>();
+
+        private void RefreshFires(MapVm map)
+        {
+            var burning = new HashSet<int>();
+            foreach (FireVm f in map.Fires) burning.Add(f.TileId);
+            foreach (int tile in burning)
+            {
+                if (_fires.ContainsKey(tile)) continue;
+                Vector3 at = TileCentre(tile) + new Vector3(0f, 0.1f, 0f);
+                SpriteRenderer flames = NewRenderer("fire" + tile, SpriteBank.Rendered("fire_flames"), at, Order(tile, _width, 60));
+                SpriteRenderer smoke = NewRenderer("fireSmoke" + tile, SpriteBank.Rendered("fire_smoke"), at + new Vector3(0f, 0.25f, 0f), Order(tile, _width, 61));
+                _fires[tile] = new[] { flames, smoke };
+            }
+            var gone = new List<int>();
+            foreach (int tile in _fires.Keys) if (!burning.Contains(tile)) gone.Add(tile);
+            foreach (int tile in gone)
+            {
+                foreach (SpriteRenderer r in _fires[tile]) Destroy(r.gameObject);
+                _fires.Remove(tile);
+            }
+        }
+
+        private void AnimateFires()
+        {
+            float t = Time.unscaledTime;
+            foreach (KeyValuePair<int, SpriteRenderer[]> kv in _fires)
+            {
+                SpriteRenderer flames = kv.Value[0], smoke = kv.Value[1];
+                float wob = Mathf.Sin(t * 9f + kv.Key) * 0.06f;
+                flames.transform.localScale = new Vector3(1f + wob * 0.5f, 1f - wob, 1f); // the flames lick up and down
+                float loop = (t * 0.35f + kv.Key * 0.37f) % 1f; // smoke drifts up and fades, then starts again
+                Vector3 baseAt = TileCentre(kv.Key) + new Vector3(0f, 0.35f, 0f);
+                smoke.transform.position = baseAt + new Vector3(0.05f * Mathf.Sin(loop * 6f), loop * 0.6f, 0f);
+                smoke.color = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - loop) * 0.85f);
+                smoke.transform.localScale = Vector3.one * (0.8f + loop * 0.6f);
+            }
         }
 
         private void RefreshHandHuts(MapVm map, bool animate)
@@ -937,6 +979,7 @@ namespace Game.Presentation.Map
             if (_ring.gameObject.activeSelf) _ring.color = new Color(1f, 1f, 1f, 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f));
             if (_arrow.gameObject.activeSelf) _arrow.transform.position = ArrowAt(_arrowHit) + new Vector3(0, 0.05f + 0.05f * Mathf.Sin(Time.unscaledTime * Mathf.PI * 2f / 1.1f), 0);
             AnimatePeople();
+            AnimateFires();
             AnimateVehicles();
             Sway();
             if (_ghost != null && _ghost.gameObject.activeSelf)
