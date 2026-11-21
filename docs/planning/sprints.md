@@ -1148,7 +1148,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 25 · 9–22 Aug 2027 · Phase 3 (business growth: invoices, managers, sell or expand, investors, benefits and night shifts, the tuition centre, the tempo and the restaurant; spec 028; 2 weeks, ADR 0155)
 
-- **Status:** Started 2026-11-21 (Sprint 24 merged, PR #35). **Plan shown to the owner before any code** (ADR 0155, proposed).
+- **Status:** Started 2026-11-21 (Sprint 24 merged, PR #35). **Plan shown to the owner before any code and approved 2026-11-21** (ADR 0155).
 - **Branch:** `sprint/25-business-growth`, from `main` after PR #35 (c32cecb4)
 - **Goal:** The player grows from owning businesses to running an empire. Sales between businesses carry terms, so a profitable business can run out of cash; a manager runs a business and costs a share of profit; a business has a value, can be sold, branched or part-owned by an investor or partner; benefits keep good people; a richer town gets a tuition centre, a tempo and a restaurant. Save schema 23 ships once, with a fixture.
 - **Points:** 39 = US-123 5, US-124 8, US-125 5, US-247 5, US-258 3, US-244 5, US-245 5, US-246 3
@@ -1183,7 +1183,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 - [x] Every story checked against spec 028 and the code at `main` (c32cecb4); ten gaps listed with recommendations (ADR 0155)
 - [x] Spec 028 approved (ADR 0153)
-- [ ] This section approved by the owner
+- [x] This section approved by the owner (2026-11-21)
 - [ ] Each story's gaps closed before its code (1 to 4 before US-123, and so on)
 
 **Sprint end checklist**

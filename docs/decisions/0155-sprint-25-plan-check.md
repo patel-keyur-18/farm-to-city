@@ -1,6 +1,6 @@
 # 0155. Sprint 25 plan check: business growth in eight stories, 39 points, save schema 23, ten gaps to close before their code
 
-- Status: Proposed (shown to the owner before any code; accepted when the owner approves it)
+- Status: Accepted (the owner approved the plan, 2026-11-21)
 - Date: 2026-11-21
 - Deciders: Keyur Patel
 - Related ADRs: 0027, 0057, 0068, 0069, 0074, 0079, 0080, 0091 to 0093, 0107, 0109, 0141, 0144, 0148, 0151, 0153, 0154

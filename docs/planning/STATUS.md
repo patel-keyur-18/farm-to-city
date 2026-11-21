@@ -5,7 +5,7 @@
 | Field | Value |
 | --- | --- |
 | Phase | **Phase 3 · Township**: Sprints 20–24 built and merged, **Sprint 25 started** (Sprints 20–27, ADR 0107). Phase 2 closed (ADR 0106); Phase 1 complete (Sprint 10) |
-| Sprint | **Sprint 25 started 2026-11-21** (branch `sprint/25-business-growth`; 39 points; the section is in `sprints.md`): spec 028 (business growth, approved, ADR 0153) in eight stories: US-123 invoices, US-124 managers, US-125 sell or expand, US-247 investors, US-258 benefits and night shifts, US-244 tuition centre, US-245 tempo, US-246 restaurant (cut first); Previews 16 to 18 before their screens; save schema 23. **The plan check is written (ADR 0155, proposed) and waits for the owner's approval; no code yet.** Both test projects pass on the branch (View 381, Core 794). Sprint 24 merged (PR #35, ADR 0154) |
+| Sprint | **Sprint 25 started 2026-11-21** (branch `sprint/25-business-growth`; 39 points; the section is in `sprints.md`): spec 028 (business growth, approved, ADR 0153) in eight stories: US-123 invoices, US-124 managers, US-125 sell or expand, US-247 investors, US-258 benefits and night shifts, US-244 tuition centre, US-245 tempo, US-246 restaurant (cut first); Previews 16 to 18 before their screens; save schema 23. **The plan check is written (ADR 0155, approved by the owner 2026-11-21); no code yet.** Both test projects pass on the branch (View 381, Core 794). Sprint 24 merged (PR #35, ADR 0154) |
 | Branch with latest work | `sprint/25-business-growth` (from `main` at `c32cecb4`): ADR 0155 and the Sprint 25 section only; not pushed |
 | Last updated | 2026-11-21 (Sprint 25 plan check) |
 
