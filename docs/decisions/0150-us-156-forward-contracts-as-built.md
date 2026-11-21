@@ -1,6 +1,6 @@
 # 0150. US-156 forward contracts as built: offers at the close, delivery by normal selling, a shortfall at the average price
 
-- Status: Proposed (awaiting the owner's review of US-156)
+- Status: Accepted (the owner approved US-156, 2026-11-21)
 - Date: 2026-11-21
 - Deciders: Keyur Patel
 - Related: spec 027 §3.7, §7, Preview 13 (approved 2026-11-21), ADR 0141, 0149
