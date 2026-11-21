@@ -1,6 +1,6 @@
 # 0152. US-147 hills and apples as built: the hills open with the Township, apple orchards on hill land only, a Monsoon harvest of 3,000 kg an acre that keeps in the cold store
 
-- Status: Accepted (the owner approved Preview 15, 2026-11-21; the build awaits the owner's review)
+- Status: Accepted (the owner approved Preview 15 and the build, 2026-11-21)
 - Date: 2026-11-21
 - Deciders: Keyur Patel
 - Related: spec 025 §3.5, §3.6, ADR 0021, ADR 0090, ADR 0125, ADR 0134, ADR 0144 §6
