@@ -1096,7 +1096,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - **Branch:** `sprint/24-town-life-events`, from `main` after PR #34
 - **Goal:** The town answers what the player does and tests what the player prepared. Citizens petition, remember whether they were heard, hold festivals, and give the town a name that draws families; crime and inequality show fairness. Events, disasters, insurance and forward contracts teach a small sure cost against a large uncertain one. The mill's atta reaches the local market as spec 016 said. The hills open for apples. Save schema 22 ships once with a fixture for every new part.
 - **Points:** 35 = US-151 5, US-150 3, US-149 3, US-154 8, US-155 5, US-156 3, US-147 5 (the table's 32) + **US-264 3** (new, ADR 0144 §3)
-- **Specs to write and review:** **spec 028 (business growth: invoices, managers, sell or expand, investors and buy-outs, the tuition centre, tempo and restaurant, benefits and night shifts, supervisors and associations, your kirana)** written in this sprint for Sprint 25 (ADR 0057), its gaps closed one per message; the apple figures of spec 025 §3.5 re-approved (four gaps) before US-147.
+- **Specs to write and review:** **spec 028 (business growth: invoices, managers, sell or expand, investors and buy-outs, the tuition centre, tempo and restaurant, benefits and night shifts, supervisors and associations, your kirana)** written in this sprint for Sprint 25 (ADR 0057), [written as `docs/specs/028-business-growth.md`](../specs/028-business-growth.md), G1–G11 closed one per message (2026-11-20 and 21), awaiting the owner's approval of the whole spec (ADR 0153); the apple figures of spec 025 §3.5 re-approved (four gaps) before US-147.
 - **Device build:** Yes: a Development build
 - **Milestone and labels:** `Phase 3 · Township`; `type:feature`, `type:spec`, `type:adr`, `type:balance`; `area:sim`, `area:content`, `area:ui`, `area:art`; `documentation`
 
@@ -1131,7 +1131,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Every story checked against specs 026, 027, 025 §3.5 and the code at `main` (9e9e69d)
 - [x] Specs 026 and 027 approved (ADR 0127, 0141)
 - [x] This section approved by the owner (2026-11-20)
-- [ ] US-264's gap and US-147's four gaps closed before their code
+- [x] US-264's gap and US-147's four gaps closed before their code
 
 **Sprint end checklist**
 
