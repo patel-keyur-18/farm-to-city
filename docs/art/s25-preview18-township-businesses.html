@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 18 Township businesses and benefits</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen, scaled to fit, with a tab bar for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink);cursor:pointer}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.sheet.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:700px}
+.card.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.card h3{margin:0;font:700 32px var(--display);text-align:center}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.cost.hi{background:var(--cream2);border-radius:10px;border:0;margin-top:6px}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.btnrow .btn{flex:1}
+.pic{width:170px;height:128px;border-radius:14px;border:3px solid var(--wood);overflow:hidden;flex:none}
+.tag{display:inline-block;font:700 14px var(--body);padding:2px 9px;border-radius:9px;background:#e9d9a8;border:2px solid var(--wood);color:var(--wood);vertical-align:middle;margin-left:8px}
+.tag.major{background:var(--saffron,#E8892A);border-color:#9b5412;color:#fff}
+.tag.warn{background:#fde2cf;border-color:var(--warn);color:var(--warn)}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice.def{background:#efe2bd;border-color:#d8c68e}
+.choice .tx{flex:1;font-size:21px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px;font-weight:400}
+.choice .btn{min-width:190px}
+.note{font-size:17px;color:var(--wood);margin:10px 4px 0;line-height:1.4}
+.note.warn{color:var(--warn);font-weight:600}
+.timer{font:600 19px var(--body);color:var(--warn)}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:760px;text-align:center}
+.banner{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fde2cf;border:4px solid var(--warn);border-radius:16px;padding:9px 20px;font:600 21px var(--body);color:var(--warn);cursor:pointer}
+@keyframes flick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) translateY(-2px)}}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick .5s infinite}
+@media (prefers-reduced-motion:reduce){.flame{animation:none}}
+.body{overflow-y:auto}
+.tabrow{display:flex;gap:10px;padding:0 20px 6px}
+.tabrow .btn{flex:1;min-width:0;padding:8px 6px 10px;font-size:20px}
+.pill{display:inline-block;font:700 15px var(--body);padding:2px 10px;border-radius:10px;border:2px solid;margin-left:8px;vertical-align:middle}
+.pill.cur{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.pill.late{background:#fde9c4;border-color:#b9770e;color:#8a5200}
+.pill.over{background:#fbd9d2;border-color:var(--warn);color:var(--warn)}
+.pill.met{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.dd{font:700 18px var(--body);background:var(--sand);border:3px solid var(--sand2);border-radius:12px;padding:6px 12px;color:var(--ink);cursor:pointer;min-width:168px;text-align:center}
+.dd:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.alert{display:flex;gap:12px;align-items:center;background:#fde2cf;border:3px solid var(--warn);border-radius:14px;padding:10px 14px;margin:10px 0 2px;font-size:19px;color:#7a2d08;font-weight:600}
+.stars{color:#e8a31c;letter-spacing:1px;font-size:20px}.stars i{color:#cfc19a;font-style:normal}
+.seg{display:flex;gap:8px}.seg .btn{min-width:120px;padding:6px 12px 8px;font-size:19px}
+.holdbtn::after{content:"";}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center;color:#d9c9a8;font-size:14px}
+.ctl button{font:600 14px var(--body);padding:6px 12px;border-radius:9px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.ctl button[aria-pressed=true]{background:var(--sand);border-color:var(--sand2);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 18: tuition centre, tempo, restaurant, benefits and night shift</h1>
+  <p class="lead">Sprint 25, US-244, US-245, US-246 and US-258 (spec 028 §3.5 to §3.8, §7). Every screen is drawn at the game's own 1280 × 720 size with its palette and type, in the layout of the shop sheets, the Equipment sheet and the Mandi trip sheet. Tap the tabs, then the buttons, the switches above the picture and the ? chips the way you would on the phone. Numbers follow the spec for a Township in its third year and are placeholders for the balance pass.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="ctl" id="ctl"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const fmt=n=>{n=Math.round(n);const s=String(Math.abs(n));let r=s.length>3?s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+s.slice(-3):s;return (n<0?'−':'')+r};
+const I={
+ bakery:'<svg viewBox="0 0 30 30"><rect x="4" y="13" width="22" height="12" rx="2" fill="#d9a05b" stroke="#8a5a2b" stroke-width="2"/><path d="M3 14c1-7 7-9 12-9s11 2 12 9z" fill="#c2410c" stroke="#8a5a2b" stroke-width="2"/><rect x="12" y="17" width="6" height="8" fill="#6b4423"/></svg>',
+ mill:'<svg viewBox="0 0 30 30"><rect x="6" y="12" width="18" height="14" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><path d="M4 13l11-9 11 9z" fill="#a8743c" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="19" r="4" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ stall:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#4a9bd6" stroke="#8a5a2b" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><rect x="3" y="24" width="24" height="3" fill="#8a5a2b"/></svg>',
+ grocer:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#79c84a" stroke="#8a5a2b" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#f3c777" stroke="#8a5a2b" stroke-width="2"/><circle cx="11" cy="18" r="2.5" fill="#c2410c"/><circle cx="18" cy="18" r="2.5" fill="#79c84a"/></svg>',
+ person:'<svg viewBox="0 0 30 30"><circle cx="15" cy="9" r="5" fill="#8a5a2b"/><path d="M5 27c0-8 4-11 10-11s10 3 10 11z" fill="#c2410c"/></svg>',
+ env:'<svg viewBox="0 0 30 30"><rect x="3" y="7" width="24" height="17" rx="2" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M4 9l11 8 11-8" fill="none" stroke="#8a5a2b" stroke-width="2.5"/><circle cx="15" cy="17" r="3" fill="#c2410c"/></svg>',
+ coin:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/><path d="M15 8v14M11 12h8M11 18h8" stroke="#9a6a2a" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ bill:'<svg viewBox="0 0 30 30"><rect x="5" y="3" width="20" height="24" rx="3" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M9 10h12M9 15h12M9 20h7" stroke="#8a5a2b" stroke-width="2.5" stroke-linecap="round"/></svg>',
+ bell:'<svg viewBox="0 0 30 30"><path d="M15 4a8 8 0 0 0-8 8v6l-3 4h22l-3-4v-6a8 8 0 0 0-8-8z" fill="#8a5a2b"/><circle cx="15" cy="26" r="3" fill="#8a5a2b"/></svg>',
+ chart:'<svg viewBox="0 0 30 30"><path d="M4 24l7-9 5 5 10-13" fill="none" stroke="#3f7d20" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+const WHY={
+ pupils:{t:'Pupils this season',h:'34 of 40',rows:[['Families with a child aged 7 to 17','41'],['A family sets aside 5% of its income for learning; it can buy a place for as many children as the budget covers at 800 each','36 can afford it'],['Chose your centre, the only one in the village','34'],['Could not afford 800: their budget is 560 to 780','5'],['A batch holds 20 pupils and you run 2 batches an evening','40 places']],foot:'Only families in your town count. The old village\'s families are not counted: their children are not named, so no skill could be given.'},
+ skill:{t:'What a pupil gains',h:'+1 skill a season',rows:[['Each season of tuition adds 1 to farming and to crafting skill','+1'],['At most 10 in all, the same as one course','cap +10'],['Karan, 14, has studied 3 seasons','+3'],['At 18 a pupil is a better hand on the hiring board','your people grow']],foot:'It is the same skill the hiring board shows as stars.'},
+ stars:{t:'Stars',h:'3.4 stars',rows:[['How full the batches are: 34 of 40 places','85% full'],['How long pupils stay: most come back each season','stay 3.1 seasons'],['Stars move a tenth a day towards the day\'s score','3.4 now']],foot:'A good centre keeps its pupils.'},
+ afford:{t:'Why 5 families could not come',h:'5 families',rows:[['The Joshi family\'s income is 12,000 a season; 5% is','600'],['The fee is 800, so the budget buys','0 places'],['Four more families have between 560 and 780','4 families'],['At a fee of 720 two of them could come','try 720']],foot:'Lower the fee and more families can afford it, but each pays less. The usual price earns about the most.'},
+ fee:{t:'The fee',h:'800 a pupil',rows:[['The usual price for a season of evening classes','800'],['−10%: 720 a pupil, about 36 pupils','25,920'],['Usual: 800 a pupil, about 34 pupils','27,200'],['+10%: 880 a pupil, about 31 pupils','27,280'],['+20%: 960 a pupil, about 27 pupils','25,920']],foot:'Your own numbers: what the centre would earn at each fee, with the pupils the budgets allow.'},
+ tuitionMoney:{t:'What the centre earns',h:'2,200 a season',rows:[['34 pupils × 800','27,200'],['Teacher Kavita','−20,000'],['The pitch\'s rent','−3,000'],['Running costs','−2,000'],['Left over','2,200']],foot:'It breaks even near 30 pupils. Run by you, without a teacher\'s wage, it earns about 22,000.'},
+ carry:{t:'Who carries it',h:'Your tempo',rows:[['The tractor-trolley, if you have a tractor: free per kg','not yours'],['Your tempo: 300 a trip, diesel 200 and wear 100, carries 1,000 kg','300'],['The hired trolley: 0.50 a kg','450 for 900 kg'],['The game picks the cheapest that fits the load','tempo']],foot:'A load over 1,000 kg goes in two tempo trips if that is cheaper than the hired trolley.'},
+ worth:{t:'Is a tempo worth it?',h:'about 10 seasons',rows:[['A tempo trip costs 300; the hired trolley costs 500 for 1,000 kg','save 200 a trip'],['The lease is 18,000 a season: it pays itself back above about 45 of 90 days at two trips a day','45 days'],['Let out to neighbours: up to 2 trips a day at 600, about 300 left after diesel and wear','about +36,000 a season'],['Buying it for 3,50,000 then pays back in about','10 seasons']],foot:'On your own trips alone a tempo only pays if you carry nearly every day. Letting it out is what makes it earn.'},
+ thali:{t:'Thali',h:'60 coins',rows:[['Rice 0.12 kg, from your store at the trader\'s price','3.4'],['Lentils 0.05 kg','4.0'],['Vegetables 0.15 kg','2.3'],['Fuel','6.0'],['Supplies','14.0'],['It costs about','30'],['You keep about','30']],foot:'What your store lacks is bought at the market at 15% more.'},
+ paratha:{t:'Paratha plate',h:'45 coins',rows:[['Atta 0.15 kg','4.5'],['Ghee 0.02 kg','10.4'],['Curd 0.1 kg','6.0'],['Fuel','4.0'],['Supplies','10.0'],['It costs about','35'],['You keep about','10']],foot:'At these prices the plate earns little. Raise its price a step, or make it only when the thali sells out.'},
+ diners:{t:'Who eats out',h:'about 1,000 plates',rows:[['A household with an income of at least 20,000 a season sets aside 25% of its leisure budget','35 households'],['Each buys as many plates as that covers, spread over the days','about 28 plates each'],['Below 20,000 a family eats at home','the rest'],['A rival may open if your prices run 10% above the usual','not yet']],foot:'It needs about 35 households with the income to pay its cook.'},
+ benefit:{t:'Does it pay?',h:'Not in output',rows:[['A meal adds about 3% to output, on a 27,000 worker','about 810'],['A meal costs','1,800'],['It pays in keeping a skilled worker: each benefit multiplies the chance a worker is poached or leaves unhappy by 0.85','5% → 4.3%'],['Two or more benefits kept through a close raise your name as an employer by 1','+1 reputation']],foot:'Benefits are paid to keep good people, not to raise output.'},
+ night:{t:'Night shift',h:'+25% wage',rows:[['The mill sold out before the day shift ended on 5 of the last 8 days','offered'],['A second miller works 20:00 to 04:00, 8 hours, no overtime','33,750 a season'],['Fatigue 0.07 a day, and the grid powers the mill as usual','grid, not a generator'],['Extra atta is worth selling only if customers were waiting','about +9,000 a season']],foot:'Demand-limited businesses will pay for a night shift only in a large town.'},
+ loyalty:{t:'Poaching and leaving',h:'5% → 2.6%',rows:[['A skilled worker is poached on about 5% of seasons','5%'],['Each benefit multiplies that chance by 0.85','× 0.85'],['All four kept','2.6%'],['The same for a worker leaving unhappy','× 0.52']],foot:''}
+};
+let tab='today',state={tempo:'none',letOut:true,load:900,benefits:{meal:true,health:false,festival:false,leave:false},night:false,fee:800,dishes:{thali:true,paratha:true},preset:1,quality:1,confirm:null,why:null,toast:null,noClinic:false};
+const qb=k=>`<button class="q" data-why="${k}" aria-label="Why?">?</button>`;
+const row=(ic,t,sub,right,k)=>`<div class="row">${ic?`<div class="ico">${ic}</div>`:''}<div class="grow">${t}<small>${sub||''}</small></div>${right||''}${k?qb(k):''}</div>`;
+const sec=t=>`<div class="sec">${t}</div>`;
+const val=v=>`<div class="val">${v}</div>`;
+function mapSvg(){
+ let t='';
+ for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+520,y=140+(c+r)*46;const col=(c*7+r*3)%5;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][col];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f6a2a" stroke-width="2" opacity=".95"/>`}
+ return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}</svg>`;
+}
+function base(bell){
+ return `<div class="map">${mapSvg()}</div>
+ <div class="hud l"><div class="s">Monsoon · 3 days left</div><div class="big">16:10</div><div class="s">Clear until 22:00</div></div>
+ <div class="hud r"><div class="big" style="font-size:40px">1.12 L</div></div><div class="hud r2">Store 48%</div><div class="hud r3">184 people &nbsp;78</div>
+ <div class="roundbtn" style="left:20px;bottom:20px;width:110px;border-radius:22px;height:70px;background:#c9c2b0;border-color:#8a8372;color:#6e6858;align-items:center;padding:0">Collect all</div>
+ <div class="roundbtn" style="right:112px;bottom:128px;width:84px;height:84px">${I.bell.replace('<svg','<svg style="width:40px;height:40px;margin-top:-10px"')}<span class="badge">${bell||1}</span></div>
+ <div class="roundbtn" style="right:20px;bottom:20px"><span style="color:#fff;background:#b02a1e;position:absolute;top:18px;left:28px;width:42px;height:34px;border-radius:6px"></span>Menu</div>`;
+}
+function sheet(title,sub,icon,body,tabs){return `<div class="scrim"></div><div class="sheet"><div class="head"><div class="cbtn">←</div><div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div>${tabs||''}<div class="body">${body}</div></div>`}
+const tabsFor=(names,a)=>`<div class="tabrow">${names.map(t=>`<button class="btn ${t===a?'':'sand'}"><span>${t}</span></button>`).join('')}</div>`;
+const shopTabs=a=>tabsFor(['Today','Customers','Books','Settings'],a);
+const cr=(l,v)=>`<div class="cost"><span>${l}</span><b>${v}</b></div>`;
+const sw=(on,key,labels)=>`<button class="btn ${on?'':'sand'}" data-sw="${key}" style="min-width:150px;padding:8px 14px 10px"><span>${on?(labels?labels[0]:'On'):(labels?labels[1]:'Off')}</span></button>`;
+const ICO={
+ school:'<svg viewBox="0 0 30 30"><rect x="3" y="7" width="24" height="15" rx="2" fill="#2f5d3a" stroke="#8a5a2b" stroke-width="2.5"/><path d="M8 13h14M8 17h9" stroke="#fff3d1" stroke-width="2" stroke-linecap="round"/><rect x="2" y="22" width="26" height="3" fill="#8a5a2b"/></svg>',
+ tempo:'<svg viewBox="0 0 30 30"><path d="M3 20V12h12l4 4h8v4z" fill="#4a9bd6" stroke="#4a3320" stroke-width="2" stroke-linejoin="round"/><circle cx="9" cy="22" r="3.5" fill="#4a3320"/><circle cx="23" cy="22" r="3.5" fill="#4a3320"/><rect x="5" y="14" width="8" height="4" fill="#fff3d1"/></svg>',
+ plate:'<svg viewBox="0 0 30 30"><circle cx="15" cy="16" r="11" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><circle cx="11" cy="14" r="3.5" fill="#e8892a"/><circle cx="19" cy="14" r="3.5" fill="#79c84a"/><circle cx="15" cy="20" r="3.5" fill="#f3c777"/></svg>',
+ heart:'<svg viewBox="0 0 30 30"><path d="M15 26C4 18 4 8 10 7c3 0 5 2 5 4 0-2 2-4 5-4 6 1 6 11-5 19z" fill="#e8604c"/></svg>',
+ moon:'<svg viewBox="0 0 30 30"><path d="M20 4a11 11 0 1 0 6 18A9 9 0 0 1 20 4z" fill="#8a5a2b"/></svg>',
+ star:'<svg viewBox="0 0 30 30"><path d="M15 3l3.6 8 8.4.8-6.3 5.6 1.9 8.3L15 21.4 7.4 25.7l1.9-8.3L3 11.8l8.4-.8z" fill="#ffc83a" stroke="#9a6a2a" stroke-width="2"/></svg>',
+ cart:'<svg viewBox="0 0 30 30"><path d="M3 12h22l-3 9H8z" fill="#4a9bd6" stroke="#4a3320" stroke-width="2"/><circle cx="10" cy="24" r="2.6" fill="#4a3320"/><circle cx="20" cy="24" r="2.6" fill="#4a3320"/><circle cx="14" cy="8" r="4" fill="#e8892a"/></svg>'
+};
+const confirmCard=()=>{const c=state.confirm;if(!c)return '';
+ return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:700px"><h3>Lease the tempo</h3><div class="note" style="text-align:center;font-size:19px">Carries 1,000 kg to the mandi, 4 hours a trip.</div>${cr('A season\'s lease, paid now','18,000 coins')}${cr('Runs until you give it back','')}${cr('Diesel and wear for each trip','300 coins')}<div class="btnrow"><button class="btn sand" data-no="1"><span>Not now</span></button><button class="btn" data-lease="1"><span>Pay 18,000 coins</span></button></div></div>`};
+
+const views={
+ today:{label:'1 · Tuition centre: Today',notes:[
+  ['What to check',['A new shop-like business from the Township. Its Today shows the evening\'s two batches, pupils against places, stars, the fee, the teacher, and what pupils gained.','Tabs are the shops\': Today, Customers, Books, Settings. Every number has a ?.','The centre\'s money is at the bottom: about +2,200 a season hired at 34 pupils; it needs about 30 pupils to break even.']],
+  ['Teaches',['Engel\'s law: families spend more on learning as they earn more, and only a family with the budget can come.']]],
+  render(){
+   let h=row(I.person,'Pupils this season','34 of 40 places',val('34 pupils'),'pupils');
+   h+=row(ICO.school,'Tonight, batch 1 (15:00 to 17:00)','Evening classes in reading, sums and farm work',val('18 of 20'),'pupils');
+   h+=row(ICO.school,'Tonight, batch 2 (17:00 to 19:00)','',val('16 of 20'),'pupils');
+   h+=row(ICO.star,'Stars','',val('3.4 stars'),'stars');
+   h+=row(I.coin,'The fee','The usual price for a season',val('800 coins'),'fee');
+   h+=row(ICO.school,'What pupils gain','+1 farming and crafting skill a season, up to +10',val('Karan +3'),'skill');
+   h+=`<div class="row"><div class="ico">${I.person}</div><div class="grow"><b style="font-size:23px">Who works here</b><small>Kavita, teacher · <span class="stars">★★★★<i>★</i></span> hired for the season</small></div>${qb('tuitionMoney')}</div>`;
+   h+=row(I.coin,'This season so far','27,200 earned · 25,000 paid out',val('+2,200 so far'),'tuitionMoney');
+   h+=row(I.coin,'The shop\'s cash','',val('9,860 coins'),'tuitionMoney');
+   return base()+sheet('Tuition centre','Open now · until 19:00',ICO.school,h,shopTabs('Today'))}},
+ customers:{label:'2 · Tuition centre: Customers',notes:[
+  ['What to check',['Customers says, in numbers, which families could come and why the rest could not: 41 families have a child of school age, 36 can afford the fee, 34 chose you.','The ? on "Could not afford it" shows one family\'s sums. That is the demand\'s Why?.']],
+  ['Notes',['Only families in your town count; the old village\'s children are not named, so no skill could be given.','With a rival centre the pupils would be shared by the same score as the shops. None opens in this sprint.']]],
+  render(){
+   let h=row(I.person,'Families with a child 7 to 17','In your town this season',val('41 families'),'pupils');
+   h+=row(I.coin,'Could afford the fee','5% of income buys at least one place at 800',val('36'),'afford');
+   h+=row(ICO.school,'Chose your centre','The only one in the village',val('34 pupils · share 100%'),'pupils');
+   h+=row(I.person,'Could not afford it','Budgets of 560 to 780 coins a season',val('5 families'),'afford');
+   h+=row(ICO.school,'No room','A batch holds 20, two batches',val('0'),'pupils');
+   h+=sec('Where the pupils come from');
+   h+=row(I.person,'Families on your land','28 families · 24 pupils','','pupils');
+   h+=row(I.person,'Families in your houses','13 families · 10 pupils','','pupils');
+   return base()+sheet('Tuition centre','Open now · until 19:00',ICO.school,h,shopTabs('Customers'))}},
+ settings:{label:'3 · Tuition centre: Settings',notes:[
+  ['What to check',['The fee has the shops\' four presets: 10% less, the usual, 10% more, 20% more. Each says how many pupils the budgets allow and what the centre would earn.','The usual price earns about the most: this is the lesson of a price.']]],
+  render(){
+   const opts=[[720,36,25920],[800,34,27200],[880,31,27280],[960,27,25920]];
+   let h=row(I.coin,'The fee','A season of evening classes, per pupil',val(state.fee+' coins'),'fee');
+   h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 4px">${opts.map(o=>`<button class="btn ${state.fee===o[0]?'':'sand'}" data-fee="${o[0]}" style="min-width:0;padding:8px 6px 10px"><span>${o[0]} coins</span><small>about ${o[1]} pupils</small><small>earns ${fmt(o[2])}</small></button>`).join('')}</div>`;
+   h+=row(ICO.school,'Open','15:00 to 19:00 · 2 batches of 20','','');
+   h+=row(I.person,'Teacher','Kavita, hired for 20,000 a season, or you can teach yourself','<button class="btn sand" style="min-width:150px"><span>Hire</span></button>','tuitionMoney');
+   return base()+sheet('Tuition centre','Open now · until 19:00',ICO.school,h,shopTabs('Settings'))}},
+ tempo:{label:'4 · The tempo: Equipment',ctl:[['tempo','none','Not yet bought'],['tempo','leased','Leased, letting it out']],notes:[
+  ['What to check',['A second machine on the Equipment sheet, from the Township: it carries 1,000 kg to the mandi, 4 hours a trip, two trips a day. The same Buy, Buy with a loan and Lease cards as the tractor.','With 1.12 lakh in cash you can only lease it: Buy and Buy with a loan are greyed with the reason.','Switch to <b>Leased</b>: it is parked on the lane, a Hiring out switch lets neighbours use it, and an honest <b>Does it pay?</b> line says it pays only above about 45 of 90 days on your own trips.']]],
+  render(){
+   let h='';
+   if(state.tempo==='none'){
+    h+=sec('Tempo');
+    h+=`<div class="row"><div class="ico">${ICO.tempo}</div><div class="grow">What it does</div><div class="val" style="font-size:19px">Carries 1,000 kg · 4 h a trip · 2 trips a day</div>${qb('worth')}</div>`;
+    const card=(on,t,sub,key,ic)=>`<div class="choice" style="${on?'':'opacity:.55'};margin:0;min-height:96px">${ic||''}<div class="tx">${t}<small>${sub}</small></div>${on?`<button class="btn" data-confirm="${key}" style="min-width:110px;padding:8px 10px 10px"><span>Lease</span></button>`:''}</div>`;
+    h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">${card(false,'Buy','3,50,000 coins: more than you have','buy')}${card(false,'Buy with a loan','You pay 1,40,000 coins now: more than you have','loan')}${card(true,'Lease','18,000 coins a season','lease')}</div>`;
+    h+=`<div class="note" style="font-size:18px">The tempo is parked on the lane by the farm when it is not on a trip. It breaks and is repaired like the tractor.</div>`;
+   } else {
+    h+=sec('Tempo');
+    h+=row(ICO.tempo,'Your tempo','Leased · 18,000 coins a season · parked on the lane',`<button class="btn sand" style="min-width:170px"><span>Give it back</span></button>`,'worth');
+    h+=sec('Letting it out');
+    h+=`<div class="row" style="min-height:108px"><div class="ico">${ICO.tempo}</div><div class="grow"><b style="font-size:23px">Let it out for neighbours' trips</b><small>${state.letOut?'On · up to 2 trips a day':'Off'}</small><small style="color:var(--ink);font-weight:700">Neighbours' trips come before yours, each 600 coins for 1,000 kg. The diesel and wear are yours: about 300 a trip left. It is farm income, not passive.</small></div>${qb('worth')}${sw(state.letOut,'letOut',['Switch off','Switch on'])}</div>`;
+    h+=row('','This season so far',state.letOut?'6 trips for neighbours · earned 3,600 · 9 trips of yours':'9 trips of yours',val(state.letOut?'+1,800 left':'0'),'worth');
+    h+=`<div class="row" style="min-height:108px"><div class="grow"><b style="font-size:23px">Does it pay?</b><small>On your own trips alone it saves 200 a trip against the hired trolley: it pays its lease only above about 45 of a season's 90 days.</small><small style="color:var(--ink);font-weight:700">With neighbours' trips about +36,000 a season; buying it pays back in about 10 seasons.</small></div>${qb('worth')}</div>`;
+   }
+   return base()+sheet('Equipment','Machines cut the work on your fields and carry your loads',ICO.tempo,h)+confirmCard()}},
+ mandi:{label:'5 · The mandi: who carries it',ctl:[['load','900','A 900 kg load'],['load','1800','An 1,800 kg load'],['load','2000','With your tractor']],notes:[
+  ['What to check',['One new line on the Mandi trip sheet: <b>Who carries it</b>, with the cost of each way and a ?. The game picks the cheapest that fits, so there is nothing for you to choose wrongly.','Your time is 0.5 h a trip; with two tempo trips it is 1 h and both of the day\'s trips are used.','With your own tractor the trolley is free per kg and is chosen first; the tempo only beats the hired trolley.']]],
+  render(){
+   const L=+state.load;const g=Math.round(L*15.78);const comm=Math.round(g*0.03);
+   const cfg=L===900?{who:'Your tempo · 1 trip',cost:300,time:'0.5 h',sub:'The cheapest that fits 900 kg: the hired trolley would cost 450'}
+    :L===1800?{who:'Your tempo · 2 trips',cost:600,time:'1 h',sub:'Two trips are cheaper than the hired trolley (900) and use both of today\'s trips'}
+    :{who:'Your tractor-trolley',cost:0,time:'0.5 h',sub:'Free per kg: the tractor carries up to 2,000 kg'};
+   const get=g-comm-cfg.cost;
+   let h=row('','Okra · '+fmt(Math.round(L*.5))+' kg','',val(fmt(Math.round(g*.45))+' coins'),'carry')+row('','Potato · '+fmt(Math.round(L*.5))+' kg','',val(fmt(Math.round(g*.55))+' coins'),'carry');
+   h+=row('','At the mandi','',val(fmt(g)+' coins'),'carry');
+   h+=row('','Commission','',val('−'+fmt(comm)+' coins'),'carry');
+   h+=`<div class="row" style="min-height:76px;background:var(--cream2);border-radius:10px"><div class="ico">${ICO.cart}</div><div class="grow"><b>Who carries it</b><small>${cfg.sub}</small></div><div class="val">${cfg.who}<br><span style="font-weight:400;font-size:18px">${cfg.cost?'−'+fmt(cfg.cost)+' coins':'no charge'}</span></div>${qb('carry')}</div>`;
+   h+=row('','Your time','',val(cfg.time+' of your day'),'carry');
+   h+=row('','You get','',val(fmt(get)+' coins'),'carry');
+   h+=`<div style="margin-top:12px"><button class="btn" style="min-width:260px"><span>Go to the mandi</span><small>${fmt(L)} kg</small></button></div>`;
+   const sub=L===2000?'A tractor-trolley takes up to 2,000 kg to the town mandi and is back in 6 h.':'A tempo takes up to 1,000 kg to the town mandi and is back in 4 h. Two trips a day.';
+   return base()+sheet('Mandi trip',sub,ICO.cart,h)}},
+ restaurant:{label:'6 · The restaurant: menu',notes:[
+  ['What to check',['A restaurant from the Township on a pitch or an acre. Settings holds its menu: two dishes, each on or off, the price presets and quality.','Each dish shows what goes in and what it costs, with a ?. Ingredients come from your store first, then the market at 15% more.','At these placeholder prices the paratha plate earns little: the ? says so. It is the balance pass\'s job to tune, not yours.']],
+  ['Demand',['Households earning at least 20,000 a season set aside 25% of their leisure budget; it needs about 35 of them to pay its cook. The ? says who eats out and why others do not.']]],
+  render(){
+   const mult=[0.9,1,1.1,1.2][state.preset];const q=state.quality?1.1:1;
+   const p=b=>Math.round(b*mult*q);
+   let h=row(ICO.plate,'Open','11:00 to 15:00 and 18:00 to 22:00 · 120 plates a day','','');
+   h+=sec('Menu');
+   const dish=(k,name,ing,price,cost,why)=>`<div class="row" style="min-height:108px"><div class="ico">${ICO.plate}</div><div class="grow"><b style="font-size:23px">${name}</b><small>${ing}</small><small style="color:var(--ink);font-weight:700">${state.dishes[k]?`${price} coins a plate · costs about ${cost} · you keep about ${price-cost}`:'Not on the menu'}</small></div>${qb(why)}${sw(state.dishes[k],'dish:'+k,['On the menu','Off'])}</div>`;
+   h+=dish('thali','Thali','Rice, lentils and vegetables',p(60),30,'thali');
+   h+=dish('paratha','Paratha plate','Atta, ghee and curd',p(45),35,'paratha');
+   h+=sec('Prices and quality');
+   h+=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">${['10% less','The usual','10% more','20% more'].map((t,i)=>`<button class="btn ${state.preset===i?'':'sand'}" data-preset="${i}" style="min-width:0;padding:8px 6px 10px"><span>${t}</span></button>`).join('')}</div>`;
+   h+=`<div class="row"><div class="grow">Quality<small>${state.quality?'Good: 10% on the price and it lifts the stars':'Standard'}</small></div><div class="seg"><button class="btn ${state.quality?'sand':''}" data-q="0"><span>Standard</span></button><button class="btn ${state.quality?'':'sand'}" data-q="1"><span>Good</span></button></div></div>`;
+   h+=row('','Who eats out','About 35 households have the income','','diners');
+   return base()+sheet('Restaurant','Open now · until 22:00',ICO.plate,h,shopTabs('Settings'))}},
+ benefits:{label:'7 · Benefits and night shift',ctl:[['night','false','Day shift only'],['night','true','Night shift on'],['noClinic','false','Clinic built'],['noClinic','true','No clinic yet']],notes:[
+  ['What to check',['A <b>Benefits</b> section on the Settings tab of every business that has workers, and on People for your farm hands: four benefits, each with its cost a worker a season, its effect and a switch.','Health cover needs the clinic: without one it is greyed and says why (switch <b>No clinic yet</b>).','Each benefit has a <b>Does it pay?</b> in your own numbers: not in output, but in keeping a skilled worker and in your name as an employer.','<b>Night shift</b> is offered only after the business sold out before the day shift ended on 3 days, needs the grid and a second worker from the board, and costs 25% more wage.']]],
+  render(){
+   const B=state.benefits;if(state.noClinic)B.health=false;
+   const items=[['meal','A meal each working day','1,800 a worker a season · motivation +0.03'],['health','Health cover','600 a worker a season · sick leave 2% → 1%, no sick day\'s wage lost'],['festival','Festival bonus','1,000 a worker, paid at each festival · motivation +0.04 that season, your name +1'],['leave','Paid leave, 4 days a season','900 a worker and those days\' work lost · motivation +0.03, tiredness −0.10 once']];
+   let h=sec('Benefits for your miller');
+   items.forEach(it=>{const dis=it[0]==='health'&&state.noClinic;
+    h+=`<div class="row" style="min-height:84px;${dis?'opacity:.6':''}"><div class="ico">${it[0]==='health'?ICO.heart:it[0]==='meal'?ICO.plate:it[0]==='festival'?ICO.star:I.env}</div><div class="grow"><b>${it[1]}</b><small>${dis?'Needs the clinic: the town has none yet':it[2]}</small></div>${qb('benefit')}${dis?`<button class="btn grey" style="min-width:150px;padding:8px 14px 10px"><span>Off</span></button>`:sw(B[it[0]],'ben:'+it[0])}</div>`});
+   const n=Object.values(B).filter(Boolean).length;
+   const cost=(B.meal?1800:0)+(B.health?600:0)+(B.festival?1000:0)+(B.leave?900:0);
+   h+=`<div class="row" style="background:var(--cream2);border-radius:10px;margin-top:6px"><div class="grow"><b>Kept: ${n} of 4</b><small>${n>=2?'Two or more kept through a close raise your name as an employer by 1':'Poaching 5% → '+(5*Math.pow(.85,n)).toFixed(1)+'%'}</small></div>${val(fmt(cost)+' coins a season')}${qb('loyalty')}</div>`;
+   h+=sec('Night shift');
+   if(!state.night)h+=`<div class="row" style="min-height:104px"><div class="ico">${ICO.moon}</div><div class="grow"><b>The mill is offered a night shift</b><small>Busy 100% of the 12 hours; sold out by 14:00 on 5 of the last 8 days</small><small style="color:var(--ink);font-weight:700">A second miller, 20:00 to 04:00. Wage +25%: 33,750 a season. Needs the grid.</small></div>${qb('night')}<button class="btn" data-sw="night" style="min-width:170px"><span>Start it</span></button></div>`;
+   else h+=`<div class="row" style="min-height:104px"><div class="ico">${ICO.moon}</div><div class="grow"><b>Night shift on</b><small>Second miller Anil, hired from the board · 20:00 to 04:00</small><small style="color:var(--ink);font-weight:700">Wage 33,750 a season · tiredness 0.07 a day · the grid powers it</small></div>${qb('night')}<button class="btn sand" data-sw="night" style="min-width:170px"><span>Stop it</span></button></div>`;
+   return base()+sheet('Flour mill','Open now · until 18:00',I.mill,h,tabsFor(['Today','Customers','Books','Settings'],'Settings'))}}
+};
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:780px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 28px var(--display)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost" style="font-size:19px;padding:6px"><span>${r[0]}</span><b style="white-space:nowrap;margin-left:12px">${r[1]}</b></div>`).join('')}${w.foot?`<div class="note" style="font-size:18px">${w.foot}</div>`:''}<div class="btnrow"><button class="btn" data-close="1" style="max-width:220px;margin:0 auto"><span>OK</span></button></div></div>`}
+function render(){
+ const v=views[tab];let html=v.render();
+ if(state.toast)html+=`<div class="toast">${state.toast}</div>`;
+ if(state.why)html+=whyCard(state.why);
+ $('#stage').innerHTML=html;
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ $('#ctl').innerHTML=(v.ctl&&v.ctl.length?'<span>Show:</span>':'')+(v.ctl||[]).map(c=>`<button data-set="${c[0]}:${c[1]}" aria-pressed="${String(state[c[0]])===c[1]}">${c[2]}</button>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;Object.assign(state,{why:null,toast:null,confirm:null});render()});
+$('#ctl').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b)return;const [g,v]=b.dataset.set.split(':');state[g]=(v==='true'?true:v==='false'?false:isNaN(+v)?v:+v);render()});
+$('#stage').addEventListener('click',e=>{
+ const t=e.target.closest('[data-why],[data-close],[data-sw],[data-fee],[data-preset],[data-q],[data-confirm],[data-no],[data-lease]');
+ if(!t)return;const d=t.dataset;
+ if(d.why)state.why=d.why;else if(d.close)state.why=null;
+ else if(d.sw){const k=d.sw;if(k.startsWith('ben:')){const b=k.slice(4);state.benefits[b]=!state.benefits[b]}else if(k.startsWith('dish:')){const b=k.slice(5);state.dishes[b]=!state.dishes[b]}else state[k]=!state[k]}
+ else if(d.fee)state.fee=+d.fee;
+ else if(d.preset)state.preset=+d.preset;
+ else if(d.q!==undefined)state.quality=+d.q;
+ else if(d.confirm)state.confirm=d.confirm;
+ else if(d.no)state.confirm=null;
+ else if(d.lease){state.confirm=null;state.tempo='leased';state.toast='The tempo is leased and parked on the lane: 18,000 coins paid.'}
+ render();
+});
+addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>
