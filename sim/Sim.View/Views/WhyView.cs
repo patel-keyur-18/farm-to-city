@@ -128,6 +128,7 @@ namespace Sim.View.Views
             { "event", EventWhy }, { "eventHist", EventHistWhy },
             // Insurance (spec 027 §3.5-§3.6).
             { InsuranceSheet.CropWhy, InsuranceCropWhy }, { InsuranceSheet.PropertyWhy, InsurancePropertyWhy }, { InsuranceSheet.BusinessWhy, InsuranceBusinessWhy }, { InsuranceSheet.ClaimWhy, InsuranceClaimWhy }, { InsuranceSheet.PremiumWhy, InsurancePremiumWhy }, { InsuranceSheet.DueWhy, InsuranceDueWhy },
+            { ContractSheet.OfferWhy, ContractOfferWhy }, { ContractSheet.OpenWhy, ContractOpenWhy }, { ContractSheet.DoneWhy, ContractDoneWhy }, { ContractSheet.DueWhy, ContractDueWhy },
             { "lifeApproval", LifeApproval }, { "lifePetition", LifePetition }, { "festival", Festival }, { "lifeScore", LifeScore }, { "lifePull", LifePull }, { "lifeCrime", LifeCrime }, { "lifeRatio", LifeRatio }, { "lifeCrimeAcre", LifeCrimeAcre },
             // Equipment (spec 013 §3.2).
             { "machine", Machine }, { "machineValue", MachineValue }, { "hireFee", HireFee }, { "hireCost", HireCost }, { "hirePays", HirePays }, { "fieldTools", FieldTools },

@@ -8,7 +8,7 @@ using Sim.Core.People;
 
 namespace Sim.Core.Finance
 {
-    public enum DueKind { Loan, Living, Hand, Warehouse, Water, School, Machine, HouseTax, ColdStore, Insurance }
+    public enum DueKind { Loan, Living, Hand, Warehouse, Water, School, Machine, HouseTax, ColdStore, Insurance, Contract }
 
     /// <summary>One charge the next season close takes from the founder's cash (ADR 0101 §1).</summary>
     public sealed class CloseDue
@@ -130,6 +130,8 @@ namespace Sim.Core.Finance
                     if (diesel > 0) list.Add(MachineDue(m, d, "diesel", diesel));
                 }
             }
+            long contract = atClose ? 0 : Town.ContractRules.Due(sim); // a shortfall as it stands, and what was carried
+            if (contract > 0) list.Add(new CloseDue { Key = "contract", Kind = DueKind.Contract, Amount = contract });
             long insurance = Town.InsuranceRules.NextProperty(sim);
             if (insurance > 0) list.Add(new CloseDue { Key = "insurance", Kind = DueKind.Insurance, Amount = insurance }); // last: a premium that cash cannot pay ends the policy, never a debt
             return list;

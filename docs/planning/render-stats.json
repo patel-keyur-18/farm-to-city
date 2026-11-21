@@ -445,5 +445,8 @@
   {"label":"US-154 events (a fire is two sprites and the banner one panel; a fire was burning)","view":"farm","date":"2026-11-21","drawCalls":332,"batches":332,"setPassCalls":9,"triangles":7197,"visibleSprites":371,"sprites":2192},
   {"label":"US-155 insurance (no new map sprites; sheets only)","view":"all","date":"2026-11-21","drawCalls":1114,"batches":1114,"setPassCalls":11,"triangles":22838,"visibleSprites":1371,"sprites":2254},
   {"label":"US-155 insurance (no new map sprites; sheets only)","view":"village","date":"2026-11-21","drawCalls":486,"batches":486,"setPassCalls":8,"triangles":9980,"visibleSprites":579,"sprites":2254},
-  {"label":"US-155 insurance (no new map sprites; sheets only)","view":"farm","date":"2026-11-21","drawCalls":348,"batches":348,"setPassCalls":8,"triangles":6691,"visibleSprites":394,"sprites":2254}
+  {"label":"US-155 insurance (no new map sprites; sheets only)","view":"farm","date":"2026-11-21","drawCalls":348,"batches":348,"setPassCalls":8,"triangles":6691,"visibleSprites":394,"sprites":2254},
+  {"label":"US-156 forward contracts (no new map sprites; sheets only)","view":"all","date":"2026-11-21","drawCalls":1107,"batches":1107,"setPassCalls":12,"triangles":22937,"visibleSprites":1364,"sprites":2247},
+  {"label":"US-156 forward contracts (no new map sprites; sheets only)","view":"village","date":"2026-11-21","drawCalls":486,"batches":486,"setPassCalls":9,"triangles":9913,"visibleSprites":580,"sprites":2247},
+  {"label":"US-156 forward contracts (no new map sprites; sheets only)","view":"farm","date":"2026-11-21","drawCalls":346,"batches":346,"setPassCalls":9,"triangles":6687,"visibleSprites":391,"sprites":2247}
 ]

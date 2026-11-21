@@ -72,6 +72,9 @@ namespace Sim.Core.Town
         /// <summary>Crop, property and business insurance (spec 027 §3.5–§3.6, save schema 22); default until a policy is switched on.</summary>
         public InsuranceState Insurance { get; internal set; } = new InsuranceState();
 
+        /// <summary>The trader's forward contracts (spec 027 §3.7, save schema 22); default until a staple is harvested at the Township.</summary>
+        public ContractsState Contracts { get; internal set; } = new ContractsState();
+
         private bool ConstructionDefault { get { return Projects.Count == 0 && NextProjectId == 0 && StockDay == -1 && TakenBricks == 0 && TakenCement == 0 && TakenTimber == 0 && KilnBricks == 0 && KilnDay == -1; } }
 
         private static CivicPost[] NewCivic() { return new[] { new CivicPost(), new CivicPost(), new CivicPost() }; }
@@ -79,13 +82,13 @@ namespace Sim.Core.Town
         private bool CivicDefault { get { foreach (CivicPost p in Civic) if (!p.IsDefault) return false; return true; } }
 
         /// <summary>Nothing of the Township has started.</summary>
-        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0 && LanesBuilt == 0 && UtilitiesBuilt == 0 && ConstructionDefault && TownLife.IsDefault && Events.IsDefault && Insurance.IsDefault; } }
+        internal bool IsDefault { get { return Road.Status == RoadStatus.None && Clinic.IsDefault && GateMet == 0 && !Cohort.Joined && CivicDefault && LandValues.Length == 0 && TurnedAway == 0 && NextTurnedAwayAt == 0 && BuiltSeason == -1 && BuilderParcels == 0 && LanesBuilt == 0 && UtilitiesBuilt == 0 && ConstructionDefault && TownLife.IsDefault && Events.IsDefault && Insurance.IsDefault && Contracts.IsDefault; } }
 
         internal TownshipState Clone()
         {
             var civic = new CivicPost[Civic.Length];
             for (int i = 0; i < civic.Length; i++) civic[i] = Civic[i].Clone();
-            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes, LanesBuilt = LanesBuilt, UtilitiesBuilt = UtilitiesBuilt, Projects = Projects.ConvertAll(x => x.Clone()), NextProjectId = NextProjectId, StockDay = StockDay, TakenBricks = TakenBricks, TakenCement = TakenCement, TakenTimber = TakenTimber, KilnBricks = KilnBricks, KilnDay = KilnDay, TownLife = TownLife.Clone(), Events = Events.Clone(), Insurance = Insurance.Clone() };
+            return new TownshipState { Road = Road.Clone(), Clinic = Clinic.Clone(), GateMet = GateMet, Cohort = Cohort.Clone(), Civic = civic, LandValues = (Fixed[])LandValues.Clone(), TurnedAway = TurnedAway, NextTurnedAwayAt = NextTurnedAwayAt, BuiltSeason = BuiltSeason, BuilderParcels = BuilderParcels, BuilderHomes = BuilderHomes, LanesBuilt = LanesBuilt, UtilitiesBuilt = UtilitiesBuilt, Projects = Projects.ConvertAll(x => x.Clone()), NextProjectId = NextProjectId, StockDay = StockDay, TakenBricks = TakenBricks, TakenCement = TakenCement, TakenTimber = TakenTimber, KilnBricks = KilnBricks, KilnDay = KilnDay, TownLife = TownLife.Clone(), Events = Events.Clone(), Insurance = Insurance.Clone(), Contracts = Contracts.Clone() };
         }
 
         internal void WriteTo(IStateWriter h)
@@ -105,7 +108,7 @@ namespace Sim.Core.Town
             h.WriteInt(BuilderHomes);
             if (h.Hashing ? LanesBuilt != 0 : !(h is SaveWriter lw && lw.Schema < MapMigration.RingSchema)) h.WriteInt(LanesBuilt); // schema 21; hashed once a lane stands
             if (h.Hashing ? UtilitiesBuilt != 0 : !(h is SaveWriter uw && uw.Schema < MapMigration.RingSchema)) h.WriteInt(UtilitiesBuilt); // schema 21; hashed once a utility stands
-            if (h.Hashing ? !ConstructionDefault : !(h is SaveWriter cw && cw.Schema < MapMigration.RingSchema)) // schema 21; hashed once a building has been made
+            if (h.Hashing ? !ConstructionDefault : !(h is SaveWriter kw && kw.Schema < MapMigration.RingSchema)) // schema 21; hashed once a building has been made
             {
                 h.WriteInt(Projects.Count);
                 foreach (BuildProject p in Projects) p.WriteTo(h);
@@ -120,6 +123,7 @@ namespace Sim.Core.Town
             if (h.Hashing ? !TownLife.IsDefault : !(h is SaveWriter tw && tw.Schema < TownLifeSchema)) TownLife.WriteTo(h); // schema 22; hashed once a close has read the town
             if (h.Hashing ? !Events.IsDefault : !(h is SaveWriter ew && ew.Schema < TownLifeSchema)) Events.WriteTo(h); // schema 22; the engine, once it has seen the Township
             if (h.Hashing ? !Insurance.IsDefault : !(h is SaveWriter iw && iw.Schema < TownLifeSchema)) Insurance.WriteTo(h); // schema 22; once a policy was ever switched on
+            if (h.Hashing ? !Contracts.IsDefault : !(h is SaveWriter xw && xw.Schema < TownLifeSchema)) Contracts.WriteTo(h); // schema 22; once a staple was harvested at the Township
         }
 
         /// <summary>The save schema that added town life (spec 026, Sprint 24).</summary>
@@ -144,7 +148,7 @@ namespace Sim.Core.Town
                 for (int i = 0; i < n; i++) s.Projects.Add(BuildProject.ReadFrom(r));
                 s.NextProjectId = r.ReadLong(); s.StockDay = r.ReadLong(); s.TakenBricks = r.ReadLong(); s.TakenCement = r.ReadLong(); s.TakenTimber = r.ReadLong(); s.KilnBricks = r.ReadLong(); s.KilnDay = r.ReadLong();
             }
-            if (r.Schema >= TownLifeSchema) { s.TownLife = TownLifeState.ReadFrom(r); s.Events = EventsState.ReadFrom(r); s.Insurance = InsuranceState.ReadFrom(r); }
+            if (r.Schema >= TownLifeSchema) { s.TownLife = TownLifeState.ReadFrom(r); s.Events = EventsState.ReadFrom(r); s.Insurance = InsuranceState.ReadFrom(r); s.Contracts = ContractsState.ReadFrom(r); }
             return s;
         }
     }

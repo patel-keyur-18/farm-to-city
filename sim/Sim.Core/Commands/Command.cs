@@ -314,6 +314,19 @@ namespace Sim.Core.Commands
         // Spec 027 §3.6 (property insurance, US-155)
         /// <summary>No building of yours stands that a property policy could cover.</summary>
         NoBuildings,
+
+        // Spec 027 §3.7 (forward contracts, US-156)
+        /// <summary>No such offer.</summary>
+        UnknownOffer,
+
+        /// <summary>The offer was withdrawn at the close.</summary>
+        OfferLapsed,
+
+        /// <summary>The delivery season already holds the most contracts.</summary>
+        TooManyContracts,
+
+        /// <summary>That crop already has a contract for the season (or the offer is already accepted).</summary>
+        AlreadyContracted,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

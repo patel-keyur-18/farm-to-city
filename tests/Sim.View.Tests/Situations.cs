@@ -366,6 +366,34 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>The Township with the trader's offers (wheat, maize), a contract running (rice, 300 of 800 kg in, the price risen), one waiting and one settled (spec 027 §7): every contract sheet and Why? in one place.</summary>
+        public static Simulation Contracted()
+        {
+            Simulation sim = TownshipBuilt();
+            Sim.Core.Town.ContractsState st = Sim.Core.Town.ContractRules.State(sim);
+            int next = (int)((sim.Period + 1) % 4);
+            Sim.Core.Town.Contract Make(string good, long kg, long delivery)
+            {
+                int g = sim.Config.Game.Market.IndexOf(good);
+                Sim.Core.Maths.Fixed expected = Sim.Core.Town.ContractRules.Expected(sim, g, (int)(delivery % 4));
+                return new Sim.Core.Town.Contract { Id = st.NextId++, Good = good, Quantity = kg * 1000, Expected = expected, Price = Sim.Core.Town.ContractRules.OfferPrice(sim, expected), Delivery = delivery };
+            }
+            Sim.Core.Town.ContractsState.Add(st.HarvestLast, "wheat", 1_000_000);
+            Sim.Core.Town.ContractsState.Add(st.HarvestLast, "maize", 800_000);
+            st.Offers.Add(Make("wheat", 400, sim.Period + 1));
+            st.Offers.Add(Make("maize", 300, sim.Period + 1));
+            Sim.Core.Town.Contract run = Make("rice", 800, sim.Period);
+            run.Filled = 300_000;
+            run.Gain = -1_200_00;
+            run.Samples = 3;
+            run.FloorSum = (run.Price + Sim.Core.Maths.Fixed.FromInt(2)) * Sim.Core.Maths.Fixed.FromInt(3);
+            st.Open.Add(run);
+            st.Open.Add(Make("potato", 500, sim.Period + 1));
+            st.History.Add(new Sim.Core.Town.ContractRecord("wheat", 400_000, 400_000, run.Price, sim.Period - 1, 0, 1_800_00));
+            st.History.Add(new Sim.Core.Town.ContractRecord("mustard", 300_000, 100_000, run.Price, sim.Period - 2, 2_400_00, -1_000_00));
+            return sim;
+        }
+
         public static Simulation TownshipBuilt()
         {
             Simulation sim = Township();
@@ -415,6 +443,7 @@ namespace Sim.View.Tests
             yield return Promises();
             yield return Events();
             yield return Insured();
+            yield return Contracted();
         }
     }
 }

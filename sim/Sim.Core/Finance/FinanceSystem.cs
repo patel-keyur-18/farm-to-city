@@ -112,6 +112,7 @@ namespace Sim.Core.Finance
             Town.CohortRules.PayTax(sim); // spec 023 §3.5: the old village's house tax, from its leisure and savings
             Town.TaxRules.BillShops(sim); // spec 022 §3.2: the village's shops on a reference profit
             Sim.Core.Equipment.EquipmentRules.Close(sim); // spec 013 §3.5: leases, maintenance and diesel for the new season
+            Town.ContractRules.Close(sim); // spec 027 §3.7: a delivery season's shortfall, last season's harvest, the new offers (before insurance: a premium that cash cannot pay ends the policy)
             Town.InsuranceRules.Close(sim); // spec 027 §3.6: the property premium for the new season, or the policy ends
             report.People = seen.After(sim).AsReadOnly();
             report.ReputationBefore = seen.ReputationBefore;

@@ -1,6 +1,6 @@
 # 0149. US-155 insurance as built: luck covered and neglect not, three policies, claims through the books
 
-- Status: Proposed (awaiting the owner's review of US-155)
+- Status: Accepted (the owner approved US-155, 2026-11-21)
 - Date: 2026-11-21
 - Deciders: Keyur Patel
 - Related: spec 027 §3.5–§3.6, §7, Preview 13 (approved 2026-11-21), ADR 0141, 0148

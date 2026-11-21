@@ -37,7 +37,7 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuildSilagePit), typeof(BuyChaffCutter), typeof(FitSolarPanel), typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(AnswerEvent), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition), typeof(ScheduleFestival));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(AnswerEvent), typeof(AcceptContract), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition), typeof(ScheduleFestival));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
@@ -140,6 +140,7 @@ namespace Sim.View.Views
             else if (c is PetitionRoad || c is BuildClinic || c is BuildDoctorQuarters) Road(ctx, vm, cash, taken, after, newest, name);
             else if (c is AnswerPetition) Declining(ctx, vm);
             else if (c is AnswerEvent insured && Sim.Core.Town.EventRules.State(sim)?.Waiting.Find(x => x.Id == insured.EventId) is Sim.Core.Town.PendingEvent repair && Sim.Core.Town.InsuranceRules.RepairPays(sim, repair, insured.Choice) > 0) InsuredRepair(ctx, vm, sim, after, repair, insured.Choice); // US-155: an insured fire's bill, the refund and what you pay
+            else if (c is AcceptContract accept) Contracting(ctx, vm, sim, accept);
             else if (c is ScheduleFestival fest) Festival(ctx, vm, sim, after, fest);
             else if (c is RepealPolicy repeal) Repealing(ctx, vm, sim, repeal);
             else if (c is ListParcel || c is CancelSale) Listing(ctx, vm, c);
@@ -148,6 +149,7 @@ namespace Sim.View.Views
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
             vm.Warning = s.Has("confirm." + name + ".warn") ? s.Get("confirm." + name + (c is BuyParcel && Sim.Core.Town.LandValueRules.On(sim) ? ".warnTownship" : ".warn"), "quick", ctx.Fmt.Percent(sim.Config.Game.Land.QuickSaleFactor)) : kind == ConfirmKind.Hold ? s.Get("confirm.cantUndo") : null;
             if (c is ScheduleFestival fw) vm.Warning = FestivalWarning(ctx, after, fw);
+            if (c is AcceptContract ac) vm.Warning = ContractWarning(ctx, sim, ac);
             if (c is CommissionWorks cw) { if (Sim.Core.Town.LaneRules.OfWork(sim, cw.WorkId) >= 0) LaneSheet.Guard(ctx, vm, after); else if (Sim.Core.Town.UtilityRules.OfWork(sim, cw.WorkId) >= 0) UtilitySheet.Guard(ctx, vm, after, cw.WorkId); else { CivicSheet.Guard(ctx, vm, cw.WorkId); if (Sim.Core.Town.ConstructionRules.On(sim) && Sim.Core.Town.ConstructionRules.Def(sim).KindOfWork(cw.WorkId) != null) vm.Warning = BuildingSheet.Timing(ctx, after, false) + " " + vm.Warning; } }
             if (c is FoundBusiness kiln && kiln.Pitch < 0 && sim.Config.Game.Businesses.IndexOfType(kiln.TypeId) >= 0 && sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)].IsKiln)
                 vm.Warning = KilnSheet.Smoke(ctx, sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(kiln.TypeId)], kiln.TileId); // US-243: the smoke's footprint, counted
@@ -172,6 +174,25 @@ namespace Sim.View.Views
             }
             if (c is CommissionWorks lw && Sim.Core.Town.LaneRules.OfWork(sim, lw.WorkId) >= 0) vm.GoLabel = s.Get("lane.cardGo", "amount", ctx.Fmt.Coins(sim.State.Treasury.Cash - after.State.Treasury.Cash));
             return vm;
+        }
+
+        /// <summary>A forward contract (spec 027 §3.7): the crop and quantity, the fixed price beside the expected one, when it is delivered. Nothing is paid now.</summary>
+        private static void Contracting(ViewContext ctx, ConfirmCardVm vm, Simulation sim, AcceptContract c)
+        {
+            var s = ctx.Strings;
+            Sim.Core.Town.Contract o = Sim.Core.Town.ContractRules.State(sim).Offers.Find(x => x.Id == c.OfferId);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AcceptContract.qty"), ctx.Fmt.Kg(o.Quantity)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AcceptContract.expected"), ctx.Fmt.PricePerKg(o.Expected)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AcceptContract.price"), ctx.Fmt.PricePerKg(o.Price), total: true));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.AcceptContract.when"), FieldSheets.SeasonName(ctx, o.Delivery)));
+        }
+
+        /// <summary>It is binding: the first kilos you sell are paid at the price, and a shortfall pays the difference if the market rose.</summary>
+        private static string ContractWarning(ViewContext ctx, Simulation sim, AcceptContract c)
+        {
+            Sim.Core.Town.Contract o = Sim.Core.Town.ContractRules.State(sim).Offers.Find(x => x.Id == c.OfferId);
+            Sim.Core.Definitions.GoodDef good = sim.Config.Game.Market.Goods[sim.Config.Game.Market.IndexOf(o.Good)];
+            return ctx.Strings.Get("confirm.AcceptContract.binding", "qty", ctx.Fmt.Kg(o.Quantity), "crop", ctx.Strings.Get(good.NameKey).ToLowerInvariant(), "season", FieldSheets.SeasonName(ctx, o.Delivery));
         }
 
         /// <summary>An insured fire's repair (spec 027 §3.6): the bill, what the policy pays back, what you pay, the cash after.</summary>
@@ -437,6 +458,11 @@ namespace Sim.View.Views
             {
                 Sim.Core.Town.TownPetition pet = Sim.Core.Town.TownLifeRules.State(ctx.Sim)?.Petitions.Find(x => x.Id == pa.PetitionId);
                 return pet == null ? null : TownLifeSheet.Text(ctx, pet);
+            }
+            if (c is AcceptContract ctr)
+            {
+                Sim.Core.Town.Contract o = Sim.Core.Town.ContractRules.State(ctx.Sim)?.Offers.Find(x => x.Id == ctr.OfferId);
+                return o == null ? null : ctx.Strings.Get(ctx.Sim.Config.Game.Market.Goods[defs.Market.IndexOf(o.Good)].NameKey);
             }
             if (c is FitSolarPanel fs) return ctx.Strings.Get(fs.Source == 1 ? "water.pump" : "water.borewell"); // which source the panel is for
             string id = c is BuyParcel b ? b.ParcelId : c is SellParcel sp ? sp.ParcelId : c is ListParcel lp ? lp.ParcelId : c is CancelSale cs ? cs.ParcelId : c is ZoneParcel zp2 ? zp2.ParcelId : c is LeaseOutLand lo ? lo.ParcelId : c is EndLease el ? el.ParcelId : null;

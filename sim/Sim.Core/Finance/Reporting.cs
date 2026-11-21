@@ -10,7 +10,7 @@ namespace Sim.Core.Finance
         private static readonly Account[] FarmCosts =
         {
             Account.SeedsAndPlanting, Account.FertiliserAndSpraying, Account.AnimalFeed, Account.VetAndBreeding, Account.HiredLabour, Account.Rent,
-            Account.Depreciation, Account.TransportAndSelling, Account.Power, Account.Repairs, Account.CropInsurancePremiums, // power and upkeep: irrigation (spec 013 §3.1)
+            Account.Depreciation, Account.TransportAndSelling, Account.Power, Account.Repairs, Account.CropInsurancePremiums, Account.ContractSettlement, // power and upkeep: irrigation (spec 013 §3.1)
         };
         private static readonly Account[] OtherIncome = { Account.DayLabourEarnings, Account.RentReceived, Account.LandRentReceived, Account.GainOnAssetSales, Account.HerdGrowth, Account.DebtWrittenOff, Account.BusinessDrawingsIncome, Account.InterestOnSavings, Account.RegionalGrants, Account.InsuranceClaimsReceived }; // rent: not farming (spec 014)
         private static readonly Account[] Household = { Account.LivingCosts, Account.HealthCosts };

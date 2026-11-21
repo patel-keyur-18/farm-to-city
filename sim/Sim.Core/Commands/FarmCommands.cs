@@ -116,12 +116,14 @@ namespace Sim.Core.Commands
                 Store.Add(sim, def.OutputGood, part, Overflow.StoreOnly, "crop:" + c.Id);
                 Livestock.LivestockSystem.AddStraw(sim, def, part);
                 c.TakenGrams += part;
+                Town.ContractRules.Harvested(sim, def.OutputGood, part);
                 sim.Emit(new CropHarvested(sim.State.Clock.SimTime, TileId, def.Id, part, c.Breakdown));
                 return CommandResult.Ok;
             }
             RejectReason r = Store.Add(sim, def.OutputGood, grams, Overflow == Overflow.StorePart ? Overflow.StoreOnly : Overflow, "crop:" + c.Id);
             if (r != RejectReason.None) return CommandResult.Reject(r);
             Livestock.LivestockSystem.AddStraw(sim, def, grams); // wheat and rice give straw to the stack (spec 012 §3.8)
+            Town.ContractRules.Harvested(sim, def.OutputGood, grams); // the trader's offers read the season's harvest (spec 027 §3.7)
 
             // The harvest's saved seed is one cycle older than the seed it grew from (§3.9).
             FarmState farm = sim.State.Farm;

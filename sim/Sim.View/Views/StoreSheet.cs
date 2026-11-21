@@ -73,6 +73,7 @@ namespace Sim.View.Views
                 vm.Lines.Add(ProduceLine(ctx, g));
             }
             if (produce == 0) vm.Lines.Add(new LineVm(s.Get("store.nothingToSell"), null));
+            ContractSheet.Add(ctx, vm); // the trader's fixed-price offers and your contracts (spec 027 §3.7)
             if (inputs.Count > 0)
             {
                 vm.Lines.Add(LineVm.Header(s.Get("store.inputsHeading")));
@@ -112,6 +113,8 @@ namespace Sim.View.Views
             if (dry != null && dry[g] > 0) line.Note = ctx.Strings.Get("store.inTown", "kg", ctx.Fmt.Kg(Store.WeightGrams(good, dry[g])));
             long[] cold = ColdStoreRules.Cold(sim); // part of it may be in the cold store in town (US-242)
             if (cold != null && cold[g] > 0) line.Note = ctx.Strings.Get("store.inCold", "kg", ctx.Fmt.Kg(Store.WeightGrams(good, cold[g])));
+            Sim.Core.Town.Contract running = Sim.Core.Town.ContractRules.Running(sim, g); // the contract this crop's first kilos fill
+            if (running != null) line.Note = (line.Note == null ? "" : line.Note + " · ") + ctx.Strings.Get("store.contractNote", "kg", ctx.Fmt.Kg(running.Left), "price", ctx.Fmt.PricePerKg(running.Price));
             string id = good.Id;
             // The button sits on the good's own row, so the list reads as one row per good (owner feedback, device run 2).
             // Everything on offer at the market (a hand's order puts a harvest there): the way out is to take it back.
@@ -121,7 +124,7 @@ namespace Sim.View.Views
                     ActionKind.Secondary, at => new Withdraw(at, id, offered));
                 return line;
             }
-            long amount = MarketRules.Value(sim, g, sell, floor);
+            long amount = Sim.Core.Town.ContractRules.SaleValue(sim, g, sell, floor); // a contract running for this crop pays its price on the first kilos (spec 027 §3.7)
             line.Action = sell > 0
                 ? ActionVm.Checked(ctx, "sell:" + id, ctx.Strings.Get("action.sellRow"), ctx.Strings.Get("store.sellDetail", "qty", ctx.Fmt.Kg(sell), "amount", ctx.Fmt.Coins(amount)),
                     ActionKind.Primary, at => new SellToTrader(at, id, sell))

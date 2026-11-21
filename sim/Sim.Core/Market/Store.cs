@@ -172,7 +172,7 @@ namespace Sim.Core.Market
         internal static long SellToTrader(Simulation sim, int good, long quantity, string reference)
         {
             Fixed floor = MarketRules.Floor(sim, good);
-            long amount = MarketRules.Value(sim, good, quantity, floor);
+            long amount = MarketRules.Value(sim, good, quantity, floor) + Town.ContractRules.Deliver(sim, good, quantity, floor); // a forward contract's first kilos at its price (spec 027 §3.7)
             if (amount > 0)
                 sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.soldToTrader", reference,
                     new Posting(Account.Cash, amount), new Posting(SalesAccount(sim, good), -amount));

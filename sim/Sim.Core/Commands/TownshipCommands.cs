@@ -189,4 +189,18 @@ namespace Sim.Core.Commands
             return CommandResult.Ok;
         }
     }
+
+    /// <summary>Accepts the trader's offer of a fixed price for a staple (US-156, spec 027 §3.7): binding; a shortfall at delivery is settled at what the price rose above it.</summary>
+    public sealed class AcceptContract : TimedCommand
+    {
+        public long OfferId { get; }
+
+        public AcceptContract(long at, long offerId) : base(at) { OfferId = offerId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            RejectReason r = ContractRules.Accept(sim, OfferId);
+            return r == RejectReason.None ? CommandResult.Ok : CommandResult.Reject(r);
+        }
+    }
 }

@@ -1,0 +1,10 @@
+{
+  "crops": ["wheat", "rice", "maize", "mustard", "lentils", "potato"],
+  "topCrops": 2,
+  "shareOfHarvest": 0.4,
+  "minKg": 300,
+  "roundKg": 100,
+  "discount": 0.03,
+  "maxOpen": 2,
+  "keepHistory": 4
+}

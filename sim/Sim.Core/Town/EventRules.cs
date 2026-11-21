@@ -53,6 +53,7 @@ namespace Sim.Core.Town
             ExpireCards(sim, s, now);
             ExpireEffects(sim, s, now);
             if (MarketRules.HourOfDay(sim) != 6) return;
+            ContractRules.Sample(sim);
             Strike(sim, s, now);
             Roll(sim, s, now);
         }

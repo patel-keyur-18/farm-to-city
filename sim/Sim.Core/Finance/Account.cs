@@ -87,6 +87,9 @@ namespace Sim.Core.Finance
 
         /// <summary>Crop insurance's premiums, charged at each sowing (spec 027 §3.5, schema 22): a farm cost.</summary>
         CropInsurancePremiums = 5035,
+
+        /// <summary>What a forward contract's shortfall cost at its delivery close (spec 027 §3.7, schema 22): a farm cost, the price rose above the contract's.</summary>
+        ContractSettlement = 5036,
         HiredLabour = 5100,
         LivingCosts = 5200,
         HealthCosts = 5250,
@@ -174,7 +177,7 @@ namespace Sim.Core.Finance
             Account.TaxOwed, Account.HouseTax, Account.BusinessTax, // spec 022 (save schema 19, after the treasury's)
             Account.Festivals, // spec 026 (save schema 22)
             Account.RegionalGrants, Account.DisasterLoss, Account.EventCosts, // spec 027 (save schema 22)
-            Account.InsuranceClaims, Account.InsuranceClaimsReceived, Account.CropInsurancePremiums, Account.InsurancePremiums,
+            Account.InsuranceClaims, Account.InsuranceClaimsReceived, Account.CropInsurancePremiums, Account.InsurancePremiums, Account.ContractSettlement,
         };
 
         /// <summary>
@@ -200,7 +203,7 @@ namespace Sim.Core.Finance
                 case Account.Fees: case Account.GiftsFromFounder: case Account.DeptOffice: case Account.DeptHealth: case Account.DeptEducation: case Account.DeptRoads:
                 case Account.DeptSafety: case Account.DeptUtilities: case Account.DeptPolicies: case Account.TaxOwed: case Account.HouseTax: case Account.BusinessTax: return 19;
                 case Account.Festivals: case Account.RegionalGrants: case Account.DisasterLoss: case Account.EventCosts:
-                case Account.InsuranceClaims: case Account.InsuranceClaimsReceived: case Account.CropInsurancePremiums: case Account.InsurancePremiums: return 22;
+                case Account.InsuranceClaims: case Account.InsuranceClaimsReceived: case Account.CropInsurancePremiums: case Account.InsurancePremiums: case Account.ContractSettlement: return 22;
                 default: return 0;
             }
         }

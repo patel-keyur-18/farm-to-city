@@ -61,6 +61,7 @@ namespace Sim.Core.Saves
             ScheduleFestival,
             AnswerEvent,
             SetCropInsurance, SetPropertyInsurance, SetBusinessInsurance,
+            AcceptContract,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -198,6 +199,7 @@ namespace Sim.Core.Saves
                 case SetCropInsurance c: At(c, Tag.SetCropInsurance); w.WriteBool(c.On); break;
                 case SetPropertyInsurance c: At(c, Tag.SetPropertyInsurance); w.WriteBool(c.On); break;
                 case SetBusinessInsurance c: At(c, Tag.SetBusinessInsurance); w.WriteLong(c.BusinessId); w.WriteBool(c.On); break;
+                case AcceptContract c: At(c, Tag.AcceptContract); w.WriteLong(c.OfferId); break;
                 case AnswerPetition c: At(c, Tag.AnswerPetition); w.WriteInt(c.PetitionId); w.WriteInt(c.Closes); break;
                 case ListParcel c: At(c, Tag.ListParcel); w.WriteString(c.ParcelId); break;
                 case CancelSale c: At(c, Tag.CancelSale); w.WriteString(c.ParcelId); break;
@@ -378,6 +380,7 @@ namespace Sim.Core.Saves
                 case Tag.SetCropInsurance: return new SetCropInsurance(at, r.ReadBool());
                 case Tag.SetPropertyInsurance: return new SetPropertyInsurance(at, r.ReadBool());
                 case Tag.SetBusinessInsurance: return new SetBusinessInsurance(at, r.ReadLong(), r.ReadBool());
+                case Tag.AcceptContract: return new AcceptContract(at, r.ReadLong());
                 case Tag.AnswerPetition: return new AnswerPetition(at, r.ReadInt(), r.ReadInt());
                 case Tag.ListParcel: return new ListParcel(at, r.ReadString());
                 case Tag.CancelSale: return new CancelSale(at, r.ReadString());
