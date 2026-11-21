@@ -67,7 +67,7 @@ namespace Sim.View.Views
             { "orchardBears", OrchardBears }, { "orchardBatch", OrchardBatch }, { "orchardSpoils", OrchardSpoils }, { "orchardToday", OrchardToday },
             { "orchardContractor", OrchardContractor }, { "orchardPayback", OrchardPayback }, { "orchardPlant", OrchardPlant },
             // Money and the market (specs 004, 005).
-            { "cash", Cash }, { "store", StoreFill }, { "price", Price }, { "marketPrice", MarketPrice }, { "traderPrice", TraderPrice },
+            { "cash", Cash }, { "store", StoreFill }, { "price", Price }, { "marketPrice", MarketPrice }, { "traderPrice", TraderPrice }, { "businessVillage", BusinessVillage },
             { "traderRoom", TraderRoom }, { "spoilage", Spoilage }, { "input", Input }, { "inputPrice", InputPrice }, { "mandi", Mandi },
             { "godown", Godown }, { "godownLet", GodownLet }, { "warehouse", Warehouse }, { "coldRent", ColdRent }, { "coldGood", ColdGood }, { "coldWorth", ColdWorth }, { "godownGood", GodownGood },
             { "netWorth", NetWorth }, { "creditLimit", CreditLimitWhy }, { "loan", LoanWhy }, { "borrow", BorrowWhy },

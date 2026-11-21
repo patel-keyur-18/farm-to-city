@@ -589,6 +589,7 @@ namespace Sim.Core.Business
                 b.Day = start / Day;
                 b.OwnToday = 0;
                 b.AreaToday = 0;
+                b.VillageToday = 0;
                 b.KilnMade = b.KilnToBuilds = b.KilnSold = 0;
             }
             int hour = (int)(start % Day / Hour);
@@ -918,16 +919,64 @@ namespace Sim.Core.Business
         /// Your mill's atta goes to your bakeries first (§3.9c), up to what their mix still needs today less what they hold, as an
         /// internal sale at the trader's price (the mill's sales, the bakery's stock).
         /// </summary>
+        /// <summary>What a business of yours still needs of a good today for its mix, less what it holds (a bakery's atta).</summary>
+        private static long NeedOf(Simulation sim, Business to, int good)
+        {
+            BusinessTypeDef t = TypeOf(sim, to);
+            long need = -to.Stock[good];
+            foreach (RecipeDef r in t.Recipes)
+                foreach (KeyValuePair<int, long> kv in r.Inputs)
+                    if (kv.Key == good) need += Need(kv.Value, System.Math.Max(0, to.Mix[r.Output] - to.MadeToday[r.Output]), r.OutputGrams);
+            return need;
+        }
+
+        /// <summary>
+        /// What a mill offers the village market this hour (US-264, spec 016 §3.5c): its unsold atta after what your bakeries still need and the trader's room
+        /// (what he still takes today while the truck is here, else tomorrow's whole day). 0 for any other business or good.
+        /// </summary>
+        internal static long VillageOffer(Simulation sim, Business b, int good)
+        {
+            if (b.Status != BusinessStatus.Open || b.Stock[good] <= 0) return 0;
+            BusinessTypeDef t = TypeOf(sim, b);
+            if (t.IsShop || t.ByRecipe || t.IsKiln) return 0;
+            bool makes = false;
+            foreach (BusinessOutput o in t.Outputs) if (o.Good == good) makes = true;
+            if (!makes) return 0;
+            string id = sim.Config.Game.Market.Goods[good].Id;
+            if (!Defs(sim).VillageGoods.Contains(id)) return 0;
+            long reserve = MarketRules.TraderBuys(sim) ? MarketRules.TraderCapacityLeft(sim, good) : sim.Config.Game.Market.Region.TraderBuyPerDay(good);
+            foreach (Business to in sim.State.Businesses.Businesses)
+                if (to != b && to.Status == BusinessStatus.Open) reserve += System.Math.Max(0, NeedOf(sim, to, good));
+            return System.Math.Max(0, b.Stock[good] - reserve);
+        }
+
+        /// <summary>The open mills offering this good to the village now, in id order, with what each offers.</summary>
+        internal static List<KeyValuePair<Business, long>> VillageOffers(Simulation sim, int good)
+        {
+            var list = new List<KeyValuePair<Business, long>>();
+            if (sim.State.Businesses == null) return list;
+            foreach (Business b in sim.State.Businesses.Businesses)
+            {
+                long q = VillageOffer(sim, b, good);
+                if (q > 0) list.Add(new KeyValuePair<Business, long>(b, q));
+            }
+            return list;
+        }
+
+        /// <summary>A mill's atta sold at the village market (and what the clearing passed on to the trader's floor): its sales, at the price the market paid.</summary>
+        internal static void SoldToVillage(Simulation sim, Business b, int good, long local, long localAmount, long toTrader, long traderAmount)
+        {
+            if (local + toTrader <= 0) return;
+            Sold(sim, b, good, local + toTrader, SalePrice(sim, b, localAmount + traderAmount));
+            b.VillageToday += local + toTrader;
+        }
+
         private static void ToYourBusinesses(Simulation sim, Business from, int good)
         {
             foreach (Business to in sim.State.Businesses.Businesses)
             {
                 if (to == from || to.Status != BusinessStatus.Open || from.Stock[good] <= 0) continue;
-                BusinessTypeDef t = TypeOf(sim, to);
-                long need = -to.Stock[good];
-                foreach (RecipeDef r in t.Recipes)
-                    foreach (KeyValuePair<int, long> kv in r.Inputs)
-                        if (kv.Key == good) need += Need(kv.Value, System.Math.Max(0, to.Mix[r.Output] - to.MadeToday[r.Output]), r.OutputGrams);
+                long need = NeedOf(sim, to, good);
                 long q = System.Math.Min(from.Stock[good], need);
                 if (q <= 0) continue;
                 long value = MarketRules.Value(sim, good, q, MarketRules.Floor(sim, good));

@@ -75,6 +75,19 @@ namespace Sim.View.Views
             return vm;
         }
 
+        /// <summary>What the village market pays for a mill's atta and why only some sells: after your bakeries and the trader, never below the truck's price (US-264).</summary>
+        private static WhyVm BusinessVillage(ViewContext ctx, long good)
+        {
+            Simulation sim = ctx.Sim;
+            int g = (int)good;
+            WhyVm vm = New(ctx, "why.businessVillage.title", ctx.Fmt.PricePerKg(sim.State.Market.MarketPrice(g)), "good", ctx.Strings.Get(sim.Config.Game.Market.Goods[g].NameKey));
+            Row(vm, ctx, "why.businessVillage.floor", ctx.Fmt.PricePerKg(MarketRules.Floor(sim, g)));
+            Row(vm, ctx, "why.businessVillage.demand", ctx.Fmt.Kg(sim.Config.Game.Market.Region.DemandPerDay(g)));
+            Text(vm, ctx, "why.businessVillage.order");
+            Text(vm, ctx, "why.businessVillage.rule");
+            return vm;
+        }
+
         private static WhyVm BusinessWage(ViewContext ctx, long type)
         {
             BusinessTypeDef t = BusinessRules.Defs(ctx.Sim).Types[(int)type];

@@ -7418,5 +7418,11 @@
   "event.ContractAccepted": "A fixed-price contract was agreed.",
   "event.ContractFilled": "Some of a contract was delivered.",
   "event.ContractSettled": "A contract's season closed.",
-  "store.contractNote": "Your contract: the first {kg} are paid {price}"
+  "store.contractNote": "Your contract: the first {kg} are paid {price}",
+  "business.village": "{good} sold in the village today",
+  "why.businessVillage.title": "{good} at the village stall",
+  "why.businessVillage.floor": "The trader's price: the village pays at least this, or the mill keeps its atta",
+  "why.businessVillage.demand": "The village buys about this much a day",
+  "why.businessVillage.order": "Your bakeries get their atta first, then the trader takes up to his daily amount; only what is left is offered to the village, spread over the day.",
+  "why.businessVillage.rule": "The village market is small: when the mill offers more than it buys, the price falls, and the mill never sells below what the truck pays."
 }

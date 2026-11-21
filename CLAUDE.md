@@ -261,6 +261,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0148 | US-154 as built: one roll at 6:00, at most two cards with a named free default (24 h minor, 48 h major), away rules and four mercy rules, 18 events from a closed list of effects, a fire and an epidemic warned 48 h ahead that slide while you are away, three new accounts, amber cards, the Events sheet and a fire drawn on the map |
 | 0149 | US-155 as built: crop insurance fixed at each sowing (luck covered, neglect not), property and business policies bought at the close, claims paid when the repair is paid, business buildings can now burn (a US-154 gap), four new accounts, switches on the Money page |
 | 0150 | US-156 forward contracts as built: offers at the close for your two biggest staples (40% of last season's harvest, 3% under the expected price), the limit counted per delivery season, delivery by the selling you already do, a shortfall at the average price carried when unpaid (not a liability), the Store's trader section |
+| 0151 | US-264 the mill's atta at the village as built: offered after the bakery and the trader, never below the truck's price, only what the village can take (a thin outlet), the mill's targets unchanged |
 
 ## Current status
 

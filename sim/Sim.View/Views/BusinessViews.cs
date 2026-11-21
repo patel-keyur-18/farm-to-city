@@ -384,6 +384,8 @@ namespace Sim.View.Views
             {
                 GoodDef g = sim.Config.Game.Market.Goods[o.Good];
                 vm.Lines.Add(new LineVm(s.Get("business.stock", "good", s.Get(g.NameKey)), ctx.Fmt.Kg(b.Stock[o.Good]), "businessTrader", o.Good) { Icon = g.Id });
+                if (BusinessRules.Defs(sim).VillageGoods.Contains(g.Id)) // US-264: what went to the village's stall today
+                    vm.Lines.Add(new LineVm(s.Get("business.village", "good", s.Get(g.NameKey)), ctx.Fmt.Kg(today ? b.VillageToday : 0), "businessVillage", o.Good) { Icon = g.Id });
             }
         }
 

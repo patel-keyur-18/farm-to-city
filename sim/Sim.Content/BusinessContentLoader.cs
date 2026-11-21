@@ -18,12 +18,15 @@ namespace Sim.Content
 
             string ap = root + ".area";
             JObject a = Object(Required(o, root, "area"), ap);
-            OnlyFields(a, ap, "catchmentPeople", "grainPerPersonPerRealDay", "nextVillageFee", "feeTolerance", "marketStockDays");
+            OnlyFields(a, ap, "catchmentPeople", "grainPerPersonPerRealDay", "nextVillageFee", "feeTolerance", "marketStockDays", "villageGoods");
             d.CatchmentPeople = BoundedInt(a, ap, "catchmentPeople", 0, 100000);
             d.GrainPerPersonPerRealDay = Bounded(a, ap, "grainPerPersonPerRealDay", "0", "5");
             d.NextVillageFee = Bounded(a, ap, "nextVillageFee", "0", "100");
             d.FeeTolerance = Bounded(a, ap, "feeTolerance", "0", "100");
             d.MarketStockDays = BoundedInt(a, ap, "marketStockDays", 1, 30);
+            var village = new List<string>(); // the goods a mill also offers the village market (US-264, spec 016 §3.5c)
+            if (a["villageGoods"] != null) foreach (JToken v in Array(a["villageGoods"], ap + ".villageGoods")) village.Add(String(v, ap + ".villageGoods"));
+            d.VillageGoods = village;
 
             string fp = root + ".funding";
             JObject f = Object(Required(o, root, "funding"), fp);

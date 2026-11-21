@@ -448,5 +448,8 @@
   {"label":"US-155 insurance (no new map sprites; sheets only)","view":"farm","date":"2026-11-21","drawCalls":348,"batches":348,"setPassCalls":8,"triangles":6691,"visibleSprites":394,"sprites":2254},
   {"label":"US-156 forward contracts (no new map sprites; sheets only)","view":"all","date":"2026-11-21","drawCalls":1107,"batches":1107,"setPassCalls":12,"triangles":22937,"visibleSprites":1364,"sprites":2247},
   {"label":"US-156 forward contracts (no new map sprites; sheets only)","view":"village","date":"2026-11-21","drawCalls":486,"batches":486,"setPassCalls":9,"triangles":9913,"visibleSprites":580,"sprites":2247},
-  {"label":"US-156 forward contracts (no new map sprites; sheets only)","view":"farm","date":"2026-11-21","drawCalls":346,"batches":346,"setPassCalls":9,"triangles":6687,"visibleSprites":391,"sprites":2247}
+  {"label":"US-156 forward contracts (no new map sprites; sheets only)","view":"farm","date":"2026-11-21","drawCalls":346,"batches":346,"setPassCalls":9,"triangles":6687,"visibleSprites":391,"sprites":2247},
+  {"label":"US-264 mill's atta at the village (no new map sprites; sheets only)","view":"all","date":"2026-11-21","drawCalls":1050,"batches":1050,"setPassCalls":9,"triangles":22869,"visibleSprites":1298,"sprites":2189},
+  {"label":"US-264 mill's atta at the village (no new map sprites; sheets only)","view":"village","date":"2026-11-21","drawCalls":457,"batches":457,"setPassCalls":6,"triangles":9557,"visibleSprites":544,"sprites":2189},
+  {"label":"US-264 mill's atta at the village (no new map sprites; sheets only)","view":"farm","date":"2026-11-21","drawCalls":328,"batches":328,"setPassCalls":6,"triangles":6608,"visibleSprites":367,"sprites":2189}
 ]

@@ -1108,7 +1108,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-154 | Events and disasters | [F16.1](features/F16.1-event-engine.md) | 8 | Must | Done 2026-11-21 (ADR 0148; approved by the owner; the fire sprite on the building is US-154.T7) |
 | US-155 | Insurance | [F16.2](features/F16.2-insurance-and-forward-contracts.md) | 5 | Must | Done (owner approved 2026-11-21, ADR 0149) |
 | US-156 | Forward contracts | [F16.2](features/F16.2-insurance-and-forward-contracts.md) | 3 | Should | Done (owner approved 2026-11-21, ADR 0150; `GateTests.AcceptEveryContract` at the sprint-end balance pass) |
-| US-264 | The mill's atta at the local market (owner, 2026-11-20) | [F12.2](features/F12.2-production-chains.md) | 3 | Should | To do |
+| US-264 | The mill's atta at the local market (owner, 2026-11-20) | [F12.2](features/F12.2-production-chains.md) | 3 | Should | Built 2026-11-21 (ADR 0151; awaiting the owner's review) |
 | US-147 | Hill parcels and apples | [F15.5](features/F15.5-roads-highway-and-hills.md) | 5 | Should | To do (blocked on its four gaps) |
 
 **Order of work** (one stop for the owner's review after each story and each spec; every sheet previewed as an artifact that looks exactly like the game before its UI code):
