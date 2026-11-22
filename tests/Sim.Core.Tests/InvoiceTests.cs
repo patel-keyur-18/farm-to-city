@@ -14,7 +14,7 @@ namespace Sim.Core.Tests
     {
         private const long Day = 86_400, Hour = 3600;
 
-        private static Simulation Township()
+        internal static Simulation Township()
         {
             Simulation sim = TownshipTests.Start(cohort: true);
             TownshipTests.Families(sim, 2);
@@ -22,7 +22,7 @@ namespace Sim.Core.Tests
             return sim;
         }
 
-        private static int FreeTile(Simulation sim, params int[] not)
+        internal static int FreeTile(Simulation sim, params int[] not)
         {
             foreach (Tile t in sim.State.Land.Tiles)
                 if (!not.Contains(t.Id) && BusinessRules.Place(sim, t.Id) == RejectReason.None && Sim.Core.People.HouseRules.Place(sim, t.Id) == RejectReason.None) return t.Id;
@@ -30,7 +30,7 @@ namespace Sim.Core.Tests
             return -1;
         }
 
-        private static Business.Business Found(Simulation sim, string type, params int[] not)
+        internal static Business.Business Found(Simulation sim, string type, params int[] not)
         {
             long give = 3_000_000 * Coin - sim.State.Ledger.Cash;
             if (give > 0) sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.Cash, give), new Posting(Account.Sales, -give));

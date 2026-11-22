@@ -232,6 +232,12 @@ namespace Sim.Core.Business
             Loan loan = LoanOf(sim, b);
             if (loan != null && loan.IsOpen) CreditSystem.Accrue(sim, loan, sim.Period);
             BusinessRules.LoseWorker(sim, b);
+            People.Worker boss = ManagerRules.Of(sim, b.Id); // a closing business lets its manager go too (he keeps the season's pay)
+            if (boss != null)
+            {
+                ManagerRules.Remove(sim, boss);
+                sim.Emit(new Events.ManagerLeft(now, b.Id, boss.Id, 0));
+            }
             InvoiceRules.CollectAll(sim, b); // what its customers owe it, now (spec 028 §3.1)
 
             KilnRules.Clear(sim, b); // a closing kiln's yard goes to the trader

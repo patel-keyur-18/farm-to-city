@@ -172,7 +172,7 @@ namespace Sim.Core.People
         public static bool LongDays(Simulation sim, Worker w)
         {
             Business.Business b = sim.State.Businesses.Find(w.Place);
-            return b.Status == Business.BusinessStatus.Open && Business.BusinessRules.LongHours(sim, b) > 0;
+            return w.Mgr == null && b.Status == Business.BusinessStatus.Open && Business.BusinessRules.LongHours(sim, b) > 0; // a manager keeps no shop hours
         }
 
         /// <summary>
@@ -238,8 +238,7 @@ namespace Sim.Core.People
                 Hand h = s.Hand(id);
                 return h != null && h.Contract == ContractState.Active ? h : null;
             }
-            Worker w = s.WorkerAt(place);
-            return w != null && w.Id == id ? w : null;
+            return s.Workers.Find(x => x.Place == place && x.Id == id); // a worker, or the business's manager
         }
     }
 }

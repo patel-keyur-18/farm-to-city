@@ -340,6 +340,34 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>The first applicant for the manager's post: a townsperson at once, else the first migrant to come.</summary>
+        internal static Applicant ManagerApplicant(Simulation sim)
+        {
+            for (int i = 0; i < 24 * 10 && sim.State.People.ApplicantsFor(HiringRules.ManagerPlace).Count == 0; i++) sim.AdvanceTo(T(sim) + Hour);
+            Assert.That(sim.State.People.ApplicantsFor(HiringRules.ManagerPlace), Is.Not.Empty, "nobody applied for the manager's post");
+            return sim.State.People.ApplicantsFor(HiringRules.ManagerPlace).First();
+        }
+
+        /// <summary>A Township with a bakery run by a manager (spec 028 §3.2, US-124): hired, a season closed with a report, and a mill beside it that has none.</summary>
+        public static Simulation Managed()
+        {
+            Simulation sim = Township();
+            SetCash(sim, 3_000_000_00);
+            int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "bakery", tile, 300_000_00, false));
+            Hire(sim);
+            long bakery = sim.State.Businesses.Businesses.Last().Id;
+            int tile2 = sim.State.Land.Tiles.First(t => t.Id != tile && Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "flour_mill", tile2, 300_000_00, false));
+            Hire(sim);
+            Ok(sim, new PostJob(T(sim), HiringRules.ManagerPlace, false));
+            Applicant a = ManagerApplicant(sim);
+            Ok(sim, new HireManager(T(sim), a.Id, bakery, OfferLevel.High));
+            sim.AdvanceTo((T(sim) / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason + 2 * Hour);
+            Assert.That(sim.State.People.Workers.Any(w => w.IsManager && w.Mgr.ReportPeriod != 0), Is.True, "he reported at the close");
+            return sim;
+        }
+
         /// <summary>The Township with its works built and land in use: the clinic and quarters, the civic works, and three bought parcels leased, zoned and listed (spec 023, 024).</summary>
         /// <summary>The built Township with a card waiting for every kind of event, and some answered (US-154).</summary>
         public static Simulation Events()
@@ -476,6 +504,7 @@ namespace Sim.View.Tests
             yield return Equipped();
             yield return Township();
             yield return Invoicing();
+            yield return Managed();
             yield return TownshipBuilt();
             yield return Kiln();
             yield return Promises();

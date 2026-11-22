@@ -457,5 +457,8 @@
   {"label":"US-147 hills and apples (an apple orchard is 9 tree sprites and a marker on a hill acre; the hills' mounds were drawn already; this Editor town was a Township one in a Monsoon rain with the ring open and 68 people, so the growth over the Village-era readings is the town's, not the orchard's: the same town without the orchard measured 394 draw calls, 411 visible sprites and 2,294 sprites against 393, 411 and 2,304 with it)","view":"farm","date":"2026-11-21","drawCalls":393,"batches":391,"setPassCalls":9,"triangles":8021,"visibleSprites":411,"sprites":2304},
   {"label":"US-123","view":"all","date":"2026-11-21","drawCalls":1100,"batches":1100,"setPassCalls":12,"triangles":23679,"visibleSprites":1337,"sprites":2277},
   {"label":"US-123","view":"village","date":"2026-11-21","drawCalls":514,"batches":514,"setPassCalls":9,"triangles":10503,"visibleSprites":606,"sprites":2277},
-  {"label":"US-123","view":"farm","date":"2026-11-21","drawCalls":365,"batches":365,"setPassCalls":9,"triangles":7125,"visibleSprites":410,"sprites":2277}
+  {"label":"US-123","view":"farm","date":"2026-11-21","drawCalls":365,"batches":365,"setPassCalls":9,"triangles":7125,"visibleSprites":410,"sprites":2277},
+  {"label":"US-124 managers","view":"all","date":"2026-11-22","drawCalls":1128,"batches":1128,"setPassCalls":9,"triangles":22903,"visibleSprites":1385,"sprites":2277},
+  {"label":"US-124 managers","view":"village","date":"2026-11-22","drawCalls":512,"batches":512,"setPassCalls":6,"triangles":10110,"visibleSprites":605,"sprites":2277},
+  {"label":"US-124 managers","view":"farm","date":"2026-11-22","drawCalls":364,"batches":364,"setPassCalls":6,"triangles":6739,"visibleSprites":410,"sprites":2277}
 ]

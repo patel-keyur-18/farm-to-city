@@ -30,13 +30,19 @@ namespace Sim.Core.People
     {
         private const long Hour = 3600;
 
+        /// <summary>The place of the manager's post on the board (spec 028 §3.2; -1 is the masons' tab in the views): one post for the town, the business chosen when you offer.</summary>
+        public const long ManagerPlace = -2;
+
+        /// <summary>What a worker's role asks at skill 50: a manager's is the post's, any other the business's.</summary>
+        public static long MarketWageOf(Simulation sim, Worker w) { return w.Mgr != null ? Business.ManagerRules.MarketWage(sim) : MarketWage(sim, w.Place); }
+
         // Draws of the Applicants stream (key = applicant id): 0 the wait, 1–4 the profile (PeopleSystem), 5 the first offer, 6 after a counter.
         private const ulong FirstOffer = 5, AfterCounter = 6;
 
         /// <summary>A business's role reads farming (the dairyman) or crafting (the miller, the baker); the farm hand farming.</summary>
         public static bool Farms(Simulation sim, long place)
         {
-            return place == 0 || BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).WorkerFarms;
+            return place == 0 || (place > 0 && BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).WorkerFarms);
         }
 
         /// <summary>A citizen's skill in the place's role, rounded.</summary>
@@ -48,6 +54,7 @@ namespace Sim.Core.People
         /// <summary>The role's market wage a season at skill 50, year-0 (spec 015 §3.1).</summary>
         public static long MarketWage(Simulation sim, long place)
         {
+            if (place == ManagerPlace) return Business.ManagerRules.MarketWage(sim);
             return place == 0 ? sim.Config.Game.People.Hand.MarketWage : BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).Wage;
         }
 
@@ -103,6 +110,7 @@ namespace Sim.Core.People
         /// <summary>A business can take a hire: yours, not closed, with nobody hired there (you may be running it).</summary>
         public static RejectReason BusinessPlace(Simulation sim, long place)
         {
+            if (place == ManagerPlace) return Business.ManagerRules.On(sim) ? RejectReason.None : RejectReason.NoTownship;
             Business.Business b = sim.State.Businesses?.Find(place);
             if (b == null || b.Status == BusinessStatus.Closed) return RejectReason.UnknownBusiness;
             if (b.Worker == WorkerKind.Citizen || b.Worker == WorkerKind.Neighbour) return RejectReason.AlreadyStaffed;
@@ -217,7 +225,7 @@ namespace Sim.Core.People
         /// The offer (spec 015 §3.3), after the command's checks: refused below the asked wage the first time, they counter at it and
         /// wait; any other refusal and they leave. Taken, they're hired at the offered wage, remembered as fair or not.
         /// </summary>
-        internal static void Offer(Simulation sim, Applicant a, OfferLevel level, long wage)
+        internal static void Offer(Simulation sim, Applicant a, OfferLevel level, long wage, bool byManager = false, Business.Business manages = null)
         {
             PeopleState s = sim.State.People;
             long t = sim.State.Clock.SimTime;
@@ -236,8 +244,13 @@ namespace Sim.Core.People
                 return;
             }
             int fairness = level == OfferLevel.Low ? -1 : level == OfferLevel.High ? 1 : 0;
-            if (fairness < 0) HrRules.Repute(sim, sim.Config.Game.People.Reputation.LowHire);
+            if (fairness < 0 && !byManager) HrRules.Repute(sim, sim.Config.Game.People.Reputation.LowHire); // a manager's low offer is not yours
             Withdraw(s, a.CitizenId);
+            if (manages != null)
+            {
+                Business.ManagerRules.Hire(sim, a, wage, fairness, manages);
+                return;
+            }
             if (a.Place == 0)
             {
                 long prepay = PeopleRules.RestOfSeason(sim, wage);

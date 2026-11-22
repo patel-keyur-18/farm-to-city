@@ -412,6 +412,7 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
+            ManagerSheet.AddToday(ctx, vm, b); // spec 028 §3.2: who runs it, above who works here
             vm.Lines.Add(WorkerLine(ctx, b));
             Worker hired = BusinessRules.HiredWorker(sim, b);
             if (hired != null && b.Status == BusinessStatus.Open) vm.Lines.Add(StaffView.Output(ctx, b.Id, hired));
@@ -451,6 +452,11 @@ namespace Sim.View.Views
             Worker w = sim.State.People?.WorkerAt(b.Id);
             var line = new LineVm(s.Get("business.worker"), BusinessWords.Worker(ctx, b), "businessWorker", b.Id)
                 { Icon = b.Worker == WorkerKind.Founder ? "person_founder" : w != null && PeopleWords.Female(ctx, w.Name) ? "person_hand_f" : "person_hand_m" };
+            if (w == null && ManagerRules.Of(sim, b.Id) != null && b.Worker == WorkerKind.None)
+            {
+                line.Note = s.Get("business.managerHires"); // he posts the job and picks by his style
+                return line;
+            }
             if (w == null)
             {
                 if (b.Worker == WorkerKind.None) { line.Note = s.Get("business.needsWorker"); line.NoteTone = Tone.Warn; }
@@ -476,6 +482,13 @@ namespace Sim.View.Views
         private static readonly long[] OwnPresets = { 200_000, 400_000, 0, 100_000 };
 
         private static void AddSettings(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
+        {
+            ManagerSheet.AddSettings(ctx, vm, b); // spec 028 §3.2: his section first
+            AddSettingsCore(ctx, vm, b, t);
+            ManagerSheet.MarkSet(ctx, vm, b); // what he sets each morning is no longer yours to change
+        }
+
+        private static void AddSettingsCore(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
         {
             if (t.IsShop) // spec 017: its own hours, price and goods
             {

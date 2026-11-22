@@ -54,7 +54,7 @@ namespace Sim.Core.Business
         {
             KilnDef k = Def(sim, b);
             Worker w = BusinessRules.HiredWorker(sim, b);
-            return w == null ? k.BricksPerHour : WorkRules.RelativeOutput(sim, w).MulRatio(k.BricksPerHour, 1).RoundToLong();
+            return ManagerRules.Scale(sim, b, w == null ? k.BricksPerHour : WorkRules.RelativeOutput(sim, w).MulRatio(k.BricksPerHour, 1).RoundToLong()); // a mis-set day fires part of it (spec 028 §3.2)
         }
 
         // ---- firing ----

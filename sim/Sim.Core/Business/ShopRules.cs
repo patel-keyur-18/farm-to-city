@@ -261,7 +261,17 @@ namespace Sim.Core.Business
         {
             BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
             People.Worker w = BusinessRules.HiredWorker(sim, b);
-            return w == null ? t.CapacityPerHour : People.WorkRules.RelativeOutput(sim, w).MulRatio(t.CapacityPerHour, 1).RoundToLong();
+            long rate = w == null ? t.CapacityPerHour : People.WorkRules.RelativeOutput(sim, w).MulRatio(t.CapacityPerHour, 1).RoundToLong();
+            return Stocked(t) ? ManagerRules.Scale(sim, b, rate) : rate; // a stall's mis-set day is a stock-out (spec 028 §3.2); a maker's is cut where it makes
+        }
+
+        /// <summary>A shop's price as a share of the reference and its quality (US-121), as <c>SetShop</c> and a manager's style set them: the same cups a day when the tea stall changes quality.</summary>
+        internal static void SetLook(Simulation sim, Business b, Fixed priceFactor, int quality)
+        {
+            b.PriceFactor = priceFactor;
+            BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            if (quality != b.Quality && t.TakesMilk) b.OwnPerDay = b.OwnPerDay * t.CupMl(quality) / t.CupMl(b.Quality);
+            b.Quality = quality;
         }
 
         public static bool RivalOpen(RivalDef d, int hour) { return hour >= d.OpenHour && hour < d.CloseHour; }

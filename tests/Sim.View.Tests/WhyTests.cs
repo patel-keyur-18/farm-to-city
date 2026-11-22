@@ -57,6 +57,7 @@ namespace Sim.View.Tests
                     yield return Named("business settings " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Settings));
                     yield return Named("business customers " + b.Id, BusinessSheet.Build(ctx, b.Id, ShopSheet.Customers));
                     yield return Named("business orders " + b.Id, BusinessSheet.Build(ctx, b.Id, InvoiceSheet.Tab));
+                    yield return Named("manager report " + b.Id, ManagerSheet.Report(ctx, b.Id)); // spec 028 §3.2: every number has a Why?
                     yield return Named("put cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Put));
                     yield return Named("take cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Take));
                     yield return Named("close " + b.Id, BusinessCloseSheet.Build(ctx, b.Id));

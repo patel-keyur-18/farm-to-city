@@ -446,6 +446,11 @@ namespace Game.Presentation
                     if (Sim.State.People.Applicant(r.Id) == null) { _sheet.Close(); break; } // hired, or gone while it was open
                     _sheet.Show(HiringBoard.Offer(_ctx, r.Id), refreshOnly);
                     break;
+                case ManagerSheet.OfferKind:
+                    if (Sim.State.People.Applicant(r.Id) == null) { _sheet.Close(); break; } // hired, or gone while it was open
+                    _sheet.Show(ManagerSheet.Offer(_ctx, r.Id, r.Arg), refreshOnly);
+                    break;
+                case ManagerSheet.ReportKind: _sheet.Show(ManagerSheet.Report(_ctx, r.Id), refreshOnly); break; // a manager's report at the close (spec 028 §3.2)
                 case "TownOffer": _sheet.Show(HiringBoard.TownOffer(_ctx, r.Id), refreshOnly); break; // offering work from a card (ADR 0083)
                 case "Hand":
                     if (Sim.State.People.Hand(r.Id) == null) { _sheet.Close(); break; } // the hand left

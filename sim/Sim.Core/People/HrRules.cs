@@ -53,7 +53,7 @@ namespace Sim.Core.People
         public static long Asked(Simulation sim, IStaff w)
         {
             var traits = sim.Config.Game.People.Traits;
-            long asked = w is Worker k ? HiringRules.AskedWage(sim, k.Place, w.Skill, false) : PeopleRules.AskedWage(sim, w.Skill, false);
+            long asked = w is Worker k ? PeopleRules.AskedWage(sim, HiringRules.MarketWageOf(sim, k), w.Skill, false) : PeopleRules.AskedWage(sim, w.Skill, false);
             Fixed factor = traits[w.Trait1].RenewalWageFactor * traits[w.Trait2].RenewalWageFactor;
             return factor == Fixed.One ? asked : Money.RoundToCoin(Money.MulRate(asked, factor));
         }
@@ -95,7 +95,7 @@ namespace Sim.Core.People
             return m;
         }
 
-        private static void SetMood(Simulation sim, IStaff w, Fixed mood)
+        internal static void SetMood(Simulation sim, IStaff w, Fixed mood)
         {
             w.Hr.Mood = mood;
             w.Hr.MoodSeason = Season(sim);

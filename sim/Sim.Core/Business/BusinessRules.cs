@@ -497,6 +497,7 @@ namespace Sim.Core.Business
             bool morning = MarketRules.HourOfDay(sim) == (sim.Config.Game.Market.Truck?.ArriveHour ?? 6);
             long[] took = null;
             InvoiceRules.Hourly(sim); // spec 028 §3.1: invoices at their term's end are paid before the hour's work
+            if (morning) ManagerRules.Morning(sim); // spec 028 §3.2: each manager sets his business first, before the stalls fill and the makers start
             if (sim.State.Shops != null) ShopRules.NewDay(sim, (sim.State.Clock.SimTime - Hour) / Day); // yesterday's stars, then today's counts
             if (morning)
             {
@@ -559,7 +560,8 @@ namespace Sim.Core.Business
         {
             BusinessTypeDef t = TypeOf(sim, b);
             Worker w = HiredWorker(sim, b);
-            return w == null ? t.GramsPerHour : WorkRules.RelativeOutput(sim, w).MulRatio(t.GramsPerHour, 1).RoundToLong();
+            long rate = w == null ? t.GramsPerHour : WorkRules.RelativeOutput(sim, w).MulRatio(t.GramsPerHour, 1).RoundToLong();
+            return ManagerRules.Scale(sim, b, rate); // a mis-set day makes only part of it (spec 028 §3.2)
         }
 
         /// <summary>The product of the worker's two traits' <paramref name="factor"/> (creative's sale, frugal's costs); 1 when you run it.</summary>
@@ -1098,7 +1100,9 @@ namespace Sim.Core.Business
                 }
                 long interest = Money.MulRate(BusinessBooks.Overdrawn(b), Defs(sim).OverdraftRate);
                 if (interest > 0) b.Ledger.Post(now, closing, "ledger.overdraftInterest", reference, new Posting(Account.Interest, interest), new Posting(Account.Overdraft, -interest));
+                ManagerRules.PayShare(sim, b, closing); // spec 028 §3.2: a tenth of the profit to his manager, before the tax
                 Town.TaxRules.BillBusiness(sim, b, closing); // spec 022 §3.2: tax on the season's profit, from its own cash
+                ManagerRules.Report(sim, b, closing); // and his report against the target, on the profit as the books show it
                 BusinessBooks.CloseSeason(sim, b, closing);
             }
             ShopRules.CloseSeason(sim);
@@ -1114,6 +1118,7 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
             {
                 if (b.Status == BusinessStatus.Closed) continue;
+                if (b.Status == BusinessStatus.Open) ManagerRules.Renew(sim, b); // spec 028 §3.2: his new season's wage upfront, or he goes
                 Worker w = sim.State.People?.WorkerAt(b.Id);
                 if (b.Status == BusinessStatus.Open && w != null && HrRules.Leaves(sim, w))
                 {

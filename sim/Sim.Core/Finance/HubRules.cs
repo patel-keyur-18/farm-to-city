@@ -147,7 +147,7 @@ namespace Sim.Core.Finance
             if (sim.State.Businesses != null)
                 foreach (Business.Business b in sim.State.Businesses.Businesses)
                 {
-                    if (BusinessRules.HiredWorker(sim, b) == null) continue; // a business you run yourself is your labour
+                    if (BusinessRules.HiredWorker(sim, b) == null && ManagerRules.Of(sim, b.Id) == null) continue; // a business you run yourself is your labour; a managed one is not
                     foreach (BusinessReport r in b.Reports) if (r.Period == last.Period) business += BusinessBooks.NetProfit(r);
                 }
             return rent + interest + business;

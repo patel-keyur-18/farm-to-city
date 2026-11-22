@@ -65,6 +65,7 @@ namespace Sim.Content
                 if (game.Events != null) game.Insurance = LoadInsurance(read("insurance.json")); // and so does insurance (spec 027 §3.5)
                 if (game.Events != null) game.Contracts = LoadContracts(read("contracts.json"), market); // and the trader's forward contracts (spec 027 §3.7)
                 if (game.Events != null && game.Shops != null) game.Invoices = LoadInvoices(read("invoices.json"), market, game.Shops); // and sales between businesses on terms (spec 028 §3.1)
+                if (game.Invoices != null && game.People != null) game.Managers = LoadManagers(read("managers.json")); // and managers for them to run (spec 028 §3.2)
             }
             return game;
         }

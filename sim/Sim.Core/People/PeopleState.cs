@@ -437,10 +437,16 @@ namespace Sim.Core.People
         public long CourseUntil { get; internal set; }
         public HrState Hr { get; internal set; } = new HrState();
 
+        /// <summary>Set when this is the business's manager (spec 028 §3.2, schema 23), else null: a worker who works it.</summary>
+        public ManagerRecord Mgr { get; internal set; }
+
+        public bool IsManager { get { return Mgr != null; } }
+
         internal Worker Clone()
         {
             var c = (Worker)MemberwiseClone();
             c.Hr = Hr.Clone();
+            c.Mgr = Mgr?.Clone();
             return c;
         }
 
@@ -460,6 +466,11 @@ namespace Sim.Core.People
             h.WriteFixed(Fatigue);
             h.WriteLong(CourseUntil);
             Hr.WriteTo(h);
+            if (h.Hashing ? Mgr != null : !(h is SaveWriter w23 && w23.Schema < Town.TownshipState.GrowthSchema)) // schema 23; hashed once a manager is hired
+            {
+                h.WriteBool(Mgr != null);
+                Mgr?.WriteTo(h);
+            }
         }
 
         internal static Worker ReadFrom(SaveReader r)
@@ -471,6 +482,7 @@ namespace Sim.Core.People
                 HiredAt = r.ReadLong(), SeasonsWorked = r.ReadInt(), Fatigue = r.ReadFixed(), CourseUntil = r.ReadLong(),
             };
             w.Hr = HrState.ReadFrom(r);
+            if (r.Schema >= Town.TownshipState.GrowthSchema && r.ReadBool()) w.Mgr = ManagerRecord.ReadFrom(r);
             return w;
         }
     }
@@ -615,7 +627,11 @@ namespace Sim.Core.People
 
         public JobPost PostAt(long place) { return Posts.Find(x => x.Place == place); }
 
-        public Worker WorkerAt(long place) { return Workers.Find(x => x.Place == place); }
+        /// <summary>The worker who works a business (not its manager).</summary>
+        public Worker WorkerAt(long place) { return Workers.Find(x => x.Place == place && x.Mgr == null); }
+
+        /// <summary>The business's manager (spec 028 §3.2), or null.</summary>
+        public Worker ManagerAt(long place) { return Workers.Find(x => x.Place == place && x.Mgr != null); }
 
         /// <summary>Applicants for a place, in id order.</summary>
         public List<Applicant> ApplicantsFor(long place) { return Applicants.FindAll(x => x.Place == place); }

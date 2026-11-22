@@ -5,6 +5,7 @@ using System.Text.Json;
 using NUnit.Framework;
 using Sim.Core.Business;
 using Sim.Core.Commands;
+using Sim.Core.People;
 using Sim.Core.Saves;
 using static Sim.Core.Tests.PeopleKit;
 using static Sim.Core.Tests.TestSim;
@@ -33,6 +34,10 @@ namespace Sim.Core.Tests
             Simulation sim = InvoiceTests.MillAndBakery(out Business.Business mill, out Business.Business bakery);
             Ok(sim, new SetTerms(sim.State.Clock.SimTime, bakery.Id, 0, "village_tea", "season"));
             InvoiceTests.ToHour(sim, 14, 2);
+            Worker boss = ManagerTests.Manage(sim, bakery, 1); // spec 028 §3.2 (US-124): a growth-chaser runs the bakery, one close behind him
+            boss.Mgr.Target = ManagerTarget.Growth;
+            sim.AdvanceTo(BusinessTests.NextClose(sim) + 2 * 3600);
+            InvoiceTests.ToHour(sim, 14, 1);
             sim.DrainEvents();
             Pin23(Growth23Fixture, sim);
         }
@@ -51,6 +56,9 @@ namespace Sim.Core.Tests
             Assert.That(inv.Open.Count, Is.GreaterThan(0), "invoices stand");
             Assert.That(inv.Terms.Count, Is.EqualTo(1), "a term was set");
             Assert.That(inv.Open.Any(i => i.BuyerRival == "grocer") && inv.Open.Any(i => i.Buyer != 0), Is.True, "a village shop's and a business's");
+            Worker boss = r.State.People.Workers.Single(w => w.IsManager);
+            Assert.That((boss.Mgr.Style, boss.Mgr.Target, boss.Mgr.ReportPeriod != 0), Is.EqualTo((1, ManagerTarget.Growth, true)), "his style, his target and his report");
+            Assert.That(r.State.People.WorkerAt(boss.Place)?.IsManager ?? false, Is.False);
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
             foreach (Business.Business b in r.State.Businesses.Businesses) Assert.That(b.Ledger.Reconcile(), Is.Null);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);

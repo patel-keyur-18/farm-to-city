@@ -17,6 +17,7 @@ namespace Sim.View.Views
         /// <summary>The job's name: "Farm hand", "Miller".</summary>
         public static string Role(ViewContext ctx, long place)
         {
+            if (place == HiringRules.ManagerPlace) return ctx.Strings.Get("board.manager");
             if (place < 0) return ctx.Strings.Get("board.masons");
             if (place == 0) return ctx.Strings.Get("board.hand");
             Business b = ctx.Sim.State.Businesses.Find(place);
@@ -30,6 +31,7 @@ namespace Sim.View.Views
             var list = new List<long> { 0 };
             if (sim.State.Businesses == null) { if (Sim.Core.Town.ConstructionRules.On(sim)) list.Add(-1); return list; }
             foreach (Business b in sim.State.Businesses.Businesses) if (b.Status != BusinessStatus.Closed) list.Add(b.Id);
+            if (ManagerRules.On(sim) && sim.State.Businesses.Businesses.Exists(b => b.Status != BusinessStatus.Closed)) list.Add(HiringRules.ManagerPlace); // spec 028 §3.2: one post for the town's managers
             if (Sim.Core.Town.ConstructionRules.On(sim)) list.Add(-1); // the town's masons (spec 025 §3.2)
             return list;
         }
@@ -47,8 +49,9 @@ namespace Sim.View.Views
                 vm.Tabs = new List<ActionVm>();
                 foreach (long x in places) vm.Tabs.Add(ActionVm.Open("tab:" + x, Role(ctx, x), new SheetRequest("Word", x)));
             }
-            if (place < 0) { BuildingSheet.MasonList(ctx, vm); return vm; }
-            AddJob(ctx, vm, place);
+            if (place == HiringRules.ManagerPlace) ManagerSheet.AddJob(ctx, vm);
+            else if (place < 0) { BuildingSheet.MasonList(ctx, vm); return vm; }
+            else AddJob(ctx, vm, place);
             AddPost(ctx, vm, place);
             AddApplicants(ctx, vm, place);
             return vm;
@@ -122,14 +125,17 @@ namespace Sim.View.Views
                 Applicant ap = a;
                 PeopleRules.SkillRange(sim, a, out int lo, out int hi);
                 string traits = PeopleWords.Trait(ctx, a.Trait1) + " · " + (a.SecondTraitKnown ? PeopleWords.Trait(ctx, a.Trait2) : "?");
-                var line = new LineVm(PeopleWords.Name(ctx, a.Name), PeopleWords.Range(ctx, lo, hi) + " · " + traits, "applicant", a.Id)
+                bool boss = place == HiringRules.ManagerPlace;
+                if (boss) traits = ManagerWords.Style(ctx, ManagerRules.StyleOf(sim, a)) + " · " + traits;
+                var line = new LineVm(PeopleWords.Name(ctx, a.Name), PeopleWords.Range(ctx, lo, hi) + " · " + traits, boss ? "managerApplicant" : "applicant", a.Id)
                     { Stars = PeopleWords.Stars(ctx, lo, hi), Icon = PeopleWords.Female(ctx, a.Name) ? "person_hand_f" : "person_hand_m", Note = From(ctx, a) };
                 if (a.Countered)
                 {
                     line.Note = s.Get("board.countered", "wage", ctx.Fmt.Coins(HiringRules.OfferWage(sim, a, OfferLevel.Asked)));
                     line.NoteTone = Tone.Warn;
                 }
-                line.Action = ActionVm.Open("offer:" + a.Id, s.Get("board.offer"), new SheetRequest("JobOffer", a.Id, place.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+                line.Action = boss ? ActionVm.Open("offer:" + a.Id, s.Get("board.offer"), new SheetRequest(ManagerSheet.OfferKind, a.Id))
+                    : ActionVm.Open("offer:" + a.Id, s.Get("board.offer"), new SheetRequest("JobOffer", a.Id, place.ToString(System.Globalization.CultureInfo.InvariantCulture)));
                 vm.Lines.Add(line);
                 if (!a.SecondTraitKnown)
                 {

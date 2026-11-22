@@ -331,6 +331,13 @@ namespace Sim.Core.Commands
         // Spec 025 §3.5 (hills and apples, US-147)
         /// <summary>The tree grows on hill land only.</summary>
         HillOnly,
+
+        // Spec 028 §3.2 (managers, US-124)
+        /// <summary>The business already has a manager (one a business), or has one and so is not run by you.</summary>
+        HasManager,
+
+        /// <summary>The business has no manager.</summary>
+        NoManager,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

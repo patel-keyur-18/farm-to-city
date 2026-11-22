@@ -56,10 +56,7 @@ namespace Sim.Core.Commands
             bool preset = false;
             foreach (Maths.Fixed f in sim.Config.Game.Shops.PricePresets) if (f == PriceFactor) preset = true;
             if (!preset || Quality < 1 || Quality > 2) return CommandResult.Reject(RejectReason.InvalidArgument);
-            b.PriceFactor = PriceFactor;
-            Definitions.BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
-            if (Quality != b.Quality && t.TakesMilk) b.OwnPerDay = b.OwnPerDay * t.CupMl(Quality) / t.CupMl(b.Quality); // the same cups a day
-            b.Quality = Quality;
+            ShopRules.SetLook(sim, b, PriceFactor, Quality);
             return CommandResult.Ok;
         }
     }
@@ -254,6 +251,7 @@ namespace Sim.Core.Commands
             Business.Business b = sim.State.Businesses?.Find(BusinessId);
             if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
             if (b.Worker != WorkerKind.None) return CommandResult.Reject(RejectReason.AlreadyStaffed);
+            if (sim.State.People?.ManagerAt(b.Id) != null) return CommandResult.Reject(RejectReason.HasManager); // his to run: let him go first
             Farm.FarmSystem.Accrue(sim);
             b.Worker = WorkerKind.Founder;
             Farm.FarmSystem.Refresh(sim);
@@ -281,5 +279,62 @@ namespace Sim.Core.Commands
         }
 
         protected override CommandResult ApplyAt(Simulation sim) { return InvoiceRules.SetTerms(sim, SellerId, BuyerId, BuyerRival, Term); }
+    }
+    /// <summary>
+    /// Offers the manager's post to an applicant of the board's manager post, to run one of your businesses (spec 028 §3.2): the asked wage,
+    /// 10% less or 10% more, the base wage for the rest of the season prepaid from the business's cash. One manager a business.
+    /// </summary>
+    public sealed class HireManager : TimedCommand
+    {
+        public long ApplicantId { get; }
+        public long BusinessId { get; }
+        public People.OfferLevel Level { get; }
+
+        public HireManager(long at, long applicantId, long businessId, People.OfferLevel level = People.OfferLevel.Asked) : base(at)
+        {
+            ApplicantId = applicantId;
+            BusinessId = businessId;
+            Level = level;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (!ManagerRules.On(sim)) return CommandResult.Reject(RejectReason.NoTownship);
+            People.Applicant a = sim.State.People.Applicant(ApplicantId);
+            if (a == null || a.Place != People.HiringRules.ManagerPlace) return CommandResult.Reject(RejectReason.UnknownApplicant);
+            Business.Business b = sim.State.Businesses.Find(BusinessId);
+            if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (sim.State.People.ManagerAt(b.Id) != null) return CommandResult.Reject(RejectReason.HasManager);
+            long wage = People.HiringRules.OfferWage(sim, a, Level);
+            if (BusinessBooks.CanSpend(sim, b) < People.PeopleRules.RestOfSeason(sim, wage)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            if (a.CitizenId != 0 && !People.HouseholdRules.WorksOutside(sim, sim.State.Citizens.Citizen(a.CitizenId))) return CommandResult.Reject(RejectReason.UnknownApplicant);
+            People.HiringRules.Offer(sim, a, Level, wage, false, b);
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>Lets a business's manager go (spec 028 §3.2): he keeps the season's pay; after his first season, severance of 10% of his wage; you can run it yourself or hire another.</summary>
+    public sealed class DismissManager : TimedCommand
+    {
+        public long BusinessId { get; }
+
+        public DismissManager(long at, long businessId) : base(at) { BusinessId = businessId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return ManagerRules.Dismiss(sim, BusinessId); }
+    }
+
+    /// <summary>What you judge a manager on at each close (spec 028 §3.2): the season's profit, or its sales.</summary>
+    public sealed class SetManagerTarget : TimedCommand
+    {
+        public long BusinessId { get; }
+        public People.ManagerTarget Target { get; }
+
+        public SetManagerTarget(long at, long businessId, People.ManagerTarget target) : base(at)
+        {
+            BusinessId = businessId;
+            Target = target;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return ManagerRules.SetTarget(sim, BusinessId, Target); }
     }
 }
