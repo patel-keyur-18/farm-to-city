@@ -337,4 +337,31 @@ namespace Sim.Core.Commands
 
         protected override CommandResult ApplyAt(Simulation sim) { return ManagerRules.SetTarget(sim, BusinessId, Target); }
     }
+    /// <summary>
+    /// Lists a business for sale (spec 028 §3.3): a buyer completes in 3 to 6 days at 90 to 105% of its worth then, never under what it holds; rushed, in a day at 85%.
+    /// It runs until the day it closes.
+    /// </summary>
+    public sealed class ListBusiness : TimedCommand
+    {
+        public long BusinessId { get; }
+        public bool Rushed { get; }
+
+        public ListBusiness(long at, long businessId, bool rushed) : base(at)
+        {
+            BusinessId = businessId;
+            Rushed = rushed;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return ExitRules.List(sim, BusinessId, Rushed); }
+    }
+
+    /// <summary>Takes a business off the market before a buyer completes (spec 028 §3.3).</summary>
+    public sealed class CancelBusinessSale : TimedCommand
+    {
+        public long BusinessId { get; }
+
+        public CancelBusinessSale(long at, long businessId) : base(at) { BusinessId = businessId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return ExitRules.Cancel(sim, BusinessId); }
+    }
 }

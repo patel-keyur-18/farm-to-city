@@ -535,6 +535,9 @@ namespace Sim.Core.Definitions
         /// <summary>Managers (spec 028 §3.2, <c>managers.json</c>), with the hiring board and the shops, or null.</summary>
         public ManagersDef Managers { get; internal set; }
 
+        /// <summary>Valuing, selling and branching a business (spec 028 §3.3, <c>exit.json</c>), with the managers, or null.</summary>
+        public ExitDef Exit { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

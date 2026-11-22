@@ -5,8 +5,8 @@
 | Field | Value |
 | --- | --- |
 | Phase | **Phase 3 · Township**: Sprints 20–24 built and merged, **Sprint 25 started** (Sprints 20–27, ADR 0107). Phase 2 closed (ADR 0106); Phase 1 complete (Sprint 10) |
-| Sprint | **Sprint 25 started 2026-11-21** (branch `sprint/25-business-growth`; 39 points; the section is in `sprints.md`): spec 028 (business growth, approved, ADR 0153) in eight stories: US-123 invoices, US-124 managers, US-125 sell or expand, US-247 investors, US-258 benefits and night shifts, US-244 tuition centre, US-245 tempo, US-246 restaurant (cut first); Previews 16 to 18 before their screens; save schema 23. **Plan approved (ADR 0155); Previews 16 to 18 approved; US-123 invoices approved (ADR 0156); US-124 managers built (ADR 0157), for the owner's review; next US-125 sell or expand (gap 9 first).** Both test projects pass on the branch (View 389, Core 817). Sprint 24 merged (PR #35, ADR 0154) |
-| Branch with latest work | `sprint/25-business-growth` (from `main` at `c32cecb4`): the plan, Previews 16 to 18, US-123 and US-124; not pushed |
+| Sprint | **Sprint 25 started 2026-11-21** (branch `sprint/25-business-growth`; 39 points; the section is in `sprints.md`): spec 028 (business growth, approved, ADR 0153) in eight stories: US-123 invoices, US-124 managers, US-125 sell or expand, US-247 investors, US-258 benefits and night shifts, US-244 tuition centre, US-245 tempo, US-246 restaurant (cut first); Previews 16 to 18 before their screens; save schema 23. **Plan approved (ADR 0155); Previews 16 to 18 approved; US-123 invoices approved (ADR 0156); US-124 managers approved (ADR 0157); US-125 sell or expand built (ADR 0158), for the owner's review; next US-247 investors, partners and buy-outs (gap 10 first).** Both test projects pass on the branch (View 392, Core 826). Sprint 24 merged (PR #35, ADR 0154) |
+| Branch with latest work | `sprint/25-business-growth` (from `main` at `c32cecb4`): the plan, Previews 16 to 18, US-123, US-124 and US-125; not pushed |
 | Last updated | 2026-11-21 (Sprint 25 plan check) |
 
 ## Done so far

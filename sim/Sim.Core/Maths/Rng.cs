@@ -44,6 +44,9 @@ namespace Sim.Core.Maths
 
         /// <summary>A manager mis-setting a day (spec 028 §3.2): key = the business, counter = the day.</summary>
         Managers = 22,
+
+        /// <summary>A business's sale (spec 028 §3.3): key = the business, counter = day × 8 + what is drawn (1 the buyer, 2 the days, 3 the share).</summary>
+        Exit = 23,
     }
 
     /// <summary>

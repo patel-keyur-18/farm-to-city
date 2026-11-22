@@ -1,0 +1,18 @@
+{
+  "baseMultiple": 4.5,
+  "growthStep": 1,
+  "riskStep": 1,
+  "managerBonus": 1,
+  "minMultiple": 3,
+  "maxMultiple": 6,
+  "growthShare": 0.10,
+  "profitableSeasons": 4,
+  "buyerLow": 0.90,
+  "buyerHigh": 1.05,
+  "saleDaysMin": 3,
+  "saleDaysMax": 6,
+  "rushedDays": 1,
+  "rushedShare": 0.85,
+  "maxBranches": 2,
+  "buyers": ["townsperson", "rival", "regional"]
+}

@@ -67,10 +67,10 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin, indexed by the pri
 | Rule | Behaviour |
 | --- | --- |
 | Valuation | `value = max(book, multiple × profit)`, profit the last 4 closed seasons (annualised when fewer, at least 1), book the business's own equity. Multiple: base 4.5, **+1 growth** if the last 2 seasons' profit is 10% or more above the 2 before (**−1** if 10% or more below), **−1 risk** if any of the last 4 seasons lost money or the business is under 4 seasons old, **+1** if it has a manager and 4 profitable seasons; clamped to 3 to 6. A sale never ends in a paper loss. A plain breakdown under a ? |
-| Selling | You list it; a buyer (a townsperson with working capital, a rival or a regional buyer, seeded) completes in 3 to 6 real days at 90 to 105% of the value, never under book. **Rushed:** 1 day at 85% of the value, never under book. You can cancel any time before completion. The business runs until the day it closes. |
+| Selling (built, ADR 0158) | The price is the worth on the day at the buyer's share. You list it; a buyer (a townsperson with working capital, a rival or a regional buyer, seeded) completes in 3 to 6 real days at 90 to 105% of the value, never under book. **Rushed:** 1 day at 85% of the value, never under book. You can cancel any time before completion. The business runs until the day it closes. |
 | What goes | The business, its building, equipment, stock and receivables go to the buyer, who moves it off your acre; the acre is cleared and yours again (a pitch is freed). Its worker and manager are released (severance as for workers). Outside shares are settled from the proceeds first (§3.4). |
-| Gain | The gain over book is business income in the season of the sale, taxed at the business tax (ADR 0109). |
-| Branches | A second (and third) business of the same kind on another acre or pitch, at most 2 branches a kind, paid like the first (building, equipment, cash). Its own books, its own manager, its own valuation; the first business's research and plan carry over as a default. No franchises. |
+| Gain | The gain over what it held is business income in the season of the sale, taxed at the business tax with the season's profit, at the sale (ADR 0109, 0158). A sold or closed business drops its insurance policy and the cards aimed at it end quietly. |
+| Branches (built, ADR 0158) | A second (and third) business of the same kind on another acre or pitch is a branch of the first (no separate command), at most 2 branches a kind, paid like the first (building, equipment, cash). Its own books, its own manager, its own valuation; the first business's research and plan carry over as a default. No franchises. |
 
 ### 3.4 Investors, partners and buy-outs (US-247, G4)
 
@@ -313,6 +313,7 @@ Each was closed with the owner, one per message, with my recommendation, before 
 - **G8 Benefits and night shifts. Closed (owner, 2026-11-21, my recommendation):** per employer, four benefits, a night shift on the grid.
 - **G9 Supervisors, associations, conflicts and accidents. Closed (owner, 2026-11-21, my recommendation):** the pay-the-wage and let-it-be defaults.
 - **G10 Kirana, marketing and khata. Closed (owner, 2026-11-21, my recommendation):** khata's 8, 4 and 1% losses and the 0.15 marketing cap.
+- **Gap 9 (owner, 2026-11-22, my recommendation, ADR 0158):** tax at the sale; a gone business drops its policy and cards; no `ValueHistory`.
 - **G12 US-123's four gaps. Closed (owner, 2026-11-21, my recommendation, ADR 0155 and 0156):** a buyer's limit stays its cash and overdraft at the moment of buying; the village shops' wholesale is their existing morning collection on terms (corrected while building: no new 20 kg demand); neighbours' milk stays cash; farm to shop stays cash.
 - **G11 Screens, scale and schema. Closed (owner, 2026-11-21, my recommendation):** five previews, the build order and cut line of §11, schema 23 in Sprint 25 and 24 in Sprint 26.
 

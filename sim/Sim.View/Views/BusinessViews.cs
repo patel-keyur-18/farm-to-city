@@ -484,6 +484,7 @@ namespace Sim.View.Views
         private static void AddSettings(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
         {
             ManagerSheet.AddSettings(ctx, vm, b); // spec 028 §3.2: his section first
+            ExitSheet.AddSettings(ctx, vm, b); // spec 028 §3.3: what it is worth, and selling it
             AddSettingsCore(ctx, vm, b, t);
             ManagerSheet.MarkSet(ctx, vm, b); // what he sets each morning is no longer yours to change
         }

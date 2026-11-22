@@ -222,7 +222,7 @@ namespace Sim.Core.Business
         /// <c>closingSaleShare</c> of book value; its overdraft and loan are repaid; what it still owes becomes your bank loan over
         /// <c>guaranteeTermSeasons</c> (you guaranteed it); what's left comes to you; your capital not returned is your loss.
         /// </summary>
-        internal static void CloseDown(Simulation sim, Business b)
+        internal static void CloseDown(Simulation sim, Business b, SaleTerms sale = null)
         {
             BusinessDefs d = BusinessRules.Defs(sim);
             BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
@@ -231,6 +231,8 @@ namespace Sim.Core.Business
             string reference = "business:" + b.Id;
             Loan loan = LoanOf(sim, b);
             if (loan != null && loan.IsOpen) CreditSystem.Accrue(sim, loan, sim.Period);
+            Town.InsuranceRules.Drop(sim, b.Id); // a closed or sold business keeps no policy (ADR 0158)
+            Town.EventRules.BusinessGone(sim, b.Id); // and the cards aimed at it end quietly
             BusinessRules.LoseWorker(sim, b);
             People.Worker boss = ManagerRules.Of(sim, b.Id); // a closing business lets its manager go too (he keeps the season's pay)
             if (boss != null)
@@ -241,14 +243,28 @@ namespace Sim.Core.Business
             InvoiceRules.CollectAll(sim, b); // what its customers owe it, now (spec 028 §3.1)
 
             KilnRules.Clear(sim, b); // a closing kiln's yard goes to the trader
+            long held = Equity(b); // what a sale's buyer takes over before the premium he pays (spec 028 §3.3)
             for (int g = 0; g < b.Stock.Length; g++)
-                if (b.Stock[g] > 0) BusinessRules.Sold(sim, b, g, b.Stock[g], MarketRules.Value(sim, g, b.Stock[g], MarketRules.Floor(sim, g)));
+            {
+                if (b.Stock[g] <= 0) continue;
+                if (sale == null) BusinessRules.Sold(sim, b, g, b.Stock[g], MarketRules.Value(sim, g, b.Stock[g], MarketRules.Floor(sim, g)));
+                else
+                {
+                    long cost = b.StockCost[g]; // a sale takes its stock at cost
+                    b.Stock[g] = 0;
+                    b.StockCost[g] = 0;
+                    if (cost > 0) l.Post(now, sim.Period, "ledger.stockToBuyer", reference, new Posting(Account.Cash, cost), new Posting(Account.BusinessStock, -cost));
+                }
+            }
 
             long building = l.Balance(Account.Buildings), equipment = l.Balance(Account.Equipment), worn = l.Balance(Account.AccumulatedDepreciation);
-            long book = building + equipment + worn, sale = Money.RoundToCoin(Money.MulRate(book, d.ClosingSaleShare));
+            long book = building + equipment + worn, proceeds = sale == null ? Money.RoundToCoin(Money.MulRate(book, d.ClosingSaleShare)) : book;
             if (building + equipment > 0)
-                l.Post(now, sim.Period, "ledger.businessSold", reference, new Posting(Account.Cash, sale), new Posting(Account.AccumulatedDepreciation, -worn),
-                    new Posting(Account.Buildings, -building), new Posting(Account.Equipment, -equipment), new Posting(Account.LossOnAssetSales, book - sale));
+            {
+                var parts = new List<Posting> { new Posting(Account.Cash, proceeds), new Posting(Account.AccumulatedDepreciation, -worn), new Posting(Account.Buildings, -building), new Posting(Account.Equipment, -equipment) };
+                if (book != proceeds) parts.Add(new Posting(Account.LossOnAssetSales, book - proceeds));
+                l.Post(now, sim.Period, sale == null ? "ledger.businessSold" : "ledger.buildingsToBuyer", reference, parts.ToArray());
+            }
 
             long overdraft = Overdrawn(b), owed = loan != null && loan.IsOpen ? CreditRules.OwedNow(sim, loan) : 0;
             long taxOwed = -l.Balance(Account.TaxOwed); // spec 022 §3.2: closing the business never wipes the tax it still owes
@@ -267,6 +283,15 @@ namespace Sim.Core.Business
             if (taxOwed > 0) Town.TaxRules.PayOwed(sim, l, reference, Town.TaxKind.Business, now);
             if (suppliers > 0) InvoiceRules.PayAll(sim, b);
 
+            long gain = 0, tax = 0;
+            if (sale != null)
+            {
+                gain = System.Math.Max(0, sale.Price - held); // the buyer pays the price for what the business holds: the rest is the gain
+                if (gain > 0) l.Post(now, sim.Period, "ledger.saleGain", reference, new Posting(Account.Cash, gain), new Posting(Account.GainOnAssetSales, -gain));
+                long taxBefore = l.Balance(Account.BusinessTax);
+                Town.TaxRules.BillBusiness(sim, b, sim.Period); // the season's profit with the gain, at the business tax (ADR 0109)
+                tax = l.Balance(Account.BusinessTax) - taxBefore;
+            }
             long toYou = l.Cash;
             if (toYou > 0) Withdraw(sim, b, toYou);
             long lost = CapitalIn(b);
@@ -275,7 +300,20 @@ namespace Sim.Core.Business
 
             b.Status = BusinessStatus.Closed;
             if (b.Pitch < 0) Land.LandSystem.SetOccupied(sim, b.TileId, false); // a pitch in the square is the village's
-            sim.Emit(new BusinessClosed(now, b.Id, t.Id, toYou, guaranteed));
+            if (sale == null)
+            {
+                sim.Emit(new BusinessClosed(now, b.Id, t.Id, toYou, guaranteed));
+                return;
+            }
+            ExitState x = sim.State.Township.Exit;
+            var rec = new SaleRecord
+            {
+                Id = x.NextSaleId++, At = now, BusinessId = b.Id, TypeId = t.Id, Buyer = sale.Buyer, Price = sale.Price, Share = sale.Share, Worth = sale.Worth, Held = held, Gain = gain, Tax = tax,
+                Severance = sale.Severance, ToYou = toYou,
+            };
+            x.Sales.Add(rec);
+            if (x.Sales.Count > ExitState.Kept) x.Sales.RemoveAt(0);
+            sim.Emit(new Events.BusinessSold(now, b.Id, rec.Id, sale.Price, toYou));
         }
     }
 }

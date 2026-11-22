@@ -228,6 +228,22 @@ namespace Sim.Core.Business
         public long KilnSold { get; internal set; }
         public long KilnSeason { get; internal set; }
 
+        // Selling and branching (spec 028 §3.3; save schema 23). Zero until listed.
+
+        /// <summary>When it was listed for sale, and when a buyer completes (0: not listed); the buyer's kind and the share of its worth he pays; whether it is a rushed sale.</summary>
+        public long ListedAt { get; internal set; }
+        public long CompletesAt { get; internal set; }
+        public int ListBuyer { get; internal set; }
+        public Fixed ListShare { get; internal set; }
+        public bool Rushed { get; internal set; }
+
+        /// <summary>The id of the first business of its kind this one is a branch of, or 0.</summary>
+        public long BranchOf { get; internal set; }
+
+        public bool Listed { get { return CompletesAt != 0 && Status != BusinessStatus.Closed; } }
+
+        private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0; } }
+
         private bool KilnUsed { get { return Yard != 0 || YardCost != 0 || KilnMade != 0 || KilnToBuilds != 0 || KilnSold != 0 || KilnSeason != 0; } }
 
         internal Business Clone()
@@ -296,6 +312,10 @@ namespace Sim.Core.Business
             if (h.Hashing ? KilnUsed : !(h is SaveWriter k21 && k21.Schema < Saves.MapMigration.RingSchema)) // schema 21; hashed once a kiln has fired
                 foreach (long v in new[] { Yard, YardCost, KilnMade, KilnToBuilds, KilnSold, KilnSeason }) h.WriteLong(v);
             if (h.Hashing ? VillageToday != 0 : !(h is SaveWriter v22 && v22.Schema < Town.TownshipState.TownLifeSchema)) h.WriteLong(VillageToday); // schema 22; hashed once a mill has sold at the village
+            if (h.Hashing ? ExitUsed : !(h is SaveWriter x23 && x23.Schema < Town.TownshipState.GrowthSchema)) // schema 23; hashed once listed or a branch
+            {
+                h.WriteLong(ListedAt); h.WriteLong(CompletesAt); h.WriteInt(ListBuyer); h.WriteFixed(ListShare); h.WriteBool(Rushed); h.WriteLong(BranchOf);
+            }
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -363,6 +383,10 @@ namespace Sim.Core.Business
                 b.Yard = r.ReadLong(); b.YardCost = r.ReadLong(); b.KilnMade = r.ReadLong(); b.KilnToBuilds = r.ReadLong(); b.KilnSold = r.ReadLong(); b.KilnSeason = r.ReadLong();
             }
             if (r.Schema >= Town.TownshipState.TownLifeSchema) b.VillageToday = r.ReadLong();
+            if (r.Schema >= Town.TownshipState.GrowthSchema)
+            {
+                b.ListedAt = r.ReadLong(); b.CompletesAt = r.ReadLong(); b.ListBuyer = r.ReadInt(); b.ListShare = r.ReadFixed(); b.Rushed = r.ReadBool(); b.BranchOf = r.ReadLong();
+            }
             return b;
         }
     }

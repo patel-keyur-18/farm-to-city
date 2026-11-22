@@ -338,6 +338,19 @@ namespace Sim.Core.Commands
 
         /// <summary>The business has no manager.</summary>
         NoManager,
+
+        // Spec 028 §3.3 (selling and branches, US-125)
+        /// <summary>The business is already listed for sale.</summary>
+        AlreadyListed,
+
+        /// <summary>The business is not listed for sale.</summary>
+        NotListedForSale,
+
+        /// <summary>The business is still being built: only an open one is sold.</summary>
+        NotOpen,
+
+        /// <summary>The kind already has its first business and the most branches.</summary>
+        TooManyBranches,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

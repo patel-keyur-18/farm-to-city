@@ -152,6 +152,20 @@ namespace Sim.View.Views
                             Action = ActionVm.Open("business:" + b.Id, s.Get("action.open"), new SheetRequest("Business", b.Id, InvoiceSheet.Tab)),
                         });
 
+            // A business sold in the last two days (spec 028 §3.3): the card says where every coin went.
+            if (Sim.Core.Business.ExitRules.State(sim) != null)
+                foreach (Sim.Core.Business.SaleRecord sale in Sim.Core.Business.ExitRules.State(sim).Sales)
+                    if (t - sale.At < 2 * 86_400L)
+                    {
+                        long saleId = sale.Id;
+                        list.Add(new AlertVm
+                        {
+                            Level = AlertLevel.Info, Note = "businessSold", NoteKey = saleId,
+                            Text = s.Get("alert.businessSold", "name", s.Get(sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(sale.TypeId)].NameKey).ToLowerInvariant(), "price", ctx.Fmt.Coins(sale.Price)),
+                            Action = ActionVm.Open("sale:" + saleId, s.Get("action.open"), new SheetRequest(ExitSheet.ReceiptKind, saleId)),
+                        });
+                    }
+
             // Decisions: pests, spoiling soon, the store nearly full.
             long grace = sim.Config.Game.Farm.Farm.ReadyGraceSeconds, warn = ctx.Ui.SpoilWarningHours * 3600L;
             foreach (Crop c in sim.State.Farm.Crops)
@@ -743,7 +757,7 @@ namespace Sim.View.Views
             // Spec 012.
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
-            { "ManagerHired", Use.StateOnly }, { "ManagerLeft", Use.StateOnly }, { "ManagerReported", Use.StateOnly }, { "InvoiceIssued", Use.StateOnly }, { "InvoicePaid", Use.StateOnly }, { "InvoiceOverdue", Use.StateOnly }, { "SupplyStopped", Use.StateOnly }, { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "ColdStoreRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            { "BusinessListed", Use.StateOnly }, { "BusinessSaleCancelled", Use.StateOnly }, { "BusinessSold", Use.StateOnly }, { "ManagerHired", Use.StateOnly }, { "ManagerLeft", Use.StateOnly }, { "ManagerReported", Use.StateOnly }, { "InvoiceIssued", Use.StateOnly }, { "InvoicePaid", Use.StateOnly }, { "InvoiceOverdue", Use.StateOnly }, { "SupplyStopped", Use.StateOnly }, { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "ColdStoreRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
             // Spec 023 (the Township).
             { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },

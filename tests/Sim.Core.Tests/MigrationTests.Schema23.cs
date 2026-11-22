@@ -38,6 +38,9 @@ namespace Sim.Core.Tests
             boss.Mgr.Target = ManagerTarget.Growth;
             sim.AdvanceTo(BusinessTests.NextClose(sim) + 2 * 3600);
             InvoiceTests.ToHour(sim, 14, 1);
+            Ok(sim, new ListBusiness(sim.State.Clock.SimTime, mill.Id, true)); // US-125: the mill sold in a day, the bakery listed and a buyer still to come
+            Ok(sim, new ListBusiness(sim.State.Clock.SimTime, bakery.Id, false));
+            sim.AdvanceTo(sim.State.Clock.SimTime + 26 * 3600);
             sim.DrainEvents();
             Pin23(Growth23Fixture, sim);
         }
@@ -55,10 +58,12 @@ namespace Sim.Core.Tests
             InvoicesState inv = r.State.Township.Invoices;
             Assert.That(inv.Open.Count, Is.GreaterThan(0), "invoices stand");
             Assert.That(inv.Terms.Count, Is.EqualTo(1), "a term was set");
-            Assert.That(inv.Open.Any(i => i.BuyerRival == "grocer") && inv.Open.Any(i => i.Buyer != 0), Is.True, "a village shop's and a business's");
+            Assert.That(inv.Open.Any(i => i.BuyerRival == "grocer"), Is.True, "a village shop's (the mill's own were collected when it was sold)");
             Worker boss = r.State.People.Workers.Single(w => w.IsManager);
             Assert.That((boss.Mgr.Style, boss.Mgr.Target, boss.Mgr.ReportPeriod != 0), Is.EqualTo((1, ManagerTarget.Growth, true)), "his style, his target and his report");
             Assert.That(r.State.People.WorkerAt(boss.Place)?.IsManager ?? false, Is.False);
+            Assert.That(r.State.Township.Exit.Sales.Count, Is.EqualTo(1), "a sale is kept");
+            Assert.That(r.State.Businesses.Businesses.Count(b => b.Listed), Is.EqualTo(1), "a listing waits for its buyer");
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
             foreach (Business.Business b in r.State.Businesses.Businesses) Assert.That(b.Ledger.Reconcile(), Is.Null);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);

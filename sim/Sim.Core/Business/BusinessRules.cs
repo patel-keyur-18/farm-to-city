@@ -373,6 +373,8 @@ namespace Sim.Core.Business
             if (type < 0) return CommandResult.Reject(RejectReason.UnknownBusiness);
             BusinessTypeDef t = d.Types[type];
             if (!Unlocked(sim, t)) return CommandResult.Reject(RejectReason.EraLocked);
+            RejectReason tooMany = ExitRules.Branch(sim, type, out Business first); // spec 028 §3.3: a second of a kind is a branch of the first, up to the most
+            if (tooMany != RejectReason.None) return CommandResult.Reject(tooMany);
             if (pitch >= 0)
             {
                 // A pitch in the square (spec 017 §3.4): shops only, one shop a pitch.
@@ -412,6 +414,7 @@ namespace Sim.Core.Business
             string reference = "business:" + b.Id;
             sim.State.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.InvestmentInBusinesses, capital), new Posting(Account.Cash, -capital));
             b.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.Cash, capital), new Posting(Account.OwnersCapital, -capital));
+            if (first != null) ExitRules.StartAs(b, first); // its settings start as the first one's, its books and its manager its own
             s.Businesses.Add(b);
             if (financing != null) b.LoanId = CreditSystem.Create(sim, lender, loan, financing.TermSeasons, b.Id).Id; // to the business, your guarantee (§3.8)
             long building = MarketRules.Indexed(sim, ShopRules.BuildingValue(t, pitch)), equipment = MarketRules.Indexed(sim, t.EquipmentValue);
@@ -497,6 +500,7 @@ namespace Sim.Core.Business
             bool morning = MarketRules.HourOfDay(sim) == (sim.Config.Game.Market.Truck?.ArriveHour ?? 6);
             long[] took = null;
             InvoiceRules.Hourly(sim); // spec 028 §3.1: invoices at their term's end are paid before the hour's work
+            ExitRules.Hourly(sim); // spec 028 §3.3: a buyer whose day has come completes, before the hour's work
             if (morning) ManagerRules.Morning(sim); // spec 028 §3.2: each manager sets his business first, before the stalls fill and the makers start
             if (sim.State.Shops != null) ShopRules.NewDay(sim, (sim.State.Clock.SimTime - Hour) / Day); // yesterday's stars, then today's counts
             if (morning)

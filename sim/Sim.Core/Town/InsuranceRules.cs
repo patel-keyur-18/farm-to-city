@@ -175,6 +175,9 @@ namespace Sim.Core.Town
             Renew(sim, p, Claim.PropertyPolicy, 0, premium, now);
         }
 
+        /// <summary>A business sold or closed drops its policy (ADR 0154's flagged item, fixed in ADR 0158): nothing of it is kept.</summary>
+        internal static void Drop(Simulation sim, long businessId) { State(sim)?.Businesses.RemoveAll(x => x.BusinessId == businessId); }
+
         /// <summary>At the close, after a business's wage: its premium from its own cash, or the policy ends.</summary>
         internal static void CloseBusiness(Simulation sim, Business.Business b)
         {

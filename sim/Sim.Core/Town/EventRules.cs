@@ -250,6 +250,23 @@ namespace Sim.Core.Town
 
         private static List<Household> Yours(Simulation sim) { return TownLifeRules.On(sim) ? TownLifeRules.Yours(sim) : new List<Household>(); }
 
+        /// <summary>
+        /// A business sold or closed (ADR 0158): the cards aimed at it end quietly, with no default taken. A warned fire finds nothing to burn; an effect on a business
+        /// that never opens again changes nothing.
+        /// </summary>
+        internal static void BusinessGone(Simulation sim, long businessId)
+        {
+            EventsState s = State(sim);
+            EventsDef d = Def(sim);
+            if (s == null || d == null) return;
+            s.Waiting.RemoveAll(c =>
+            {
+                if (c.Target != businessId) return false;
+                string id = d.Events[c.Def].Id;
+                return id == "supplier_strike" || id == "health_inspection" || id == "viral_rush" || ((id == "breakdown" || id == EventsDef.FireRepair) && c.Target2 == 1);
+            });
+        }
+
         private static List<Business.Business> OpenBusinesses(Simulation sim)
         {
             var r = new List<Business.Business>();

@@ -103,6 +103,7 @@ namespace Sim.View.Views
             { "businessArea", BusinessArea }, { "businessFee", BusinessFee }, { "businessTrader", BusinessTrader }, { "businessWage", BusinessWage },
             { "businessOwn", BusinessOwn }, { "businessWorker", BusinessWorker }, { "businessHours", BusinessHours }, { "businessMarket", BusinessMarket },
             { "businessCash", BusinessCash }, { "booksLine", BooksLine }, { "booksPlan", BooksPlan },
+            { "businessWorth", BusinessWorthWhy }, { "businessHolds", BusinessHoldsWhy }, { "businessSale", BusinessSaleWhy }, { "businessBranch", BusinessBranchWhy }, // spec 028 §3.3
             { "managerWage", ManagerWage }, { "managerStyle", ManagerStyle }, { "managerApplicant", ManagerApplicant }, { "managerMiss", ManagerMiss }, { "managerTarget", ManagerGoal }, { "managerRaise", ManagerRaise }, // spec 028 §3.2
             { "invoiceTerms", InvoiceTerms }, { "invoiceOwed", InvoiceOwed }, { "invoiceLine", InvoiceLineWhy }, { "invoiceStop", InvoiceStop }, // spec 028 §3.1
             { "planCost", (c, i) => PlanLine(c, i, "cost") }, { "planFees", (c, i) => PlanLine(c, i, "fees") }, { "planSales", (c, i) => PlanLine(c, i, "sales") },
