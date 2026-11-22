@@ -1,9 +1,9 @@
 {
   "Schema": 23,
-  "Hash": "0xB81458354C7836F2",
+  "Hash": "0xB946B6AB55DAEB14",
   "Facts": {
     "buildings": 6,
-    "cash": 660429243,
+    "cash": 619535555,
     "chaptersSeen": 0,
     "crops": 0,
     "era": 3,
@@ -13,11 +13,11 @@
     "loansOpen": 0,
     "orders": 0,
     "parcelsOwned": 4,
-    "profitableSeasons": 2,
+    "profitableSeasons": 3,
     "roster": 8,
-    "seasonReports": 2,
-    "simTime": 921600,
-    "storeTotal": 17369711,
+    "seasonReports": 3,
+    "simTime": 1112400,
+    "storeTotal": 16625947,
     "trees": 0
   }
 }

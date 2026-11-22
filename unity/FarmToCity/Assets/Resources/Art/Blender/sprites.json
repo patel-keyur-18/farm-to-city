@@ -3460,6 +3460,62 @@
    "name": "tubewell"
   },
   {
+   "w": 352,
+   "h": 286,
+   "pivotX": 0.42804,
+   "pivotY": 0.40977,
+   "name": "tuition_building_e"
+  },
+  {
+   "w": 352,
+   "h": 244,
+   "pivotX": 0.42804,
+   "pivotY": 0.38394,
+   "name": "tuition_building_n"
+  },
+  {
+   "w": 352,
+   "h": 286,
+   "pivotX": 0.57196,
+   "pivotY": 0.40977,
+   "name": "tuition_building_s"
+  },
+  {
+   "w": 352,
+   "h": 244,
+   "pivotX": 0.57196,
+   "pivotY": 0.38394,
+   "name": "tuition_building_w"
+  },
+  {
+   "w": 344,
+   "h": 274,
+   "pivotX": 0.41667,
+   "pivotY": 0.42446,
+   "name": "tuition_e"
+  },
+  {
+   "w": 344,
+   "h": 244,
+   "pivotX": 0.41667,
+   "pivotY": 0.36504,
+   "name": "tuition_n"
+  },
+  {
+   "w": 344,
+   "h": 274,
+   "pivotX": 0.58333,
+   "pivotY": 0.42446,
+   "name": "tuition_s"
+  },
+  {
+   "w": 344,
+   "h": 244,
+   "pivotX": 0.58333,
+   "pivotY": 0.36504,
+   "name": "tuition_w"
+  },
+  {
    "w": 144,
    "h": 166,
    "pivotX": 0.5,

@@ -50,6 +50,30 @@ namespace Sim.Core.Definitions
         public Fixed TraderShare { get; internal set; }
     }
 
+    /// <summary>
+    /// The tuition centre's own numbers (spec 028 §3.5, US-244, ADR 0161): batches of pupils in the evening, the fee a pupil a season (year-0 coins) and its
+    /// presets, the stars it starts with and the share of affordable children sent at 0 and at 5 stars, the books and chalk a pupil uses a season, and
+    /// the skill a season of tuition adds (up to a cap in all).
+    /// </summary>
+    public sealed class TuitionDef
+    {
+        public int Batches { get; internal set; }
+        public int BatchSize { get; internal set; }
+        public int AgeMin { get; internal set; }
+        public int AgeMax { get; internal set; }
+        public long Fee { get; internal set; }
+        public System.Collections.Generic.IReadOnlyList<Fixed> Presets { get; internal set; }
+        public Fixed StartStars { get; internal set; }
+        public Fixed TakeUpLow { get; internal set; }
+        public Fixed TakeUpHigh { get; internal set; }
+        public long SuppliesPerPupil { get; internal set; }
+        public int GainPerSeason { get; internal set; }
+        public int GainMax { get; internal set; }
+
+        /// <summary>Pupils a season: batches × batch size.</summary>
+        public int Capacity { get { return Batches * BatchSize; } }
+    }
+
     /// <summary>A business type from <c>content/businesses.json</c> (spec 016 §3.1): the flour mill (Hamlet), the bakery and the dairy (Village).</summary>
     public sealed class BusinessTypeDef
     {
@@ -114,6 +138,11 @@ namespace Sim.Core.Definitions
         public KilnDef Kiln { get; internal set; }
 
         public bool IsKiln { get { return Kiln != null; } }
+
+        /// <summary>The tuition centre's numbers (US-244), or null: it teaches pupils for a fee, not goods.</summary>
+        public TuitionDef Tuition { get; internal set; }
+
+        public bool IsTuition { get { return Tuition != null; } }
 
         /// <summary>What kind of shop it is (spec 017 §3.1), or None for the mill, bakery and dairy.</summary>
         public ShopKind Kind { get; internal set; }

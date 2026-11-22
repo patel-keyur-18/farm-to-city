@@ -275,7 +275,7 @@ namespace Sim.Core.Town
             return r;
         }
 
-        private static bool Food(Simulation sim, Business.Business b) { BusinessTypeDef t = BusinessRules.TypeOf(sim, b); return !t.IsKiln && t.Id != "flour_mill"; }
+        private static bool Food(Simulation sim, Business.Business b) { BusinessTypeDef t = BusinessRules.TypeOf(sim, b); return !t.IsKiln && !t.IsTuition && t.Id != "flour_mill"; }
 
         private static Fixed Mean(Simulation sim)
         {

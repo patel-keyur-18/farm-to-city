@@ -216,8 +216,8 @@ namespace Sim.View.Views
             string why = s.Get("manager.why." + style.Id);
             string price = style.PriceFactor == Fixed.One ? s.Get("manager.priceAt") : style.PriceFactor < Fixed.One
                 ? s.Get("manager.priceUnder", "pct", ctx.Fmt.Percent(Fixed.One - style.PriceFactor)) : s.Get("manager.priceOver", "pct", ctx.Fmt.Percent(style.PriceFactor - Fixed.One));
-            if (t.IsShop || (t.Input >= 0 && !t.ByRecipe && !t.IsKiln))
-                vm.Lines.Add(new LineVm(s.Get(t.IsShop ? "manager.didPrice" : "manager.didFee", "price", price), why, "managerStyle", b.Id));
+            if (t.IsShop || t.IsTuition || (t.Input >= 0 && !t.ByRecipe && !t.IsKiln))
+                vm.Lines.Add(new LineVm(s.Get(t.IsShop || t.IsTuition ? "manager.didPrice" : "manager.didFee", "price", price), why, "managerStyle", b.Id));
             if (t.IsShop)
                 vm.Lines.Add(new LineVm(s.Get(style.Quality == 2 ? "manager.didGood" : "manager.didStandard"), why, "managerStyle", b.Id));
             if (ShopRules.Stocked(t))

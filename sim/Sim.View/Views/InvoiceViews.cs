@@ -15,7 +15,7 @@ namespace Sim.View.Views
         public const string Tab = "invoices";
 
         /// <summary>The tab shows from the Township, for an open business or one with invoices.</summary>
-        public static bool Applies(ViewContext ctx, Business b) { return InvoiceRules.On(ctx.Sim) && (b.Status != BusinessStatus.Closed || InvoiceRules.Of(ctx.Sim, b, true).Count + InvoiceRules.Of(ctx.Sim, b, false).Count > 0); }
+        public static bool Applies(ViewContext ctx, Business b) { return InvoiceRules.On(ctx.Sim) && !BusinessRules.TypeOf(ctx.Sim, b).IsTuition && (b.Status != BusinessStatus.Closed || InvoiceRules.Of(ctx.Sim, b, true).Count + InvoiceRules.Of(ctx.Sim, b, false).Count > 0); }
 
         private static string BuyerName(ViewContext ctx, Invoice i, bool seller)
         {

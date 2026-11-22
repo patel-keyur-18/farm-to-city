@@ -111,6 +111,7 @@ namespace Sim.View.Views
             if (t.IsShop) ShopResearch.Add(ctx, vm, t, type); // spec 017: who buys, the rivals, your share
             else if (t.ByRecipe) AddRecipeResearch(ctx, vm, t, type);
             else if (t.IsKiln) KilnSheet.AddResearch(ctx, vm, t, type);
+            else if (t.IsTuition) TuitionSheet.AddResearch(ctx, vm, t, type);
             else AddMillResearch(ctx, vm, t, type);
             vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "research.cost", t)), ctx.Fmt.Coins(BusinessRules.Cost(sim, t, t.IsShop ? 0 : -1)), "planCost", BusinessWords.PlanId(type, false)) { Icon = t.Id });
             vm.Actions.Add(ActionVm.Open("plan", s.Get("research.plan"), new SheetRequest("BusinessPlan", type, "hire")));
@@ -207,9 +208,9 @@ namespace Sim.View.Views
                 new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(self, !loan)));
             vm.Lines.Add(funding);
             vm.Lines.Add(LineVm.Header(s.Get(BusinessWords.Key(ctx, "plan.season", t))));
-            if (!t.ByRecipe && !t.IsShop && !t.IsKiln) vm.Lines.Add(new LineVm(s.Get("plan.fees"), ctx.Fmt.Coins(p.Fees), "planFees", id));
+            if (!t.ByRecipe && !t.IsShop && !t.IsKiln && !t.IsTuition) vm.Lines.Add(new LineVm(s.Get("plan.fees"), ctx.Fmt.Coins(p.Fees), "planFees", id));
             vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.sales", t)), ctx.Fmt.Coins(p.Sales), "planSales", id));
-            if (!t.IsKiln) vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.wheat", t), "kg", t.TakesMilk ? ctx.Fmt.Litres(BusinessRules.DefaultOwnPerDay(sim, t)) : ctx.Fmt.Kg(t.OwnPerDay)),
+            if (!t.IsKiln && !t.IsTuition) vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.wheat", t), "kg", t.TakesMilk ? ctx.Fmt.Litres(BusinessRules.DefaultOwnPerDay(sim, t)) : ctx.Fmt.Kg(t.OwnPerDay)),
                 "−" + ctx.Fmt.Coins(p.Wheat), "planWheat", id));
             if (!t.IsShop || p.Power > 0) vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.power", t)), "−" + ctx.Fmt.Coins(p.Power), "planPower", id));
             if (!t.IsShop || p.Repairs > 0) vm.Lines.Add(new LineVm(s.Get("plan.repairs"), "−" + ctx.Fmt.Coins(p.Repairs), "planRepairs", id)); // a handcart needs none
@@ -365,6 +366,7 @@ namespace Sim.View.Views
             if (t.IsShop) ShopSheet.AddToday(ctx, vm, b, t); // spec 017: sold today, what's out
             if (t.ByRecipe) AddRecipeToday(ctx, vm, b, t);
             else if (t.IsKiln) KilnSheet.AddToday(ctx, vm, b, t);
+            else if (t.IsTuition) TuitionSheet.AddToday(ctx, vm, b, t);
             else if (!t.IsShop) AddMillToday(ctx, vm, b, t);
             if (!t.IsShop && ShopRules.Rated(t) && ShopRules.Defs(sim) != null) vm.Lines.Add(ShopSheet.StarsLine(ctx, b)); // the mill earns stars too (ADR 0092)
             AddMoney(ctx, vm, b, t);
@@ -509,6 +511,7 @@ namespace Sim.View.Views
             bool market = b.BuyFromMarket;
             int open = b.OpenHour, close = b.CloseHour;
 
+            if (t.IsTuition) { TuitionSheet.AddSettings(ctx, vm, b, t); AddCash(ctx, vm, b, t); return; } // its evening is fixed; its fee is the choice
             var hours = new LineVm(s.Get("business.hours"), BusinessWords.Hours(ctx, open, close), "businessHours", id);
             hours.Action = ActionVm.Checked(ctx, "hours", s.Get("business.change"), BusinessWords.Hours(ctx, nextHours[0], nextHours[1]), ActionKind.Secondary,
                 at => new SetBusiness(at, id, nextHours[0], nextHours[1], fee, ownNow, market));

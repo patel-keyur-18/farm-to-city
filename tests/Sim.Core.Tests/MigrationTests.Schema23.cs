@@ -15,6 +15,13 @@ namespace Sim.Core.Tests
 {
     public partial class MigrationTests
     {
+        private static void ToHour(Simulation sim, int hour)
+        {
+            long t = sim.State.Clock.SimTime / 86400 * 86400 + hour * 3600;
+            if (t <= sim.State.Clock.SimTime) t += 86400;
+            sim.AdvanceTo(t);
+        }
+
         private static string Growth23Fixture { get { return Path.Combine(Dir, "schema23-growth.ftc"); } }
 
         private static void Pin23(string file, Simulation sim)
@@ -55,6 +62,16 @@ namespace Sim.Core.Tests
             sim.State.Township.UtilitiesBuilt |= 1 << Definitions.UtilityDef.Grid;
             bakery.ShortDays = 0b111;
             Ok(sim, new SetNightShift(sim.State.Clock.SimTime, bakery.Id, true));
+            Business.Business centre = InvoiceTests.Found(sim, "tuition", mill.TileId, bakery.TileId); // US-244: a tuition centre, a family's children enrolled, one with seasons sat
+            Household kids = AddFamily(sim, 0, 36, 33, 9, 12, 15);
+            kids.Savings = 1_000_000 * Coin;
+            kids.Schooling = 3 * TuitionRules.FeeAt(sim, sim.Config.Game.Businesses.Types[centre.Type].Tuition, Fixed.One);
+            centre.Stars = Fixed.FromInt(5);
+            TuitionRules.Enrol(sim, centre);
+            sim.State.Citizens.Citizen(centre.Pupils[0]).TuitionSeasons = 3;
+            ToHour(sim, 15);
+            ToHour(sim, 19);
+            sim.State.Township.Exit.Offers.Clear();
             Ok(sim, new ListBusiness(sim.State.Clock.SimTime, mill.Id, true)); // US-125: the mill sold in a day, the bakery listed and a buyer still to come
             Ok(sim, new ListBusiness(sim.State.Clock.SimTime, bakery.Id, false));
             sim.AdvanceTo(sim.State.Clock.SimTime + 26 * 3600);
@@ -88,6 +105,8 @@ namespace Sim.Core.Tests
             Assert.That(r.State.Township.Exit.Offers.Single().Kind, Is.EqualTo(DealKind.BuyOut), "a rival's offer waits");
             Assert.That((owned.Benefits, r.State.Township.Exit.FarmBenefits), Is.EqualTo(((int)(Benefit.Meal | Benefit.Leave), (int)Benefit.Meal)), "benefits are kept");
             Assert.That(r.State.People.NightAt(owned.Id)?.Night ?? false, Is.True, "a night worker is kept");
+            Business.Business school = r.State.Businesses.Businesses.Single(b => config.Game.Businesses.Types[b.Type].IsTuition);
+            Assert.That((school.Pupils.Count > 0, school.TuitionFees > 0, r.State.Citizens.Citizens.Max(c => c.TuitionSeasons) >= 3), Is.EqualTo((true, true, true)), "a tuition centre's pupils, its fees and a child's seasons are kept");
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
             foreach (Business.Business b in r.State.Businesses.Businesses) Assert.That(b.Ledger.Reconcile(), Is.Null);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);

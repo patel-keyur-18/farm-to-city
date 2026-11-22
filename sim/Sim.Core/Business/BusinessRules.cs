@@ -109,6 +109,7 @@ namespace Sim.Core.Business
             if (tile < 0 && pitch < 0) tile = PlanTile(sim);
             if (t.IsShop) return ShopRules.Projected(sim, t, runYourself, loan, pitch, tile);
             if (t.IsKiln) return KilnRules.Projected(sim, t, runYourself, loan);
+            if (t.IsTuition) return TuitionRules.Projected(sim, t, runYourself, loan);
             if (t.ByRecipe) return ProjectedByRecipe(sim, t, runYourself, loan, mix ?? DefaultMix(sim, t), ownPerDay);
             int days = sim.Clock.DaysPerSeason;
             Fixed index = sim.State.Market.PriceIndex;
@@ -409,7 +410,7 @@ namespace Sim.Core.Business
                 Ledger = new Ledger(), Stock = new long[goods], StockCost = new long[goods], Plan = plan, Day = now / Day,
                 Mix = t.Kind == ShopKind.Sweets ? ShopRules.DefaultMix(sim, t, tileId) : DefaultMix(sim, t), MadeToday = new long[goods],
                 BuyFromMarket = !t.IsKiln && t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
-                Pitch = pitch, PutOut = t.IsShop ? ShopRules.DefaultPutOut(sim, t, tileId) : new long[goods], Stars = sim.Config.Game.Shops?.StartStars ?? Fixed.FromRatio(5, 2),
+                Pitch = pitch, PutOut = t.IsShop ? ShopRules.DefaultPutOut(sim, t, tileId) : new long[goods], Stars = t.IsTuition ? t.Tuition.StartStars : sim.Config.Game.Shops?.StartStars ?? Fixed.FromRatio(5, 2),
             };
             string reference = "business:" + b.Id;
             sim.State.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.InvestmentInBusinesses, capital), new Posting(Account.Cash, -capital));
@@ -443,6 +444,7 @@ namespace Sim.Core.Business
                 sim.CompleteJob(job);
                 if (b == null || b.Status != BusinessStatus.Building) return;
                 b.Status = BusinessStatus.Open;
+                TuitionRules.Opened(sim, b); // a tuition centre's first pupils, at once
                 sim.Emit(new BusinessOpened(sim.State.Clock.SimTime, b.Id, b.Worker, b.WorkerCitizen));
             }
         }
@@ -506,6 +508,7 @@ namespace Sim.Core.Business
             if (sim.State.Shops != null) ShopRules.NewDay(sim, (sim.State.Clock.SimTime - Hour) / Day); // yesterday's stars, then today's counts
             if (morning)
             {
+                TuitionRules.Morning(sim); // a tuition centre's stars move a tenth toward their target
                 KilnRules.Morning(sim); // the trader's stock, with what your kiln sells him, is set first: a build draws on it all day
                 // A new day's batches for every maker first (so what your shops still need is counted), then the stalls fill up from your
                 // store and businesses before the village shops buy what's left (spec 017 §5, ADR 0091 §2).
@@ -518,7 +521,7 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
                 if (b.Status == BusinessStatus.Open)
                 {
-                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln && !Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour) && !Town.EventRules.Shut(sim, b)) Morning(sim, b, took);
+                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln && !TypeOf(sim, b).IsTuition && !Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour) && !Town.EventRules.Shut(sim, b)) Morning(sim, b, took);
                     Work(sim, b);
                 }
             ShopRules.Hourly(sim); // the customers (spec 017 §3.8), after the businesses' hour
@@ -611,6 +614,12 @@ namespace Sim.Core.Business
             Worker hired = night ? NightRules.Of(sim, b) : HiredWorker(sim, b);
             if (!night && hired != null && Overtime(sim, b, hour) && !WorkRules.Pay(sim, hired, WorkRules.OvertimeHour(sim, hired), "ledger.overtime")) return; // past the overdraft: no overtime (a night worker's wage is the whole of it)
             if (ShopRules.Stocked(t)) return; // a stall sells in the shops' hour (spec 017 §3.8)
+            if (t.IsTuition)
+            {
+                TuitionRules.Teach(sim, b, hour);
+                BusinessBooks.Sweep(sim, b);
+                return;
+            }
             if (t.IsKiln)
             {
                 KilnRules.Fire(sim, b);
@@ -950,7 +959,7 @@ namespace Sim.Core.Business
         {
             if (b.Status != BusinessStatus.Open || b.Stock[good] <= 0) return 0;
             BusinessTypeDef t = TypeOf(sim, b);
-            if (t.IsShop || t.ByRecipe || t.IsKiln) return 0;
+            if (t.IsShop || t.ByRecipe || t.IsKiln || t.IsTuition) return 0;
             bool makes = false;
             foreach (BusinessOutput o in t.Outputs) if (o.Good == good) makes = true;
             if (!makes) return 0;
@@ -1116,6 +1125,7 @@ namespace Sim.Core.Business
                 BusinessBooks.CloseSeason(sim, b, closing);
             }
             ShopRules.CloseSeason(sim);
+            TuitionRules.AtClose(sim); // spec 028 §3.5: a season of tuition adds its skill, then the new season's pupils are enrolled
             OwnerRules.AtClose(sim); // spec 028 §3.4: what a profitable business is offered now
         }
 

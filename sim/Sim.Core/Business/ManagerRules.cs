@@ -181,6 +181,7 @@ namespace Sim.Core.Business
                     for (int g = 0; g < one.Length; g++) if (one[g] > 0) b.PutOut[g] = one[g] * style.StockDays;
                 }
             }
+            else if (t.IsTuition) TuitionRules.SetNearest(sim, b, style.PriceFactor);
             else if (t.Input >= 0 && !t.ByRecipe && !t.IsKiln) b.Fee = t.Fee * style.PriceFactor;
             if (t.ByRecipe && !t.TakesMilk && b.BuyFromMarket) BuyAhead(sim, b, t, style.StockDays);
         }

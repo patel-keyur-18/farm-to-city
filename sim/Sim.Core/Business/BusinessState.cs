@@ -252,7 +252,14 @@ namespace Sim.Core.Business
         public int ShortDays { get; internal set; }
         public long ShortDay { get; internal set; }
 
+        /// <summary>A tuition centre's pupils this season (US-244, ADR 0161, schema 23): your children by citizen id, the old village's as a head-count, and the fees it took this season.</summary>
+        public List<long> Pupils { get; internal set; } = new List<long>();
+        public int CohortPupils { get; internal set; }
+        public long TuitionFees { get; internal set; }
+
         private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0 || Stakes.Count > 0 || BoughtOutOfferedAt != 0 || Benefits != 0 || FestivalPaid != 0 || ShortDays != 0 || ShortDay != 0; } }
+
+        private bool TuitionUsed { get { return Pupils.Count > 0 || CohortPupils != 0 || TuitionFees != 0; } }
 
         private bool KilnUsed { get { return Yard != 0 || YardCost != 0 || KilnMade != 0 || KilnToBuilds != 0 || KilnSold != 0 || KilnSeason != 0; } }
 
@@ -268,6 +275,7 @@ namespace Sim.Core.Business
             c.Plan = Plan.Clone();
             c.Reports = new List<BusinessReport>(Reports); // reports are immutable
             c.Stakes = Stakes.ConvertAll(x => x.Clone());
+            c.Pupils = new List<long>(Pupils);
             return c;
         }
 
@@ -330,6 +338,12 @@ namespace Sim.Core.Business
                 foreach (Stake k in Stakes) k.WriteTo(h);
                 h.WriteLong(BoughtOutOfferedAt);
                 h.WriteInt(Benefits); h.WriteLong(FestivalPaid); h.WriteInt(ShortDays); h.WriteLong(ShortDay);
+            }
+            if (h.Hashing ? TuitionUsed : !(h is SaveWriter t23 && t23.Schema < Town.TownshipState.GrowthSchema)) // schema 23; hashed once a tuition centre has pupils
+            {
+                h.WriteInt(Pupils.Count);
+                foreach (long id in Pupils) h.WriteLong(id);
+                h.WriteInt(CohortPupils); h.WriteLong(TuitionFees);
             }
         }
 
@@ -405,6 +419,9 @@ namespace Sim.Core.Business
                 for (int i = 0; i < stakes; i++) b.Stakes.Add(Stake.ReadFrom(r));
                 b.BoughtOutOfferedAt = r.ReadLong();
                 b.Benefits = r.ReadInt(); b.FestivalPaid = r.ReadLong(); b.ShortDays = r.ReadInt(); b.ShortDay = r.ReadLong();
+                int pupils = r.ReadCount();
+                for (int i = 0; i < pupils; i++) b.Pupils.Add(r.ReadLong());
+                b.CohortPupils = r.ReadInt(); b.TuitionFees = r.ReadLong();
             }
             return b;
         }

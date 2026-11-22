@@ -111,7 +111,7 @@ namespace Sim.View.Views
             { "planWheat", (c, i) => PlanLine(c, i, "wheat") }, { "planPower", (c, i) => PlanLine(c, i, "power") }, { "planRepairs", (c, i) => PlanLine(c, i, "repairs") },
             { "planDepreciation", (c, i) => PlanLine(c, i, "depreciation") }, { "planWage", (c, i) => PlanLine(c, i, "wage") },
             { "planProfit", (c, i) => PlanLine(c, i, "profit") }, { "planCash", (c, i) => PlanLine(c, i, "cash") }, { "planPayback", (c, i) => PlanLine(c, i, "payback") },
-            { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planMonsoon", (c, i) => PlanLine(c, i, "monsoon") }, { "kiln", KilnWhy }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
+            { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planMonsoon", (c, i) => PlanLine(c, i, "monsoon") }, { "kiln", KilnWhy }, { "tuition", TuitionWhy }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
             { "businessOverdraft", BusinessOverdraft }, { "businessClose", BusinessClose },
             { "businessPeople", BusinessPeople }, { "recipeShops", RecipeShops }, { "recipeInput", RecipeInput }, { "recipeMade", RecipeMade },
             { "recipeStock", RecipeStock }, { "recipeMix", RecipeMix }, { "dairyMilk", DairyMilk }, { "dairyNeighbours", DairyNeighbours },
@@ -123,7 +123,7 @@ namespace Sim.View.Views
             // The school (spec 018).
             { "road", RoadWhy }, { "clinic", ClinicWhy }, { "civic", CivicWhy }, { "utility", UtilityWhy }, { UpgradeSheet.Why, UpgradeHouseWhy }, { "utilityTown", UtilityTownWhy }, { "lane", LaneWhy }, { "build", BuildWhy }, { "cohort", CohortWhyView },
             { "schoolCost", SchoolCost }, { "schoolUpkeep", SchoolUpkeep }, { "schoolPupils", SchoolPupils },
-            { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "codex", Codex },
+            { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "citizen.tuition", CitizenTuition }, { "codex", Codex },
             // The town treasury (spec 021).
             { "treasuryBalance", TreasuryBalance }, { "treasuryUntied", TreasuryUntied }, { "treasuryTied", TreasuryTied }, { "treasuryRents", TreasuryRents },
             { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryWindow", TreasuryWindow }, { "policy", PolicyWhy }, { "taxHouse", TaxHouseWhy }, { "taxBusiness", TaxBusinessWhy }, { "taxCollected", TaxCollectedWhy }, { "treasuryAccount", TreasuryAccount },

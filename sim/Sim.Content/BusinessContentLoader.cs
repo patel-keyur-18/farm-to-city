@@ -47,7 +47,7 @@ namespace Sim.Content
                 JObject t = Object(tokens[i], p);
                 OnlyFields(t, p, "id", "nameKey", "era", "building", "equipment", "buildHours", "worker", "workerSkill", "wage", "kgPerHour", "powerPerKg", "repairsShare",
                     "openHour", "closeHour", "fee", "ownPerDay", "input", "outputs", "recipes", "shops", "takesMilk", "neighbourMilkPremium",
-                    "kind", "pitchBuilding", "capacityPerHour", "goods", "cup", "good", "kiln");
+                    "kind", "pitchBuilding", "capacityPerHour", "goods", "cup", "good", "kiln", "tuition");
                 var x = new BusinessTypeDef { Id = UniqueId(t, p, types.ConvertAll(y => y.Id)), NameKey = String(Required(t, p, "nameKey"), p + ".nameKey") };
                 string era = String(Required(t, p, "era"), p + ".era");
                 x.Era = -1;
@@ -66,6 +66,19 @@ namespace Sim.Content
                 x.Wage = Money(Required(t, p, "wage"), p + ".wage");
                 Shop(x, t, p, market);
                 // A stall or tea stall sells what it's given, at its own rate (capacityPerHour); the others work kg an hour.
+                if (t["tuition"] != null)
+                {
+                    if (t["recipes"] != null || t["input"] != null || t["outputs"] != null || t["kind"] != null || t["kiln"] != null) throw new ContentException(p + ".tuition", "a tuition centre teaches pupils: no recipes, input, outputs, shop kind or kiln");
+                    x.Tuition = Tuition(t, p);
+                    x.GramsPerHour = 0;
+                    x.PowerPerKg = Fixed.Zero;
+                    x.RepairsShare = Bounded(t, p, "repairsShare", "0", "1");
+                    x.OpenHour = BoundedInt(t, p, "openHour", 0, 23);
+                    x.CloseHour = BoundedInt(t, p, "closeHour", x.OpenHour + 1, 24);
+                    if ((x.CloseHour - x.OpenHour) % x.Tuition.Batches != 0) throw new ContentException(p + ".tuition.batches", "the open hours must split into whole batches");
+                    types.Add(x);
+                    continue;
+                }
                 if (t["kiln"] != null)
                 {
                     if (t["recipes"] != null || t["input"] != null || t["outputs"] != null || t["kind"] != null) throw new ContentException(p + ".kiln", "a kiln fires bricks: no recipes, input, outputs or shop kind");
@@ -120,6 +133,34 @@ namespace Sim.Content
                 types.Add(x);
             }
             d.Types = types.AsReadOnly();
+            return d;
+        }
+
+        /// <summary>The tuition centre's fields (US-244): batches, the fee and its presets, the stars and take-up, the supplies and the skill gain.</summary>
+        private static TuitionDef Tuition(JObject t, string p)
+        {
+            string tp = p + ".tuition";
+            JObject k = Object(t["tuition"], tp);
+            OnlyFields(k, tp, "batches", "batchSize", "ageMin", "ageMax", "fee", "presets", "startStars", "takeUpLow", "takeUpHigh", "suppliesPerPupil", "gainPerSeason", "gainMax");
+            var presets = new List<Fixed>();
+            List<JToken> list = NonEmptyArray(k, tp, "presets");
+            for (int i = 0; i < list.Count; i++)
+            {
+                Fixed f = Number(list[i], Index(tp + ".presets", i));
+                Range(f, Fixed.FromRatio(1, 2), Fixed.FromInt(2), Index(tp + ".presets", i));
+                presets.Add(f);
+            }
+            if (presets[0] != Fixed.One) throw new ContentException(tp + ".presets", "the first preset is the reference fee (1)");
+            var d = new TuitionDef
+            {
+                Batches = BoundedInt(k, tp, "batches", 1, 6), BatchSize = BoundedInt(k, tp, "batchSize", 1, 200), AgeMin = BoundedInt(k, tp, "ageMin", 3, 18), AgeMax = BoundedInt(k, tp, "ageMax", 3, 25),
+                Fee = Money(Required(k, tp, "fee"), tp + ".fee"), Presets = presets.AsReadOnly(), StartStars = Bounded(k, tp, "startStars", "0", "5"),
+                TakeUpLow = Bounded(k, tp, "takeUpLow", "0", "1"), TakeUpHigh = Bounded(k, tp, "takeUpHigh", "0", "1"),
+                SuppliesPerPupil = Money(Required(k, tp, "suppliesPerPupil"), tp + ".suppliesPerPupil"), GainPerSeason = BoundedInt(k, tp, "gainPerSeason", 1, 10), GainMax = BoundedInt(k, tp, "gainMax", 1, 50),
+            };
+            if (d.AgeMax < d.AgeMin) throw new ContentException(tp + ".ageMax", "no younger than ageMin");
+            if (d.TakeUpHigh < d.TakeUpLow) throw new ContentException(tp + ".takeUpHigh", "no lower than takeUpLow");
+            if (d.GainMax < d.GainPerSeason) throw new ContentException(tp + ".gainMax", "at least one season's gain");
             return d;
         }
 

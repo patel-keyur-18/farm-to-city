@@ -244,6 +244,7 @@ namespace Sim.Core.Business
             InvoiceRules.CollectAll(sim, b); // what its customers owe it, now (spec 028 §3.1)
 
             KilnRules.Clear(sim, b); // a closing kiln's yard goes to the trader
+            TuitionRules.Release(b); // a closing tuition centre's pupils go
             long held = Equity(b) + OwnerRules.Liability(b); // what a sale's buyer takes over before the premium he pays, outside owners' money included (spec 028 §3.3)
             for (int g = 0; g < b.Stock.Length; g++)
             {

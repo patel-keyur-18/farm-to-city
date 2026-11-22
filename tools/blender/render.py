@@ -4118,6 +4118,62 @@ for _f, _deg in FACINGS.items():
     SPRITES["brick_kiln_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_brick_kiln("building"), d)))()
 
 
+# ---------------------------------------------------------------- the tuition centre (US-244, Preview 18): a small classroom with a tiled roof
+
+def model_tuition(stage):
+    """A tuition centre (spec 028 §3.5): one lime-washed classroom under a tiled gable roof with a maroon dado, a green door and two
+    windows, a blue name board over the door, a verandah on two posts, a blackboard on the front wall and benches in the yard.
+    stage 'done' or 'building' (the plinth, half-raised walls, bamboo poles, bricks and sand)."""
+    o = []
+    lime, dado = toon("schoolLime", 0xF4E7C2), toon("schoolDado", 0x9A3B2E)
+    brick, plinth = toon("brick", BRICK), toon("plinth", PLINTH)
+    w, d, h, cy = 0.34, 0.20, 0.16, 0.06
+    yard_pad(o, 0.52, 0.34, -0.12)
+    o.append(box("plinth", (w + 0.03, d + 0.03, 0.03), (0, cy, 0.015), plinth, bevel=0.005))
+    if stage == "building":
+        for sx in (-1, 1):
+            o.append(box("wallSide%d" % sx, (0.02, d, 0.07), (sx * (w / 2 - 0.01), cy, 0.065), brick))
+        o.append(box("wallBackHalf", (w, 0.02, 0.09), (0, cy + d / 2 - 0.01, 0.075), brick))
+        o.append(box("wallMid", (0.02, d, 0.05), (0, cy, 0.055), brick))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-w / 2 - 0.02, 0.0, w / 2 + 0.02):
+            for y in (cy - d / 2 - 0.02, cy + d / 2 + 0.02):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.2, (x, y, 0.1), bam, segs=6))
+        for i in range(3):
+            for j in range(3):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.14 + j * 0.055, -0.1, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.05, 0.035, (0.14, -0.1, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+    o.append(box("walls", (w, d, h), (0, cy, 0.03 + h / 2), lime))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.03), (0, cy, 0.045), dado, outline=False))
+    o.append(gable_roof("roof", w, d, 0.05, 0.03 + h, toon("tile", TILE), overhang=0.02))
+    front = cy - d / 2 - 0.004
+    o.append(box("door", (0.05, 0.010, 0.11), (0, front, 0.085), toon("schoolDoor", 0x2F6E4E)))
+    win = toon("wood_dark", WOOD_DARK)
+    for x in (-0.115, 0.115):
+        o.append(box("win%d" % (x > 0), (0.06, 0.010, 0.045), (x, front, 0.115), win))
+    o.append(box("nameBoard", (0.20, 0.008, 0.026), (0, front - 0.004, 0.03 + h - 0.014), toon("tuitionSign", 0x2D5F9A), outline=False))
+    o.append(box("nameLine", (0.15, 0.009, 0.006), (0, front - 0.005, 0.03 + h - 0.014), toon("signText", 0xF2EBDC), outline=False))
+    o.append(box("blackboard", (0.07, 0.008, 0.045), (0.115, front - 0.004, 0.115), toon("blackboard", 0x2B3A33)))
+    # The verandah: a low slab on two posts over the door.
+    vy = cy - d / 2 - 0.045
+    for x in (-0.06, 0.06):
+        o.append(cylinder("post%d" % (x > 0), 0.009, 0.009, 0.11, (x, vy, 0.085), lime, segs=8))
+    o.append(box("verandah", (0.18, 0.09, 0.010), (0, vy + 0.005, 0.14), toon("roofSlab", 0xD8CDB8)))
+    # Two benches in the yard, a slate board leaning on a post.
+    for i, x in enumerate((-0.16, 0.0)):
+        o.append(box("bench%d" % i, (0.11, 0.028, 0.022), (x, -0.15, 0.017), toon("wood", WOOD)))
+        o.append(box("benchBack%d" % i, (0.11, 0.008, 0.03), (x, -0.136, 0.032), toon("wood_dark", WOOD_DARK)))
+    o.append(box("stand", (0.012, 0.012, 0.09), (0.20, -0.13, 0.045), toon("wood", WOOD)))
+    o.append(box("slate", (0.06, 0.008, 0.045), (0.20, -0.135, 0.09), toon("blackboard", 0x2B3A33)))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["tuition_%s" % _f] = (lambda d=_deg: (lambda: refit(model_tuition("done"), d)))()
+    SPRITES["tuition_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_tuition("building"), d)))()
+
+
 # ---------------------------------------------------------------- shops (spec 017, US-120): previewed to the owner first
 # Pitch pieces are modelled at the people's scale (a door about 0.11 before BUILDING_SCALE), each on the council's brick pitch.
 

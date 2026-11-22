@@ -125,7 +125,7 @@ namespace Sim.View.Views
         public static string Label(ViewContext ctx, Business b, int line)
         {
             BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
-            return ctx.Strings.Get(BusinessWords.Key(ctx, "books." + Names[line], t), "good", t.ByRecipe || t.IsKiln || t.Input < 0 ? "" : BusinessWords.Good(ctx, t.Input));
+            return ctx.Strings.Get(BusinessWords.Key(ctx, "books." + Names[line], t), "good", t.ByRecipe || t.IsKiln || t.IsTuition || t.Input < 0 ? "" : BusinessWords.Good(ctx, t.Input));
         }
 
         private static bool IsCost(int line) { return line == Goods || line == Tax || (line >= Wages && line <= Interest) || line == CashOut || line == Debts || line == Payable; }
@@ -146,7 +146,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             vm.Lines.Add(LineVm.Header(s.Get(back == 0 ? "books.pnlNow" : "books.pnl")));
             BusinessTypeDef type = BusinessRules.TypeOf(ctx.Sim, b);
-            bool recipe = type.ByRecipe || type.IsShop || type.IsKiln; // a bakery, dairy, shop or kiln charges no fees
+            bool recipe = type.ByRecipe || type.IsShop || type.IsKiln || type.IsTuition; // a bakery, dairy, shop or kiln charges no fees
             foreach (int line in new[] { Fees, Sales, Goods, Margin })
                 if (line != Fees || !recipe) Add(ctx, vm, b, r, back, line);
             if (Amount(r, Wages) != 0 || b.Worker != WorkerKind.Founder) Add(ctx, vm, b, r, back, Wages);
@@ -223,7 +223,7 @@ namespace Sim.View.Views
                     s.Get("books.pvaSoFar", "n", ctx.Fmt.Integer(full), "of", ctx.Fmt.Integer(BusinessBooks.KeptReports)), "booksPlan", WhyId(b, 0, Profit)));
                 return;
             }
-            bool recipe = BusinessRules.TypeOf(ctx.Sim, b).ByRecipe || BusinessRules.TypeOf(ctx.Sim, b).IsShop || BusinessRules.TypeOf(ctx.Sim, b).IsKiln;
+            bool recipe = BusinessRules.TypeOf(ctx.Sim, b).ByRecipe || BusinessRules.TypeOf(ctx.Sim, b).IsShop || BusinessRules.TypeOf(ctx.Sim, b).IsKiln || BusinessRules.TypeOf(ctx.Sim, b).IsTuition;
             foreach (int line in PlanLines)
             {
                 if (line == Fees && recipe) continue;
@@ -300,11 +300,11 @@ namespace Sim.View.Views
                 case Profit:
                     if (Near(actual, plan)) return s.Get("books.why.asPlanned");
                     // The line that moved profit most the same way: income above plan or costs below it raise it.
-                    int most = t.ByRecipe || t.IsKiln ? Sales : Fees;
+                    int most = t.ByRecipe || t.IsKiln || t.IsTuition ? Sales : Fees;
                     long biggest = 0;
                     foreach (int l in PlanLines)
                     {
-                        if (l == Profit || (l == Fees && (t.ByRecipe || t.IsKiln))) continue;
+                        if (l == Profit || (l == Fees && (t.ByRecipe || t.IsKiln || t.IsTuition))) continue;
                         long effect = (Average(b, l) - Planned(p, l)) * (IsCost(l) ? -1 : 1);
                         if ((effect > 0) == (actual > plan) && System.Math.Abs(effect) > biggest) { biggest = System.Math.Abs(effect); most = l; }
                     }

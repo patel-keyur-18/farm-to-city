@@ -372,6 +372,24 @@ namespace Sim.View.Tests
         public static Simulation Owned()
         {
             Simulation sim = Managed();
+            // US-244: a tuition centre with pupils, a family of yours (two children, three seasons sat) beside the old village's.
+            int tile3 = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "tuition", tile3, 300_000_00, false));
+            Hire(sim);
+            Sim.Core.Business.Business centre = sim.State.Businesses.Businesses.Last();
+            sim.AdvanceTo(centre.ReadyAt + 60);
+            Sim.Core.People.CitizensState cs = sim.State.Citizens;
+            var family = new Sim.Core.People.Household { Id = cs.NextHouseholdId++, HomeId = 0, Savings = 500_000 * 100, Schooling = 4 * 800 * 100 };
+            foreach (int age in new[] { 35, 33, 9, 12 })
+            {
+                var c = new Sim.Core.People.Citizen { Id = cs.NextCitizenId++, Name = 0, BornSeason = Sim.Core.People.CitizenRules.BornFor(sim, age), HouseholdId = family.Id, Health = Sim.Core.Maths.Fixed.One, TuitionSeasons = age < 18 ? 3 : 0 };
+                cs.Citizens.Add(c);
+                family.Members.Add(c.Id);
+            }
+            cs.Households.Add(family);
+            centre.Stars = Sim.Core.Maths.Fixed.FromInt(4);
+            Sim.Core.Business.TuitionRules.Enrol(sim, centre);
+            centre.TuitionFees = 2_400 * 100;
             Sim.Core.Business.Business bakery = sim.State.Businesses.Businesses.First(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == "bakery");
             Sim.Core.Business.Business mill = sim.State.Businesses.Businesses.First(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == "flour_mill");
             Sim.Core.Business.ExitState x = sim.State.Township.Exit;

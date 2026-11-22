@@ -531,6 +531,8 @@ namespace Sim.View.Views
             }
             vm.Lines.Add(new LineVm(s.Get("citizen.health"), ctx.Rating(c.Health), "citizen.health", c.Id));
             vm.Lines.Add(new LineVm(s.Get("citizen.school"), Schooling(ctx, c), "citizen.school", c.Id));
+            if (c.TuitionSeasons > 0) // US-244: seasons sat at a tuition centre
+                vm.Lines.Add(new LineVm(s.Get("citizen.tuition"), s.Plural("citizen.tuitionValue", c.TuitionSeasons), "citizen.tuition", c.Id) { Icon = "school" });
 
             if (c.Story.Count > 0)
             {

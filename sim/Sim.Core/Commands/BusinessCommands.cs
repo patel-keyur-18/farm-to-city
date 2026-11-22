@@ -441,4 +441,19 @@ namespace Sim.Core.Commands
 
         protected override CommandResult ApplyAt(Simulation sim) { return On ? NightRules.Start(sim, BusinessId) : NightRules.Stop(sim, BusinessId); }
     }
+
+    /// <summary>Sets a tuition centre's fee preset for the next enrolment (spec 028 §3.5): the pupils already in keep the fee they came at.</summary>
+    public sealed class SetTuitionFee : TimedCommand
+    {
+        public long BusinessId { get; }
+        public int Preset { get; }
+
+        public SetTuitionFee(long at, long businessId, int preset) : base(at)
+        {
+            BusinessId = businessId;
+            Preset = preset;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return TuitionRules.SetFee(sim, BusinessId, Preset); }
+    }
 }
