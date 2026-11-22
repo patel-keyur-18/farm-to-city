@@ -364,4 +364,49 @@ namespace Sim.Core.Commands
 
         protected override CommandResult ApplyAt(Simulation sim) { return ExitRules.Cancel(sim, BusinessId); }
     }
+
+    /// <summary>Takes an investor's cash or a partner's savings into a business for a share of it (spec 028 §3.4).</summary>
+    public sealed class AcceptDeal : TimedCommand
+    {
+        public long OfferId { get; }
+
+        public AcceptDeal(long at, long offerId) : base(at) { OfferId = offerId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return OwnerRules.Accept(sim, OfferId); }
+    }
+
+    /// <summary>Says no to an offer: it costs nothing and may come again (spec 028 §3.4).</summary>
+    public sealed class DeclineDeal : TimedCommand
+    {
+        public long OfferId { get; }
+
+        public DeclineDeal(long at, long offerId) : base(at) { OfferId = offerId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return OwnerRules.Decline(sim, OfferId); }
+    }
+
+    /// <summary>Sells the business today to the rival who offered for it (spec 028 §3.4): the outside shares are paid first, as in any sale (§3.3).</summary>
+    public sealed class AcceptBuyOut : TimedCommand
+    {
+        public long OfferId { get; }
+
+        public AcceptBuyOut(long at, long offerId) : base(at) { OfferId = offerId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return OwnerRules.AcceptBuyOut(sim, OfferId); }
+    }
+
+    /// <summary>Buys an outside owner's share back at the business's worth × the share (spec 028 §3.4): an investor's after four seasons, a partner's any time.</summary>
+    public sealed class BuyBackShare : TimedCommand
+    {
+        public long BusinessId { get; }
+        public StakeKind Kind { get; }
+
+        public BuyBackShare(long at, long businessId, StakeKind kind) : base(at)
+        {
+            BusinessId = businessId;
+            Kind = kind;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return OwnerRules.BuyBack(sim, BusinessId, Kind); }
+    }
 }

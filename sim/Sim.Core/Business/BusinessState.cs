@@ -242,7 +242,11 @@ namespace Sim.Core.Business
 
         public bool Listed { get { return CompletesAt != 0 && Status != BusinessStatus.Closed; } }
 
-        private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0; } }
+        /// <summary>Outside owners (spec 028 §3.4): an investor and a partner at most; and the period a rival last offered to buy it (0: never).</summary>
+        public List<Stake> Stakes { get; internal set; } = new List<Stake>();
+        public long BoughtOutOfferedAt { get; internal set; }
+
+        private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0 || Stakes.Count > 0 || BoughtOutOfferedAt != 0; } }
 
         private bool KilnUsed { get { return Yard != 0 || YardCost != 0 || KilnMade != 0 || KilnToBuilds != 0 || KilnSold != 0 || KilnSeason != 0; } }
 
@@ -257,6 +261,7 @@ namespace Sim.Core.Business
             c.PutOut = (long[])PutOut.Clone();
             c.Plan = Plan.Clone();
             c.Reports = new List<BusinessReport>(Reports); // reports are immutable
+            c.Stakes = Stakes.ConvertAll(x => x.Clone());
             return c;
         }
 
@@ -315,6 +320,9 @@ namespace Sim.Core.Business
             if (h.Hashing ? ExitUsed : !(h is SaveWriter x23 && x23.Schema < Town.TownshipState.GrowthSchema)) // schema 23; hashed once listed or a branch
             {
                 h.WriteLong(ListedAt); h.WriteLong(CompletesAt); h.WriteInt(ListBuyer); h.WriteFixed(ListShare); h.WriteBool(Rushed); h.WriteLong(BranchOf);
+                h.WriteInt(Stakes.Count);
+                foreach (Stake k in Stakes) k.WriteTo(h);
+                h.WriteLong(BoughtOutOfferedAt);
             }
         }
 
@@ -386,6 +394,9 @@ namespace Sim.Core.Business
             if (r.Schema >= Town.TownshipState.GrowthSchema)
             {
                 b.ListedAt = r.ReadLong(); b.CompletesAt = r.ReadLong(); b.ListBuyer = r.ReadInt(); b.ListShare = r.ReadFixed(); b.Rushed = r.ReadBool(); b.BranchOf = r.ReadLong();
+                int stakes = r.ReadCount();
+                for (int i = 0; i < stakes; i++) b.Stakes.Add(Stake.ReadFrom(r));
+                b.BoughtOutOfferedAt = r.ReadLong();
             }
             return b;
         }

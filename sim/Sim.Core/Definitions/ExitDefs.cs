@@ -33,5 +33,34 @@ namespace Sim.Core.Definitions
 
         /// <summary>The kinds of buyer, by id (a townsperson, a rival, a regional buyer).</summary>
         public IReadOnlyList<string> Buyers { get; internal set; }
+
+        // Investors, partners and buy-outs (spec 028 §3.4).
+
+        /// <summary>The shares of its worth an investor may offer cash for, ascending; the most outside owners (investor and partner) hold together.</summary>
+        public IReadOnlyList<Fixed> InvestorShares { get; internal set; }
+        public Fixed MaxOutside { get; internal set; }
+
+        /// <summary>Seasons an investor's share must stand before you may buy it back; the worth (in coins) a business needs before an investor looks at it.</summary>
+        public int BuyBackSeasons { get; internal set; }
+        public long InvestorValueMin { get; internal set; }
+
+        /// <summary>A partner puts in this share of the worth and takes this share of the profit.</summary>
+        public Fixed PartnerStake { get; internal set; }
+        public Fixed PartnerProfit { get; internal set; }
+
+        /// <summary>A buy-out offer is this share of the worth, between low and high (never under what it holds); open this many hours, more when the business is a big part of your net worth; seasons between offers for a business.</summary>
+        public Fixed BuyOutLow { get; internal set; }
+        public Fixed BuyOutHigh { get; internal set; }
+        public int BuyOutHours { get; internal set; }
+        public int BuyOutBigHours { get; internal set; }
+        public Fixed BuyOutBigShare { get; internal set; }
+        public int BuyOutGapSeasons { get; internal set; }
+
+        /// <summary>Hours an investor's or a partner's offer stays open; the chance, at a close, that a business is offered something.</summary>
+        public int OfferHours { get; internal set; }
+        public Fixed OfferChance { get; internal set; }
+
+        /// <summary>The investors' names, by id (the strings give each one).</summary>
+        public IReadOnlyList<string> Investors { get; internal set; }
     }
 }

@@ -46,7 +46,8 @@ namespace Sim.Core.Business
 
         public static ExitState State(Simulation sim) { return sim.State.Township?.Exit; }
 
-        public static long Book(Business b) { return System.Math.Max(0, BusinessBooks.Equity(b)); }
+        /// <summary>What it holds: its assets less its debts, outside owners' money included (their share is part of what a buyer takes over); never below 0.</summary>
+        public static long Book(Business b) { return System.Math.Max(0, BusinessBooks.Equity(b) + OwnerRules.Liability(b)); }
 
         // ---- the worth ----
 
@@ -131,15 +132,22 @@ namespace Sim.Core.Business
             long now = sim.State.Clock.SimTime;
             foreach (Business b in sim.State.Businesses.Businesses.ToArray())
                 if (b.Status == BusinessStatus.Open && b.Listed && now >= b.CompletesAt) Complete(sim, b);
+            OwnerRules.Hourly(sim);
         }
 
         /// <summary>The business is sold at its worth then, at the buyer's share, never under what it holds.</summary>
-        private static void Complete(Simulation sim, Business b)
+        private static void Complete(Simulation sim, Business b) { SellNow(sim, b, b.ListShare, b.ListBuyer, 0); }
+
+        /// <summary>
+        /// A sale closes today (a listing's day, or a rival's offer taken): its people are released first, then the price is the larger of what was offered (0: the worth at the share)
+        /// and what it holds, and the sale is the close-down at that price (<see cref="BusinessBooks.CloseDown"/>).
+        /// </summary>
+        internal static void SellNow(Simulation sim, Business b, Fixed share, int buyer, long offered)
         {
             long severance = Release(sim, b); // first: the buyer pays for what the business holds after its people are paid off
             Worth w = Valuation(sim, b);
-            long price = PriceAt(w, b.ListShare);
-            BusinessBooks.CloseDown(sim, b, new SaleTerms { Price = price, Share = b.ListShare, Worth = w.Value, Buyer = b.ListBuyer, Severance = severance });
+            long price = offered > 0 ? System.Math.Max(w.Book, offered) : PriceAt(w, share);
+            BusinessBooks.CloseDown(sim, b, new SaleTerms { Price = price, Share = share, Worth = w.Value, Buyer = buyer, Severance = severance });
         }
 
         /// <summary>Its worker and manager are released with severance (10% of the wage after their first season) from the business's cash; returns what was paid.</summary>

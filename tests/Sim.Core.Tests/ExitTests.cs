@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Sim.Core.Business;
+using Sim.Core.Definitions;
 using Sim.Core.Commands;
 using Sim.Core.Events;
 using Sim.Core.Finance;
@@ -26,7 +27,7 @@ namespace Sim.Core.Tests
         }
 
         /// <summary>The kept reports with these season profits, oldest first (coins).</summary>
-        private static void Seasons(Business.Business b, params long[] coins)
+        internal static void Seasons(Business.Business b, params long[] coins)
         {
             b.Reports.Clear();
             long p = 0;

@@ -351,6 +351,19 @@ namespace Sim.Core.Commands
 
         /// <summary>The kind already has its first business and the most branches.</summary>
         TooManyBranches,
+
+        // Spec 028 §3.4 (investors, partners and buy-outs, US-247)
+        /// <summary>The business already has that kind of outside owner (one investor and one partner a business).</summary>
+        HasStake,
+
+        /// <summary>Outside owners together would hold more than the most a business allows.</summary>
+        OutsideCap,
+
+        /// <summary>The business has no such outside owner.</summary>
+        NoStake,
+
+        /// <summary>An investor's share can be bought back only after the seasons it must stand.</summary>
+        BuyBackTooEarly,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

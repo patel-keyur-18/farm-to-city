@@ -1106,10 +1106,12 @@ namespace Sim.Core.Business
                 if (interest > 0) b.Ledger.Post(now, closing, "ledger.overdraftInterest", reference, new Posting(Account.Interest, interest), new Posting(Account.Overdraft, -interest));
                 ManagerRules.PayShare(sim, b, closing); // spec 028 §3.2: a tenth of the profit to his manager, before the tax
                 Town.TaxRules.BillBusiness(sim, b, closing); // spec 022 §3.2: tax on the season's profit, from its own cash
+                OwnerRules.PayProfit(sim, b, closing); // spec 028 §3.4: each outside owner's share of what is left
                 ManagerRules.Report(sim, b, closing); // and his report against the target, on the profit as the books show it
                 BusinessBooks.CloseSeason(sim, b, closing);
             }
             ShopRules.CloseSeason(sim);
+            OwnerRules.AtClose(sim); // spec 028 §3.4: what a profitable business is offered now
         }
 
         /// <summary>

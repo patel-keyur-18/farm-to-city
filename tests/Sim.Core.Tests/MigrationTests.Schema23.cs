@@ -5,6 +5,7 @@ using System.Text.Json;
 using NUnit.Framework;
 using Sim.Core.Business;
 using Sim.Core.Commands;
+using Sim.Core.Maths;
 using Sim.Core.People;
 using Sim.Core.Saves;
 using static Sim.Core.Tests.PeopleKit;
@@ -38,10 +39,22 @@ namespace Sim.Core.Tests
             boss.Mgr.Target = ManagerTarget.Growth;
             sim.AdvanceTo(BusinessTests.NextClose(sim) + 2 * 3600);
             InvoiceTests.ToHour(sim, 14, 1);
+            ExitTests.Seasons(bakery, 50_000, 50_000, 50_000, 50_000);
+            for (long p = 9_000; bakery.Stakes.Count == 0; p++) // US-247: an investor put money into the bakery
+            {
+                sim.State.Township.Exit.Offers.Clear();
+                OwnerRules.AtClose(sim, p);
+                DealOffer o = sim.State.Township.Exit.Offers.Find(x => x.Kind == DealKind.Investor && x.BusinessId == bakery.Id);
+                if (o != null) Ok(sim, new AcceptDeal(sim.State.Clock.SimTime, o.Id));
+                Assert.That(p, Is.LessThan(9_400), "an investor came");
+            }
+            sim.State.Township.Exit.Offers.Clear();
             Ok(sim, new ListBusiness(sim.State.Clock.SimTime, mill.Id, true)); // US-125: the mill sold in a day, the bakery listed and a buyer still to come
             Ok(sim, new ListBusiness(sim.State.Clock.SimTime, bakery.Id, false));
             sim.AdvanceTo(sim.State.Clock.SimTime + 26 * 3600);
             sim.DrainEvents();
+            long at = sim.State.Clock.SimTime;
+            sim.State.Township.Exit.Offers.Add(new DealOffer { Id = sim.State.Township.Exit.NextOfferId++, Kind = DealKind.BuyOut, BusinessId = bakery.Id, Who = 2, Share = Fixed.FromRatio(104, 100), Cash = 340_000 * Coin, RaisedAt = at, ExpiresAt = at + 24 * 3600 }); // and a rival's offer waiting
             Pin23(Growth23Fixture, sim);
         }
 
@@ -64,6 +77,9 @@ namespace Sim.Core.Tests
             Assert.That(r.State.People.WorkerAt(boss.Place)?.IsManager ?? false, Is.False);
             Assert.That(r.State.Township.Exit.Sales.Count, Is.EqualTo(1), "a sale is kept");
             Assert.That(r.State.Businesses.Businesses.Count(b => b.Listed), Is.EqualTo(1), "a listing waits for its buyer");
+            Business.Business owned = r.State.Businesses.Businesses.Single(b => b.Stakes.Count > 0);
+            Assert.That((owned.Stakes[0].Kind, OwnerRules.Liability(owned) > 0), Is.EqualTo((StakeKind.Investor, true)), "an investor's share, owed on the books");
+            Assert.That(r.State.Township.Exit.Offers.Single().Kind, Is.EqualTo(DealKind.BuyOut), "a rival's offer waits");
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
             foreach (Business.Business b in r.State.Businesses.Businesses) Assert.That(b.Ledger.Reconcile(), Is.Null);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);

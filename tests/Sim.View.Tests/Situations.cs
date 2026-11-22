@@ -368,6 +368,29 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>A Township whose bakery has an investor (a share he can buy back) and whose mill has offers waiting: an investor's, a partner's and a rival's (spec 028 §3.4, US-247).</summary>
+        public static Simulation Owned()
+        {
+            Simulation sim = Managed();
+            Sim.Core.Business.Business bakery = sim.State.Businesses.Businesses.First(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == "bakery");
+            Sim.Core.Business.Business mill = sim.State.Businesses.Businesses.First(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == "flour_mill");
+            Sim.Core.Business.ExitState x = sim.State.Township.Exit;
+            Sim.Core.Business.DealOffer Add(Sim.Core.Business.DealKind kind, Sim.Core.Business.Business b, int pct, long coins, long who)
+            {
+                var o = new Sim.Core.Business.DealOffer { Id = x.NextOfferId++, Kind = kind, BusinessId = b.Id, Who = who, Share = Sim.Core.Maths.Fixed.FromRatio(pct, 100), Cash = coins * 100, RaisedAt = T(sim), ExpiresAt = T(sim) + 48 * 3600 };
+                x.Offers.Add(o);
+                return o;
+            }
+            Ok(sim, new AcceptDeal(T(sim), Add(Sim.Core.Business.DealKind.Investor, bakery, 15, 43_500, 0).Id));
+            bakery.Stakes[0].Period -= 5; // five seasons ago: it can be bought back
+            bakery.Stakes[0].Paid = 2_130 * 100;
+            foreach (Sim.Core.People.Household h in sim.State.Citizens.Households) h.Savings = 500_000 * 100;
+            Add(Sim.Core.Business.DealKind.Investor, mill, 20, 71_550, 2);
+            Add(Sim.Core.Business.DealKind.Partner, mill, 20, 28_800, sim.State.Citizens.Households[0].Id);
+            Add(Sim.Core.Business.DealKind.BuyOut, bakery, 104, 341_000, 1);
+            return sim;
+        }
+
         /// <summary>The Township with its works built and land in use: the clinic and quarters, the civic works, and three bought parcels leased, zoned and listed (spec 023, 024).</summary>
         /// <summary>The built Township with a card waiting for every kind of event, and some answered (US-154).</summary>
         public static Simulation Events()
@@ -505,6 +528,7 @@ namespace Sim.View.Tests
             yield return Township();
             yield return Invoicing();
             yield return Managed();
+            yield return Owned();
             yield return TownshipBuilt();
             yield return Kiln();
             yield return Promises();

@@ -14,5 +14,20 @@
   "rushedDays": 1,
   "rushedShare": 0.85,
   "maxBranches": 2,
-  "buyers": ["townsperson", "rival", "regional"]
+  "buyers": ["townsperson", "rival", "regional"],
+  "investorShares": [0.10, 0.15, 0.20, 0.25, 0.30],
+  "maxOutside": 0.40,
+  "buyBackSeasons": 4,
+  "investorValueMin": 50000,
+  "partnerStake": 0.20,
+  "partnerProfit": 0.20,
+  "buyOutLow": 0.90,
+  "buyOutHigh": 1.10,
+  "buyOutHours": 24,
+  "buyOutBigHours": 48,
+  "buyOutBigShare": 0.25,
+  "buyOutGapSeasons": 2,
+  "offerHours": 48,
+  "offerChance": 0.35,
+  "investors": ["seth", "iyer", "khan", "joshi", "reddy"]
 }

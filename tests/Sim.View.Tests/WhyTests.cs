@@ -59,12 +59,15 @@ namespace Sim.View.Tests
                     yield return Named("business orders " + b.Id, BusinessSheet.Build(ctx, b.Id, InvoiceSheet.Tab));
                     yield return Named("sell expand " + b.Id, ExitSheet.Build(ctx, b.Id)); // spec 028 §3.3
                     yield return Named("manager report " + b.Id, ManagerSheet.Report(ctx, b.Id)); // spec 028 §3.2: every number has a Why?
+                    yield return Named("owners " + b.Id, OwnerSheet.Owners(ctx, b.Id)); // spec 028 §3.4
                     yield return Named("put cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Put));
                     yield return Named("take cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Take));
                     yield return Named("close " + b.Id, BusinessCloseSheet.Build(ctx, b.Id));
                     for (int back = 1; back <= b.Reports.Count; back++)
                         yield return Named("business report " + b.Id + " " + back, BusinessReportSheet.Build(ctx, b.Id, back.ToString(System.Globalization.CultureInfo.InvariantCulture)));
                 }
+                if (sim.State.Township?.Exit != null)
+                    foreach (Sim.Core.Business.DealOffer o in sim.State.Township.Exit.Offers) yield return Named("deal card " + o.Id, OwnerSheet.Card(ctx, o.Id)); // spec 028 §3.4
             }
             if (Sim.Core.Town.TreasuryRules.IsOpen(sim)) // the town treasury (spec 021)
             {

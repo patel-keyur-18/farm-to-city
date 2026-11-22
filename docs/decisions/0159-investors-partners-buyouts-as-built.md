@@ -1,0 +1,27 @@
+# 0159. US-247 investors, partners and buy-outs as built: offers raised at the close outside the card limit, a share as a liability, a sale settles outside owners first
+
+- Status: Accepted (the owner closed gaps 10 and 11 before code, 2026-11-22; the story is for the owner's review)
+- Date: 2026-11-22
+- Deciders: Keyur Patel
+- Related ADRs: 0109, 0141, 0153, 0155, 0157, 0158
+
+## Context
+
+US-247 (spec 028 §3.4): take an investor or a partner into a business, and answer a rival's offer to buy it, so the player learns what equity, a profit share and a valuation mean. Two gaps were closed with the owner before code. **Gap 10:** spec 028 said "an opportunity event on spec 027's engine", but that engine has a two-card limit and a random daily roll, so a fire card could crowd an investor out for seasons. **Gap 11:** the spec said a partner blocks selling or closing "without buying the partner out" yet also said a sale "settles outside shares first".
+
+## Decisions (as built)
+
+1. **Offers are the sprint's own, raised at the season close** (`OwnerRules.AtClose`), outside spec 027's engine and its two-card limit. A business that is open, not listed and made a profit last season has a seeded chance (`offerChance` 0.35) of one offer; it picks among the kinds that fit. One offer is open for a business at a time. Offers are raised **only while you are playing** (never in a catch-up) and an unanswered one lapses to *no* (48 hours, a rival's 24 or 48 when the business is a quarter or more of your net worth). Refusing costs nothing and it may come again. *Why:* an investor is a once-a-season chance the player should always see; a limit shared with fires would hide it, and an offer landing while you are away would be gone on your return.
+2. **An investor** (`investorShares` 10 to 30% in 5% steps) offers `worth × share` in cash for that share of equity and profit; the business must be worth 50,000 and outside owners together stay at or under 40% (`maxOutside`). One investor a business. **A partner** is one of your households with savings of at least the stake: she puts in 20% of the worth from her own savings (taken from the household) for 20% of the profit; one a business. The cash goes into the business's capital.
+3. **A share is a liability of the business.** `OutsideEquity` (2500, business books only) is credited with the cash put in: your equity in the business, and your net worth, are unchanged on the day, and what the business "holds" for a valuation counts their money too. At each close, after the tax, each share is paid `share × the season's profit after tax` from the business's cash, never when it lost, as a distribution (`OutsideDrawings`, 3250), not an expense; a partner's is paid into her household's savings.
+4. **Buying a share back** (`BuyBackShare`, a tap with the price) costs `the worth now × the share`: an investor's after four seasons (`buyBackSeasons`), a partner's any time. The cash goes out, the liability becomes your capital in the business, and any difference from what was put in is a gain or a loss on the sale in your own books. *Why:* the price follows the business, so it is a real choice, not a fixed refund.
+5. **A partner never blocks a sale** (gap 11). Any sale, rival's offer taken or plain closing settles each outside share first: `share × the cash left after the business's debts`, before the tax, so tax falls on your gain alone; a partner's part goes to her household. The sale card and the receipt show it as *Paid first to outside owners*; the listing's confirm card says that outside owners are paid first. Spec 028's "blocks" wording is replaced; the test is `Partner_Settled_On_Sale`.
+6. **A rival's offer** (`buyOutLow` to `buyOutHigh`, 90 to 110%) is a share of the worth, never under what the business holds, at most one a business each two seasons, from a rival for a shop and a regional buyer for any other business. Accepting (`AcceptBuyOut`, a hold) is a sale today: the same close-down as a listing's, at the offered price, with a card showing every coin first (the card is the sim's own preview of the sale).
+7. **Screens** (Preview 17, screens 1 and 4 to 6): Settings gets an *Owners* row (*You 80% · Imran Khan 20%*, an offer waiting flagged); the owners' sheet lists you and each outside owner with what was put in, when and what was paid, *Buy back* (greyed with the seasons left), the limit bar and *Why?* on each number; one card for an investor, a partner or a rival with every number, *If you wait* named on *Decline*, and a timer. A new offer's card opens by itself when nothing else is open and waits on the bell otherwise. Eight *Why?* sources; the sale receipt gains the owners' line.
+8. **Save schema 23** (hashed only when used): a business's stakes and its last buy-out offer period, the Township's open offers, and what the owners were paid on each sale card. New accounts `OutsideEquity` and `OutsideDrawings` (schema 23). The schema23-growth fixture holds an investor on the bakery and a rival's offer waiting.
+
+## Consequences
+
+- `GateTests.InvestorDilution` (sprint end) tests the loop this opens: take an investor, draw the cash out, buy the share back dearer or cheaper than it came; the 40% cap and the four-season wait are the limits.
+- A partner needs savings equal to a fifth of the worth, so partners will be rare for big businesses; the balance pass reads how often one is offered before any number moves.
+- Business loans, tax owed and other debts are paid before outside owners, because their share is of what is left.

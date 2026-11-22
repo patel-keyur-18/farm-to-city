@@ -33,6 +33,7 @@ namespace Sim.View.Views
             Worth w = ExitRules.Valuation(ctx.Sim, b);
             vm.Lines.Add(LineVm.Header(s.Get("exit.section")));
             vm.Lines.Add(new LineVm(s.Get("exit.worth"), ctx.Fmt.Coins(w.Value), "businessWorth", b.Id) { Icon = "coin", Note = b.Listed ? s.Get("exit.listedNote") : Basis(ctx, w) });
+            OwnerSheet.AddSettings(ctx, vm, b);
             vm.Lines.Add(new LineVm(s.Get("exit.sellRow"), s.Get("exit.sellRowWhy")) { Icon = "coin", Action = ActionVm.Open("sellExpand", s.Get("exit.sell"), new SheetRequest(Kind, b.Id)) });
         }
 
@@ -49,6 +50,7 @@ namespace Sim.View.Views
             vm.Lines.Add(LineVm.Header(s.Get("exit.worthHeader")));
             vm.Lines.Add(new LineVm(s.Get("exit.worth"), ctx.Fmt.Coins(w.Value), "businessWorth", id) { Icon = "coin", Note = Basis(ctx, w) });
             vm.Lines.Add(new LineVm(s.Get("exit.holds"), ctx.Fmt.Coins(w.Book), "businessHolds", id) { Icon = "coin", Note = s.Get("exit.holdsNote") });
+            OwnerSheet.AddSettings(ctx, vm, b);
             vm.Lines.Add(LineVm.Header(s.Get("exit.sellHeader")));
             long low = ExitRules.PriceAt(w, d.BuyerLow), high = ExitRules.PriceAt(w, d.BuyerHigh), rushed = ExitRules.PriceAt(w, d.RushedShare);
             if (b.Listed)
@@ -98,6 +100,7 @@ namespace Sim.View.Views
                 Subtitle = s.Get("exit.soldSubtitle", "buyer", s.Get("exit.buyer." + d.Buyers[r.Buyer]), "price", ctx.Fmt.Coins(r.Price), "pct", ctx.Fmt.Percent(r.Worth <= 0 ? r.Share : Fixed.FromRatio(r.Price, r.Worth))), // the share it came to, which the floor at what it held can raise
             };
             vm.Lines.Add(new LineVm(s.Get("exit.receiptPrice"), ctx.Fmt.Coins(r.Price), "businessSale", 0) { Note = s.Get("exit.receiptPriceNote", "worth", ctx.Fmt.Coins(r.Worth)) });
+            if (r.Outside > 0) vm.Lines.Add(new LineVm(s.Get("exit.receiptOutside"), ctx.Fmt.Coins(-r.Outside), "ownerPaid", 0)); // first, as the card said
             vm.Lines.Add(new LineVm(s.Get("exit.receiptTax", "gain", ctx.Fmt.Coins(r.Gain)), ctx.Fmt.Coins(-r.Tax), "businessSale", 0));
             if (r.Severance > 0) vm.Lines.Add(new LineVm(s.Get("exit.receiptSeverance"), ctx.Fmt.Coins(-r.Severance), "businessSale", 0));
             vm.Lines.Add(new LineVm(s.Get("exit.receiptToYou"), ctx.Fmt.Coins(r.ToYou), "businessSale", 0) { Note = s.Get("exit.receiptNote") });

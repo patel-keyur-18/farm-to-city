@@ -233,6 +233,7 @@ namespace Sim.Core.Business
             if (loan != null && loan.IsOpen) CreditSystem.Accrue(sim, loan, sim.Period);
             Town.InsuranceRules.Drop(sim, b.Id); // a closed or sold business keeps no policy (ADR 0158)
             Town.EventRules.BusinessGone(sim, b.Id); // and the cards aimed at it end quietly
+            OwnerRules.Gone(sim, b.Id); // and the offers for it
             BusinessRules.LoseWorker(sim, b);
             People.Worker boss = ManagerRules.Of(sim, b.Id); // a closing business lets its manager go too (he keeps the season's pay)
             if (boss != null)
@@ -243,7 +244,7 @@ namespace Sim.Core.Business
             InvoiceRules.CollectAll(sim, b); // what its customers owe it, now (spec 028 §3.1)
 
             KilnRules.Clear(sim, b); // a closing kiln's yard goes to the trader
-            long held = Equity(b); // what a sale's buyer takes over before the premium he pays (spec 028 §3.3)
+            long held = Equity(b) + OwnerRules.Liability(b); // what a sale's buyer takes over before the premium he pays, outside owners' money included (spec 028 §3.3)
             for (int g = 0; g < b.Stock.Length; g++)
             {
                 if (b.Stock[g] <= 0) continue;
@@ -283,15 +284,17 @@ namespace Sim.Core.Business
             if (taxOwed > 0) Town.TaxRules.PayOwed(sim, l, reference, Town.TaxKind.Business, now);
             if (suppliers > 0) InvoiceRules.PayAll(sim, b);
 
-            long gain = 0, tax = 0;
+            long gain = 0, tax = 0, outside = 0;
             if (sale != null)
             {
                 gain = System.Math.Max(0, sale.Price - held); // the buyer pays the price for what the business holds: the rest is the gain
                 if (gain > 0) l.Post(now, sim.Period, "ledger.saleGain", reference, new Posting(Account.Cash, gain), new Posting(Account.GainOnAssetSales, -gain));
+                outside = OwnerRules.Settle(sim, b); // investor and partner first, a part of what is left (spec 028 §3.4); the tax then falls on your gain alone
                 long taxBefore = l.Balance(Account.BusinessTax);
                 Town.TaxRules.BillBusiness(sim, b, sim.Period); // the season's profit with the gain, at the business tax (ADR 0109)
                 tax = l.Balance(Account.BusinessTax) - taxBefore;
             }
+            else outside = OwnerRules.Settle(sim, b); // a plain closing pays them their part of what is left too
             long toYou = l.Cash;
             if (toYou > 0) Withdraw(sim, b, toYou);
             long lost = CapitalIn(b);
@@ -309,7 +312,7 @@ namespace Sim.Core.Business
             var rec = new SaleRecord
             {
                 Id = x.NextSaleId++, At = now, BusinessId = b.Id, TypeId = t.Id, Buyer = sale.Buyer, Price = sale.Price, Share = sale.Share, Worth = sale.Worth, Held = held, Gain = gain, Tax = tax,
-                Severance = sale.Severance, ToYou = toYou,
+                Severance = sale.Severance, ToYou = toYou, Outside = outside,
             };
             x.Sales.Add(rec);
             if (x.Sales.Count > ExitState.Kept) x.Sales.RemoveAt(0);

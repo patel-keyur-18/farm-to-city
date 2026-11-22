@@ -40,4 +40,45 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "BusinessSold(business=" + BusinessId + ", price=" + Price + ", toYou=" + ToYou + ")"; }
     }
+
+    /// <summary>An investor, a partner or a rival made an offer for a business (spec 028 §3.4); <c>Kind</c> is the <c>DealKind</c>.</summary>
+    public sealed class DealOffered : SimEvent
+    {
+        public long OfferId { get; }
+        public long BusinessId { get; }
+        public int Kind { get; }
+
+        public DealOffered(long simTime, long offerId, long businessId, int kind) : base(simTime) { OfferId = offerId; BusinessId = businessId; Kind = kind; }
+
+        protected override string Describe() { return "DealOffered(offer=" + OfferId + ", business=" + BusinessId + ", kind=" + Kind + ")"; }
+    }
+
+    /// <summary>An offer was taken, declined or lapsed (spec 028 §3.4).</summary>
+    public sealed class DealAnswered : SimEvent
+    {
+        public long OfferId { get; }
+        public long BusinessId { get; }
+        public int Kind { get; }
+        public bool Accepted { get; }
+        public bool Lapsed { get; }
+
+        public DealAnswered(long simTime, long offerId, long businessId, int kind, bool accepted, bool lapsed) : base(simTime)
+        {
+            OfferId = offerId; BusinessId = businessId; Kind = kind; Accepted = accepted; Lapsed = lapsed;
+        }
+
+        protected override string Describe() { return "DealAnswered(offer=" + OfferId + ", business=" + BusinessId + ", kind=" + Kind + (Accepted ? ", accepted" : Lapsed ? ", lapsed" : ", declined") + ")"; }
+    }
+
+    /// <summary>An outside owner's share was bought back (spec 028 §3.4); <c>Kind</c> is the <c>StakeKind</c>.</summary>
+    public sealed class ShareBoughtBack : SimEvent
+    {
+        public long BusinessId { get; }
+        public int Kind { get; }
+        public long Price { get; }
+
+        public ShareBoughtBack(long simTime, long businessId, int kind, long price) : base(simTime) { BusinessId = businessId; Kind = kind; Price = price; }
+
+        protected override string Describe() { return "ShareBoughtBack(business=" + BusinessId + ", kind=" + Kind + ", price=" + Price + ")"; }
+    }
 }

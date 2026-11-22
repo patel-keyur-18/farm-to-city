@@ -65,6 +65,7 @@ namespace Sim.Core.Saves
             SetTerms,
             HireManager, DismissManager, SetManagerTarget,
             ListBusiness, CancelBusinessSale,
+            AcceptDeal, DeclineDeal, AcceptBuyOut, BuyBackShare,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -205,6 +206,10 @@ namespace Sim.Core.Saves
                 case AcceptContract c: At(c, Tag.AcceptContract); w.WriteLong(c.OfferId); break;
                 case ListBusiness c: At(c, Tag.ListBusiness); w.WriteLong(c.BusinessId); w.WriteBool(c.Rushed); break;
                 case CancelBusinessSale c: At(c, Tag.CancelBusinessSale); w.WriteLong(c.BusinessId); break;
+                case AcceptDeal c: At(c, Tag.AcceptDeal); w.WriteLong(c.OfferId); break;
+                case DeclineDeal c: At(c, Tag.DeclineDeal); w.WriteLong(c.OfferId); break;
+                case AcceptBuyOut c: At(c, Tag.AcceptBuyOut); w.WriteLong(c.OfferId); break;
+                case BuyBackShare c: At(c, Tag.BuyBackShare); w.WriteLong(c.BusinessId); w.WriteInt((int)c.Kind); break;
                 case HireManager c: At(c, Tag.HireManager); w.WriteLong(c.ApplicantId); w.WriteLong(c.BusinessId); w.WriteInt((int)c.Level); break;
                 case DismissManager c: At(c, Tag.DismissManager); w.WriteLong(c.BusinessId); break;
                 case SetManagerTarget c: At(c, Tag.SetManagerTarget); w.WriteLong(c.BusinessId); w.WriteInt((int)c.Target); break;
@@ -392,6 +397,10 @@ namespace Sim.Core.Saves
                 case Tag.AcceptContract: return new AcceptContract(at, r.ReadLong());
                 case Tag.ListBusiness: return new ListBusiness(at, r.ReadLong(), r.ReadBool());
                 case Tag.CancelBusinessSale: return new CancelBusinessSale(at, r.ReadLong());
+                case Tag.AcceptDeal: return new AcceptDeal(at, r.ReadLong());
+                case Tag.DeclineDeal: return new DeclineDeal(at, r.ReadLong());
+                case Tag.AcceptBuyOut: return new AcceptBuyOut(at, r.ReadLong());
+                case Tag.BuyBackShare: return new BuyBackShare(at, r.ReadLong(), (Business.StakeKind)r.ReadInt());
                 case Tag.HireManager: return new HireManager(at, r.ReadLong(), r.ReadLong(), (OfferLevel)r.ReadInt());
                 case Tag.DismissManager: return new DismissManager(at, r.ReadLong());
                 case Tag.SetManagerTarget: return new SetManagerTarget(at, r.ReadLong(), (ManagerTarget)r.ReadInt());

@@ -460,5 +460,8 @@
   {"label":"US-123","view":"farm","date":"2026-11-21","drawCalls":365,"batches":365,"setPassCalls":9,"triangles":7125,"visibleSprites":410,"sprites":2277},
   {"label":"US-124 managers","view":"all","date":"2026-11-22","drawCalls":1128,"batches":1128,"setPassCalls":9,"triangles":22903,"visibleSprites":1385,"sprites":2277},
   {"label":"US-124 managers","view":"village","date":"2026-11-22","drawCalls":512,"batches":512,"setPassCalls":6,"triangles":10110,"visibleSprites":605,"sprites":2277},
-  {"label":"US-124 managers","view":"farm","date":"2026-11-22","drawCalls":364,"batches":364,"setPassCalls":6,"triangles":6739,"visibleSprites":410,"sprites":2277}
+  {"label":"US-124 managers","view":"farm","date":"2026-11-22","drawCalls":364,"batches":364,"setPassCalls":6,"triangles":6739,"visibleSprites":410,"sprites":2277},
+  {"label":"US-125 and US-247 (sell or expand, investors and partners)","view":"all","date":"2026-11-22","drawCalls":1116,"batches":1116,"setPassCalls":12,"triangles":22999,"visibleSprites":1373,"sprites":2264},
+  {"label":"US-125 and US-247 (sell or expand, investors and partners)","view":"village","date":"2026-11-22","drawCalls":501,"batches":501,"setPassCalls":9,"triangles":10022,"visibleSprites":595,"sprites":2264},
+  {"label":"US-125 and US-247 (sell or expand, investors and partners)","view":"farm","date":"2026-11-22","drawCalls":348,"batches":348,"setPassCalls":9,"triangles":6705,"visibleSprites":393,"sprites":2264}
 ]
