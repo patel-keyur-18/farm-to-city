@@ -49,6 +49,12 @@ namespace Sim.Core.Tests
                 Assert.That(p, Is.LessThan(9_400), "an investor came");
             }
             sim.State.Township.Exit.Offers.Clear();
+            Ok(sim, new SetBenefit(sim.State.Clock.SimTime, bakery.Id, Benefit.Meal, true)); // US-258: a meal for the bakery's people, a night shift on the grid
+            Ok(sim, new SetBenefit(sim.State.Clock.SimTime, bakery.Id, Benefit.Leave, true));
+            Ok(sim, new SetBenefit(sim.State.Clock.SimTime, 0, Benefit.Meal, true));
+            sim.State.Township.UtilitiesBuilt |= 1 << Definitions.UtilityDef.Grid;
+            bakery.ShortDays = 0b111;
+            Ok(sim, new SetNightShift(sim.State.Clock.SimTime, bakery.Id, true));
             Ok(sim, new ListBusiness(sim.State.Clock.SimTime, mill.Id, true)); // US-125: the mill sold in a day, the bakery listed and a buyer still to come
             Ok(sim, new ListBusiness(sim.State.Clock.SimTime, bakery.Id, false));
             sim.AdvanceTo(sim.State.Clock.SimTime + 26 * 3600);
@@ -80,6 +86,8 @@ namespace Sim.Core.Tests
             Business.Business owned = r.State.Businesses.Businesses.Single(b => b.Stakes.Count > 0);
             Assert.That((owned.Stakes[0].Kind, OwnerRules.Liability(owned) > 0), Is.EqualTo((StakeKind.Investor, true)), "an investor's share, owed on the books");
             Assert.That(r.State.Township.Exit.Offers.Single().Kind, Is.EqualTo(DealKind.BuyOut), "a rival's offer waits");
+            Assert.That((owned.Benefits, r.State.Township.Exit.FarmBenefits), Is.EqualTo(((int)(Benefit.Meal | Benefit.Leave), (int)Benefit.Meal)), "benefits are kept");
+            Assert.That(r.State.People.NightAt(owned.Id)?.Night ?? false, Is.True, "a night worker is kept");
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
             foreach (Business.Business b in r.State.Businesses.Businesses) Assert.That(b.Ledger.Reconcile(), Is.Null);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);

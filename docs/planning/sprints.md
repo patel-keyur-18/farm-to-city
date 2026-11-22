@@ -1161,8 +1161,8 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-123 | Invoices | [F12.5](features/F12.5-invoices-and-payment-terms.md) | 5 | Must | Built 2026-11-21, for the owner's review (ADR 0156) |
 | US-124 | Managers | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 8 | Must | Done 2026-11-22, approved (ADR 0157) |
 | US-125 | Sell or expand | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 5 | Should | Done 2026-11-22, approved (ADR 0158) |
-| US-247 | Investors, partners and buy-outs | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 5 | Should | Built 2026-11-22, for the owner's review (ADR 0159) |
-| US-258 | Benefits and night shifts | [F11.4](features/F11.4-full-hiring-and-hr.md) | 3 | Should | To do |
+| US-247 | Investors, partners and buy-outs | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 5 | Should | Done 2026-11-22, approved (ADR 0159) |
+| US-258 | Benefits and night shifts | [F11.4](features/F11.4-full-hiring-and-hr.md) | 3 | Should | Built 2026-11-22, for the owner's review (ADR 0160) |
 | US-244 | Tuition centre | [F12.7](features/F12.7-township-businesses.md) | 5 | Should | To do |
 | US-245 | Tempo transport | [F12.7](features/F12.7-township-businesses.md) | 5 | Should | To do |
 | US-246 | Restaurant | [F12.7](features/F12.7-township-businesses.md) | 3 | Could | To do |

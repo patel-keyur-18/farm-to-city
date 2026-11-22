@@ -246,7 +246,13 @@ namespace Sim.Core.Business
         public List<Stake> Stakes { get; internal set; } = new List<Stake>();
         public long BoughtOutOfferedAt { get; internal set; }
 
-        private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0 || Stakes.Count > 0 || BoughtOutOfferedAt != 0; } }
+        /// <summary>Benefits it gives all its workers (spec 028 §3.8; the bits are <see cref="People.Benefit"/>), the season +1 its festival bonus was last paid in, and the last days its day shift could not keep up with the day's plan (bit 0 the latest), with the day +1 last recorded.</summary>
+        public int Benefits { get; internal set; }
+        public long FestivalPaid { get; internal set; }
+        public int ShortDays { get; internal set; }
+        public long ShortDay { get; internal set; }
+
+        private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0 || Stakes.Count > 0 || BoughtOutOfferedAt != 0 || Benefits != 0 || FestivalPaid != 0 || ShortDays != 0 || ShortDay != 0; } }
 
         private bool KilnUsed { get { return Yard != 0 || YardCost != 0 || KilnMade != 0 || KilnToBuilds != 0 || KilnSold != 0 || KilnSeason != 0; } }
 
@@ -323,6 +329,7 @@ namespace Sim.Core.Business
                 h.WriteInt(Stakes.Count);
                 foreach (Stake k in Stakes) k.WriteTo(h);
                 h.WriteLong(BoughtOutOfferedAt);
+                h.WriteInt(Benefits); h.WriteLong(FestivalPaid); h.WriteInt(ShortDays); h.WriteLong(ShortDay);
             }
         }
 
@@ -397,6 +404,7 @@ namespace Sim.Core.Business
                 int stakes = r.ReadCount();
                 for (int i = 0; i < stakes; i++) b.Stakes.Add(Stake.ReadFrom(r));
                 b.BoughtOutOfferedAt = r.ReadLong();
+                b.Benefits = r.ReadInt(); b.FestivalPaid = r.ReadLong(); b.ShortDays = r.ReadInt(); b.ShortDay = r.ReadLong();
             }
             return b;
         }

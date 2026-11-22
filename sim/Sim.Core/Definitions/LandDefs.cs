@@ -538,6 +538,9 @@ namespace Sim.Core.Definitions
         /// <summary>Valuing, selling and branching a business (spec 028 §3.3, <c>exit.json</c>), with the managers, or null.</summary>
         public ExitDef Exit { get; internal set; }
 
+        /// <summary>Benefits and the night shift (spec 028 §3.8, <c>content/benefits.json</c>), from the Township's content, or null.</summary>
+        public BenefitsDef Benefits { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

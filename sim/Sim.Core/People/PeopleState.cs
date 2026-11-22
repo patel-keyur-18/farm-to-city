@@ -442,6 +442,9 @@ namespace Sim.Core.People
 
         public bool IsManager { get { return Mgr != null; } }
 
+        /// <summary>The second worker of a night shift (spec 028 §3.8, schema 23): works 20:00 to 04:00 beside the day worker.</summary>
+        public bool Night { get; internal set; }
+
         internal Worker Clone()
         {
             var c = (Worker)MemberwiseClone();
@@ -466,10 +469,11 @@ namespace Sim.Core.People
             h.WriteFixed(Fatigue);
             h.WriteLong(CourseUntil);
             Hr.WriteTo(h);
-            if (h.Hashing ? Mgr != null : !(h is SaveWriter w23 && w23.Schema < Town.TownshipState.GrowthSchema)) // schema 23; hashed once a manager is hired
+            if (h.Hashing ? Mgr != null || Night : !(h is SaveWriter w23 && w23.Schema < Town.TownshipState.GrowthSchema)) // schema 23; hashed once a manager or a night worker is hired
             {
                 h.WriteBool(Mgr != null);
                 Mgr?.WriteTo(h);
+                h.WriteBool(Night);
             }
         }
 
@@ -482,7 +486,11 @@ namespace Sim.Core.People
                 HiredAt = r.ReadLong(), SeasonsWorked = r.ReadInt(), Fatigue = r.ReadFixed(), CourseUntil = r.ReadLong(),
             };
             w.Hr = HrState.ReadFrom(r);
-            if (r.Schema >= Town.TownshipState.GrowthSchema && r.ReadBool()) w.Mgr = ManagerRecord.ReadFrom(r);
+            if (r.Schema >= Town.TownshipState.GrowthSchema)
+            {
+                if (r.ReadBool()) w.Mgr = ManagerRecord.ReadFrom(r);
+                w.Night = r.ReadBool();
+            }
             return w;
         }
     }
@@ -628,7 +636,10 @@ namespace Sim.Core.People
         public JobPost PostAt(long place) { return Posts.Find(x => x.Place == place); }
 
         /// <summary>The worker who works a business (not its manager).</summary>
-        public Worker WorkerAt(long place) { return Workers.Find(x => x.Place == place && x.Mgr == null); }
+        public Worker WorkerAt(long place) { return Workers.Find(x => x.Place == place && x.Mgr == null && !x.Night); }
+
+        /// <summary>The business's night worker (spec 028 §3.8), or null.</summary>
+        public Worker NightAt(long place) { return Workers.Find(x => x.Place == place && x.Night); }
 
         /// <summary>The business's manager (spec 028 §3.2), or null.</summary>
         public Worker ManagerAt(long place) { return Workers.Find(x => x.Place == place && x.Mgr != null); }

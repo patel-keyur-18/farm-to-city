@@ -65,7 +65,11 @@ namespace Sim.Core.Business
         public List<DealOffer> Offers { get; internal set; } = new List<DealOffer>();
         public long NextOfferId { get; internal set; } = 1;
 
-        internal bool IsDefault { get { return Sales.Count == 0 && NextSaleId == 1 && Offers.Count == 0 && NextOfferId == 1; } }
+        /// <summary>The benefits your farm gives its hands (spec 028 §3.8; bits of <see cref="People.Benefit"/>), and the season +1 their festival bonus was last paid in.</summary>
+        public int FarmBenefits { get; internal set; }
+        public long FarmFestivalPaid { get; internal set; }
+
+        internal bool IsDefault { get { return Sales.Count == 0 && NextSaleId == 1 && Offers.Count == 0 && NextOfferId == 1 && FarmBenefits == 0 && FarmFestivalPaid == 0; } }
 
         internal ExitState Clone()
         {
@@ -83,6 +87,8 @@ namespace Sim.Core.Business
             h.WriteInt(Offers.Count);
             foreach (DealOffer x in Offers) x.WriteTo(h);
             h.WriteLong(NextOfferId);
+            h.WriteInt(FarmBenefits);
+            h.WriteLong(FarmFestivalPaid);
         }
 
         internal static ExitState ReadFrom(SaveReader r)
@@ -94,6 +100,8 @@ namespace Sim.Core.Business
             int offers = r.ReadCount();
             for (int i = 0; i < offers; i++) s.Offers.Add(DealOffer.ReadFrom(r));
             s.NextOfferId = r.ReadLong();
+            s.FarmBenefits = r.ReadInt();
+            s.FarmFestivalPaid = r.ReadLong();
             return s;
         }
     }

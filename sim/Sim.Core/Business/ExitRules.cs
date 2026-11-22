@@ -162,6 +162,7 @@ namespace Sim.Core.Business
                 b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.severance", "business:" + b.Id, new Posting(Account.HiredLabour, sev), new Posting(Account.Cash, -sev));
                 total += sev;
             }
+            total += NightRules.Remove(sim, b, false); // and its night worker, paid off the same way
             return total;
         }
 

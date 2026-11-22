@@ -463,5 +463,8 @@
   {"label":"US-124 managers","view":"farm","date":"2026-11-22","drawCalls":364,"batches":364,"setPassCalls":6,"triangles":6739,"visibleSprites":410,"sprites":2277},
   {"label":"US-125 and US-247 (sell or expand, investors and partners)","view":"all","date":"2026-11-22","drawCalls":1116,"batches":1116,"setPassCalls":12,"triangles":22999,"visibleSprites":1373,"sprites":2264},
   {"label":"US-125 and US-247 (sell or expand, investors and partners)","view":"village","date":"2026-11-22","drawCalls":501,"batches":501,"setPassCalls":9,"triangles":10022,"visibleSprites":595,"sprites":2264},
-  {"label":"US-125 and US-247 (sell or expand, investors and partners)","view":"farm","date":"2026-11-22","drawCalls":348,"batches":348,"setPassCalls":9,"triangles":6705,"visibleSprites":393,"sprites":2264}
+  {"label":"US-125 and US-247 (sell or expand, investors and partners)","view":"farm","date":"2026-11-22","drawCalls":348,"batches":348,"setPassCalls":9,"triangles":6705,"visibleSprites":393,"sprites":2264},
+  {"label":"US-258 benefits and night shifts","view":"all","date":"2026-11-22","drawCalls":979,"batches":979,"setPassCalls":11,"triangles":19625,"visibleSprites":1208,"sprites":2206},
+  {"label":"US-258 benefits and night shifts","view":"village","date":"2026-11-22","drawCalls":473,"batches":473,"setPassCalls":9,"triangles":9936,"visibleSprites":560,"sprites":2206},
+  {"label":"US-258 benefits and night shifts","view":"farm","date":"2026-11-22","drawCalls":331,"batches":331,"setPassCalls":9,"triangles":6898,"visibleSprites":370,"sprites":2206}
 ]

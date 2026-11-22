@@ -123,8 +123,8 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin, indexed by the pri
 | Benefits | **A meal each working day:** 1,800, motivation +0.03. **Health cover** (needs the clinic): 600, sick leave 2% to 1%, no sick day's wage lost, motivation +0.02. **Festival bonus:** 1,000, paid at each festival, motivation +0.04 that season, reputation +1. **Paid leave, 4 days a season:** 900 and those days' work lost, motivation +0.03, fatigue −0.10 once a season. Motivation still stops at 1.2. |
 | Loyalty | Each benefit multiplies the poaching chance and the chance a worker leaves unhappy by 0.85 (all four: poaching 5% to about 2.6% a season). Two or more benefits kept through a close: employer reputation +1. |
 | Honest value | A "Does it pay?" line per benefit with your own numbers: benefits do not pay in output alone (+0.03 is about +3% output, about 600 on a 20,000 worker); they pay in keeping a skilled worker and in reputation. |
-| Night shift | Needs the grid (not a generator) and a second worker hired for the same role; offered only on the mill, bakery, dairy and sweet shop. 20:00 to 04:00, 8 hours, no overtime; wage +25% (25,000 on a 20,000 role); fatigue 0.07 a day; the business's power as usual. |
-| When it pays | Offered when the business sold out before the day shift ended on 3 days (the sheet shows "busy 100% of the 12 hours; sold out by 14:00 on 5 of the last 8 days"). Demand-limited businesses will pay only in a large town. |
+| Night shift | Needs the grid (not a generator) and a second worker for the same role (**built, ADR 0160: taken on at once from the commuters, not chosen from the board**); offered only on the mill, bakery, dairy and sweet shop. 20:00 to 04:00, 8 hours, no overtime; wage +25% (25,000 on a 20,000 role); fatigue 0.07 a day; the business's power as usual. |
+| When it pays | Offered when the day shift could not keep up with the business's own plan on 3 of the last 8 days (**built, ADR 0160: no demand model records "sold out"; the sheet shows "Day shift behind on 3 of the last 8 days"**). Demand-limited businesses will pay only in a large town. |
 
 ### 3.9 Supervisors, associations, conflicts and accidents (US-259, G9, Could)
 
@@ -311,6 +311,7 @@ Each was closed with the owner, one per message, with my recommendation, before 
 - **G6 Tempo. Closed (owner, 2026-11-21, my recommendation):** price 3,50,000 and a trip at 300.
 - **G7 Restaurant. Closed (owner, 2026-11-21, my recommendation):** two dishes; highway travellers left out.
 - **G8 Benefits and night shifts. Closed (owner, 2026-11-21, my recommendation):** per employer, four benefits, a night shift on the grid.
+- **Gaps 12 and 13 (owner, 2026-11-22, my recommendation, ADR 0160):** a benefit's cost paid upfront with the wage, off stops at once with no refund; the night shift as a second worker flagged Night, the sold-out days counted.
 - **G9 Supervisors, associations, conflicts and accidents. Closed (owner, 2026-11-21, my recommendation):** the pay-the-wage and let-it-be defaults.
 - **G10 Kirana, marketing and khata. Closed (owner, 2026-11-21, my recommendation):** khata's 8, 4 and 1% losses and the 0.15 marketing cap.
 - **Gap 9 (owner, 2026-11-22, my recommendation, ADR 0158):** tax at the sale; a gone business drops its policy and cards; no `ValueHistory`.

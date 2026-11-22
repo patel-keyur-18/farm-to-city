@@ -292,6 +292,7 @@ namespace Sim.Core.People
             }
             s.Applicants.RemoveAll(x => x.Place == b.Id);
             s.Posts.RemoveAll(x => x.Place == b.Id);
+            BenefitRules.ChargeNew(sim, b.Id); // spec 028 §3.8: the rest of the season's benefits for the new worker
             Farm.FarmSystem.Refresh(sim);
             sim.Emit(new WorkerHired(t, b.Id, w.Id, wage, prepay));
         }

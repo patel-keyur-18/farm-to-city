@@ -81,4 +81,27 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "ShareBoughtBack(business=" + BusinessId + ", kind=" + Kind + ", price=" + Price + ")"; }
     }
+
+    /// <summary>A benefit was switched on or off for an employer (spec 028 §3.8): the business's id (0: your farm) and the <c>Benefit</c> bit.</summary>
+    public sealed class BenefitChanged : SimEvent
+    {
+        public long Employer { get; }
+        public int Benefit { get; }
+        public bool On { get; }
+
+        public BenefitChanged(long simTime, long employer, int benefit, bool on) : base(simTime) { Employer = employer; Benefit = benefit; On = on; }
+
+        protected override string Describe() { return "BenefitChanged(employer=" + Employer + ", benefit=" + Benefit + ", " + (On ? "on" : "off") + ")"; }
+    }
+
+    /// <summary>A business started or ended its night shift (spec 028 §3.8).</summary>
+    public sealed class NightShiftChanged : SimEvent
+    {
+        public long BusinessId { get; }
+        public bool On { get; }
+
+        public NightShiftChanged(long simTime, long businessId, bool on) : base(simTime) { BusinessId = businessId; On = on; }
+
+        protected override string Describe() { return "NightShiftChanged(business=" + BusinessId + ", " + (On ? "on" : "off") + ")"; }
+    }
 }

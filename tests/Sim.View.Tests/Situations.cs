@@ -388,6 +388,14 @@ namespace Sim.View.Tests
             Add(Sim.Core.Business.DealKind.Investor, mill, 20, 71_550, 2);
             Add(Sim.Core.Business.DealKind.Partner, mill, 20, 28_800, sim.State.Citizens.Households[0].Id);
             Add(Sim.Core.Business.DealKind.BuyOut, bakery, 104, 341_000, 1);
+            // US-258: benefits on the bakery and the farm, the grid on, the bakery on a night shift and the mill offered one.
+            Ok(sim, new SetBenefit(T(sim), bakery.Id, Sim.Core.People.Benefit.Meal, true));
+            Ok(sim, new SetBenefit(T(sim), bakery.Id, Sim.Core.People.Benefit.Leave, true));
+            sim.State.Township.UtilitiesBuilt |= 1 << Sim.Core.Definitions.UtilityDef.Grid;
+            bakery.ShortDays = 0b11;
+            mill.ShortDays = 0b111;
+            bakery.ShortDays = 0b111;
+            Ok(sim, new SetNightShift(T(sim), bakery.Id, true));
             return sim;
         }
 

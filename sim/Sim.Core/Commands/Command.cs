@@ -364,6 +364,22 @@ namespace Sim.Core.Commands
 
         /// <summary>An investor's share can be bought back only after the seasons it must stand.</summary>
         BuyBackTooEarly,
+
+        // Spec 028 §3.8 (benefits and night shifts, US-258)
+        /// <summary>Health cover needs the clinic, with its doctor in post.</summary>
+        NoClinic,
+
+        /// <summary>The night shift needs the grid (a generator will not do).</summary>
+        NoGrid,
+
+        /// <summary>This kind of business has no night shift (the mill, bakery, dairy and sweet shop have).</summary>
+        NoNightShift,
+
+        /// <summary>The business has not yet been too busy for its day shift, so no night shift is offered.</summary>
+        NightNotOffered,
+
+        /// <summary>It already runs a night shift, or has none to stop.</summary>
+        NightState,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

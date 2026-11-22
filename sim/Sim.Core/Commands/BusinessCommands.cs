@@ -409,4 +409,36 @@ namespace Sim.Core.Commands
 
         protected override CommandResult ApplyAt(Simulation sim) { return OwnerRules.BuyBack(sim, BusinessId, Kind); }
     }
+
+    /// <summary>Gives (or stops giving) one benefit to all of an employer's workers (spec 028 §3.8): a business's id, or 0 for your farm's hands.</summary>
+    public sealed class SetBenefit : TimedCommand
+    {
+        public long Employer { get; }
+        public People.Benefit Benefit { get; }
+        public bool On { get; }
+
+        public SetBenefit(long at, long employer, People.Benefit benefit, bool on) : base(at)
+        {
+            Employer = employer;
+            Benefit = benefit;
+            On = on;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return People.BenefitRules.Set(sim, Employer, Benefit, On); }
+    }
+
+    /// <summary>Starts or stops a business's night shift (spec 028 §3.8).</summary>
+    public sealed class SetNightShift : TimedCommand
+    {
+        public long BusinessId { get; }
+        public bool On { get; }
+
+        public SetNightShift(long at, long businessId, bool on) : base(at)
+        {
+            BusinessId = businessId;
+            On = on;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return On ? NightRules.Start(sim, BusinessId) : NightRules.Stop(sim, BusinessId); }
+    }
 }
