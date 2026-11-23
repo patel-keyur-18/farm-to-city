@@ -511,6 +511,9 @@ namespace Sim.Core.Definitions
         /// <summary>The Concept Codex (spec 018 §3.3), with the school's content; else null.</summary>
         public CodexDefs Codex { get; internal set; }
 
+        /// <summary>The town's Chronicle (spec 029, schema 24), with the school's content; else null.</summary>
+        public ChronicleDefs Chronicle { get; internal set; }
+
         /// <summary>The three advisors and their notes (spec 018 §3.4), with the school's content; else null.</summary>
         public AdvisorDefs Advisors { get; internal set; }
 

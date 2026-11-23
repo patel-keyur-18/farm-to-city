@@ -135,7 +135,7 @@ namespace Sim.Core.Business
                 sim.Emit(new LedgerReconciliationFailed(sim.State.Clock.SimTime, "business " + b.Id + ": " + failure));
             }
             b.Reports.Add(report);
-            if (NetProfit(report) > 0) b.ProfitableSeasons++;
+            if (NetProfit(report) > 0) { b.ProfitableSeasons++; History.ChronicleRules.Profit(sim, b); } // spec 029 §3.2: the first profit
             if (b.Reports.Count > KeptReports) b.Reports.RemoveAt(0);
             b.SeasonOpeningCash = b.Ledger.Cash;
             b.AreaSeason = 0;

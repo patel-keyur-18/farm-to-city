@@ -133,7 +133,7 @@ Nothing is asked of the player. A hand's notice is a line, not a card; the town 
 | chronicle | `pinned` | list of kinds | the 14 once-only | | Never dropped |
 | chronicle | `recordMinGrams`, `recordRise` | int, Fixed | 1,000,000, 0.05 | | §3.3 |
 | chronicle | `almanacKeep`, `minProfit` | int, long | 8, 10,000 | | §3.4 |
-| chronicle | `lossLines[]` | list of ledger accounts | the closed list | | Costliest loss's lines |
+| chronicle | `lossKinds[]` | list of loss kinds | fire repair, sale or closing loss, spoiled goods, seizure or default, a business's losing season | | Costliest loss's kinds (G9; running worst, no ledger scan) |
 | stories | `handSeasons`, `handSavings`, `handChance`, `handNotice`, `handWindow`, `handFollow` | int, long, Fixed, int, int, int | 3, 10,000, 0.20, 1, 4, 2 | | The hand's stall |
 | stories | `elderAges[]`, `migrantSeasons[]` | list | 60, 70, 80; 2, 4 | | |
 | stories | `perSeason` | int | 1 | 1 to 3 | At most one step a season |
@@ -215,6 +215,8 @@ All closed (owner, 2026-11-23, my recommendations; ADR 0165):
 - **G5 The spotlight.** A fixed story priority, ties by lowest id, never random.
 - **G6 The arcs.** Four arcs over real events; the only new rule is the hand's stall (a seeded 20% chance, a season's notice, the next newcomer stall).
 - **G7 The screens.** A Menu sheet with two tabs, the Almanac card at the Winter close, a toast for a step; no animation or music.
+- **G8 Events that lack a line's facts. Closed (owner, 2026-11-23, my recommendation, ADR 0166 gap 10):** add the fields to the events (`EpidemicEnded` the sick, a loan cleared event with the lender, the fire's repair payment), one `ChronicleSystem` reading the day's events with their own times.
+- **G9 The costliest loss. Closed (owner, 2026-11-23, my recommendation, ADR 0166 gap 12):** the Almanac keeps a running worst one-off loss for the year, updated at the moment it happens; no ledger scan; `lossLines` in §4 is a list of kinds, not accounts.
 
 ## 11. Cut first
 

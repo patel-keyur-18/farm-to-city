@@ -124,6 +124,7 @@ namespace Sim.Core
                 if (config.Game.Shops != null) state.Shops = Business.ShopsState.New(config);
                 if (config.Game.Treasury != null) state.Treasury = new Town.TreasuryState();
                 if (config.Game.Township != null) state.Township = new Town.TownshipState();
+                if (config.Game.Chronicle != null) state.Chronicle = new History.ChronicleState(config.Game.Farm.Crops.Count);
                 if (config.Game.Onboarding != null)
                 {
                     state.Guidance = new Progress.GuidanceState();
@@ -131,6 +132,8 @@ namespace Sim.Core
                     state._stepCount = config.Game.Onboarding.Steps.Count;
                 }
             }
+
+            History.ChronicleRules.Founding(sim); // spec 029 §3.2: the first line, once the land is the founder's
 
             // The first passes are at the next boundary strictly after the start time.
             long t = state.Clock.SimTime;
@@ -151,6 +154,7 @@ namespace Sim.Core
             if (state == null) throw new ArgumentNullException(nameof(state));
             var sim = new Simulation(config, state);
             sim.MendLostPasses();
+            History.ChronicleRules.Begin(sim); // an older save: "The Chronicle begins" (spec 029 §3.1)
             return sim;
         }
 
@@ -292,7 +296,7 @@ namespace Sim.Core
 
         // ---- Used by systems, job handlers and commands ----
 
-        internal void Emit(SimEvent e) { _events.Add(e); }
+        internal void Emit(SimEvent e) { _events.Add(e); History.ChronicleRules.Observe(this, e); }
 
         /// <summary>Starts a job of a registered type, due at <paramref name="dueTime"/> (≥ the current sim time).</summary>
         internal Job ScheduleJob(string type, long targetId, long dueTime)

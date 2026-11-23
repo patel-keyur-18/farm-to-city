@@ -121,7 +121,7 @@ namespace Sim.Core.Town
                 EventEffect e = s.Effects[i];
                 if (e.Until > now) continue;
                 s.Effects.RemoveAt(i);
-                if (e.Kind == EventEffect.Epidemic) sim.Emit(new EpidemicEnded(now));
+                if (e.Kind == EventEffect.Epidemic) sim.Emit(new EpidemicEnded(now, e.Percent));
             }
         }
 
@@ -704,7 +704,7 @@ namespace Sim.Core.Town
                         break;
                 }
             }
-            if (ev.Id == EventsDef.FireRepair) Repaired(sim, s, p, choice, now);
+            if (ev.Id == EventsDef.FireRepair) { Repaired(sim, s, p, choice, now); sim.Emit(new FireRepaired(now, p.Target, p.Target2 == 1, p.Param)); } // spec 029 §3.2: the town rebuilt it for what the card carried
         }
 
         private static int FlagCode(string name)

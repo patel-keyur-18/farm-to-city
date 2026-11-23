@@ -113,7 +113,11 @@ namespace Sim.Core.Finance
                 sim.Emit(new LoanRepayment(sim.State.Clock.SimTime, loan.Id, interest, arrears, principal - arrears));
             }
             if (!loan.HasArrears) loan.ArrearsCloses = 0;
-            if (loan.Principal == 0 && loan.ArrearsInterest + loan.InterestAccrued == 0) loan.State = LoanState.Repaid;
+            if (loan.Principal == 0 && loan.ArrearsInterest + loan.InterestAccrued == 0)
+            {
+                if (loan.State != LoanState.Repaid) sim.Emit(new LoanCleared(sim.State.Clock.SimTime, loan.Id, sim.Config.Game.Credit.Lenders[loan.Lender].Id, loan.OriginalPrincipal)); // spec 029 §3.2
+                loan.State = LoanState.Repaid;
+            }
             return take;
         }
 

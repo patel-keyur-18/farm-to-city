@@ -163,6 +163,7 @@ namespace Sim.Core.People
             PopulationRules.Traits(sim, RngStream.Migration, c);
             c.Story.Add(new StoryLine(StoryKind.Arrived, sim.State.Clock.SimTime, 0));
             s.Citizens.Add(c);
+            History.ChronicleRules.Arrived(sim, c); // spec 029 §3.2: the first settler
             PopulationRules.InsertMember(x, id);
             return c;
         }

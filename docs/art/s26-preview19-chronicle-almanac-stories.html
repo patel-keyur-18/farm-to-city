@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 19 The Chronicle, the Almanac and citizen stories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen, scaled to fit, with a tab bar for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink);cursor:pointer}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.sheet.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:700px}
+.card.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.card h3{margin:0;font:700 32px var(--display);text-align:center}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.cost.hi{background:var(--cream2);border-radius:10px;border:0;margin-top:6px}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.btnrow .btn{flex:1}
+.pic{width:170px;height:128px;border-radius:14px;border:3px solid var(--wood);overflow:hidden;flex:none}
+.tag{display:inline-block;font:700 14px var(--body);padding:2px 9px;border-radius:9px;background:#e9d9a8;border:2px solid var(--wood);color:var(--wood);vertical-align:middle;margin-left:8px}
+.tag.major{background:var(--saffron,#E8892A);border-color:#9b5412;color:#fff}
+.tag.warn{background:#fde2cf;border-color:var(--warn);color:var(--warn)}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice.def{background:#efe2bd;border-color:#d8c68e}
+.choice .tx{flex:1;font-size:21px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px;font-weight:400}
+.choice .btn{min-width:190px}
+.note{font-size:17px;color:var(--wood);margin:10px 4px 0;line-height:1.4}
+.note.warn{color:var(--warn);font-weight:600}
+.timer{font:600 19px var(--body);color:var(--warn)}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:760px;text-align:center}
+.banner{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fde2cf;border:4px solid var(--warn);border-radius:16px;padding:9px 20px;font:600 21px var(--body);color:var(--warn);cursor:pointer}
+@keyframes flick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) translateY(-2px)}}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick .5s infinite}
+@media (prefers-reduced-motion:reduce){.flame{animation:none}}
+.body{overflow-y:auto}
+.tabrow{display:flex;gap:10px;padding:0 20px 6px}
+.tabrow .btn{flex:1;min-width:0;padding:8px 6px 10px;font-size:20px}
+.pill{display:inline-block;font:700 15px var(--body);padding:2px 10px;border-radius:10px;border:2px solid;margin-left:8px;vertical-align:middle}
+.pill.cur{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.pill.late{background:#fde9c4;border-color:#b9770e;color:#8a5200}
+.pill.over{background:#fbd9d2;border-color:var(--warn);color:var(--warn)}
+.pill.met{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.dd{font:700 18px var(--body);background:var(--sand);border:3px solid var(--sand2);border-radius:12px;padding:6px 12px;color:var(--ink);cursor:pointer;min-width:168px;text-align:center}
+.dd:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.alert{display:flex;gap:12px;align-items:center;background:#fde2cf;border:3px solid var(--warn);border-radius:14px;padding:10px 14px;margin:10px 0 2px;font-size:19px;color:#7a2d08;font-weight:600}
+.stars{color:#e8a31c;letter-spacing:1px;font-size:20px}.stars i{color:#cfc19a;font-style:normal}
+.seg{display:flex;gap:8px}.seg .btn{min-width:120px;padding:6px 12px 8px;font-size:19px}
+.holdbtn::after{content:"";}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center;color:#d9c9a8;font-size:14px}
+.ctl button{font:600 14px var(--body);padding:6px 12px;border-radius:9px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.ctl button[aria-pressed=true]{background:var(--sand);border-color:var(--sand2);color:var(--ink)}
+
+.tl .yr{font:700 26px var(--display);color:var(--wood);margin:16px 0 2px;padding-bottom:2px;border-bottom:3px solid var(--wood)}
+.tl .when{font-size:16px;color:var(--wood);margin-top:2px}
+.tl .row{min-height:68px}
+.tl .row.story{background:#f6ecc6;border-radius:10px}
+.tag.new{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.portrait{width:84px;height:84px;border-radius:14px;border:3px solid var(--wood);background:#e9d9a8;display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
+.portrait svg{width:70px;height:70px}
+.almcard{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:820px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;padding:20px 28px 22px}
+.almcard h3{margin:0;font:700 36px var(--display);text-align:center;color:var(--ink)}
+.almcard .kick{text-align:center;font-size:19px;color:var(--wood);margin:2px 0 8px}
+.almcard .row{min-height:64px}
+.storytoast{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);width:760px;background:var(--cream);border:4px solid var(--wood);border-radius:20px;padding:12px 18px;display:flex;align-items:center;gap:16px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.storytoast .kick{font:600 17px var(--body);color:var(--green2)}
+.storytoast .tx{font:700 24px var(--display);color:var(--ink);line-height:1.2}
+.storytoast .go{font:700 30px var(--body);color:var(--wood)}
+.leaving{font-size:17px;color:var(--warn);font-weight:700;margin-top:3px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 19: the Chronicle, the Almanac and citizen stories</h1>
+  <p class="lead">Sprint 26, US-157, US-158 and US-159 (spec 029 §7, ADR 0165, 0166). Every screen is drawn at the game's own 1280 × 720 size with its palette and type, in the layout of the Codex and the Money sheets. The sentences are the real ones from the string table; the numbers are a Township town's of about 25 households. Tap the tabs below to move between screens, the <b>?</b> on a line, the tabs on the sheet and the buttons to try them.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="ctl" id="ctl"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const I={
+ person:'<svg viewBox="0 0 30 30"><circle cx="15" cy="9" r="5" fill="#8a5a2b"/><path d="M5 27c0-8 4-11 10-11s10 3 10 11z" fill="#c2410c"/></svg>',
+ house:'<svg viewBox="0 0 30 30"><path d="M3 15L15 4l12 11z" fill="#c2410c" stroke="#8a5a2b" stroke-width="2"/><rect x="6" y="14" width="18" height="12" fill="#f3c777" stroke="#8a5a2b" stroke-width="2"/><rect x="12" y="18" width="6" height="8" fill="#8a5a2b"/></svg>',
+ book:'<svg viewBox="0 0 30 30"><path d="M4 6h10c1 0 1 1 1 1v18H4z" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M26 6H16c-1 0-1 1-1 1v18h11z" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2.5"/></svg>',
+ school:'<svg viewBox="0 0 30 30"><rect x="3" y="7" width="24" height="15" rx="2" fill="#2f5d3a" stroke="#8a5a2b" stroke-width="2.5"/><path d="M8 13h14M8 17h9" stroke="#fff3d1" stroke-width="2" stroke-linecap="round"/><rect x="2" y="22" width="26" height="3" fill="#8a5a2b"/></svg>',
+ clinic:'<svg viewBox="0 0 30 30"><rect x="4" y="8" width="22" height="18" rx="2" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M15 11v10M10 16h10" stroke="#c2410c" stroke-width="4" stroke-linecap="round"/></svg>',
+ sign:'<svg viewBox="0 0 30 30"><rect x="13" y="12" width="4" height="15" fill="#8a5a2b"/><rect x="4" y="4" width="22" height="10" rx="2" fill="#f3c777" stroke="#8a5a2b" stroke-width="2.5"/></svg>',
+ coin:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/><path d="M15 8v14M11 12h8M11 18h8" stroke="#9a6a2a" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ field:'<svg viewBox="0 0 30 30"><path d="M3 22l8-12 8 12z" fill="#a86f3b" stroke="#8a5a2b" stroke-width="2"/><path d="M12 24l8-14 8 14z" fill="#d6a449" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ mill:'<svg viewBox="0 0 30 30"><rect x="6" y="12" width="18" height="14" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><path d="M4 13l11-9 11 9z" fill="#a8743c" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="19" r="4" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ star:'<svg viewBox="0 0 30 30"><path d="M15 3l3.6 8 8.4.8-6.3 5.6 1.9 8.3L15 21.4 7.4 25.7l1.9-8.3L3 11.8l8.4-.8z" fill="#ffc83a" stroke="#9a6a2a" stroke-width="2"/></svg>',
+ gear:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="9" fill="#8a5a2b"/><circle cx="15" cy="15" r="4" fill="#fff3d1"/></svg>',
+ bell:'<svg viewBox="0 0 30 30"><path d="M15 4a8 8 0 0 0-8 8v6l-3 4h22l-3-4v-6a8 8 0 0 0-8-8z" fill="#8a5a2b"/><circle cx="15" cy="26" r="3" fill="#8a5a2b"/></svg>',
+ chron:'<svg viewBox="0 0 30 30"><rect x="5" y="3" width="20" height="24" rx="3" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M9 10h12M9 15h12M9 20h7" stroke="#8a5a2b" stroke-width="2.5" stroke-linecap="round"/><circle cx="23" cy="23" r="5" fill="#c2410c" stroke="#fff3d1" stroke-width="2"/></svg>'
+};
+const qb=k=>`<button class="q" data-why="${k}" aria-label="Why?">?</button>`;
+const val=v=>`<div class="val">${v}</div>`;
+const sec=t=>`<div class="sec">${t}</div>`;
+const row=(ic,t,sub,right,k,cls)=>`<div class="row ${cls||''}">${ic?`<div class="ico">${ic}</div>`:''}<div class="grow">${t}<small>${sub||''}</small></div>${right||''}${k?qb(k):''}</div>`;
+const tabsFor=(names,a,key)=>`<div class="tabrow">${names.map(t=>`<button class="btn ${t===a?'':'sand'}" data-sub="${t}"><span>${t}</span></button>`).join('')}</div>`;
+const WHY={
+ founding:{t:'You came to the valley',h:'10 acres',rows:[['Written the day your town began','Spring, year 1'],['Your land then: the farm, the yard, the cattle acre and the labour quarters','10 acres']],foot:'The first line of every Chronicle. It is never dropped.'},
+ record:{t:'A record Rice harvest',h:'2,350 kg',rows:[['Rice harvested on all your fields this Monsoon','2,350 kg'],['The best earlier season of rice','2,100 kg'],['A record needs at least 1,000 kg and 5% over the best','12% over']],foot:'One record line a season: the crop that beat its best by the most.'},
+ loan:{t:'You paid off the loan',h:'40,000 coins',rows:[['The loan, taken from the Cooperative bank in Spring, year 4','40,000'],['What was left to pay','0'],['Written the day the last payment cleared it','Winter, year 6']],foot:'One loan line a season, the biggest kept.'},
+ story:{t:'Why this line',h:'A story step',rows:[['Ramesh has been your hand for 3 seasons','3'],['His household has put aside','12,400'],['His terms are fair: his motivation is','1.04'],['A hand like this has a one in five chance each close of starting a stall of his own','20%']],foot:'You can keep a hand with a raise or benefits before the close.'},
+ best:{t:'Best return',h:'38 for every 100',rows:[['Your Bakery earned over the year\'s four seasons','1,52,000'],['The money you put in to found it','4,00,000'],['Its profit over the money put in','38%'],['A return counts when the profit is at least 10,000; else the year is quiet','met']],foot:'It compares the Bakery with the Flour mill (21%) and your crops (Rice 29%): the biggest share wins.'},
+ loss:{t:'Costliest loss',h:'18,400 coins',rows:[['A fire took part of the grain store in Summer; the town rebuilt it for','18,400'],['Counted: a fire repair, a loss on selling or closing, spoiled goods, something seized, a business\'s losing season','one-off losses only'],['Wages, seed, rent and fuel are ordinary costs and never count','not counted']],foot:'The biggest single loss of the year, with its cause.'},
+ spot:{t:'Why Meera',h:'The year\'s story',rows:[['Her story moved this year: the first reader in her family','first in the order'],['After her: the first child to read, the youngest baby, your longest-serving worker, the oldest elder','not needed'],['Ties go to the lowest id, so it is always the same person','never random']],foot:''},
+ worth:{t:'Net worth',h:'18,64,000',rows:[['Cash, land at today\'s price, buildings, stored goods and your businesses, less what you owe','18,64,000'],['A year ago','15,54,000'],['Change','+3,10,000']],foot:'In today\'s coins.'}
+};
+let tab='menu',state={why:null,sub:'Timeline',quiet:false,toast:true,leaving:true};
+function mapSvg(){let t='';for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+520,y=140+(c+r)*46;const col=(c*7+r*3)%5;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][col];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f5f26" stroke-width="1"/>`}return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}</svg>`}
+function base(bell){return `<div class="map">${mapSvg()}</div>
+ <div class="hud l"><div class="s">Winter · 1 day left · Year 6</div><div class="big">16:10</div><div class="s">Clear until 22:00</div></div>
+ <div class="hud r"><div class="big" style="font-size:40px">1.12 L</div></div><div class="hud r2">Store 48%</div><div class="hud r3">112 people &nbsp;78</div>
+ <div class="roundbtn" style="left:20px;bottom:20px;width:110px;border-radius:22px;height:70px;background:#c9c2b0;border-color:#8a8372;color:#6e6858;align-items:center;padding:0">Collect all</div>
+ <div class="roundbtn" style="right:112px;bottom:128px;width:84px;height:84px">${I.bell.replace('<svg','<svg style="width:40px;height:40px;margin-top:-10px"')}<span class="badge">${bell||1}</span></div>
+ <div class="roundbtn" style="right:20px;bottom:20px"><span style="color:#fff;background:#b02a1e;position:absolute;top:18px;left:28px;width:42px;height:34px;border-radius:6px"></span>Menu</div>`}
+function sheet(title,sub,icon,body,tabs){return `<div class="scrim"></div><div class="sheet"><div class="head"><div class="cbtn">←</div><div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div>${tabs||''}<div class="body">${body}</div></div>`}
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:780px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:600 17px var(--body);color:var(--wood)">Why?</div><h3 style="text-align:left;font-size:30px">${w.t}</h3></div><div style="font:700 28px var(--display);color:var(--green2)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost"><span style="max-width:560px">${r[0]}</span><b>${r[1]}</b></div>`).join('')}${w.foot?`<div class="note">${w.foot}</div>`:''}<div class="btnrow"><button class="btn sand" data-close="1"><span>Close</span></button></div></div>`}
+const TL=[
+ ['Year 6',[
+  [I.coin,'You paid off 40,000 coins to Cooperative bank.','Winter, year 6','loan'],
+  [I.field,'A record Rice harvest: 2,350 kg.','Monsoon, year 6','record'],
+  [I.mill,'Your Bakery opened.','Summer, year 6',null],
+  [I.book,'Meera learned to read: the first in her family.','Spring, year 6','story',1]]],
+ ['Year 5',[
+  [I.person,'Ramesh has put aside enough for a stall of his own.','Winter, year 5','story',1],
+  [I.house,'The village became a township: 21 families now.','Monsoon, year 5',null],
+  [I.sign,'The road to the district was paved.','Summer, year 5',null],
+  [I.clinic,'The clinic opened: the town has a doctor.','Spring, year 5',null]]],
+ ['Year 4',[
+  [I.school,'Sunita learned to read as a grown-up, in your class.','Winter, year 4',null],
+  [I.school,'Kavita was the first child in the valley to learn to read at your school.','Monsoon, year 4',null],
+  [I.school,'The school opened its doors.','Summer, year 4',null],
+  [I.house,'The hamlet became a village: 9 families now.','Spring, year 4',null]]],
+ ['Year 1',[
+  [I.person,'Suresh was the first child born here.','Winter, year 2',null],
+  [I.person,'Mahesh was the first to settle on your land.','Monsoon, year 1',null],
+  [I.house,'You came to the valley with 10 acres and a plan.','Spring, year 1','founding']]]
+];
+const views={
+ menu:{label:'1 · Menu: a new Chronicle row',notes:[
+  ['What to check',['One new row in the Menu, <b>Chronicle</b>, in the same layout as the others (a picture, a title, one line, an Open button). It appears in every era, because the town\'s story starts on its first day.','A badge is not needed: the Chronicle is read when you want to, and the new lines are marked inside it.']]],
+  render(){const r=(ic,t,s,hi)=>`<div class="row" style="min-height:100px;${hi?'background:var(--cream2);border-radius:10px':''}"><div class="ico" style="width:56px;height:56px">${ic}</div><div class="grow"><b style="font-size:26px">${t}</b><small style="font-size:20px">${s}</small></div><button class="btn" style="min-width:190px"><span>Open</span></button></div>`;
+   return base()+sheet('Menu','',I.gear,r(I.coin,'Money and loans','Cash, the season report, borrowing')+r(I.person,'People','Labourers and hands')+r(I.mill,'Businesses','Start a business, see how yours are doing')+r(I.chron,'Chronicle','The story of your valley, year by year',1)+r(I.book,'Codex','What you have learned'))}},
+ timeline:{label:'2 · Chronicle: Timeline',ctl:[['toast','true','Tap a ? for its Why']],notes:[
+  ['What to check',['Newest first, grouped by game year, one warm sentence a line with its date and an icon by kind. A story step (a hand saving for a stall, a first reader) has a soft background so it stands out.','A <b>?</b> on a line opens its Why? with the numbers behind it. Lines that are plain facts (a school opened) carry no ?.','About 25 to 40 lines a game year in a town of 25 households; 400 are kept. The firsts, the eras and the founding are never dropped.']],
+  ['Teaches',['That a town is the sum of what you did: the lines are your decisions, the record harvests and the loans cleared are your results.']]],
+  render(){let h='<div class="tl">';TL.forEach(y=>{h+=`<div class="yr">${y[0]}</div>`;y[1].forEach(e=>{h+=`<div class="row ${e[4]?'story':''}"><div class="ico">${e[0]}</div><div class="grow">${e[1]}<div class="when">${e[2]}</div></div>${e[3]?qb(e[3]):''}</div>`})});h+='</div>';
+   return base()+sheet('Chronicle','The story of your valley',I.chron,h,tabsFor(['Timeline','Almanacs'],'Timeline'))}},
+ almanacs:{label:'3 · Chronicle: Almanacs',notes:[
+  ['What to check',['The last 8 years, newest first: the year, the net worth, the best return and a person. Open takes you to the same card as at the Winter close; it never changes once written.','A year with no best return reads "a quiet year".']]],
+  render(){const y=(n,nw,best,who)=>`<div class="row" style="min-height:96px"><div class="ico">${I.chron}</div><div class="grow"><b style="font-size:24px">Year ${n} in the valley</b><small>Net worth ${nw} · Best: ${best}</small><small>${who}</small></div><button class="btn sand" style="min-width:140px"><span>Open</span></button></div>`;
+   return base()+sheet('Chronicle','The story of your valley',I.chron,y(6,'18,64,000','Bakery, 38 for every 100','Meera, the first in her family to read')+y(5,'15,54,000','Rice, 29 for every 100','Ramesh, saving for a stall')+y(4,'11,20,000','a quiet year','Sunita, who learned to read as a grown-up')+y(3,'8,02,000','Mango orchard, 22 for every 100','Suresh, the youngest baby'),tabsFor(['Timeline','Almanacs'],'Almanacs'))}},
+ card:{label:'4 · The Almanac card',ctl:[['quiet','false','A good year'],['quiet','true','A quiet year']],notes:[
+  ['What to check',['Opens at each Winter close after <i>Your year</i> and before Dadi\'s letters. The population, the net worth with its change, the best return (?), the costliest loss (?) and one person to remember (?). Two buttons: <b>Open the Chronicle</b> and <b>Close</b>.','Best return is a ratio: the profit over the money put in, so a small business that did well can beat a big one that did not. A year under 10,000 coins of profit reads "a quiet year".','The costliest loss is one-off only: a fire, a loss on a sale, spoiled goods, a seizure, a business\'s losing season. Wages, seed and rent never count.']],
+  ['Teaches',['That return is profit against what you put in, and that one bad day can cost more than a quiet year earns.']]],
+  render(){const q=state.quiet;
+   let h=`<div class="almcard"><h3>Year 6 in the valley</h3><div class="kick">Winter · what the year was</div>`;
+   h+=row(I.person,'Your people','26 households · the old village 184 people',val('112 people'),null);
+   h+=row(I.coin,'Net worth','Up 3,10,000 on last year',val('18,64,000'),'worth');
+   h+=q?row(I.chron,'Best return','Under 10,000 coins of profit in any business or crop',val('a quiet year'),'best'):row(I.mill,'Best return','Your Bakery: it earned 38 coins for every 100 you put in',val('1,52,000'),'best');
+   h+=q?row(I.gear,'Costliest loss','No one-off loss this year',val('none'),'loss'):row(I.gear,'Costliest loss','A fire took part of the grain store in Summer',val('−18,400'),'loss');
+   h+=q?row('', 'A quiet year for the people','Nobody\'s story moved','', 'spot'):`<div class="row" style="min-height:104px"><div class="portrait">${I.person}</div><div class="grow"><b style="font-size:23px">Meera</b><small>was the first child in her family to learn to read.</small></div>${qb('spot')}</div>`;
+   h+=`<div class="btnrow"><button class="btn sand"><span>Open the Chronicle</span></button><button class="btn"><span>Close</span></button></div></div>`;
+   return base()+'<div class="scrim"></div>'+h}},
+ toast:{label:'5 · A story\'s toast',ctl:[['storyStep','0','A hand saving'],['storyStep','1','A first reader'],['storyStep','2','A long life']],notes:[
+  ['What to check',['A six-second card at the bottom of the screen, like a Codex card: the person\'s portrait, a small green line saying it is a story, one sentence. It waits for open sheets and letters, never stays, never blocks a tap. Tapping it opens the Chronicle at the line.','At most one story step a season in the whole town.']]],
+  render(){const S=[['Ramesh has put aside enough for a stall of his own.','He will leave at the close.'],['Meera learned to read: the first in her family.','A story from your valley'],['Dadi Lakshmi is 80 and still part of the daily life of the farm.','A story from your valley']][state.storyStep||0];
+   return base()+`<div class="storytoast"><div class="portrait" style="width:70px;height:70px">${I.person}</div><div style="flex:1"><div class="kick">${S[1]}</div><div class="tx">${S[0]}</div></div><div class="go">›</div></div>`}},
+ people:{label:'6 · People: a hand gives notice',ctl:[['leaving','true','Notice given'],['leaving','false','No notice']],notes:[
+  ['What to check',['A line on the person\'s row in the People sheet, in the warning colour: "Ramesh will leave at the close to start a stall." It is a line, not a card: nothing is asked of you.','You can answer it before the close: a raise, a benefit (Settings tab), or a hire from the board so the farm is not left short. If you do nothing he leaves, no severance is owed and the post is empty.','The stall is the village\'s and a rival, not yours: it competes by the usual shop rules.']],
+  ['Teaches',['That a good worker is worth keeping, and that a worker with savings and fair terms may rather work for himself.']]],
+  render(){const L=state.leaving;let h=sec('Your hands');
+   h+=`<div class="row" style="min-height:104px"><div class="portrait" style="width:72px;height:72px">${I.person}</div><div class="grow"><b style="font-size:24px">Ramesh</b><small>Hand · <span class="stars">★★★★<i>★</i></span> · hired 3 seasons ago</small>${L?'<div class="leaving">Will leave at the close to start a stall</div>':''}</div><button class="btn sand" style="min-width:150px"><span>Talk</span></button>${L?qb('story'):''}</div>`;
+   h+=`<div class="row" style="min-height:104px"><div class="portrait" style="width:72px;height:72px">${I.person}</div><div class="grow"><b style="font-size:24px">Sunita</b><small>Hand · <span class="stars">★★★<i>★★</i></span> · hired 5 seasons ago</small></div><button class="btn sand" style="min-width:150px"><span>Talk</span></button></div>`;
+   h+=sec('Hiring');h+=row('','Hiring board','Farm hand, miller, baker and more',`<button class="btn" style="min-width:170px"><span>Open</span></button>`);
+   return base()+sheet('People','Labourers and hands',I.person,h)}}
+};
+function render(){
+ const v=views[tab];let html=v.render();
+ if(state.why)html+=whyCard(state.why);
+ $('#stage').innerHTML=html;
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ $('#ctl').innerHTML=(v.ctl&&v.ctl.filter(c=>c[0]!=='toast').length?'<span>Show:</span>':'')+(v.ctl||[]).filter(c=>c[0]!=='toast').map(c=>`<button data-set="${c[0]}:${c[1]}" aria-pressed="${String(state[c[0]])===c[1]}">${c[2]}</button>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;state.why=null;render()});
+$('#ctl').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b)return;const [g,v]=b.dataset.set.split(':');state[g]=(v==='true'?true:v==='false'?false:isNaN(+v)?v:+v);render()});
+$('#stage').addEventListener('click',e=>{
+ const t=e.target.closest('[data-why],[data-close],[data-sub]');if(!t)return;const d=t.dataset;
+ if(d.why)state.why=d.why;else if(d.close)state.why=null;else if(d.sub){tab=d.sub==='Almanacs'?'almanacs':'timeline'}
+ render();
+});
+addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>
