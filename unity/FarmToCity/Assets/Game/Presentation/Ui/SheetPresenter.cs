@@ -127,12 +127,12 @@ namespace Game.Presentation.Ui
                 case "person_hand_m": case "person_hand_f": case "person_labourer_m": case "person_labourer_f": return SpriteBank.Rendered(icon + "_front");
                 case "hand_hut": case "hand_hut_building": case "granary": case "cold_store": case "silage_pit": case "chaff_cutter": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut;
                 case "solar_panel": return SpriteBank.Rendered("icon_solar_panel") ?? SpriteBank.Rendered(icon); // granary: your godown in town (ADR 0087)
-                case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": case "brick_kiln": case "brick_kiln_building": case "tuition": case "tuition_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
+                case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": case "brick_kiln": case "brick_kiln_building": case "tuition": case "tuition_building": case "restaurant": case "restaurant_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
                 case "veg_stall": case "tea_stall": case "sweet_shop": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut; // shops (spec 017)
                 case "school": case "school_building": return IconBank.Good(icon); // spec 018
                 case "watchman_post": case "community_hall": case "playground": return IconBank.Good(icon); // spec 023 §3.7
                 case "clinic": case "clinic_building": case "doctor_quarters": case "doctor_quarters_building": return IconBank.Good(icon); // spec 023 §3.1
-                case "newcomer_veg": case "newcomer_chai": case "newcomer_sweets": return IconBank.Good(icon); // spec 017 §3.7
+                case "newcomer_veg": case "newcomer_chai": case "newcomer_sweets": case "newcomer_meals": return IconBank.Good(icon); // spec 017 §3.7
                 case "veg_stall_building": case "tea_stall_building": case "sweet_shop_building": return SpriteBank.Rendered(icon.Substring(0, icon.Length - 9) + "_s") ?? SpriteBank.Hut;
                 case "pitch": return SpriteBank.Rendered("pitch_empty_1");
                 case "star": return IconBank.Star(2); // a shop's stars (spec 017 §3.5)

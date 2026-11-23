@@ -456,4 +456,21 @@ namespace Sim.Core.Commands
 
         protected override CommandResult ApplyAt(Simulation sim) { return TuitionRules.SetFee(sim, BusinessId, Preset); }
     }
+
+    /// <summary>Switches one of a restaurant's dishes on or off (spec 028 §3.7): a dish off hands its diners to the rest, and the last cannot be switched off.</summary>
+    public sealed class SetDish : TimedCommand
+    {
+        public long BusinessId { get; }
+        public int Dish { get; }
+        public bool On { get; }
+
+        public SetDish(long at, long businessId, int dish, bool on) : base(at)
+        {
+            BusinessId = businessId;
+            Dish = dish;
+            On = on;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return MealsRules.SetDish(sim, BusinessId, Dish, On); }
+    }
 }

@@ -106,6 +106,22 @@
       "buildHours": 48, "worker": "tutor", "workerSkill": "crafting", "wage": 20000,
       "repairsShare": 0.02, "openHour": 15, "closeHour": 19,
       "tuition": { "batches": 2, "batchSize": 20, "ageMin": 7, "ageMax": 17, "fee": 800, "presets": [1.0, 0.9, 1.1, 1.2], "startStars": 2, "takeUpLow": 0.4, "takeUpHigh": 1.0, "suppliesPerPupil": 50, "gainPerSeason": 1, "gainMax": 10 }
+    },
+    {
+      "id": "restaurant", "nameKey": "business.restaurant", "era": "township", "kind": "meals",
+      "building": { "value": 30000, "lifeSeasons": 80 },
+      "equipment": { "value": 20000, "lifeSeasons": 20 },
+      "buildHours": 48, "worker": "cook", "workerSkill": "crafting", "wage": 20000,
+      "capacityPerHour": 30, "repairsShare": 0.02,
+      "openHour": 11, "closeHour": 22,
+      "meals": {
+        "break": [15, 18], "leisureShare": 0.30, "minIncome": 20000,
+        "dishes": [
+          { "id": "thali",   "nameKey": "dish.thali",   "price": 60, "share": 6, "inputs": { "rice": 0.12, "lentils": 0.05, "potato": 0.15 }, "fuel": 4, "supplies": 7 },
+          { "id": "paratha", "nameKey": "dish.paratha", "price": 45, "share": 4, "inputs": { "atta": 0.12, "ghee": 0.006, "curd": 0.05 },       "fuel": 3, "supplies": 3 }
+        ]
+      },
+      "good": { "recipeCost": 0.10 }
     }
   ]
 }

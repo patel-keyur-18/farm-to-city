@@ -63,7 +63,7 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             long usual = HiringRules.AskedWage(sim, place, Fixed.FromInt(50), false);
-            string where = place == 0 ? s.Get("board.handWhere") : s.Get("board.businessWhere", "business", BusinessWords.Name(ctx, BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place))).ToLowerInvariant());
+            string where = place == 0 ? s.Get("board.handWhere") : s.Get(BusinessWords.Key(ctx, "board.businessWhere", BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place))), "business", BusinessWords.Name(ctx, BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place))).ToLowerInvariant());
             vm.Lines.Add(new LineVm(Role(ctx, place), s.Get("board.usual", "wage", ctx.Fmt.Coins(usual)), "jobUsual", place)
                 { Icon = place == 0 ? "person_hand_m" : BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).Id, Note = where });
             if (place == 0) return;

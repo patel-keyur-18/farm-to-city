@@ -67,7 +67,7 @@ namespace Sim.Core.Saves
             ListBusiness, CancelBusinessSale,
             AcceptDeal, DeclineDeal, AcceptBuyOut, BuyBackShare,
             SetBenefit, SetNightShift,
-            SetTuitionFee,
+            SetTuitionFee, SetDish,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -211,6 +211,7 @@ namespace Sim.Core.Saves
                 case SetBenefit c: At(c, Tag.SetBenefit); w.WriteLong(c.Employer); w.WriteInt((int)c.Benefit); w.WriteBool(c.On); break;
                 case SetNightShift c: At(c, Tag.SetNightShift); w.WriteLong(c.BusinessId); w.WriteBool(c.On); break;
                 case SetTuitionFee c: At(c, Tag.SetTuitionFee); w.WriteLong(c.BusinessId); w.WriteInt(c.Preset); break;
+                case SetDish c: At(c, Tag.SetDish); w.WriteLong(c.BusinessId); w.WriteInt(c.Dish); w.WriteBool(c.On); break;
                 case AcceptDeal c: At(c, Tag.AcceptDeal); w.WriteLong(c.OfferId); break;
                 case DeclineDeal c: At(c, Tag.DeclineDeal); w.WriteLong(c.OfferId); break;
                 case AcceptBuyOut c: At(c, Tag.AcceptBuyOut); w.WriteLong(c.OfferId); break;
@@ -405,6 +406,7 @@ namespace Sim.Core.Saves
                 case Tag.SetBenefit: return new SetBenefit(at, r.ReadLong(), (People.Benefit)r.ReadInt(), r.ReadBool());
                 case Tag.SetNightShift: return new SetNightShift(at, r.ReadLong(), r.ReadBool());
                 case Tag.SetTuitionFee: return new SetTuitionFee(at, r.ReadLong(), r.ReadInt());
+                case Tag.SetDish: return new SetDish(at, r.ReadLong(), r.ReadInt(), r.ReadBool());
                 case Tag.AcceptDeal: return new AcceptDeal(at, r.ReadLong());
                 case Tag.DeclineDeal: return new DeclineDeal(at, r.ReadLong());
                 case Tag.AcceptBuyOut: return new AcceptBuyOut(at, r.ReadLong());

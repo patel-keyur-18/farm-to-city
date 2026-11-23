@@ -1875,6 +1875,34 @@
    "h": 260,
    "pivotX": 0.46933,
    "pivotY": 0.22088,
+   "name": "newcomer_meals_cart_s"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "newcomer_meals_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 290,
+   "pivotX": 0.5,
+   "pivotY": 0.26951,
+   "name": "newcomer_meals_pitch_2"
+  },
+  {
+   "w": 262,
+   "h": 268,
+   "pivotX": 0.5282,
+   "pivotY": 0.29344,
+   "name": "newcomer_meals_pitch_3"
+  },
+  {
+   "w": 196,
+   "h": 260,
+   "pivotX": 0.46933,
+   "pivotY": 0.22088,
    "name": "newcomer_sweets_cart_s"
   },
   {
@@ -3122,6 +3150,83 @@
    "pivotX": 0.5247,
    "pivotY": 0.41823,
    "name": "pump_outlet"
+  },
+  {
+   "w": 358,
+   "h": 288,
+   "pivotX": 0.42925,
+   "pivotY": 0.4104,
+   "name": "restaurant_building_e"
+  },
+  {
+   "w": 358,
+   "h": 244,
+   "pivotX": 0.42925,
+   "pivotY": 0.39021,
+   "name": "restaurant_building_n"
+  },
+  {
+   "w": 358,
+   "h": 288,
+   "pivotX": 0.57075,
+   "pivotY": 0.4104,
+   "name": "restaurant_building_s"
+  },
+  {
+   "w": 358,
+   "h": 244,
+   "pivotX": 0.57075,
+   "pivotY": 0.39021,
+   "name": "restaurant_building_w"
+  },
+  {
+   "w": 350,
+   "h": 294,
+   "pivotX": 0.4181,
+   "pivotY": 0.40183,
+   "name": "restaurant_e"
+  },
+  {
+   "w": 350,
+   "h": 242,
+   "pivotX": 0.4181,
+   "pivotY": 0.37484,
+   "name": "restaurant_n"
+  },
+  {
+   "w": 244,
+   "h": 242,
+   "pivotX": 0.49942,
+   "pivotY": 0.32308,
+   "name": "restaurant_pitch_1"
+  },
+  {
+   "w": 244,
+   "h": 242,
+   "pivotX": 0.49942,
+   "pivotY": 0.32308,
+   "name": "restaurant_pitch_2"
+  },
+  {
+   "w": 246,
+   "h": 242,
+   "pivotX": 0.49767,
+   "pivotY": 0.32308,
+   "name": "restaurant_pitch_3"
+  },
+  {
+   "w": 350,
+   "h": 324,
+   "pivotX": 0.5819,
+   "pivotY": 0.3646,
+   "name": "restaurant_s"
+  },
+  {
+   "w": 350,
+   "h": 262,
+   "pivotX": 0.5819,
+   "pivotY": 0.34369,
+   "name": "restaurant_w"
   },
   {
    "w": 356,

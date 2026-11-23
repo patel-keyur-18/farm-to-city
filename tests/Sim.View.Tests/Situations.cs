@@ -377,7 +377,10 @@ namespace Sim.View.Tests
             Ok(sim, new FoundBusiness(T(sim), "tuition", tile3, 300_000_00, false));
             Hire(sim);
             Sim.Core.Business.Business centre = sim.State.Businesses.Businesses.Last();
-            sim.AdvanceTo(centre.ReadyAt + 60);
+            Ok(sim, new FoundBusiness(T(sim), "restaurant", 0, 300_000_00, false, null, 0)); // US-246: a restaurant on a pitch in the square, built beside the centre
+            Hire(sim);
+            Sim.Core.Business.Business diner = sim.State.Businesses.Businesses.Last();
+            sim.AdvanceTo(System.Math.Max(centre.ReadyAt, diner.ReadyAt) + 60);
             Sim.Core.People.CitizensState cs = sim.State.Citizens;
             var family = new Sim.Core.People.Household { Id = cs.NextHouseholdId++, HomeId = 0, Savings = 500_000 * 100, Schooling = 4 * 800 * 100 };
             foreach (int age in new[] { 35, 33, 9, 12 })
@@ -391,6 +394,10 @@ namespace Sim.View.Tests
             Sim.Core.Business.TuitionRules.Enrol(sim, centre);
             centre.TuitionFees = 2_400 * 100;
             Ok(sim, new BuyMachine(T(sim), "tempo")); // US-245: a tempo in the shed
+            foreach (Sim.Core.People.Household h in sim.State.Citizens.Households) { h.Income = 40_000 * 100; h.Leisure = 5_700 * 100; } // the households' leisure to eat out on
+            sim.AdvanceTo(T(sim) / 86_400 * 86_400 + 15 * 3600); // lunch is served
+            Assert.That(diner.SeasonServed, Is.GreaterThan(0), "the restaurant served diners at lunch");
+
             Sim.Core.Business.Business bakery = sim.State.Businesses.Businesses.First(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == "bakery");
             Sim.Core.Business.Business mill = sim.State.Businesses.Businesses.First(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == "flour_mill");
             Sim.Core.Business.ExitState x = sim.State.Township.Exit;

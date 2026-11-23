@@ -3,13 +3,14 @@ using Sim.Core.Maths;
 
 namespace Sim.Core.Definitions
 {
-    /// <summary>The three kinds of shop (spec 017 §3.1): customers of one kind choose between the shops of that kind.</summary>
+    /// <summary>The kinds of shop (spec 017 §3.1, and the restaurant's meals, spec 028 §3.7): customers of one kind choose between the shops of that kind.</summary>
     public enum ShopKind
     {
         None = 0,
         Veg = 1,
         Chai = 2,
         Sweets = 3,
+        Meals = 4,
     }
 
     /// <summary>What people want of a kind of shop a real day (spec 017 §3.2), and how much less they buy as prices rise.</summary>

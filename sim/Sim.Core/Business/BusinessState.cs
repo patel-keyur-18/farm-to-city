@@ -257,6 +257,9 @@ namespace Sim.Core.Business
         public int CohortPupils { get; internal set; }
         public long TuitionFees { get; internal set; }
 
+        /// <summary>A restaurant's dishes switched off (US-246, schema 23): bit k is the k-th dish; a dish off hands its diners to the other.</summary>
+        public int DishesOff { get; internal set; }
+
         private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0 || Stakes.Count > 0 || BoughtOutOfferedAt != 0 || Benefits != 0 || FestivalPaid != 0 || ShortDays != 0 || ShortDay != 0; } }
 
         private bool TuitionUsed { get { return Pupils.Count > 0 || CohortPupils != 0 || TuitionFees != 0; } }
@@ -345,6 +348,7 @@ namespace Sim.Core.Business
                 foreach (long id in Pupils) h.WriteLong(id);
                 h.WriteInt(CohortPupils); h.WriteLong(TuitionFees);
             }
+            if (h.Hashing ? DishesOff != 0 : !(h is SaveWriter m23 && m23.Schema < Town.TownshipState.GrowthSchema)) h.WriteInt(DishesOff); // schema 23; hashed once a dish has been switched off
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -422,6 +426,7 @@ namespace Sim.Core.Business
                 int pupils = r.ReadCount();
                 for (int i = 0; i < pupils; i++) b.Pupils.Add(r.ReadLong());
                 b.CohortPupils = r.ReadInt(); b.TuitionFees = r.ReadLong();
+                b.DishesOff = r.ReadInt();
             }
             return b;
         }

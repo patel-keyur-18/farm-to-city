@@ -4198,6 +4198,67 @@ for _f, _deg in FACINGS.items():
     SPRITES["tuition_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_tuition("building"), d)))()
 
 
+# ---------------------------------------------------------------- the restaurant (US-246, Preview 18): a small eating house with a striped awning and tables in front
+
+def model_restaurant(stage):
+    """A restaurant (spec 028 §3.7): a cream-washed eating house under a tiled gable roof, a red and cream striped awning over a wide
+    front window and a green door, a signboard over the awning, a chimney with a puff of steam, two round tables with stools and
+    a cloth umbrella in front. stage 'done' or 'building' (the plinth, half-raised walls, bamboo poles, bricks and sand)."""
+    o = []
+    cream, dado = toon("eatCream", 0xF3E3BC), toon("eatDado", 0x2F6E4E)
+    brick, plinth = toon("brick", BRICK), toon("plinth", PLINTH)
+    w, d, h, cy = 0.34, 0.20, 0.15, 0.07
+    yard_pad(o, 0.52, 0.36, -0.12)
+    o.append(box("plinth", (w + 0.03, d + 0.03, 0.03), (0, cy, 0.015), plinth, bevel=0.005))
+    if stage == "building":
+        for sx in (-1, 1):
+            o.append(box("wallSide%d" % sx, (0.02, d, 0.07), (sx * (w / 2 - 0.01), cy, 0.065), brick))
+        o.append(box("wallBackHalf", (w, 0.02, 0.09), (0, cy + d / 2 - 0.01, 0.075), brick))
+        o.append(box("wallMid", (0.02, d, 0.05), (0, cy, 0.055), brick))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-w / 2 - 0.02, 0.0, w / 2 + 0.02):
+            for y in (cy - d / 2 - 0.02, cy + d / 2 + 0.02):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.2, (x, y, 0.1), bam, segs=6))
+        for i in range(3):
+            for j in range(3):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.14 + j * 0.055, -0.11, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.05, 0.035, (0.14, -0.11, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+    o.append(box("walls", (w, d, h), (0, cy, 0.03 + h / 2), cream))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.03), (0, cy, 0.045), dado, outline=False))
+    o.append(gable_roof("roof", w, d, 0.05, 0.03 + h, toon("tile", TILE), overhang=0.02))
+    front = cy - d / 2 - 0.004
+    o.append(box("door", (0.05, 0.010, 0.10), (0.11, front, 0.08), toon("eatDoor", 0x2F6E4E)))
+    o.append(box("window", (0.14, 0.010, 0.06), (-0.06, front, 0.105), toon("wood_dark", WOOD_DARK)))
+    o.append(box("glass", (0.125, 0.011, 0.047), (-0.06, front - 0.001, 0.105), toon("eatGlass", 0xF2C14E), outline=False))
+    # The striped awning: slanted bands of red and cream over the window.
+    red, band = toon("awnRed", 0xB5362B), toon("awnCream", 0xF2EBDC)
+    for i in range(7):
+        o.append(box("awn%d" % i, (0.022, 0.05, 0.008), (-0.13 + i * 0.022, front - 0.028, 0.158 - 0.006), red if i % 2 == 0 else band, outline=False))
+    # The sign over the awning and the chimney with steam.
+    o.append(box("sign", (0.20, 0.008, 0.03), (0, front - 0.004, 0.03 + h - 0.012), toon("eatSign", 0x234B6B), outline=False))
+    o.append(box("signLine", (0.14, 0.009, 0.007), (0, front - 0.005, 0.03 + h - 0.012), toon("signText", 0xF2EBDC), outline=False))
+    o.append(box("chimney", (0.04, 0.04, 0.09), (-0.11, cy + 0.04, 0.03 + h + 0.06), toon("brickChim", BRICK), bevel=0.003))
+    steam = toon("steam", 0xE9E4DC)
+    for i, (dx, dz, r) in enumerate(((0.0, 0.0, 0.018), (0.012, 0.03, 0.024))):
+        o.append(sphere("steam%d" % i, r, (-0.11 + dx, cy + 0.04, 0.03 + h + 0.14 + dz), steam, segs=10, rings=6, outline=False))
+    # Two round tables with a stool each and a cloth umbrella over the left one.
+    wood, dark = toon("wood", WOOD), toon("wood_dark", WOOD_DARK)
+    for i, x in enumerate((-0.13, 0.08)):
+        o.append(cylinder("table%d" % i, 0.045, 0.045, 0.01, (x, -0.1, 0.06), wood, segs=14))
+        o.append(cylinder("tableLeg%d" % i, 0.006, 0.006, 0.055, (x, -0.1, 0.03), dark, segs=6))
+        for j, dx in enumerate((-0.06, 0.06)):
+            o.append(cylinder("stool%d%d" % (i, j), 0.016, 0.016, 0.03, (x + dx, -0.1, 0.017), dark, segs=8))
+    o.append(cylinder("umbrellaPole", 0.004, 0.004, 0.11, (-0.13, -0.1, 0.11), dark, segs=6))
+    o.append(cylinder("umbrella", 0.07, 0.01, 0.025, (-0.13, -0.1, 0.17), red, segs=12))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["restaurant_%s" % _f] = (lambda d=_deg: (lambda: refit(model_restaurant("done"), d)))()
+    SPRITES["restaurant_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_restaurant("building"), d)))()
+
+
 # ---------------------------------------------------------------- shops (spec 017, US-120): previewed to the owner first
 # Pitch pieces are modelled at the people's scale (a door about 0.11 before BUILDING_SCALE), each on the council's brick pitch.
 
@@ -4404,6 +4465,46 @@ def model_sweet_shop(on_pitch=True, number=3):
     return group(o, scale=BUILDING_SCALE)
 
 
+def model_restaurant_pitch(on_pitch=True, number=1):
+    """The restaurant on a pitch (US-246): a small cream kiosk with a green dado and a red and cream striped awning, a steel counter in
+    front with a big handi of dal and a stack of thalis on it, a tawa on a stove beside it, and a signboard over the roof."""
+    o = []
+    if on_pitch:
+        pitch_base(o, number)
+    z0 = 0.02 if on_pitch else 0.0
+    w, d, h = 0.20, 0.08, 0.15
+    cy = 0.055
+    cream, dado = toon("eatCream", 0xF3E3BC), toon("eatDado", 0x2F6E4E)
+    red, band = toon("awnRed", 0xB5362B), toon("awnCream", 0xF2EBDC)
+    o.append(box("back", (w, 0.016, h), (0, cy + d / 2 - 0.008, z0 + h / 2), cream))
+    for sx in (-1, 1):
+        o.append(box("side%d" % sx, (0.016, d, h), (sx * (w / 2 - 0.008), cy, z0 + h / 2), cream))
+    o.append(box("inside", (w - 0.03, 0.006, h - 0.03), (0, cy + d / 2 - 0.018, z0 + (h - 0.03) / 2), toon("shopDark", 0x4A3424), outline=False))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.03), (0, cy, z0 + 0.015), dado, outline=False))
+    o.append(box("roof", (w + 0.03, d + 0.03, 0.01), (0, cy, z0 + h + 0.005), toon("tile", TILE)))
+    o.append(box("sign", (0.17, 0.008, 0.035), (0, cy - d / 2 - 0.012, z0 + h + 0.02), toon("eatSign", 0x234B6B)))
+    o.append(box("signText", (0.12, 0.009, 0.008), (0, cy - d / 2 - 0.013, z0 + h + 0.02), toon("signText", 0xF2EBDC), outline=False))
+    for i in range(6):                           # a striped awning over the front
+        x0 = -w / 2 + i * w / 6
+        o.append(poly_mesh("awn%d" % i, [(x0, cy - d / 2, z0 + h - 0.02), (x0 + w / 6, cy - d / 2, z0 + h - 0.02),
+                                         (x0 + w / 6, cy - d / 2 - 0.03, z0 + h - 0.04), (x0, cy - d / 2 - 0.03, z0 + h - 0.04)],
+                           [(0, 1, 2, 3)], red if i % 2 else band))
+    # The counter in front: a handi of dal and a stack of steel thalis.
+    case_y = -0.04
+    steel = toon("steel", 0xC9CDD2)
+    o.append(box("case", (0.17, 0.05, 0.05), (0.02, case_y, z0 + 0.025), toon("caseWood", 0x7A4A2A), bevel=0.002))
+    o.append(cylinder("handi", 0.022, 0.018, 0.022, (-0.03, case_y, z0 + 0.061), toon("alu", 0xD5D9DD), segs=14, smooth=True))
+    o.append(cylinder("dal", 0.019, 0.019, 0.003, (-0.03, case_y, z0 + 0.072), toon("dal", 0xD9A83C), segs=14, outline=False))
+    for i in range(4):
+        o.append(cylinder("thali%d" % i, 0.02, 0.02, 0.004, (0.05, case_y, z0 + 0.052 + i * 0.005), steel, segs=16))
+    # A tawa on a clay stove out front on the left, a puff of steam above it.
+    bx, by = -0.10, -0.05
+    o.append(cylinder("stove", 0.028, 0.032, 0.038, (bx, by, z0 + 0.019), toon("clay", 0xB4572E), segs=12))
+    o.append(cylinder("tawa", 0.034, 0.034, 0.004, (bx, by, z0 + 0.041), toon("kadhai", 0x3A3A3A), segs=16, smooth=True))
+    o.append(sphere("steam", 0.012, (bx, by, z0 + 0.075), toon("steam", 0xE9E4DC), segs=10, rings=6, outline=False))
+    return group(o, scale=BUILDING_SCALE)
+
+
 for _f, _deg in FACINGS.items():
     SPRITES["pitch_veg_%s" % _f] = (lambda d=_deg: (lambda: refit(model_veg_cart(), d)))()
     SPRITES["pitch_tea_%s" % _f] = (lambda d=_deg: (lambda: refit(model_tea_counter(), d)))()
@@ -4417,13 +4518,14 @@ SPRITES["veg_cart_e"] = lambda: refit(model_veg_cart(on_pitch=False), 90)
 # facing as the pitch does (I and II to the camera's left face, III to its right); on your own acre the stall shed, the tea counter and
 # the sweet shop without the council's brick pitch.
 PITCH_FACING = {1: 0, 2: 0, 3: 90}
-SHOP_MODELS = {"veg_stall": model_veg_cart, "tea_stall": model_tea_counter, "sweet_shop": model_sweet_shop}
+SHOP_MODELS = {"veg_stall": model_veg_cart, "tea_stall": model_tea_counter, "sweet_shop": model_sweet_shop, "restaurant": model_restaurant_pitch}
 for _id, _fn in SHOP_MODELS.items():
     for _n, _deg in PITCH_FACING.items():
         SPRITES["%s_pitch_%d" % (_id, _n)] = (lambda fn=_fn, n=_n, d=_deg: (lambda: refit(fn(on_pitch=True, number=n), d)))()
 SPRITES["veg_stall_s"] = model_veg_shed
 SPRITES["tea_stall_s"] = lambda: refit(model_tea_counter(on_pitch=False), 0)
 SPRITES["sweet_shop_s"] = lambda: refit(model_sweet_shop(on_pitch=False), 0)
+# (the restaurant on an acre is the eating house, model_restaurant: restaurant_s, _e, _n, _w)
 
 
 def model_newcomer_cart(kind, on_pitch=False, number=1):
@@ -4462,6 +4564,12 @@ def model_newcomer_cart(kind, on_pitch=False, number=1):
             o.append(cylinder("glass%d" % i, 0.0045, 0.004, 0.012, (-0.05 + (i % 3) * 0.011, -0.015 + (i // 3) * 0.012, top + 0.006), glass, segs=8))
         o.append(box("board", (0.10, 0.004, 0.022), (0, -W / 2 - 0.004, z0 + H - 0.012), toon("teaBoard", 0xF2C94C), outline=False))
         o.append(cylinder("gas", 0.014, 0.014, 0.05, (-0.02, 0.0, z0 + 0.025), toon("gasRed", 0xC2412D), segs=12, smooth=True))
+    elif kind == "meals":
+        o.append(cylinder("handi", 0.026, 0.021, 0.03, (0.03, 0.0, top + 0.015), toon("alu", 0xD5D9DD), segs=14, smooth=True))
+        o.append(cylinder("dal", 0.023, 0.023, 0.003, (0.03, 0.0, top + 0.031), toon("dal", 0xD9A83C), segs=14, outline=False))
+        for i in range(4):
+            o.append(cylinder("thali%d" % i, 0.02, 0.02, 0.004, (-0.04, 0.0, top + 0.003 + i * 0.005), steel, segs=16))
+        o.append(box("board", (0.10, 0.004, 0.022), (0, -W / 2 - 0.004, z0 + H - 0.012), toon("teaBoard", 0xF2C94C), outline=False))
     else:
         o.append(box("case", (0.13, 0.07, 0.045), (0, 0, top + 0.0225), toon("caseWood", 0x7A4A2A), bevel=0.002))
         o.append(box("caseGlass", (0.12, 0.004, 0.03), (0, -0.036, top + 0.025), glass, outline=False))
@@ -4492,7 +4600,7 @@ def model_newcomer_cart(kind, on_pitch=False, number=1):
 
 
 # Newcomers (spec 017 §3.7, ADR 0095 §2, approved 2026-11-08): each kind's cart on each pitch, facing as the pitch does, and on the lane's verge by the square.
-for _k in ("veg", "chai", "sweets"):
+for _k in ("veg", "chai", "sweets", "meals"):
     for _n, _deg in PITCH_FACING.items():
         SPRITES["newcomer_%s_pitch_%d" % (_k, _n)] = (lambda k=_k, n=_n, d=_deg: (lambda: refit(model_newcomer_cart(k, True, n), d)))()
     SPRITES["newcomer_%s_cart_s" % _k] = (lambda k=_k: (lambda: refit(model_newcomer_cart(k), 0)))()

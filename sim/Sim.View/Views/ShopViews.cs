@@ -31,6 +31,7 @@ namespace Sim.View.Views
         {
             if (r.Newcomer) return "newcomer_" + KindKey(r.Kind);
             RivalDef d = ShopRules.Defs(ctx.Sim).Rivals[r.Def];
+            if (d.Kind == ShopKind.Meals) return "restaurant"; // the town dhaba, off the map
             return "place_" + (d.Tile >= 0 ? ShopResearch.PlaceKind(ctx.Sim, d.Tile) : "halwai");
         }
 
@@ -63,7 +64,9 @@ namespace Sim.View.Views
         public const long RivalBase = 1_000_000;
 
         /// <summary>"cups" or "kg" figures for a kind.</summary>
-        public static string Amount(ViewContext ctx, ShopKind kind, long n) { return kind == ShopKind.Chai ? Cups(ctx, n) : ctx.Fmt.Kg(n); }
+        public static string Amount(ViewContext ctx, ShopKind kind, long n) { return kind == ShopKind.Chai ? Cups(ctx, n) : kind == ShopKind.Meals ? Portions(ctx, n) : ctx.Fmt.Kg(n); }
+
+        public static string Portions(ViewContext ctx, long n) { return ctx.Strings.Get(n == 1 ? "shop.portions.one" : "shop.portions.other", "n", ctx.Fmt.Integer(n)); }
 
         public static string Cups(ViewContext ctx, long n) { return ctx.Strings.Get(n == 1 ? "shop.cups.one" : "shop.cups.other", "n", ctx.Fmt.Integer(n)); }
 
@@ -92,6 +95,9 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             ShopDefs d = ShopRules.Defs(sim);
+            if (t.IsMeals) MealsSheet.AddResearch(ctx, vm, t, type);
+            else
+            {
             vm.Lines.Add(new LineVm(s.Get("research.shopPeople"), s.Get("research.shopPeopleValue", "n", ctx.Fmt.Integer(d.VillagePeople), "town", ctx.Fmt.Integer(sim.State.Citizens?.Population ?? 0)),
                 "shopPeople", type) { Icon = "population" });
             long demand = 0;
@@ -105,6 +111,7 @@ namespace Sim.View.Views
                 foreach (int g in ShopRules.KindGoods(sim, t.Kind))
                     vm.Lines.Add(new LineVm(s.Get("research.shopReference", "good", g < 0 ? s.Get("shop.chai") : s.Get(sim.Config.Game.Market.Goods[g].NameKey)),
                         g < 0 ? ShopWords.Price(ctx, t.Kind, Fixed.One) : ctx.Fmt.PricePerKg(ShopRules.Reference(sim, t.Kind, g)), "shopReference", type) { Icon = "coin" });
+            }
             List<Rival> rivals = sim.State.Shops.All();
             for (int i = 0; i < rivals.Count; i++)
             {
@@ -205,6 +212,7 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             vm.Lines.Add(new LineVm(s.Get("shop.soldToday"), ShopWords.Amount(ctx, t.Kind, b.ServedToday), "shopToday", b.Id) { Icon = t.Id });
             vm.Lines.Add(StarsLine(ctx, b));
+            if (t.IsMeals) MealsSheet.AddToday(ctx, vm, b, t);
             if (t.Kind == ShopKind.Chai)
             {
                 vm.Lines.Add(new LineVm(s.Get("shop.milk"), ctx.Fmt.Litres(ShopRules.Milk(sim, b)), "shopMilk", b.Id) { Icon = "milk" });
@@ -283,10 +291,14 @@ namespace Sim.View.Views
             int hi = 0;
             for (int i = 0; i < HourPresets.Length; i++) if (HourPresets[i][0] == open && HourPresets[i][1] == close) hi = i;
             int[] next = HourPresets[(hi + 1) % HourPresets.Length];
-            var hours = new LineVm(s.Get("business.hours"), BusinessWords.Hours(ctx, open, close), "businessHours", id);
-            hours.Action = ActionVm.Checked(ctx, "hours", s.Get("business.change"), BusinessWords.Hours(ctx, next[0], next[1]), ActionKind.Secondary,
-                at => new SetBusiness(at, id, next[0], next[1], fee, own, market));
-            vm.Lines.Add(hours);
+            if (t.IsMeals) MealsSheet.AddSettings(ctx, vm, b, t); // its two sittings are fixed; its menu is the choice
+            else
+            {
+                var hours = new LineVm(s.Get("business.hours"), BusinessWords.Hours(ctx, open, close), "businessHours", id);
+                hours.Action = ActionVm.Checked(ctx, "hours", s.Get("business.change"), BusinessWords.Hours(ctx, next[0], next[1]), ActionKind.Secondary,
+                    at => new SetBusiness(at, id, next[0], next[1], fee, own, market));
+                vm.Lines.Add(hours);
+            }
 
             var presets = ShopRules.Defs(sim).PricePresets;
             int pi = 0;
@@ -330,6 +342,7 @@ namespace Sim.View.Views
                     vm.Lines.Add(line);
                 }
             }
+            if (t.IsMeals) return; // the kitchen buys from your store, your businesses, then the market: no switch
             var buy = new LineVm(s.Get(BusinessWords.Key(ctx, "business.market", t)), s.Get(market ? "business.yes" : "business.no"), "businessMarket", id);
             buy.Action = new ActionVm("market", s.Get(market ? "business.stopMarket" : "business.startMarket"), null, ActionKind.Secondary, true, null, at => new SetBusiness(at, id, open, close, fee, own, !market));
             vm.Lines.Add(buy);

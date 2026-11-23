@@ -149,7 +149,7 @@ namespace Sim.Core.Town
         {
             if (!IsDay(sim)) return Fixed.Zero;
             FestivalDef d = Def(sim);
-            return kind == ShopKind.Chai ? d.ShopChai : kind == ShopKind.Sweets ? d.ShopSweets : d.ShopVeg;
+            return kind == ShopKind.Chai ? d.ShopChai : kind == ShopKind.Sweets || kind == ShopKind.Meals ? d.ShopSweets : d.ShopVeg; // a feast day fills the restaurant as it fills the sweet shop
         }
 
         /// <summary>The festival's day is over: kept in the record (the last few) and announced.</summary>

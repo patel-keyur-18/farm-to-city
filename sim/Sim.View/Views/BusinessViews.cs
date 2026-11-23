@@ -240,7 +240,7 @@ namespace Sim.View.Views
         /// <summary>The hours a day you'd work there (its day, up to yours) and what they'd earn a season as day labour.</summary>
         public static void HoursOff(Simulation sim, BusinessTypeDef t, out int hours, out long value)
         {
-            hours = System.Math.Min(t.CloseHour - t.OpenHour, (int)sim.State.Farm.Founder.TodayHours.RoundToLong());
+            hours = System.Math.Min(t.OpenSpan(t.OpenHour, t.CloseHour), (int)sim.State.Farm.Founder.TodayHours.RoundToLong());
             value = Sim.Core.Finance.Money.MulRate(MarketRules.Indexed(sim, sim.Config.Game.Farm.Founder.DayLabourWagePerHour), Fixed.FromInt(hours * sim.Clock.DaysPerSeason));
         }
 
@@ -329,9 +329,10 @@ namespace Sim.View.Views
             if (b.Status == BusinessStatus.Closed) return s.Get("business.closed");
             int hour = (int)(ctx.Now % 86_400 / 3600);
             if (BusinessRules.TypeOf(ctx.Sim, b).IsKiln && !KilnRules.Fires(ctx.Sim)) return s.Get("business.kilnMonsoon"); // wet clay can't be fired
-            if (BusinessRules.OpenAt(ctx.Sim, b, hour)) return s.Get("business.openNow", "close", b.CloseHour + ":00");
+            MealsDef sittings = BusinessRules.TypeOf(ctx.Sim, b).Meals; // a restaurant shuts between lunch and dinner
+            if (BusinessRules.OpenAt(ctx.Sim, b, hour)) return s.Get("business.openNow", "close", (sittings != null && hour < sittings.BreakFrom ? sittings.BreakFrom : b.CloseHour) + ":00");
             if (!BusinessRules.Staffed(ctx.Sim, b)) return s.Get(b.Worker == WorkerKind.None ? "business.shutNoWorker" : "business.shutAway");
-            return s.Get("business.shutNow", "open", b.OpenHour + ":00");
+            return s.Get("business.shutNow", "open", (sittings != null && hour >= sittings.BreakFrom && hour < sittings.BreakTo ? sittings.BreakTo : b.OpenHour) + ":00");
         }
 
         public static SheetVm Build(ViewContext ctx, long id, string tab = null)

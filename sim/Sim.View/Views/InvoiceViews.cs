@@ -55,6 +55,7 @@ namespace Sim.View.Views
             void Add(int g) { if (g >= 0 && Produces(from, g) && seen.Add(g)) names.Add(BusinessWords.Good(ctx, g)); }
             foreach (int g in BusinessRules.BoughtInputs(t)) Add(g);
             foreach (int g in t.Goods) Add(g);
+            if (t.IsMeals) foreach (DishDef d in t.Meals.Dishes) foreach (KeyValuePair<int, long> kv in d.Inputs) Add(kv.Key); // the kitchen buys your atta, ghee and curd
             return string.Join(", ", names);
         }
 

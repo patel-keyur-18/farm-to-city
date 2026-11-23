@@ -74,6 +74,11 @@ namespace Sim.Core.Tests
             ToHour(sim, 15);
             ToHour(sim, 19);
             sim.State.Township.Exit.Offers.Clear();
+            foreach (Household h in sim.State.Citizens.Households) { h.Income = 40_000 * Coin; h.Leisure = 5_700 * Coin; } // US-246: a restaurant on a pitch, a lunch served, its thali switched off
+            Business.Business diner = RestaurantTests.Open(sim);
+            ToHour(sim, 14);
+            Ok(sim, new SetDish(sim.State.Clock.SimTime, diner.Id, 0, false));
+            sim.State.Township.Exit.Offers.Clear();
             EquipmentTests.Give(sim, 1_000_000); // US-245: a tempo, let out, with a hand to drive it, one send of two legs
             HireHand(sim);
             Ok(sim, new BuyMachine(sim.State.Clock.SimTime, "tempo"));
@@ -115,6 +120,8 @@ namespace Sim.Core.Tests
             Assert.That(r.State.People.NightAt(owned.Id)?.Night ?? false, Is.True, "a night worker is kept");
             Business.Business school = r.State.Businesses.Businesses.Single(b => config.Game.Businesses.Types[b.Type].IsTuition);
             Assert.That((school.Pupils.Count > 0, school.TuitionFees > 0, r.State.Citizens.Citizens.Max(c => c.TuitionSeasons) >= 3), Is.EqualTo((true, true, true)), "a tuition centre's pupils, its fees and a child's seasons are kept");
+            Business.Business diner = r.State.Businesses.Businesses.Single(b => config.Game.Businesses.Types[b.Type].IsMeals);
+            Assert.That((diner.DishesOff, diner.SeasonServed > 0 || diner.ServedToday > 0), Is.EqualTo((1, true)), "a restaurant's menu switch and its diners are kept");
             Equipment.Machine tempo = r.State.Equipment.Machines.Single(x => config.Game.Equipment.Machines[x.Kind].IsTempo);
             Assert.That((tempo.OwnLegs, tempo.HireOut), Is.EqualTo((2, true)), "a tempo's legs and its let-out switch are kept");
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);

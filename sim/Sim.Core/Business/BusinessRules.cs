@@ -409,7 +409,7 @@ namespace Sim.Core.Business
                 OpenHour = t.OpenHour, CloseHour = t.CloseHour, Fee = t.Fee, OwnPerDay = ownPerDay, Worker = runYourself ? WorkerKind.Founder : WorkerKind.None,
                 Ledger = new Ledger(), Stock = new long[goods], StockCost = new long[goods], Plan = plan, Day = now / Day,
                 Mix = t.Kind == ShopKind.Sweets ? ShopRules.DefaultMix(sim, t, tileId) : DefaultMix(sim, t), MadeToday = new long[goods],
-                BuyFromMarket = !t.IsKiln && t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
+                BuyFromMarket = !t.IsKiln && t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg || t.IsMeals, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
                 Pitch = pitch, PutOut = t.IsShop ? ShopRules.DefaultPutOut(sim, t, tileId) : new long[goods], Stars = t.IsTuition ? t.Tuition.StartStars : sim.Config.Game.Shops?.StartStars ?? Fixed.FromRatio(5, 2),
             };
             string reference = "business:" + b.Id;
@@ -521,7 +521,7 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
                 if (b.Status == BusinessStatus.Open)
                 {
-                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln && !TypeOf(sim, b).IsTuition && !Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour) && !Town.EventRules.Shut(sim, b)) Morning(sim, b, took);
+                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsMeals && !TypeOf(sim, b).IsKiln && !TypeOf(sim, b).IsTuition && !Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour) && !Town.EventRules.Shut(sim, b)) Morning(sim, b, took);
                     Work(sim, b);
                 }
             ShopRules.Hourly(sim); // the customers (spec 017 §3.8), after the businesses' hour
@@ -533,6 +533,7 @@ namespace Sim.Core.Business
             if (NightRules.Active(sim, b) && NightRules.NightHour(sim, hour)) // spec 028 §3.8: the night shift, on the grid, its worker not away
                 return b.Status == BusinessStatus.Open && !Town.EventRules.Shut(sim, b) && !WorkRules.Away(NightRules.Of(sim, b));
             if (b.Worker == WorkerKind.None || hour < b.OpenHour || hour >= b.CloseHour) return false;
+            if (TypeOf(sim, b).IsMeals && !MealsRules.Sitting(TypeOf(sim, b), hour)) return false; // the break between lunch and dinner
             if (Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour)) return false; // a festival's day: only the stalls stay open (owner, 2026-11-20)
             if (Town.EventRules.Shut(sim, b)) return false; // a strike's pause or a fire's repair (spec 027)
             Worker w = HiredWorker(sim, b);
@@ -613,7 +614,7 @@ namespace Sim.Core.Business
             bool night = NightRules.Active(sim, b) && NightRules.NightHour(sim, hour);
             Worker hired = night ? NightRules.Of(sim, b) : HiredWorker(sim, b);
             if (!night && hired != null && Overtime(sim, b, hour) && !WorkRules.Pay(sim, hired, WorkRules.OvertimeHour(sim, hired), "ledger.overtime")) return; // past the overdraft: no overtime (a night worker's wage is the whole of it)
-            if (ShopRules.Stocked(t)) return; // a stall sells in the shops' hour (spec 017 §3.8)
+            if (ShopRules.Stocked(t) || t.IsMeals) return; // a stall and a kitchen sell in the shops' hour (spec 017 §3.8)
             if (t.IsTuition)
             {
                 TuitionRules.Teach(sim, b, hour);
@@ -824,7 +825,7 @@ namespace Sim.Core.Business
         }
 
         /// <summary>Good quality's extra on a batch's cost (the sweet shop's pure ghee and fresh paneer, §3.5, ADR 0092), or 0.</summary>
-        private static long GoodExtra(Simulation sim, Business b, long cost)
+        internal static long GoodExtra(Simulation sim, Business b, long cost)
         {
             BusinessTypeDef t = TypeOf(sim, b);
             return b.Quality == 2 && t.GoodRecipeExtra > Fixed.Zero ? Money.MulRate(cost, t.GoodRecipeExtra) : 0;
@@ -1083,7 +1084,7 @@ namespace Sim.Core.Business
             if (sim.State.Businesses == null) return Fixed.Zero;
             Fixed day = sim.State.Farm.Founder.TodayHours, hours = Fixed.Zero;
             foreach (Business b in sim.State.Businesses.Businesses)
-                if (b.Status == BusinessStatus.Open && b.Worker == WorkerKind.Founder) hours += Fixed.FromInt(b.CloseHour - b.OpenHour);
+                if (b.Status == BusinessStatus.Open && b.Worker == WorkerKind.Founder) hours += Fixed.FromInt(TypeOf(sim, b).OpenSpan(b.OpenHour, b.CloseHour));
             return (hours < day ? hours : day) * Farm.FounderRules.Nutrition(sim);
         }
 
