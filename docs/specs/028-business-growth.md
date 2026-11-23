@@ -66,7 +66,7 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin, indexed by the pri
 
 | Rule | Behaviour |
 | --- | --- |
-| Valuation | `value = max(book, multiple × profit)`, profit the last 4 closed seasons (annualised when fewer, at least 1), book the business's own equity. Multiple: base 4.5, **+1 growth** if the last 2 seasons' profit is 10% or more above the 2 before (**−1** if 10% or more below), **−1 risk** if any of the last 4 seasons lost money or the business is under 4 seasons old, **+1** if it has a manager and 4 profitable seasons; clamped to 3 to 6. A sale never ends in a paper loss. A plain breakdown under a ? |
+| Valuation | `value = max(book, multiple × profit)`, profit the last 4 closed seasons (annualised when fewer; **with no season closed there is no profit to count, so it is worth its book only: a buyer pays for proven earnings, never for a plan, ADR 0164**), book the business's own equity. Multiple: base 4.5, **+1 growth** if the last 2 seasons' profit is 10% or more above the 2 before (**−1** if 10% or more below), **−1 risk** if any of the last 4 seasons lost money or the business is under 4 seasons old, **+1** if it has a manager and 4 profitable seasons; clamped to 3 to 6. A sale never ends in a paper loss. A plain breakdown under a ? |
 | Selling (built, ADR 0158) | The price is the worth on the day at the buyer's share. You list it; a buyer (a townsperson with working capital, a rival or a regional buyer, seeded) completes in 3 to 6 real days at 90 to 105% of the value, never under book. **Rushed:** 1 day at 85% of the value, never under book. You can cancel any time before completion. The business runs until the day it closes. |
 | What goes | The business, its building, equipment, stock and receivables go to the buyer, who moves it off your acre; the acre is cleared and yours again (a pitch is freed). Its worker and manager are released (severance as for workers). Outside shares are settled from the proceeds first (§3.4). |
 | Gain | The gain over what it held is business income in the season of the sale, taxed at the business tax with the season's profit, at the sale (ADR 0109, 0158). A sold or closed business drops its insurance policy and the cards aimed at it end quietly. |
@@ -78,7 +78,7 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin, indexed by the pri
 | --- | --- |
 | Investor | **An offer raised at the season close (built, ADR 0159, gap 10), outside spec 027's engine and its two-card limit,** while you are playing, to a business with a profitable season and a valuation above 50,000 (a seeded 35% chance, one offer open for a business). The investor offers cash of 10, 15, 20, 25 or 30% of the value for the same share of equity and profit (`share = cash ÷ valuation`). The cash goes into the business's capital. One investor a business; outside shares (investor plus partner) never above 40%. The card is open 48 h, default: decline. Paid after the tax, from the business's cash. |
 | Profit share | Paid from the business's cash at each close, `share × profit` when positive. |
-| Buying back | At the current valuation × the share, after 4 seasons, **and never less than the cash they put in (Sprint 25 balance, owner 2026-11-23, ADR 0164: the InvestorDilution bot found that letting the profit fall bought an investor out at a third of his cash)**. Selling the business settles the share from the proceeds. |
+| Buying back | At the current valuation × the share, after 4 seasons, **and never less than the cash they put in (Sprint 25 balance, owner 2026-11-23, ADR 0164: the InvestorDilution bot found that letting the profit fall bought an investor out at a third of his cash)**. Selling the business settles the share from the proceeds. **Your drawings stop at the cash the business holds beyond the investors' money (ADR 0164: the review found that drawing his cash out and then closing kept it); if the business loses money, the investor shares the loss at the close, as a real investor does.** |
 | Partner | One of your households with savings of at least their stake joins: stake 20% of the value for a fixed 20% profit share; one partner a business. Partners are not shares and are not traded. **A sale or a closing never waits for them (built, gap 11, ADR 0159): outside shares are paid first, a part of what is left;** you can buy them out any time at value × 20%. They set no prices; they share the books and the buy-out. |
 | Buy-outs | A rival (or a regional buyer if none is open) offers 90 to 110% of the value for one of your businesses, never under book; at most one offer a business each 2 seasons. Open 24 h (48 h when the business is a quarter or more of your net worth). Refusing costs nothing. Accepting is a sale (§3.3) with outside shares settled first. |
 | Books | Outside equity sits in the business's own books and in net worth (a share is a liability of the business to the investor, not income). |
@@ -92,7 +92,7 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin, indexed by the pri
 | Demand | A child aged 7 to 17 attends if the household can afford it: the education budget (5% of income) buys `floor(budget ÷ fee)` children, never more than it has. Several centres share pupils by the shop score. |
 | Fee | Reference 800 a pupil a season; presets −10%, reference, +10%, +20%. Stars from how full the batches are and how long pupils stay. |
 | Gain | +1 skill (farming and crafting) per season of tuition, capped at +10 (one course). A pupil is a better hand at 18 on the board. |
-| Money | 40 pupils × 800 = 32,000 against a 20,000 wage, 3,000 rent and about 2,000 running. About +7,000 at full; breaks even near 30 pupils (about 45 families). Target hired 3,000 to 8,000 a season, run by you 18,000 to 25,000. |
+| Money | 40 pupils × 800 = 32,000 against a 20,000 wage, 3,000 rent and about 2,000 running. About +7,000 at full; breaks even near 30 pupils (about 45 families). Target hired 3,000 to 8,000 a season, run by you 18,000 to 25,000. **Measured (Sprint 25 balance, `GateTests.Targets`, a Township bot's town at 30 seasons, 3 seeds): hired 5,000 to 9,000, run by you 29,000 to 33,000 once its stars have grown; the run-by-you figure is above the first guess, so the target is restated to 25,000 to 35,000 (ADR 0027, ADR 0164).** |
 | **As built (owner, 2026-11-22, gaps 14 to 17, ADR 0161)** | **Pupils** are your households' children first (named, they gain the skill) and the old village's as a head-count; a family's schooling budget pays floor(budget ÷ fee) places and each fee committed comes off it. **Stars set take-up:** 40% of the children a family can pay for at no stars, all at five (start 2 stars: 64%); stars move a tenth a day to 5 × (full × 3/5 + stayed × 2/5). **Enrolment** when the centre opens and at each close; **the fee is a day's share** (a quarter of the season's, the season being 4 days) taken at the end of each batch, fixed at enrolment, so a shut evening earns nothing. **The cap is the child's own** (10 seasons) and stacks with the adult course. **An acre only:** no pitch in the square (the rent line above does not apply). |
 
 ### 3.6 Tempo transport (US-245, G6)
@@ -103,7 +103,7 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin, indexed by the pri
 | Trips | 1,000 kg, 4 hours on the paved road, 300 a trip (diesel 200, wear 100), two trips a day (your time 0.5 h each). Without a tempo, one trip a day as before. |
 | Which vehicle goes | The cheapest that fits the load, said on the mandi sheet: the tractor-trolley (free per kg), then the tempo (0.30 a kg), then the hired trolley (0.50 a kg). A load over 1,000 kg with no tractor goes in two tempo trips or the hired trolley. |
 | Letting it out | The tractor's switch, "Let it out for neighbours' trips": farm income, not passive; diesel and wear yours. Neighbours' trips come before yours, up to 2 a day, each paying 600 for 1,000 kg. About 300 net a trip, 600 a day at most. |
-| Is it worth it | A line on its sheet like the cold store's. Own trips alone: it pays its lease only above about 45 of a season's 90 days. With neighbours' trips: about +36,000 a season, payback about 10 seasons. |
+| Is it worth it | A line on its sheet like the cold store's. Own trips alone: it pays its lease only above about 45 of a season's 90 days. With neighbours' trips: about +36,000 a season, payback about 10 seasons. **(Rescaled at build, ADR 0162: see the next row; no payback is promised.)** |
 | **As built (owner, 2026-11-23, gaps 18 to 20, ADR 0162)** | **The money is rescaled to a 4-day season** (the spec's figures assumed 90 days and could never pay back): **price 40,000, lease 2,000 a season**, upkeep 1.5%, a 48-season life; the trip numbers stand (1,000 kg, 4 h, 300 a leg, neighbours 600, trolley 1,000). A season is 8 legs: every leg yours saves 700 each, payback about 10 seasons. **A send is one or two legs** (up to 1,000 kg one leg; up to 2,000 kg two legs back to back, 8 h, 600), two legs a day. **Neighbours get the idle legs, yours first:** at midnight the legs you did not use go to neighbours at 600 a leg (diesel and wear yours), farm income; this turns round "neighbours' trips come before yours". Only a tempo you bought can be let out (a hired hand drives it). |
 
 ### 3.7 Restaurant (US-246, G7, Could)
@@ -115,7 +115,7 @@ Everything is Fixed-point (ADR 0018). Money is in 1/100 coin, indexed by the pri
 | Buying | From your store first, at the trader's price (a cash sale, as for every shop: owner, 2026-11-21), then the market at +15%. |
 | Demand | A household with income of at least 20,000 a season sets aside 25% of its leisure budget and buys `floor(that ÷ price)` portions a season, spread over the days; below 20,000 it eats at home. Shared by the score with any rival (a newcomer may open when your prices run 10% above the reference). Good quality: +10% on the price, lifts stars. |
 | Capacity | 15 portions an hour a cook, 120 a day. |
-| Money | About 1,000 portions × 53, against a 20,000 wage, about 25,000 ingredients and supplies and 3,000 rent: about +5,000 hired, +25,000 run by you; needs about 35 households with the income. Targets hired 3,000 to 8,000, run by you 18,000 to 28,000. |
+| Money | About 1,000 portions × 53, against a 20,000 wage, about 25,000 ingredients and supplies and 3,000 rent: about +5,000 hired, +25,000 run by you; needs about 35 households with the income. Targets hired 3,000 to 8,000, run by you 18,000 to 28,000. **Measured (Sprint 25 balance, `GateTests.Targets`, 3 seeds): hired 13,000 to 15,000, run by you 34,000 to 35,000 from its second season; restated to hired 10,000 to 17,000 and run by you 30,000 to 36,000, still under the bakery's (ADR 0027, ADR 0164).** |
 | **As built (owner, 2026-11-23, gaps 21 to 24, ADR 0163)** | **A kitchen serves 30 portions an hour, 240 a day** (the 15 and 120 were the 90-day figures: a 4-day season would cap it at 480 portions and the wage could never be paid). **The 20,000 is the kitchen crew's wage** (the cook and a kitchen hand). **A shop of the kind "meals"** on the shops' machinery, with the **town dhaba** (300 m, standard, 3 stars) as rival and newcomers as for the other shops; diners are worked out only while your restaurant is open. **The menu:** diners split 6 to 4 between the thali and the paratha plate; a switch per dish (the last stays); one price setting; "vegetables" are potatoes; cooked as ordered. **Demand:** 30% of the leisure (tuned from 25%, so a hired restaurant is in profit in a town of 20 to 25 households), from households earning 20,000 or more, the old village counted as its households; spread over the 4 days. **Buying:** your store, then your businesses (at the trader's price), then the market at retail; the kitchen cooks what its cash can pay for. **Good quality:** finer ingredients, a tenth dearer to cook. **Hours:** 11:00 to 15:00 and 18:00 to 22:00, fixed. Hired 3,000 to 8,000, run by you 18,000 to 28,000 (measured in `RestaurantTests.Money`). |
 
 ### 3.8 Benefits and night shifts (US-258, G8)
@@ -159,8 +159,8 @@ A **place** is one employer: all your farm hands together, or one business. The 
 | --- | --- | --- | --- | --- | --- |
 | invoices | `terms` | list | cash, half (2 d), season (4 d) | | |
 | invoices | `defaultTerm`, `wholesaleKgDay`, `lateTerms` | | half, 20, 1 | 0–60, 0–4 | |
-| managers | `wageBase`, `wageProfitShare` | | 4,000, 0.10 | 0–1 | |
-| managers | `styles[]` | | §3.2 | | price, quality, stock days, hire rule |
+| managers | `wageOfRole`, `wageProfitShare` | | 0.60, 0.10 | 0–1 | |
+| managers | `styles[]` | | §3.2 | | price, quality, stock days (no hire rule: he works the business himself, ADR 0164) |
 | managers | `missDay[5]` | Fixed | 0.20 to 0.02 | 0–1 | |
 | exit | `baseMultiple`, `growth`, `risk`, `managerBonus`, `minMultiple`, `maxMultiple` | Fixed | 4.5, 1, 1, 1, 3, 6 | | |
 | exit | `saleDays`, `rushDiscount`, `buyerRange`, `maxBranches` | | 3–6, 0.15, 0.90–1.05, 2 | | |
@@ -224,7 +224,7 @@ An older save loads with no invoices (every internal sale cash), no manager, no 
 | Decision | Immediate cost | Delayed effect | Side effects | Reversibility |
 | --- | --- | --- | --- | --- |
 | Longer invoice terms | nothing | cash arrives later | a late payer stops its supplier | change for later invoices |
-| Hire a manager | 4,000 + 10% of profit | profit report; your hours free | passive income | dismiss any time |
+| Hire a manager | 60% of a worker's wage in the trade + 10% of profit | profit report; your hours free | passive income | dismiss any time |
 | List a business | nothing | cash in 3 to 6 days at 90 to 105% | its jobs and income end | cancel before the day |
 | Rush a sale | 15% off | cash in a day | as above | none |
 | Take an investor | a share of profit | cash now | outside equity, a buy-back price | buy back after 4 seasons |
@@ -257,8 +257,8 @@ Tests are named for the story that builds them; the sprint's tests file under `t
 | AC-2 | The village grocer and tea stall buy on terms, pay at term end, never default | `InvoiceTests.Wholesale_Buyers` |
 | AC-3 | An unpaid invoice ages current, late, overdue; an overdue one stops the seller's deliveries until paid | `InvoiceTests.Ageing`, `InvoiceTests.StopRule` |
 | AC-4 | Receivable and payable keep the books exact, cancel between your businesses in net worth, and cash flow shows the difference from profit | `InvoiceTests.Books_Reconcile`, `InvoiceTests.NetWorth_Cancels` |
-| AC-5 | A manager's post, wage (4,000 + 10% of positive profit, never a loss from it), one a business, dismissal | `ManagerTests.Post_Wage`, `ManagerTests.One_Per_Business` |
-| AC-6 | Each style sets the price, quality, stock and hire by §3.2; the mis-set day chance follows the stars | `ManagerTests.Styles`, `ManagerTests.MisSet_By_Stars` |
+| AC-5 | A manager's post, wage (60% of a trade worker's wage + 10% of positive profit, never a loss from it), one a business, dismissal | `ManagerTests.Post_Wage`, `ManagerTests.One_Per_Business` |
+| AC-6 | Each style sets the price, quality and stock by §3.2; the mis-set day chance follows the stars | `ManagerTests.Styles`, `ManagerTests.MisSet_By_Stars` |
 | AC-7 | The target, the close report, motivation after two misses, the refused raise, passive income | `ManagerTests.Report_Target`, `ManagerTests.Passive_Income` |
 | AC-8 | Valuation follows §3.3 (base, growth, risk, bonus, clamp, floor at book) | `ExitTests.Valuation` |
 | AC-9 | A listing completes in 3 to 6 days at 90 to 105% (rushed: 1 day at 85%), never under book; cancel; what goes; the gain taxed | `ExitTests.Sale`, `ExitTests.Rushed`, `ExitTests.Cancel`, `ExitTests.Gain_Taxed` |
@@ -292,10 +292,10 @@ Tests are named for the story that builds them; the sprint's tests file under `t
 | Managed profit | at least the hired profit, below run-by-you (net worth 1.08 to 1.13 times hired, ADR 0164) | `GateTests.Managed`: no style below hired, none over a quarter above |
 | Invoices | a late payer's cash gap shows in cash flow; no money created | exact |
 | Valuation | 3 to 6 times a year's profit; never below book | exact |
-| Tuition centre | hired 3,000 to 8,000, run by you 18,000 to 25,000 a season | measured, tuned |
-| Restaurant | hired 3,000 to 8,000, run by you 18,000 to 28,000 | measured, tuned |
+| Tuition centre | hired 3,000 to 8,000, run by you 25,000 to 35,000 a season | measured (Sprint 25 balance) |
+| Restaurant | hired 10,000 to 17,000, run by you 30,000 to 36,000 | measured (Sprint 25 balance) |
 | Kirana | hired 3,000 to 8,000, run by you 15,000 to 25,000 | measured, tuned |
-| Tempo | payback about 10 seasons with neighbours' trips, no payback on own trips below about 45 days | measured |
+| Tempo | **as built (ADR 0162, rescaled to a 4-day season): a leg you use saves 700, the let-out nets 300 a leg and never pays the standing cost on its own: it is a way to earn from idle legs, not a business; no payback figure is promised** | as built |
 | Benefits | each costs more than the output it adds; poaching 5% to about 2.6% with all four | ±1 point |
 | Accidents | about 1.8% a season a worker | ±0.5 points |
 | The Township's pace (day 101 competent) | unchanged within 2 days: nothing here starts before the Township | ±2 days |

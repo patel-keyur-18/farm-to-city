@@ -59,7 +59,7 @@ namespace Sim.Core.Business
             int n = profits.Count;
             long sum = 0;
             foreach (long p in profits) sum += p;
-            long year = n == 0 ? b.Plan.Profit * 4 : sum * 4 / n;
+            long year = n == 0 ? 0 : sum * 4 / n; // no season closed: a buyer pays for what it holds, never for a plan (ADR 0164)
             var w = new Worth { Seasons = n, Profit = System.Math.Max(1, year), Book = Book(b) };
             Fixed m = d.BaseMultiple;
             if (n >= 4)

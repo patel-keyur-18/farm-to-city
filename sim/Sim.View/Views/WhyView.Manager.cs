@@ -19,7 +19,7 @@ namespace Sim.View.Views
             Worker m = ManagerOf(ctx, id);
             long usual = PeopleRules.AskedWage(sim, ManagerRules.MarketWage(sim, id), Fixed.FromInt(50), false);
             WhyVm vm = New(ctx, "why.managerWage.title", Money(ctx, m == null ? usual : m.Wage));
-            Row(vm, ctx, "why.managerWage.base", Money(ctx, m == null ? usual : m.Wage));
+            Row(vm, ctx, "why.managerWage.base", m != null ? Money(ctx, m.Wage) : id > 0 ? Money(ctx, usual) : Pct(ctx, d.WageOfRole)); // on the board, before a business is chosen, only the share
             Text(vm, ctx, "why.managerWage.skill");
             Row(vm, ctx, "why.managerWage.share", Pct(ctx, d.WageProfitShare));
             if (m != null)

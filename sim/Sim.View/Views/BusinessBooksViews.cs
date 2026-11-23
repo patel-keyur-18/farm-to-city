@@ -345,7 +345,7 @@ namespace Sim.View.Views
             if (b == null) return new SheetVm { Icon = "coin", Title = ctx.Reject(RejectReason.UnknownBusiness) };
             BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
             bool put = arg == Put;
-            long have = put ? sim.State.Ledger.Cash : b.Ledger.Cash;
+            long have = put ? sim.State.Ledger.Cash : BusinessBooks.Drawable(b);
             var vm = new SheetVm
             {
                 Icon = "coin", Title = s.Get(put ? "cashIn.title" : "cashOut.title", "name", BusinessWords.InSentence(ctx, t)),
@@ -355,6 +355,8 @@ namespace Sim.View.Views
             if (!put && b.Status == BusinessStatus.Open && b.Worker != WorkerKind.Founder)
                 vm.Subtitle = s.Get("cashOut.subtitleKeep", "cash", ctx.Fmt.Coins(have),
                     "keep", ctx.Fmt.Coins(BusinessRules.Wage(sim, t) + Money.MulRate(Sim.Core.Market.MarketRules.Indexed(sim, t.EquipmentValue), t.RepairsShare)));
+            if (!put && OwnerRules.Liability(b) > 0)
+                vm.Subtitle = s.Get("cashOut.subtitleOwners", "cash", ctx.Fmt.Coins(b.Ledger.Cash), "owners", ctx.Fmt.Coins(OwnerRules.Liability(b)), "free", ctx.Fmt.Coins(have));
             var amounts = new List<long>();
             foreach (long a in Steps)
                 if (a <= have) amounts.Add(a);

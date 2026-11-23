@@ -117,8 +117,10 @@ namespace Sim.Core.Tests
                     Ok(sim, new AcceptDeal(sim.State.Clock.SimTime, o.Id));
                     cashIn = o.Cash;
                     Assert.That(Worth(sim) - before, Is.EqualTo(0).Within(Coin), "his cash is no gain the moment it arrives: the share is owed on the books");
-                    Ok(sim, new TakeCash(sim.State.Clock.SimTime, b.Id, System.Math.Min(o.Cash, b.Ledger.Cash - 1)));
-                    Assert.That(Worth(sim) - before, Is.EqualTo(0).Within(Coin), "and drawing it out changes nothing either");
+                    Assert.That(sim.Execute(new TakeCash(sim.State.Clock.SimTime, b.Id, o.Cash)).Accepted, Is.False, "his money is not yours to draw: only what the business holds beyond it");
+                    long free = BusinessBooks.Drawable(b);
+                    if (free > 0) Ok(sim, new TakeCash(sim.State.Clock.SimTime, b.Id, free));
+                    Assert.That(Worth(sim) - before, Is.EqualTo(0).Within(Coin), "and drawing what is yours changes nothing either");
                 }
                 // Twenty days (five seasons): the business keeps the profit it had (a steady value), or its profit falls to nothing from the first close.
                 PlayDays(sim, 20, d => { if (collapse && d >= 4) ExitTests.Seasons(b, 0, 0, 0, 0); else if (!collapse) ExitTests.Seasons(b, 50_000, 50_000, 50_000, 50_000); });
@@ -137,6 +139,101 @@ namespace Sim.Core.Tests
             Play(true, true, out long in2, out long back2);
             TestContext.Out.WriteLine("INVESTOR (b) profit collapses: his cash " + in2 / Coin + ", bought back at " + back2 / Coin);
             Assert.That(back2, Is.GreaterThanOrEqualTo(in2), "(b) after a collapse the buy-back is no cheaper than his cash");
+        }
+
+        // AC-31 (review): take an investor's cash, draw what you can and close. His money cannot be drawn, so the close pays him his share of what is left (a closing that
+        // destroys value costs him part of his stake, as a real investor's); but it never beats simply selling the business.
+        [Test]
+        public void InvestorDrawAndClose()
+        {
+            long Play(bool investor)
+            {
+                Simulation sim = InvoiceTests.Township();
+                Business.Business b = InvoiceTests.Found(sim, "bakery");
+                ExitTests.Seasons(b, 50_000, 50_000, 50_000, 50_000);
+                long before = Worth(sim);
+                if (investor)
+                {
+                    ExitState x = sim.State.Township.Exit;
+                    var o = new DealOffer { Id = x.NextOfferId++, Kind = DealKind.Investor, BusinessId = b.Id, Share = Fixed.FromRatio(30, 100), Cash = Money.RoundToCoin(Money.MulRate(ExitRules.Valuation(sim, b).Value, Fixed.FromRatio(30, 100))), RaisedAt = sim.State.Clock.SimTime, ExpiresAt = sim.State.Clock.SimTime + 3600 };
+                    x.Offers.Add(o);
+                    Ok(sim, new AcceptDeal(sim.State.Clock.SimTime, o.Id));
+                    long free = BusinessBooks.Drawable(b);
+                    if (free > 0) Ok(sim, new TakeCash(sim.State.Clock.SimTime, b.Id, free));
+                }
+                if (investor) Ok(sim, new CloseBusiness(sim.State.Clock.SimTime, b.Id));
+                else
+                {
+                    Ok(sim, new ListBusiness(sim.State.Clock.SimTime, b.Id, true));
+                    for (int h = 0; h < 8 * 24 && b.Status != BusinessStatus.Closed; h++) sim.AdvanceTo(sim.State.Clock.SimTime + 3600);
+                }
+                GrowthReconciles(sim);
+                return Worth(sim) - before;
+            }
+            long plain = Play(false), with = Play(true);
+            TestContext.Out.WriteLine("INVESTORCLOSE net worth change: sold at once " + plain / Coin + ", investor taken, drawn and closed " + with / Coin);
+            Assert.That(with, Is.LessThanOrEqualTo(plain), "taking an investor's cash and closing never beats selling the business");
+        }
+
+        // AC-31 (review): a business that has traded no season is worth what it holds, never a plan's profit: found it at the least capital, run it yourself, list it and sell it.
+        [Test]
+        public void SellNew()
+        {
+            foreach (bool yourself in new[] { true, false })
+            {
+                Simulation sim = InvoiceTests.Township();
+                long give = 6_000_000 * Coin - sim.State.Ledger.Cash;
+                sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.Cash, give), new Posting(Account.Sales, -give));
+                long start = Worth(sim);
+                Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "bakery", InvoiceTests.FreeTile(sim), (yourself ? 145_000 : 200_000) * Coin, yourself));
+                Business.Business b = sim.State.Businesses.Businesses.Last();
+                if (!yourself) BusinessTests.Staff(sim, b);
+                sim.AdvanceTo(b.ReadyAt + 60);
+                var w = ExitRules.Valuation(sim, b);
+                Assert.That(w.Value, Is.EqualTo(w.Book), "no season closed: worth is what it holds");
+                Ok(sim, new ListBusiness(sim.State.Clock.SimTime, b.Id, true));
+                for (int h = 0; h < 8 * 24 && b.Status != BusinessStatus.Closed; h++) sim.AdvanceTo(sim.State.Clock.SimTime + 3600);
+                SaleRecord sale = sim.State.Township.Exit.Sales.Single();
+                TestContext.Out.WriteLine("SELLNEW yourself=" + yourself + ": sold at a gain of " + sale.Gain / Coin + " on " + sale.Held / Coin + " held; net worth " + (Worth(sim) - start) / Coin + " with the days it ran");
+                Assert.That(sale.Gain, Is.LessThanOrEqualTo(sale.Held / 100 + 1), "no season closed: it sells for what it holds, never for a plan's profit");
+                GrowthReconciles(sim);
+            }
+        }
+
+        // Sprint 25 balance (review): the tuition centre's and the restaurant's season profit, hired and run by you, in a Township bot's town at 30 seasons. Run with --filter Targets.
+        [Test, Explicit("measure")]
+        public void Targets()
+        {
+            TestContent.WithCohort = true;
+            SimConfig config;
+            try { config = new SimConfig(TestContent.Clock(), TestContent.Weather(), game: TestContent.Game(null)); }
+            finally { TestContent.WithCohort = false; }
+            foreach (string type in new[] { "tuition", "restaurant" })
+                foreach (bool yourself in new[] { false, true })
+                    for (ulong seed = 1; seed <= 3; seed++)
+                    {
+                        Simulation sim = Tools.Balancer.Economy.RunBot(config, new Tools.Balancer.TownshipBot(false), 30, seed, null).Sim;
+                        long give = 3_000_000 * Coin - sim.State.Ledger.Cash;
+                        if (give > 0) sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.Cash, give), new Posting(Account.Sales, -give));
+                        bool found = false;
+                        if (type == "tuition") // the bot's town has no free acre: buy one
+                            foreach (var parcel in sim.Config.Game.Map.Parcels.ToList())
+                            {
+                                if (sim.Execute(new BuyParcel(sim.State.Clock.SimTime, parcel.Id)).Accepted)
+                                {
+                                    found = sim.Execute(new FoundBusiness(sim.State.Clock.SimTime, type, InvoiceTests.FreeTile(sim), 400_000 * Coin, yourself)).Accepted;
+                                    if (found) break;
+                                }
+                            }
+                        else for (int pitch = 0; pitch < 12 && !found; pitch++) found = sim.Execute(new FoundBusiness(sim.State.Clock.SimTime, type, 0, 400_000 * Coin, yourself, null, pitch)).Accepted;
+                        if (!found) { TestContext.Out.WriteLine("TARGETS " + type + " seed " + seed + ": no free pitch"); continue; }
+                        Business.Business b = sim.State.Businesses.Businesses.Last();
+                        if (!yourself) BusinessTests.Staff(sim, b);
+                        PlayDays(sim, 32);
+                        var profits = b.Reports.Select(r => BusinessBooks.NetProfit(r) / Coin).ToList();
+                        long mean = profits.Count == 0 ? 0 : profits.Skip(profits.Count > 3 ? 2 : 0).Sum() / System.Math.Max(1, profits.Count - (profits.Count > 3 ? 2 : 0));
+                        TestContext.Out.WriteLine("TARGETS " + type + (yourself ? " run by you" : " hired") + " seed " + seed + ": seasons " + profits.Count + ", profits " + string.Join(",", profits) + ", mean after the first two " + mean);
+                    }
         }
 
         // AC-31, all four benefits stacked: each costs more than the output it adds (spec 028 §3.8), so a bakery that gives all four earns the owner no more than one that gives none.

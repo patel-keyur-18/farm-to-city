@@ -459,7 +459,9 @@ namespace Sim.Core.Business
             Citizen c = sim.State.Citizens.Citizen(b.WorkerCitizen);
             bool working = c != null && c.Living && c.Job == CitizenJob.Business && c.Employer == b.Id;
             if (working && !HouseholdRules.IsElder(sim, c)) return;
-            long worker = sim.State.People.WorkerAt(b.Id)?.Id ?? 0;
+            People.Worker staff = sim.State.People.StaffAt(b.Id);
+            long worker = staff?.Id ?? 0;
+            bool manager = staff?.Mgr != null;
             LoseWorker(sim, b);
             if (working)
             {
@@ -467,7 +469,8 @@ namespace Sim.Core.Business
                 c.Story.Add(new StoryLine(StoryKind.Retired, sim.State.Clock.SimTime, 0));
                 HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId));
             }
-            sim.Emit(new WorkerLeft(sim.State.Clock.SimTime, b.Id, worker, 0));
+            if (manager) sim.Emit(new ManagerLeft(sim.State.Clock.SimTime, b.Id, worker, 0));
+            else sim.Emit(new WorkerLeft(sim.State.Clock.SimTime, b.Id, worker, 0));
         }
 
         /// <summary>The worker leaves: a townsperson goes back to outside work (their household's budget follows).</summary>

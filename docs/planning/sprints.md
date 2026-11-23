@@ -1084,7 +1084,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [ ] Save schema 21: migration, fixtures for every new part, every older schema loads
 - [ ] Sheets, cards and the ring's layout previewed to and approved by the owner before each story's code
 - [ ] Balance: the 20% rule, the Village 28–45 days, the Township's pace, the kiln, the generator and grid, the cold store, land payback, the land stress bots, contradictions flagged
-- [ ] Render statistics read for each visible story, growth over 10% reported
+- [x] Render statistics read for each visible story, growth over 10% reported (the farm's triangles +12%, reported in the checklist)
 - [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone (the owner)
 - [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR (ADR 0154)
 - [x] `STATUS.md`, feature files and this file updated
@@ -1135,15 +1135,15 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
 - [x] Spec 028 written and approved; the apple figures re-approved
 - [x] Save schema 22: migration, fixtures for every new part (`schema22.ftc`, `schema22-townlife.ftc`, `schema22-risk.ftc`), every older schema loads
 - [x] Sheets and cards previewed to and approved by the owner before each story's code
 - [x] Balance: the 20% rule, the Village, the Township's pace, crime, `eventPart`, the exploit bots, the mill, the 200-seed Township (ADR 0154)
 - [x] Render statistics read for each visible story, growth over 10% reported (`docs/planning/render-stats.json`; the review's changes are numbers and text only)
 - [x] Test checklist with device-only rows marked (`docs/test-checklists/s24-town-life-events.md`); the Development build is the owner's to make
-- [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
-- [ ] `STATUS.md`, feature files and this file updated
+- [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR (0164: nine findings, all fixed or answered)
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it
 
 ## Sprint 25 · 9–22 Aug 2027 · Phase 3 (business growth: invoices, managers, sell or expand, investors, benefits and night shifts, the tuition centre, the tempo and the restaurant; spec 028; 2 weeks, ADR 0155)
@@ -1189,11 +1189,11 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 **Sprint end checklist**
 
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
-- [ ] Save schema 23: migration, the fixture `schema23-growth.ftc`, every older schema loads, goldens unmoved
-- [ ] Previews 16, 17 and 18 approved before their screens
-- [ ] Balance: the 20% rule, the pace, the new businesses' targets, managed against hired, the exploit bots, the 200-seed Township
+- [x] Save schema 23: migration, the fixture `schema23-growth.ftc`, every older schema loads, goldens unmoved (the review found the schema 23 block hashed for towns using no feature; fixed, ADR 0164)
+- [x] Previews 16, 17 and 18 approved before their screens
+- [x] Balance: the 20% rule, the pace, the new businesses' targets, managed against hired, the exploit bots, the 200-seed Township (ADR 0164; `KhataWorst` and `MarketingSpiral` wait for US-260)
 - [ ] Render statistics read for each visible story, growth over 10% reported
-- [ ] Test checklist with device-only rows marked (`docs/test-checklists/s25-business-growth.md`)
+- [x] Test checklist with device-only rows marked (`docs/test-checklists/s25-business-growth.md`)
 - [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
 - [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it

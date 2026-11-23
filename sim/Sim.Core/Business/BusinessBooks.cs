@@ -40,11 +40,17 @@ namespace Sim.Core.Business
         {
             Business b = sim.State.Businesses?.Find(id);
             RejectReason r = Check(b, amount);
-            if (r == RejectReason.None && !b.Ledger.CanAfford(amount)) r = RejectReason.InsufficientFunds;
+            if (r == RejectReason.None && (!b.Ledger.CanAfford(amount) || amount > Drawable(b))) r = RejectReason.InsufficientFunds;
             if (r != RejectReason.None) return CommandResult.Reject(r);
             Withdraw(sim, b, amount);
             return CommandResult.Ok;
         }
+
+        /// <summary>
+        /// The most you can draw: its cash less what outside owners have put in (ADR 0164). Their money is not yours to take; if the business loses money, they lose with it
+        /// at the close, but they cannot be left with nothing by drawing their cash out first.
+        /// </summary>
+        public static long Drawable(Business b) { return System.Math.Max(0, b.Ledger.Cash - OwnerRules.Liability(b)); }
 
         /// <summary>The entries of drawings: business Dr Owner's capital, Cr Cash; you Dr Cash, Cr 1800 down to your capital in it, the rest Cr 4300.</summary>
         private static void Withdraw(Simulation sim, Business b, long amount)
@@ -234,13 +240,13 @@ namespace Sim.Core.Business
             Town.InsuranceRules.Drop(sim, b.Id); // a closed or sold business keeps no policy (ADR 0158)
             Town.EventRules.BusinessGone(sim, b.Id); // and the cards aimed at it end quietly
             OwnerRules.Gone(sim, b.Id); // and the offers for it
-            BusinessRules.LoseWorker(sim, b);
-            People.Worker boss = ManagerRules.Of(sim, b.Id); // a closing business lets its manager go too (he keeps the season's pay)
+            People.Worker boss = ManagerRules.Of(sim, b.Id); // a closing business lets its manager go first: he works it himself, and keeps the season's pay
             if (boss != null)
             {
                 ManagerRules.Remove(sim, boss);
                 sim.Emit(new Events.ManagerLeft(now, b.Id, boss.Id, 0));
             }
+            BusinessRules.LoseWorker(sim, b);
             InvoiceRules.CollectAll(sim, b); // what its customers owe it, now (spec 028 §3.1)
 
             KilnRules.Clear(sim, b); // a closing kiln's yard goes to the trader

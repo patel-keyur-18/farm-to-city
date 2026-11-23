@@ -274,6 +274,8 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0161 | US-244 the tuition centre as built: pupils from your households and the old village, fees by the day, stars that set take-up, skill gained by your children |
 | 0162 | US-245 the tempo as built: a vehicle of legs rescaled to a four-day season, the cheapest ride chosen, idle legs let out to neighbours at midnight |
 | 0163 | US-246 the restaurant as built: a shop of the kind meals that cooks to order, diners from the households' leisure, the town dhaba as rival, a switch for each dish, a crew wage |
+| 0164 | Sprint 25 balance and the independent review: a buy-back never under what the investor put in, a manager who works the business himself (60% of a worker's wage and a tenth of the profit), a business with no closed season worth its book only, drawings stop at the cash beyond the investors' money, the new businesses' targets measured, nine review findings fixed |
+| 0165 | Spec 029 (Chronicle, Almanac, citizen stories): compact chronicle entries with text made at view, 22 kinds with firsts once, record harvests, the Almanac, a story spotlight and four arcs over real events, save schema 24 in Sprint 26 |
 
 ## Current status
 

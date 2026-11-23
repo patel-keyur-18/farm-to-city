@@ -131,7 +131,7 @@ namespace Sim.View.Views
                     { Stars = PeopleWords.Stars(ctx, lo, hi), Icon = PeopleWords.Female(ctx, a.Name) ? "person_hand_f" : "person_hand_m", Note = From(ctx, a) };
                 if (a.Countered)
                 {
-                    line.Note = s.Get("board.countered", "wage", ctx.Fmt.Coins(HiringRules.OfferWage(sim, a, OfferLevel.Asked)));
+                    line.Note = boss ? s.Get("board.counteredManager") : s.Get("board.countered", "wage", ctx.Fmt.Coins(HiringRules.OfferWage(sim, a, OfferLevel.Asked)));
                     line.NoteTone = Tone.Warn;
                 }
                 line.Action = boss ? ActionVm.Open("offer:" + a.Id, s.Get("board.offer"), new SheetRequest(ManagerSheet.OfferKind, a.Id))

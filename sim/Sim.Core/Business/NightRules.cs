@@ -44,7 +44,7 @@ namespace Sim.Core.Business
         /// <summary>At the end of the day shift: did the plan go unmet (a recipe's mix not made, the mill's own wheat not ground)? Kept for the last days.</summary>
         internal static void EndOfDay(Simulation sim, Business b, BusinessTypeDef t, long day)
         {
-            if (Defs(sim) == null || !Eligible(t) || b.ShortDay == day + 1) return;
+            if (Defs(sim) == null || !Eligible(t) || b.ShortDay == day + 1 || !Town.TownshipRules.Reached(sim)) return; // before the Township nothing is kept: the save stays as it was
             bool unmet = false;
             if (t.ByRecipe) { foreach (int p in t.Products) if (b.Mix[p] > 0 && b.MadeToday[p] < b.Mix[p]) unmet = true; }
             else unmet = b.OwnPerDay > b.OwnToday && sim.State.Market.Stock[t.Input] > 0;

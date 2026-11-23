@@ -172,7 +172,7 @@ namespace Sim.Core.People
         public static bool LongDays(Simulation sim, Worker w)
         {
             Business.Business b = sim.State.Businesses.Find(w.Place);
-            return w.Mgr == null && b.Status == Business.BusinessStatus.Open && Business.BusinessRules.LongHours(sim, b) > 0; // a manager keeps no shop hours
+            return b.Status == Business.BusinessStatus.Open && Business.BusinessRules.LongHours(sim, b) > 0; // a manager works the business himself, so long days tire him too
         }
 
         /// <summary>

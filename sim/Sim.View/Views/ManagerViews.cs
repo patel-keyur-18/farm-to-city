@@ -124,6 +124,9 @@ namespace Sim.View.Views
                 { Icon = "person_hand_m", Note = s.Get("manager.boardNote") });
         }
 
+        /// <summary>A worker (not you, not a manager) already works there: he must be let go first.</summary>
+        private static bool Staffed(Business b) { return b.Worker != WorkerKind.None && b.Worker != WorkerKind.Founder; }
+
         // ---- the offer ----
 
         /// <summary>Offer an applicant the manager's post (Preview 16, screen 4): which business first, then the three terms. Arg is the business chosen.</summary>
@@ -138,7 +141,7 @@ namespace Sim.View.Views
             long.TryParse(arg, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out chosen);
             var open = new List<Business>();
             foreach (Business b in sim.State.Businesses.Businesses) if (b.Status != BusinessStatus.Closed) open.Add(b);
-            Business pick = open.Find(b => b.Id == chosen && ManagerRules.Of(sim, b.Id) == null) ?? open.Find(b => ManagerRules.Of(sim, b.Id) == null);
+            Business pick = open.Find(b => b.Id == chosen && ManagerRules.Of(sim, b.Id) == null) ?? open.Find(b => ManagerRules.Of(sim, b.Id) == null && !Staffed(b)) ?? open.Find(b => ManagerRules.Of(sim, b.Id) == null); // the first he can take, else the first without a manager (its offers say why not)
             vm.Title = s.Get("board.offerTitle", "name", PeopleWords.Name(ctx, a.Name));
             vm.Subtitle = pick == null ? s.Get("manager.offerNone") : s.Get("manager.offerSubtitle", "business", BusinessWords.InSentence(ctx, BusinessRules.TypeOf(sim, pick)));
             vm.Lines.Add(LineVm.Header(s.Get("manager.whichBusiness")));
