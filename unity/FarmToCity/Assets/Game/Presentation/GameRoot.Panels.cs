@@ -6,6 +6,7 @@ using Sim.Core.Commands;
 using Sim.Core.Finance;
 using Sim.View.Text;
 using Sim.View.Views;
+using HiringRules = Sim.Core.People.HiringRules;
 using UnityEngine;
 
 namespace Game.Presentation
@@ -239,6 +240,10 @@ namespace Game.Presentation
                 case "Word": return; // the board stays: the post, a reference asked, a talk
                 case EventSheet.CardKind: if (_back.Count > 0) Back(); else _sheet.Close(); return; // answered: the card is gone; back to the Events list or the bell it came from
                 case "HrEvent": if (_back.Count > 0) Back(); else _sheet.Close(); return; // answered: back to the alerts it came from
+                case ExitSheet.Kind: return; // listed, rushed or cancelled: the sheet stays and shows it
+                case OwnerSheet.OwnersKind: return; // a share bought back: the sheet stays and shows the owners now
+                case OwnerSheet.CardKind: if (_back.Count > 0) Back(); else _sheet.Close(); return; // answered: the card is gone; back to the owners or the bell it came from
+                case ManagerSheet.OfferKind: Return(new SheetRequest("Word", HiringRules.ManagerPlace)); return; // back to the manager's tab: hired, countered or gone
                 case "TownOffer": Return(new SheetRequest("Citizen", r.Id)); return; // back to their card: hired, countered or not
                 case "JobOffer": Return(new SheetRequest("Word", r.Arg == null ? 0 : long.Parse(r.Arg, System.Globalization.CultureInfo.InvariantCulture))); return; // back to the job's tab: hired, countered or gone
             }

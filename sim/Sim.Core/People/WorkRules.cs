@@ -93,7 +93,7 @@ namespace Sim.Core.People
         }
 
         /// <summary>Motivation × (1 − fatigue): exactly 1 for a fair hire in a content home who isn't tired.</summary>
-        public static Fixed Condition(Simulation sim, IStaff w) { return Motivation(sim, w) * (Fixed.One - w.Fatigue); }
+        public static Fixed Condition(Simulation sim, IStaff w) { return Motivation(sim, w) * (Fixed.One - w.Fatigue) * BenefitRules.LeaveOutput(sim, w); }
 
         /// <summary>Output = skill factor × motivation × (1 − fatigue) (spec 015 §3.4); 0 while away on a course.</summary>
         public static Fixed Output(Simulation sim, IStaff w)
@@ -172,7 +172,7 @@ namespace Sim.Core.People
         public static bool LongDays(Simulation sim, Worker w)
         {
             Business.Business b = sim.State.Businesses.Find(w.Place);
-            return b.Status == Business.BusinessStatus.Open && Business.BusinessRules.LongHours(sim, b) > 0;
+            return b.Status == Business.BusinessStatus.Open && Business.BusinessRules.LongHours(sim, b) > 0; // a manager works the business himself, so long days tire him too
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace Sim.Core.People
         internal static void Daily(Simulation sim)
         {
             PeopleState s = sim.State.People;
-            if (!s.Hands.Exists(h => h.Fatigue != Fixed.Zero || h.LongDays) && !s.Workers.Exists(w => w.Fatigue != Fixed.Zero || LongDays(sim, w))) return;
+            if (!s.Hands.Exists(h => h.Fatigue != Fixed.Zero || h.LongDays) && !s.Workers.Exists(w => w.Fatigue != Fixed.Zero || w.Night || LongDays(sim, w))) return;
             FarmSystem.Accrue(sim);
             foreach (Hand h in s.Hands)
             {
@@ -193,8 +193,15 @@ namespace Sim.Core.People
                     sim.Emit(new LongDaysStopped(sim.State.Clock.SimTime, 0, h.Id));
                 }
             }
-            foreach (Worker w in s.Workers) w.Fatigue = Tire(sim, w.Fatigue, LongDays(sim, w) && !Away(w));
+            foreach (Worker w in s.Workers) w.Fatigue = w.Night ? NightTire(sim, w.Fatigue) : Tire(sim, w.Fatigue, LongDays(sim, w) && !Away(w));
             FarmSystem.Refresh(sim);
+        }
+
+        /// <summary>The night worker never rests by day: fatigue rises <c>nightFatigue</c> a day (spec 028 §3.8), within the same maximum.</summary>
+        private static Fixed NightTire(Simulation sim, Fixed fatigue)
+        {
+            Fixed f = fatigue + sim.Config.Game.Benefits.NightFatigue, max = sim.Config.Game.People.Work.FatigueMax;
+            return f > max ? max : f;
         }
 
         private static Fixed Tire(Simulation sim, Fixed fatigue, bool longDay)
@@ -238,8 +245,7 @@ namespace Sim.Core.People
                 Hand h = s.Hand(id);
                 return h != null && h.Contract == ContractState.Active ? h : null;
             }
-            Worker w = s.WorkerAt(place);
-            return w != null && w.Id == id ? w : null;
+            return s.Workers.Find(x => x.Place == place && x.Id == id); // a worker, or the business's manager
         }
     }
 }

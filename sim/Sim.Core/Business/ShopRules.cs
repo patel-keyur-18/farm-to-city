@@ -64,7 +64,7 @@ namespace Sim.Core.Business
         public static List<int> KindGoods(Simulation sim, ShopKind kind)
         {
             var list = new List<int>();
-            if (kind == ShopKind.Chai) { list.Add(-1); return list; }
+            if (kind == ShopKind.Chai || kind == ShopKind.Meals) { list.Add(-1); return list; } // cups, portions
             if (kind == ShopKind.Sweets)
             {
                 foreach (KeyValuePair<int, Fixed> kv in Defs(sim).Kind(kind).References) list.Add(kv.Key);
@@ -87,6 +87,7 @@ namespace Sim.Core.Business
         /// </summary>
         public static long DemandPerDay(Simulation sim, ShopKind kind, int good, ShopGroup g)
         {
+            if (kind == ShopKind.Meals) return MealsRules.PerDay(sim, g); // from the households' leisure (spec 028 §3.7)
             ShopKindDef k = Defs(sim).Kind(kind);
             bool product = kind == ShopKind.Veg && IsProduct(sim, good);
             Fixed people = Fixed.FromInt(PeopleIn(sim, g, product)) * k.AdultShare * sim.Config.Game.Population.RealDaysPerGameDay;
@@ -102,8 +103,9 @@ namespace Sim.Core.Business
         public static long DemandThisHour(Simulation sim, ShopKind kind, int good, ShopGroup g, int hour)
         {
             ShopDefs d = Defs(sim);
-            if (hour < d.OpenHour || hour >= d.CloseHour) return 0;
-            long hourly = DemandPerDay(sim, kind, good, g) / (d.CloseHour - d.OpenHour);
+            BusinessTypeDef meals = kind == ShopKind.Meals ? MealsRules.Type(sim) : null;
+            if (kind == ShopKind.Meals ? !MealsRules.Sitting(meals, hour) : hour < d.OpenHour || hour >= d.CloseHour) return 0; // diners come at the two sittings
+            long hourly = DemandPerDay(sim, kind, good, g) / (kind == ShopKind.Meals ? MealsRules.SittingHours(meals) : d.CloseHour - d.OpenHour);
             Fixed rise = Town.FestivalRules.ShopRise(sim, kind) + Town.EventRules.ShopRise(sim); // spec 026 §3.1: a festival's day brings the crowd; spec 027: a viral rush, a closure
             return rise == Fixed.Zero ? hourly : System.Math.Max(0, hourly + (Fixed.FromInt((int)hourly) * rise).RoundToLong());
         }
@@ -119,6 +121,7 @@ namespace Sim.Core.Business
             ShopDefs d = Defs(sim);
             Fixed index = sim.State.Market.PriceIndex;
             if (kind == ShopKind.Chai && good < 0) return d.Kind(kind).Reference * index;
+            if (kind == ShopKind.Meals) return MealsRules.Average(sim, MealsRules.Type(sim).Meals);
             if (kind == ShopKind.Sweets)
                 foreach (KeyValuePair<int, Fixed> kv in d.Kind(kind).References) if (kv.Key == good) return kv.Value * index;
             if (kind == ShopKind.Veg && VegShare(sim, good) > Fixed.Zero) return sim.State.Market.Price[good] * d.RetailMarkup;
@@ -253,6 +256,7 @@ namespace Sim.Core.Business
         public static bool RivalOpen(Simulation sim, Rival r, int hour)
         {
             if (!r.Newcomer) return RivalOpen(Defs(sim).Rivals[r.Def], hour);
+            if (r.Kind == ShopKind.Meals) return MealsRules.Sitting(MealsRules.Type(sim), hour);
             return hour >= Defs(sim).OpenHour && hour < Defs(sim).CloseHour;
         }
 
@@ -261,7 +265,17 @@ namespace Sim.Core.Business
         {
             BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
             People.Worker w = BusinessRules.HiredWorker(sim, b);
-            return w == null ? t.CapacityPerHour : People.WorkRules.RelativeOutput(sim, w).MulRatio(t.CapacityPerHour, 1).RoundToLong();
+            long rate = w == null ? t.CapacityPerHour : People.WorkRules.RelativeOutput(sim, w).MulRatio(t.CapacityPerHour, 1).RoundToLong();
+            return Stocked(t) || t.IsMeals ? ManagerRules.Scale(sim, b, rate) : rate; // a stall's or a kitchen's mis-set day is a stock-out (spec 028 §3.2); a maker's is cut where it makes
+        }
+
+        /// <summary>A shop's price as a share of the reference and its quality (US-121), as <c>SetShop</c> and a manager's style set them: the same cups a day when the tea stall changes quality.</summary>
+        internal static void SetLook(Simulation sim, Business b, Fixed priceFactor, int quality)
+        {
+            b.PriceFactor = priceFactor;
+            BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            if (quality != b.Quality && t.TakesMilk) b.OwnPerDay = b.OwnPerDay * t.CupMl(quality) / t.CupMl(b.Quality);
+            b.Quality = quality;
         }
 
         public static bool RivalOpen(RivalDef d, int hour) { return hour >= d.OpenHour && hour < d.CloseHour; }
@@ -325,8 +339,9 @@ namespace Sim.Core.Business
             long start = sim.State.Clock.SimTime - Hour;
             NewDay(sim, start / Day);
             int hour = (int)(start % Day / Hour);
-            foreach (ShopKind kind in new[] { ShopKind.Veg, ShopKind.Chai, ShopKind.Sweets })
+            foreach (ShopKind kind in new[] { ShopKind.Veg, ShopKind.Chai, ShopKind.Sweets, ShopKind.Meals })
             {
+                if (kind == ShopKind.Meals && !MealsRules.Running(sim)) continue; // diners are worked out once a restaurant of yours is open
                 var outlets = new List<Outlet>();
                 foreach (Business b in sim.State.Businesses.Businesses)
                     if (b.Status == BusinessStatus.Open && BusinessRules.TypeOf(sim, b).Kind == kind && BusinessRules.OpenAt(sim, b, hour))
@@ -380,6 +395,7 @@ namespace Sim.Core.Business
         private static long Limit(Simulation sim, Outlet o, ShopKind kind, int good)
         {
             if (o.R != null) return o.CapLeft;
+            if (kind == ShopKind.Meals) return System.Math.Min(o.CapLeft, MealsRules.Afford(sim, o.B)); // the kitchen cooks what its cash can pay for
             BusinessTypeDef t = BusinessRules.TypeOf(sim, o.B);
             long stock = kind == ShopKind.Chai ? Milk(sim, o.B) / t.CupMl(o.B.Quality) : o.B.Stock[good];
             return System.Math.Min(o.CapLeft, stock);
@@ -514,6 +530,7 @@ namespace Sim.Core.Business
         private static long Sell(Simulation sim, Business b, ShopKind kind, int good, long q)
         {
             BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            if (kind == ShopKind.Meals) return MealsRules.Sell(sim, b, t, q);
             if (kind != ShopKind.Chai)
             {
                 long amount = BusinessRules.SalePrice(sim, b, MarketRules.Value(sim, good, q, Price(sim, b, good)));
@@ -562,12 +579,13 @@ namespace Sim.Core.Business
         }
 
         /// <summary>Stock used up in what's sold, at its cost.</summary>
-        private static void Use(Simulation sim, Business b, int good, long grams)
+        internal static long Use(Simulation sim, Business b, int good, long grams)
         {
             long cost = (long)((System.Numerics.BigInteger)b.StockCost[good] * grams / b.Stock[good]);
             b.Stock[good] -= grams;
             b.StockCost[good] -= cost;
             if (cost > 0) b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.costOfGoods", "business:" + b.Id, new Posting(Account.CostOfGoodsSold, cost), new Posting(Account.BusinessStock, -cost));
+            return cost;
         }
 
         // ---- the morning (§5 SetStallGoods) ----
@@ -575,7 +593,7 @@ namespace Sim.Core.Business
         // ---- quality and stars (§3.5, ADR 0092) ----
 
         /// <summary>Whether a business earns stars: the shops and the mill (the bakery and dairy sell at the morning round, chosen by nobody).</summary>
-        public static bool Rated(BusinessTypeDef t) { return !t.IsKiln && (t.IsShop || !t.ByRecipe); }
+        public static bool Rated(BusinessTypeDef t) { return !t.IsKiln && !t.IsTuition && (t.IsShop || !t.ByRecipe); }
 
         /// <summary>Whether it keeps nothing overnight: good quality at the vegetable stall and the sweet shop.</summary>
         public static bool Fresh(BusinessTypeDef t, Business b) { return b.Quality == 2 && t.GoodFresh; }
@@ -634,7 +652,7 @@ namespace Sim.Core.Business
         }
 
         /// <summary>Whether a business is a stall that's stocked each morning (the vegetable stall, the tea stall's snacks), not one that makes its goods.</summary>
-        public static bool Stocked(BusinessTypeDef t) { return t.IsShop && !t.ByRecipe; }
+        public static bool Stocked(BusinessTypeDef t) { return t.IsShop && !t.ByRecipe && !t.IsMeals; }
 
         /// <summary>
         /// The stalls' 6:00 round, before your bakery and dairy sell to the village shops (§5, ADR 0091 §2): what's left from yesterday
@@ -691,7 +709,7 @@ namespace Sim.Core.Business
         }
 
         /// <summary>Produce from your store at today's market price (the trader's, as spec 016's own wheat): Cr the farm's sales, Dr the stall's stock.</summary>
-        private static long FromStore(Simulation sim, Business b, int g, long need)
+        internal static long FromStore(Simulation sim, Business b, int g, long need)
         {
             long q = System.Math.Min(need, sim.State.Market.Stock[g] - sim.State.Market.Offered[g]);
             Fixed price = MarketRules.Floor(sim, g);
@@ -714,21 +732,17 @@ namespace Sim.Core.Business
         }
 
         /// <summary>Your product from your businesses that make it, in id order, at the trader's price (an internal sale, as the mill's atta).</summary>
-        private static long FromYours(Simulation sim, Business to, int g, long need, long[] took)
+        internal static long FromYours(Simulation sim, Business to, int g, long need, long[] took)
         {
             long got = 0;
             foreach (Business from in sim.State.Businesses.Businesses)
             {
-                if (from == to || from.Status != BusinessStatus.Open || from.Stock[g] <= 0 || !BusinessRules.TypeOf(sim, from).Makes(g)) continue;
+                if (from == to || from.Status != BusinessStatus.Open || from.Stock[g] <= 0 || !BusinessRules.TypeOf(sim, from).Makes(g) || InvoiceRules.Blocked(sim, from, to)) continue;
                 Fixed price = MarketRules.Floor(sim, g);
                 long q = System.Math.Min(System.Math.Min(need - got, from.Stock[g]), Money.QuantityFor(System.Math.Max(0, BusinessBooks.CanSpend(sim, to)), price, 1000));
                 if (q <= 0) continue;
                 long value = MarketRules.Value(sim, g, q, price);
-                BusinessBooks.Draw(sim, to, value);
-                to.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.boughtFromBusiness", "business:" + to.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
-                to.Stock[g] += q;
-                to.StockCost[g] += value;
-                BusinessRules.Sold(sim, from, g, q, value);
+                InvoiceRules.Sale(sim, from, to, g, q, value);
                 BusinessBooks.Sweep(sim, from);
                 took[g] += q;
                 got += q;
@@ -740,7 +754,7 @@ namespace Sim.Core.Business
         /// What your store and businesses can't give, bought as far as its cash goes: vegetables and fruit at the local market's price (a
         /// sabziwala at the mandi each morning, ADR 0093), snacks and products at the import price.
         /// </summary>
-        private static void FromMarket(Simulation sim, Business b, int g, long need, Fixed price)
+        internal static void FromMarket(Simulation sim, Business b, int g, long need, Fixed price)
         {
             long q = System.Math.Min(need, Money.QuantityFor(System.Math.Max(0, BusinessBooks.CanSpend(sim, b)), price, 1000));
             long value = MarketRules.Value(sim, g, q, price);
@@ -833,7 +847,7 @@ namespace Sim.Core.Business
             if (s == null || sim.State.Businesses == null) return;
             ShopDefs d = Defs(sim);
             long t = sim.State.Clock.SimTime, season = t / sim.Clock.SecondsPerSeason;
-            foreach (ShopKind kind in new[] { ShopKind.Veg, ShopKind.Chai, ShopKind.Sweets })
+            foreach (ShopKind kind in new[] { ShopKind.Veg, ShopKind.Chai, ShopKind.Sweets, ShopKind.Meals })
             {
                 SeasonOf(sim, kind, out long served, out long demand);
                 if (demand <= 0) continue;
@@ -943,6 +957,12 @@ namespace Sim.Core.Business
             {
                 if (t.Kind == ShopKind.Veg && !t.Sells(good)) continue;
                 if (t.Kind == ShopKind.Sweets && !t.Makes(good)) continue;
+                if (t.Kind == ShopKind.Meals)
+                {
+                    MealsRules.Plan(sim, t, ExpectedPerDay(sim, t.Kind, good, at), out long dishes, out long cooked, out long burned);
+                    sales += dishes; inputs += cooked; fuel += burned;
+                    continue;
+                }
                 long q = ExpectedPerDay(sim, t.Kind, good, at) * days;
                 if (t.Kind == ShopKind.Chai)
                 {

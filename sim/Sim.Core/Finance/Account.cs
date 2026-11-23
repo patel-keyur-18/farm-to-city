@@ -36,14 +36,23 @@ namespace Sim.Core.Finance
         BankLoans = 2200,
         InterestPayable = 2300,
 
+        /// <summary>What a business owes other businesses for goods bought on terms (spec 028 §3.1, schema 23); the seller books the same as Owed by buyers (1300). Business books only.</summary>
+        TradePayable = 2350,
+
         /// <summary>Tax billed and not yet paid, to the town (spec 022 §3.1, §3.2): paid first at the next close. The founder's and each business's own.</summary>
         TaxOwed = 2400,
+
+        /// <summary>What an investor or a partner put into a business, owed to them as their share (spec 028 §3.4, schema 23): a liability of the business, so your equity in it is what is left. Business books only.</summary>
+        OutsideEquity = 2500,
 
         OpeningEquity = 3000,
         RetainedEarnings = 3100,
 
         /// <summary>A business's owner's capital: what the founder put in, less drawings (spec 016 §3.2).</summary>
         OwnersCapital = 3200,
+
+        /// <summary>The profit an investor's or a partner's share was paid at the closes (spec 028 §3.4, schema 23): a distribution, not an expense. Business books only.</summary>
+        OutsideDrawings = 3250,
 
         CropSales = 4000,
         FruitSales = 4010,
@@ -178,6 +187,7 @@ namespace Sim.Core.Finance
             Account.Festivals, // spec 026 (save schema 22)
             Account.RegionalGrants, Account.DisasterLoss, Account.EventCosts, // spec 027 (save schema 22)
             Account.InsuranceClaims, Account.InsuranceClaimsReceived, Account.CropInsurancePremiums, Account.InsurancePremiums, Account.ContractSettlement,
+            Account.TradePayable, Account.OutsideEquity, Account.OutsideDrawings, // spec 028 (save schema 23)
         };
 
         /// <summary>
@@ -204,6 +214,7 @@ namespace Sim.Core.Finance
                 case Account.DeptSafety: case Account.DeptUtilities: case Account.DeptPolicies: case Account.TaxOwed: case Account.HouseTax: case Account.BusinessTax: return 19;
                 case Account.Festivals: case Account.RegionalGrants: case Account.DisasterLoss: case Account.EventCosts:
                 case Account.InsuranceClaims: case Account.InsuranceClaimsReceived: case Account.CropInsurancePremiums: case Account.InsurancePremiums: case Account.ContractSettlement: return 22;
+                case Account.TradePayable: case Account.OutsideEquity: case Account.OutsideDrawings: return 23;
                 default: return 0;
             }
         }

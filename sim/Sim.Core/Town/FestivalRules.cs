@@ -149,7 +149,7 @@ namespace Sim.Core.Town
         {
             if (!IsDay(sim)) return Fixed.Zero;
             FestivalDef d = Def(sim);
-            return kind == ShopKind.Chai ? d.ShopChai : kind == ShopKind.Sweets ? d.ShopSweets : d.ShopVeg;
+            return kind == ShopKind.Chai ? d.ShopChai : kind == ShopKind.Sweets || kind == ShopKind.Meals ? d.ShopSweets : d.ShopVeg; // a feast day fills the restaurant as it fills the sweet shop
         }
 
         /// <summary>The festival's day is over: kept in the record (the last few) and announced.</summary>
@@ -168,6 +168,7 @@ namespace Sim.Core.Town
                 s.Festivals.Add(new FestivalRecord(s.FestivalKind, s.FestivalVenue, s.FestivalPayer, s.FestivalDay, s.FestivalPeople, s.FestivalCost));
                 while (s.Festivals.Count > Def(sim).Keep) s.Festivals.RemoveAt(0);
                 sim.Emit(new FestivalHeld(sim.State.Clock.SimTime, s.FestivalKind, s.FestivalVenue, s.FestivalPayer, s.FestivalDay, s.FestivalCost));
+                Sim.Core.People.BenefitRules.Festival(sim); // spec 028 §3.8: the festival bonus, where it is given
             }
         }
     }

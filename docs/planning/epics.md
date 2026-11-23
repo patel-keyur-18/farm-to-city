@@ -112,8 +112,8 @@
 | [F15.8](features/F15.8-building-upgrades-and-overlays.md) | Building upgrades and overlays | E15 | 3 | Spec 024 (to write, ADR 0107) | Backlog | US-152, US-153 | 10 |
 | [F16.1](features/F16.1-event-engine.md) | Event engine | E16 | 3 | Spec 027 (to write, ADR 0107) | Backlog | US-154 | 8 |
 | [F16.2](features/F16.2-insurance-and-forward-contracts.md) | Insurance and forward contracts | E16 | 3 | Spec 027 (to write, ADR 0107) | Backlog | US-155, US-156 | 8 |
-| [F16.3](features/F16.3-chronicle-and-almanac.md) | Chronicle and Almanac | E16 | 3 | Spec 029 (to write, ADR 0107) | Backlog | US-157, US-158 | 8 |
-| [F16.4](features/F16.4-citizen-stories.md) | Citizen stories | E16 | 3 | Spec 029 (to write, ADR 0107) | Backlog | US-159 | 5 |
+| [F16.3](features/F16.3-chronicle-and-almanac.md) | Chronicle and Almanac | E16 | 3 | Spec 029 (written, ADR 0165) | Backlog | US-157, US-158 | 8 |
+| [F16.4](features/F16.4-citizen-stories.md) | Citizen stories | E16 | 3 | Spec 029 (written, ADR 0165) | Backlog | US-159 | 5 |
 | [F17.1](features/F17.1-cohort-simulation.md) | Cohort simulation | E17 | 4 | To write at the start of Phase 4 | Backlog | US-160–US-160 | 8 |
 | [F17.2](features/F17.2-transport-and-logistics.md) | Transport and logistics | E17 | 4 | To write at the start of Phase 4 | Backlog | US-161–US-161 | 5 |
 | [F17.3](features/F17.3-industry-and-pollution.md) | Industry and pollution | E17 | 4 | To write at the start of Phase 4 | Backlog | US-162–US-162 | 5 |

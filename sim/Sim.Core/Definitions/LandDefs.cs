@@ -529,6 +529,18 @@ namespace Sim.Core.Definitions
         /// <summary>Forward contracts (spec 027 §3.7, <c>contracts.json</c>), with the events, or null.</summary>
         public ContractsDef Contracts { get; internal set; }
 
+        /// <summary>Invoices between businesses (spec 028 §3.1, <c>invoices.json</c>), with the events and the shops, or null.</summary>
+        public InvoicesDef Invoices { get; internal set; }
+
+        /// <summary>Managers (spec 028 §3.2, <c>managers.json</c>), with the hiring board and the shops, or null.</summary>
+        public ManagersDef Managers { get; internal set; }
+
+        /// <summary>Valuing, selling and branching a business (spec 028 §3.3, <c>exit.json</c>), with the managers, or null.</summary>
+        public ExitDef Exit { get; internal set; }
+
+        /// <summary>Benefits and the night shift (spec 028 §3.8, <c>content/benefits.json</c>), from the Township's content, or null.</summary>
+        public BenefitsDef Benefits { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

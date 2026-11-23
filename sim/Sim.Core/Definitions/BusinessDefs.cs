@@ -50,6 +50,64 @@ namespace Sim.Core.Definitions
         public Fixed TraderShare { get; internal set; }
     }
 
+    /// <summary>
+    /// The tuition centre's own numbers (spec 028 §3.5, US-244, ADR 0161): batches of pupils in the evening, the fee a pupil a season (year-0 coins) and its
+    /// presets, the stars it starts with and the share of affordable children sent at 0 and at 5 stars, the books and chalk a pupil uses a season, and
+    /// the skill a season of tuition adds (up to a cap in all).
+    /// </summary>
+    public sealed class TuitionDef
+    {
+        public int Batches { get; internal set; }
+        public int BatchSize { get; internal set; }
+        public int AgeMin { get; internal set; }
+        public int AgeMax { get; internal set; }
+        public long Fee { get; internal set; }
+        public System.Collections.Generic.IReadOnlyList<Fixed> Presets { get; internal set; }
+        public Fixed StartStars { get; internal set; }
+        public Fixed TakeUpLow { get; internal set; }
+        public Fixed TakeUpHigh { get; internal set; }
+        public long SuppliesPerPupil { get; internal set; }
+        public int GainPerSeason { get; internal set; }
+        public int GainMax { get; internal set; }
+
+        /// <summary>Pupils a season: batches × batch size.</summary>
+        public int Capacity { get { return Batches * BatchSize; } }
+    }
+
+    /// <summary>One dish on the restaurant's menu (US-246): its price a portion (year-0 coins), the diners' share of it, what a portion takes and its fuel and supplies.</summary>
+    public sealed class DishDef
+    {
+        public string Id { get; internal set; }
+        public string NameKey { get; internal set; }
+        public Fixed Price { get; internal set; }
+
+        /// <summary>Parts of ten diners that order it (a thali 6, a paratha plate 4).</summary>
+        public int Share { get; internal set; }
+        public IReadOnlyList<KeyValuePair<int, long>> Inputs { get; internal set; }
+        public Fixed Fuel { get; internal set; }
+        public Fixed Supplies { get; internal set; }
+    }
+
+    /// <summary>
+    /// The restaurant's own numbers (spec 028 §3.7, US-246, ADR 0163): the two sittings (open 11:00 to 15:00 and 18:00 to 22:00, so the break is the hours between),
+    /// the dishes, the part of a household's leisure that goes on eating out and the income below which a household eats at home, and how much dearer
+    /// good quality's finer ingredients are.
+    /// </summary>
+    public sealed class MealsDef
+    {
+        public int BreakFrom { get; internal set; }
+        public int BreakTo { get; internal set; }
+        public IReadOnlyList<DishDef> Dishes { get; internal set; }
+        public Fixed LeisureShare { get; internal set; }
+        public long MinIncome { get; internal set; }
+
+        /// <summary>Hours the doors are shut between the sittings.</summary>
+        public int BreakHours { get { return BreakTo - BreakFrom; } }
+
+        /// <summary>The ten diners' parts, added up.</summary>
+        public int ShareTotal { get { int n = 0; foreach (DishDef d in Dishes) n += d.Share; return n; } }
+    }
+
     /// <summary>A business type from <c>content/businesses.json</c> (spec 016 §3.1): the flour mill (Hamlet), the bakery and the dairy (Village).</summary>
     public sealed class BusinessTypeDef
     {
@@ -114,6 +172,19 @@ namespace Sim.Core.Definitions
         public KilnDef Kiln { get; internal set; }
 
         public bool IsKiln { get { return Kiln != null; } }
+
+        /// <summary>The tuition centre's numbers (US-244), or null: it teaches pupils for a fee, not goods.</summary>
+        public TuitionDef Tuition { get; internal set; }
+
+        public bool IsTuition { get { return Tuition != null; } }
+
+        /// <summary>The restaurant's numbers (US-246), or null: it cooks dishes to order, from your store and the market.</summary>
+        public MealsDef Meals { get; internal set; }
+
+        public bool IsMeals { get { return Meals != null; } }
+
+        /// <summary>Hours a day its doors are open: the span less the restaurant's break between sittings.</summary>
+        public int OpenSpan(int openHour, int closeHour) { return closeHour - openHour - (Meals != null ? Meals.BreakHours : 0); }
 
         /// <summary>What kind of shop it is (spec 017 §3.1), or None for the mill, bakery and dairy.</summary>
         public ShopKind Kind { get; internal set; }

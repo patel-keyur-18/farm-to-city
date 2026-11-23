@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 17 Sell or expand and investors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen, scaled to fit, with a tab bar for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink);cursor:pointer}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.sheet.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:700px}
+.card.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.card h3{margin:0;font:700 32px var(--display);text-align:center}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.cost.hi{background:var(--cream2);border-radius:10px;border:0;margin-top:6px}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.btnrow .btn{flex:1}
+.pic{width:170px;height:128px;border-radius:14px;border:3px solid var(--wood);overflow:hidden;flex:none}
+.tag{display:inline-block;font:700 14px var(--body);padding:2px 9px;border-radius:9px;background:#e9d9a8;border:2px solid var(--wood);color:var(--wood);vertical-align:middle;margin-left:8px}
+.tag.major{background:var(--saffron,#E8892A);border-color:#9b5412;color:#fff}
+.tag.warn{background:#fde2cf;border-color:var(--warn);color:var(--warn)}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice.def{background:#efe2bd;border-color:#d8c68e}
+.choice .tx{flex:1;font-size:21px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px;font-weight:400}
+.choice .btn{min-width:190px}
+.note{font-size:17px;color:var(--wood);margin:10px 4px 0;line-height:1.4}
+.note.warn{color:var(--warn);font-weight:600}
+.timer{font:600 19px var(--body);color:var(--warn)}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:760px;text-align:center}
+.banner{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fde2cf;border:4px solid var(--warn);border-radius:16px;padding:9px 20px;font:600 21px var(--body);color:var(--warn);cursor:pointer}
+@keyframes flick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) translateY(-2px)}}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick .5s infinite}
+@media (prefers-reduced-motion:reduce){.flame{animation:none}}
+.body{overflow-y:auto}
+.tabrow{display:flex;gap:10px;padding:0 20px 6px}
+.tabrow .btn{flex:1;min-width:0;padding:8px 6px 10px;font-size:20px}
+.pill{display:inline-block;font:700 15px var(--body);padding:2px 10px;border-radius:10px;border:2px solid;margin-left:8px;vertical-align:middle}
+.pill.cur{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.pill.late{background:#fde9c4;border-color:#b9770e;color:#8a5200}
+.pill.over{background:#fbd9d2;border-color:var(--warn);color:var(--warn)}
+.pill.met{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.dd{font:700 18px var(--body);background:var(--sand);border:3px solid var(--sand2);border-radius:12px;padding:6px 12px;color:var(--ink);cursor:pointer;min-width:168px;text-align:center}
+.dd:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.alert{display:flex;gap:12px;align-items:center;background:#fde2cf;border:3px solid var(--warn);border-radius:14px;padding:10px 14px;margin:10px 0 2px;font-size:19px;color:#7a2d08;font-weight:600}
+.stars{color:#e8a31c;letter-spacing:1px;font-size:20px}.stars i{color:#cfc19a;font-style:normal}
+.seg{display:flex;gap:8px}.seg .btn{min-width:120px;padding:6px 12px 8px;font-size:19px}
+.holdbtn::after{content:"";position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(0,0,0,.22);transition:width 0s}
+.holdbtn.holding::after{width:100%;transition:width .7s linear}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center;color:#d9c9a8;font-size:14px}
+.ctl button{font:600 14px var(--body);padding:6px 12px;border-radius:9px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.ctl button[aria-pressed=true]{background:var(--sand);border-color:var(--sand2);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 17: sell or expand, investors, partners and buy-outs</h1>
+  <p class="lead">Sprint 25, US-125 and US-247 (spec 028 §3.3, §3.4, §7). Every screen is drawn at the game's own 1280 × 720 size with its palette and type, in the layout of the business sheets and the event cards of Sprint 24. Tap the tabs, then the buttons, the switches above the picture and the ? chips the way you would on the phone. Selling and buying are holds, as in the Store. Numbers follow the spec for a Township in its third year and are placeholders for the balance pass.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="ctl" id="ctl"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const fmt=n=>{n=Math.round(n);const s=String(Math.abs(n));let r=s.length>3?s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+s.slice(-3):s;return (n<0?'−':'')+r};
+const I={
+ bakery:'<svg viewBox="0 0 30 30"><rect x="4" y="13" width="22" height="12" rx="2" fill="#d9a05b" stroke="#8a5a2b" stroke-width="2"/><path d="M3 14c1-7 7-9 12-9s11 2 12 9z" fill="#c2410c" stroke="#8a5a2b" stroke-width="2"/><rect x="12" y="17" width="6" height="8" fill="#6b4423"/></svg>',
+ mill:'<svg viewBox="0 0 30 30"><rect x="6" y="12" width="18" height="14" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><path d="M4 13l11-9 11 9z" fill="#a8743c" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="19" r="4" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ stall:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#4a9bd6" stroke="#8a5a2b" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><rect x="3" y="24" width="24" height="3" fill="#8a5a2b"/></svg>',
+ grocer:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#79c84a" stroke="#8a5a2b" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#f3c777" stroke="#8a5a2b" stroke-width="2"/><circle cx="11" cy="18" r="2.5" fill="#c2410c"/><circle cx="18" cy="18" r="2.5" fill="#79c84a"/></svg>',
+ person:'<svg viewBox="0 0 30 30"><circle cx="15" cy="9" r="5" fill="#8a5a2b"/><path d="M5 27c0-8 4-11 10-11s10 3 10 11z" fill="#c2410c"/></svg>',
+ env:'<svg viewBox="0 0 30 30"><rect x="3" y="7" width="24" height="17" rx="2" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M4 9l11 8 11-8" fill="none" stroke="#8a5a2b" stroke-width="2.5"/><circle cx="15" cy="17" r="3" fill="#c2410c"/></svg>',
+ coin:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/><path d="M15 8v14M11 12h8M11 18h8" stroke="#9a6a2a" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ bill:'<svg viewBox="0 0 30 30"><rect x="5" y="3" width="20" height="24" rx="3" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M9 10h12M9 15h12M9 20h7" stroke="#8a5a2b" stroke-width="2.5" stroke-linecap="round"/></svg>',
+ bell:'<svg viewBox="0 0 30 30"><path d="M15 4a8 8 0 0 0-8 8v6l-3 4h22l-3-4v-6a8 8 0 0 0-8-8z" fill="#8a5a2b"/><circle cx="15" cy="26" r="3" fill="#8a5a2b"/></svg>',
+ chart:'<svg viewBox="0 0 30 30"><path d="M4 24l7-9 5 5 10-13" fill="none" stroke="#3f7d20" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+const WHY={
+ value:{t:'What the bakery is worth',h:'3,28,200 coins',rows:[['Profit of the last 4 seasons: 11,800 + 13,100 + 15,600 + 14,200','54,700'],['A business starts at 4.5 times a year\'s profit','4.5'],['Profit grew: the last 2 seasons are 20% above the 2 before','+1'],['No loss in the last 4 seasons, and over 4 seasons old','0'],['It has a manager and 4 profitable seasons','+1'],['That is 6.5; a business is never rated above 6 or below 3','6'],['6 times 54,700','3,28,200'],['What it holds, if you shut it today','1,12,400']],foot:'It is worth the larger of the two: what it earns, or what it holds. A sale never ends in a paper loss.'},
+ book:{t:'What the bakery holds',h:'1,12,400 coins',rows:[['Building and equipment at their book value','1,06,120'],['Cash','9,430'],['Stock','7,970'],['Owed to it by customers','6,480'],['Owed by it: to the mill 13,600 and others 4,000','−17,600'],['Overdraft and loans','0 coins']],foot:'This is the bakery\'s own equity: what is left if everything is sold at book and every bill paid.'},
+ sale:{t:'What a sale pays',h:'2,95,380 to 3,44,610',rows:[['A listing finds a buyer in 3 to 6 days, a townsperson, a rival or a regional buyer','3 to 6 days'],['The price is 90 to 105% of its worth, never under what it holds','90 to 105%'],['Rushed: one day, at 85% of its worth, never under what it holds','2,78,970'],['The gain over what it holds is business income this season, taxed at 8%','about 17,000']],foot:'You can cancel a listing any time before the day it sells. The bakery keeps running until then.'},
+ branch:{t:'Why a branch costs the same',h:'1,10,000 coins',rows:[['A new bakery\'s building','60,000'],['Its equipment','50,000'],['Its research and plan start as this bakery\'s','free'],['At most 2 branches of a kind','0 of 2']],foot:'A branch has its own books, its own manager and its own worth. No franchises.'},
+ investor:{t:'What an investor costs',h:'15% for 71,550',rows:[['The mill is worth 4.5 times 1,06,000 a year','4,77,000'],['15% of 4,77,000 is the cash he puts in','71,550'],['He gets 15% of the mill\'s profit at each close, when it is positive','about 3,975 a season'],['After 4 seasons you can buy the share back at the worth then, times 15%','any time later'],['Investors and partners together never hold more than 40%','15% of 40%']],foot:'Equity is a price paid for money now. If the mill grows, the share costs more to buy back.'},
+ partner:{t:'What a partner costs',h:'20% for 28,800',rows:[['The tea stall is worth 4.5 times 32,000 a year','1,44,000'],['Her stake is 20% of that, from her own savings','28,800'],['Her fixed profit share, 20% of each season\'s profit when positive','about 1,600 a season'],['She sets no prices, and you cannot sell or close the stall without buying her out at the worth times 20%','28,800 or more']],foot:'She needs savings of at least her stake, so only a household that has saved can join.'},
+ buyout:{t:'Why this offer',h:'3,41,000 coins',rows:[['Lala Sweets & Co. is a rival in your village; it offers 90 to 110% of the bakery\'s worth','104%'],['The bakery is worth','3,28,200'],['An offer is never under what the bakery holds','1,12,400'],['At most one offer a business each 2 seasons, and you may always refuse','free']],foot:'Refusing costs nothing. The card waits 24 hours; if you do not answer it is refused.'},
+ settle:{t:'Who is paid first',h:'Outside shares',rows:[['Ramesh Seth holds 15% of the bakery','15%'],['15% of the 3,41,000 you would be paid','51,150'],['The bank, the overdraft and the tax come off next','0 and 18,288'],['What is left is yours','2,69,662']],foot:'A share is a claim on the business, so a sale settles it before you take your part.'},
+ back:{t:'Buying the share back',h:'49,230 coins',rows:[['He put in 43,500 for 15% when the bakery was worth 2,90,000','43,500'],['The bakery is worth 3,28,200 now; 15% of that is','49,230'],['So buying back costs you more than he paid, because the bakery grew','+5,730'],['You can buy back after 4 seasons, any time later','allowed']],foot:'If it had lost value the share would cost less. Either way you pay what it is worth, not what he paid.'},
+ paid:{t:'Paid to owners at the last close',h:'2,130 coins',rows:[['The bakery\'s profit last season','14,200'],['His 15% share of it, paid from the bakery\'s cash','2,130'],['When the bakery loses money nothing is paid','0']],foot:''}
+};
+let tab='entry',state={listed:false,confirm:null,sold:false,offerKind:'investor',seasons:5,done:null,why:null,toast:null};
+const qb=k=>`<button class="q" data-why="${k}" aria-label="Why?">?</button>`;
+const row=(ic,t,sub,right,k)=>`<div class="row">${ic?`<div class="ico">${ic}</div>`:''}<div class="grow">${t}<small>${sub||''}</small></div>${right||''}${k?qb(k):''}</div>`;
+const sec=t=>`<div class="sec">${t}</div>`;
+function mapSvg(){
+ let t='';
+ for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+520,y=140+(c+r)*46;const col=(c*7+r*3)%5;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][col];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f6a2a" stroke-width="2" opacity=".95"/>`}
+ return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}</svg>`;
+}
+function base(bell){
+ return `<div class="map">${mapSvg()}</div>
+ <div class="hud l"><div class="s">Monsoon · 3 days left</div><div class="big">10:24</div><div class="s">Rain until 15:00</div></div>
+ <div class="hud r"><div class="big" style="font-size:40px">1.12 L</div></div><div class="hud r2">Store 48%</div><div class="hud r3">184 people &nbsp;78</div>
+ <div class="roundbtn" style="left:20px;bottom:20px;width:110px;border-radius:22px;height:70px;background:#c9c2b0;border-color:#8a8372;color:#6e6858;align-items:center;padding:0">Collect all</div>
+ <div class="roundbtn" style="right:112px;bottom:128px;width:84px;height:84px">${I.bell.replace('<svg','<svg style="width:40px;height:40px;margin-top:-10px"')}<span class="badge">${bell||1}</span></div>
+ <div class="roundbtn" style="right:20px;bottom:20px"><span style="color:#fff;background:#b02a1e;position:absolute;top:18px;left:28px;width:42px;height:34px;border-radius:6px"></span>Menu</div>`;
+}
+function sheet(title,sub,icon,body,tabs){return `<div class="scrim"></div><div class="sheet"><div class="head"><div class="cbtn" data-go="${state.back||''}">←</div><div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div>${tabs||''}<div class="body">${body}</div></div>`}
+const bizTabs=a=>`<div class="tabrow">${['Today','Orders','Books','Settings'].map(t=>`<button class="btn ${t===a?'':'sand'}"><span>${t}</span></button>`).join('')}</div>`;
+const cr=(l,v,c)=>`<div class="cost"><span>${l}</span><b${c?` style="color:${c}"`:''}>${v}</b></div>`;
+const hold=(label,cls,key)=>`<button class="btn holdbtn ${cls||''}" data-hold="${key}"><span>${label}</span><small>Hold to confirm</small></button>`;
+const pics={
+ deal:'<svg class="pic" viewBox="0 0 170 128"><rect width="170" height="128" fill="#cfe6b5"/><rect x="20" y="78" width="130" height="40" rx="8" fill="#a8743c"/><circle cx="62" cy="52" r="16" fill="#8a5a2b"/><circle cx="108" cy="52" r="16" fill="#c2410c"/><path d="M62 70c0 14 4 20 4 20h-8zM108 70c0 14 4 20 4 20h8z" fill="#fff3d1"/><path d="M70 92l16-8 14 8" stroke="#4a3320" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="85" cy="30" r="12" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/></svg>',
+ offer:'<svg class="pic" viewBox="0 0 170 128"><rect width="170" height="128" fill="#f6d79a"/><rect x="30" y="52" width="110" height="60" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="3"/><path d="M22 54l63-36 63 36z" fill="#c2410c" stroke="#8a5a2b" stroke-width="3"/><rect x="70" y="78" width="30" height="34" fill="#6b4423"/><rect x="118" y="26" width="34" height="22" rx="4" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M123 33h24M123 40h16" stroke="#8a5a2b" stroke-width="2.5"/></svg>'
+};
+const confirmCard=()=>{const c=state.confirm;if(!c)return '';
+ const t={list:['List the bakery for sale','A buyer takes 3 to 6 days.',[['Asking, at 90 to 105% of its worth','2,95,380 to 3,44,610'],['It keeps running until the day it closes',''],['Cancel any time before then','free']],hold('Hold to list','','list')],
+  rush:['Rush the sale','Sold tomorrow, at 85% of its worth.',[['You are paid','2,78,970'],['A normal listing would pay at least','2,95,380'],['What the rush costs you, at least','16,410'],['No taking it back','']],hold('Hold to sell','','rush')],
+  buy:['Buy back the share','Ramesh Seth\'s 15% of the bakery.',[['The bakery is worth','3,28,200'],['15% of that, from your cash','49,230'],['He put in','43,500'],['The bakery grew, so the share costs','5,730 more']],`<button class="btn" data-buy="1"><span>Pay 49,230 coins</span></button>`]}[c];
+ return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:720px"><h3>${t[0]}</h3><div class="note" style="text-align:center;font-size:19px">${t[1]}</div>${t[2].map(r=>cr(r[0],r[1])).join('')}<div class="btnrow"><button class="btn sand" data-no="1"><span>Not now</span></button>${t[3]}</div></div>`};
+
+const views={
+ entry:{label:'1 · The bakery\'s Settings',notes:[
+  ['What to check',['A new section on every business\'s Settings tab from the Township: <b>Worth and owners</b>. It shows what the business is worth, with its ?, who owns it, and one button.','<b>Sell or expand</b> opens the next screen. The Manager section is Preview 16\'s.']],
+  ['Where it comes from',['Worth is the larger of what it earns (a multiple of the last four seasons\' profit) and what it holds. The ? says how, in words.']]],
+  render(){
+   let h=sec('Manager');
+   h+=row(I.person,'Meena','<span class="stars">★★★<i>★★</i></span> Growth-chaser · target profit 15,000','','');
+   h+=sec('Worth and owners');
+   h+=row(I.coin,'Worth now','Larger of what it earns and what it holds','<div class="val">3,28,200 coins</div>','value');
+   h+=row(I.person,'Owners','You 85% · Ramesh Seth 15%','','paid');
+   h+=`<div class="row"><div class="grow"><b>Sell or expand</b><small>List it, rush a sale, or open a second bakery</small></div><button class="btn" data-go="sell" style="min-width:200px"><span>Sell or expand</span></button></div>`;
+   state.back='';
+   return base()+sheet('Bakery','Open now · until 18:00',I.bakery,h,bizTabs('Settings'))}},
+ sell:{label:'2 · Sell or expand',ctl:[['listed','false','Not listed'],['listed','true','Listed for sale']],notes:[
+  ['What to check',['Worth with its ? and what it holds with its ?. Owners shows the outside share and opens the ledger.','<b>List it</b> and <b>Rush it</b> each open a confirm card. Selling is a hold, as in the Store: a tap can never sell your business.','Switch to <b>Listed for sale</b> above the picture to see a listing: the days left and <b>Cancel the sale</b>.','Open a branch uses the founding screens you know; its research and plan start as this bakery\'s.']],
+  ['Why it works so',['A sale never pays under what the business holds, so you can learn its worth without risking the money you put in.','Outside shares are paid from the sale first; the gain over what it holds is taxed as business income this season.']]],
+  render(){
+   state.back='entry';
+   let h=sec('What it is worth');
+   h+=row(I.coin,'Worth now','6 times a year\'s profit of 54,700','<div class="val">3,28,200 coins</div>','value');
+   h+=row(I.bill,'What it holds','If you shut it today and paid every bill','<div class="val">1,12,400 coins</div>','book');
+   h+=row(I.person,'Owners','You 85% · Ramesh Seth 15%','<button class="btn sand" data-go="ledger" style="min-width:130px;padding:6px 14px 8px"><span>Owners</span></button>','');
+   h+=sec('Sell it');
+   if(!state.listed){
+    h+=`<div class="choice"><div class="tx">List it for sale<small>A buyer takes 3 to 6 days and pays 90 to 105%: 2,95,380 to 3,44,610 coins. It runs until the day it closes.</small></div>${qb('sale')}<button class="btn" data-confirm="list" style="min-width:170px"><span>List it</span></button></div>`;
+    h+=`<div class="choice"><div class="tx">Rush it<small>Sold tomorrow at 85%: 2,78,970 coins. No taking it back.</small></div><button class="btn sand" data-confirm="rush" style="min-width:170px"><span>Rush it</span></button></div>`;
+   } else {
+    h+=`<div class="alert" style="background:#e4f2d4;border-color:var(--green2);color:#24480f"><div class="ico" style="width:42px;height:42px;background:#fff3d1;border-color:var(--green2)">${I.bill}</div><div class="grow">Listed 1 day ago. A buyer is deciding: 2 to 5 days left.<div style="font-size:16px;font-weight:400;margin-top:2px">The bakery runs until the day it closes. Meena and Radha work as usual.</div></div>${qb('sale')}<button class="btn sand" data-cancel="1" style="min-width:190px"><span>Cancel the sale</span></button></div>`;
+   }
+   h+=sec('Open a branch');
+   h+=`<div class="row" style="min-height:88px"><div class="ico">${I.bakery}</div><div class="grow">A second bakery<small>On another acre or pitch. Building 60,000, equipment 50,000, its own books and manager. Its plan starts as this bakery's.</small></div><div class="val" style="font-size:18px;width:110px">0 of 2 branches</div>${qb('branch')}<button class="btn" data-toast="Choose an acre or a pitch on the map, as for the first bakery." style="min-width:170px"><span>Open a branch</span></button></div>`;
+   return base()+sheet('Sell or expand','Bakery',I.bakery,h)+confirmCard()}},
+ sold:{label:'3 · The day it sells',notes:[
+  ['What to check',['A card on the day: who bought it, the price as a share of its worth, and where every coin went: the outside share first, then tax, then severance, then you.','The acre is yours again; its pitch is freed. The sale also appears as a line on the season page.']],
+  ['What goes',['The building, equipment, stock and what customers owe go to the buyer. Meena and Radha are released with severance, as for any worker.']]],
+  render(){
+   state.back='';
+   return base(2)+`<div class="scrim"></div><div class="card" style="top:48%;width:780px"><div style="display:flex;gap:20px;align-items:flex-start">${pics.offer}<div style="flex:1"><h3 style="text-align:left;font-size:34px">The bakery is sold<span class="tag" style="font-size:16px">Sale</span></h3><div class="note" style="font-size:19px;margin-top:6px">A regional buyer paid 3,10,400 coins, 95% of its worth. The acre is yours again.</div></div></div>
+   ${cr('The price','3,10,400')}${cr('Ramesh Seth\'s 15% is paid first','−46,560')}${cr('Business tax on the gain of 1,98,000 (8%)','−15,840')}${cr('Severance for Meena and Radha','−1,900')}<div class="cost hi"><span><b>You receive</b></span><b>2,46,100 coins</b></div>
+   <div class="note">Its bank loan and overdraft were nil. A gain over what it held is business income this season. <button class="q" data-why="settle" style="display:inline-flex;width:30px;height:30px;font-size:17px;vertical-align:middle;margin-left:6px" aria-label="Why?">?</button></div>
+   <div class="btnrow"><button class="btn" style="max-width:240px;margin:0 auto"><span>OK</span></button></div></div>`}},
+ offer:{label:'4 · An investor or a partner',ctl:[['offerKind','investor','An investor, for the flour mill'],['offerKind','partner','A partner, for the tea stall']],notes:[
+  ['What to check',['A card in the event frame: opportunity, a picture, what is offered, every cost, and the answer that happens if you wait. Declining is the free default after 48 hours.','The investor puts cash into the mill for a share of its equity and profit. A partner is a townsperson who puts in her own savings and takes a fixed share of profit; she sets no prices.','Investors and partners together never hold more than 40% of a business.']],
+  ['A scale note',['A partner needs savings at least her stake, so partners suit small businesses (a stall), investors the big ones (a mill, a bakery).']]],
+  render(){
+   state.back='';
+   const inv=state.offerKind==='investor';
+   if(state.done)return base()+`<div class="toast">${state.done}</div>`;
+   const K=inv?{pic:pics.deal,t:'An investor',tag:'Opportunity',txt:'Ramesh Seth, a trader from the district, offers 71,550 coins to your flour mill for 15% of its equity and profit.',rows:[['Cash into the mill\'s capital','+71,550'],['His share of profit at each close','15% · about 3,975 a season'],['Buy the share back after 4 seasons at its worth then','any time later'],['Outside shares of the mill after this','15% of 40%']],yes:'Take the money',why:'investor'}
+        :{pic:pics.deal,t:'A partner',tag:'Opportunity',txt:'Sunita Devi, a townswoman with savings, offers 28,800 coins to join your tea stall as a partner with 20% of its profit.',rows:[['Her stake, from her own savings, into the stall','+28,800'],['A fixed share of profit at each close','20% · about 1,600 a season'],['She sets no prices; you cannot sell or close the stall without buying her out','at the worth × 20%'],['Outside shares of the stall after this','20% of 40%']],yes:'Take her in',why:'partner'};
+   return base()+'<div class="scrim"></div>'+`<div class="card" style="top:47%;width:790px"><div style="display:flex;gap:20px;align-items:flex-start">${K.pic}<div style="flex:1"><div style="display:flex;align-items:center;gap:10px"><h3 style="text-align:left;font-size:36px;flex:1">${K.t}<span class="tag" style="background:#e4f2d4;border-color:var(--green2);color:var(--green2)">${K.tag}</span></h3>${qb(K.why)}</div><div class="note" style="font-size:19px;margin-top:6px">${K.txt}</div></div></div>${K.rows.map(r=>cr(r[0],r[1])).join('')}
+   <div class="choice def" style="margin-top:12px"><div class="tx">No, thank you<span class="tag">If you wait</span><small>No cost · the offer goes away and may come again</small></div><button class="btn sand" data-done="You said no. Nothing changed."><span>Decline</span></button></div>
+   <div class="choice"><div class="tx">${K.yes}<small>${inv?'You can buy the share back after 4 seasons':'Your stall\'s books show her share'}</small></div><button class="btn" data-done="${inv?'Ramesh Seth put 71,550 coins into the flour mill. He holds 15%.':'Sunita Devi joined the tea stall with 28,800 coins. She holds 20%.'}"><span>${K.yes}</span></button></div>
+   <div class="note timer">If you do not answer: No, thank you in 46 h</div></div>`}},
+ ledger:{label:'5 · Who owns the bakery',ctl:[['seasons','5','Bought in 5 seasons ago'],['seasons','1','Bought in 1 season ago']],notes:[
+  ['What to check',['One row for you and one for each outside owner: share, what was put in and when, and what was paid at the last close.','<b>Buy back</b> is greyed until 4 seasons have passed and says when; then it asks for a tap to spend, with the price and why it differs from what he paid.','Switch above the picture to see it too early.']],
+  ['The cap',['The bar shows outside shares against the 40% limit. A partner would be a second row, with the same Buy out.']]],
+  render(){
+   state.back='sell';
+   const late=state.seasons>=4;
+   let h=sec('Owners of the bakery');
+   h+=row(I.person,'You','85% · you put in 1,10,000 coins','<div class="val">85%</div>','');
+   h+=`<div class="row" style="min-height:94px"><div class="ico">${I.person}</div><div class="grow"><b>Ramesh Seth</b>, an investor<small>15% · put in 43,500 coins ${late?'in Summer, year 2':'last season'}<br>Paid at the last close: 2,130 coins</small></div>${qb('paid')}<button class="btn ${late?'':'grey'}" ${late?'data-confirm="buy"':''} style="min-width:190px"><span>Buy back</span><small>${late?'49,230 coins':'From the Winter close'}</small></button></div>`;
+   h+=row(I.person,'A partner','None. One partner can join; she would hold 20%','','partner');
+   h+=sec('The limit');
+   h+=`<div class="row" style="min-height:54px"><div style="width:230px">Outside shares</div><div style="flex:1;height:22px;border-radius:11px;background:#e9d9a8;border:2px solid var(--wood);overflow:hidden;position:relative"><div style="width:37.5%;height:100%;background:var(--green)"></div></div><div class="val" style="width:150px">15% of 40%</div></div>`;
+   h+=`<div class="note" style="font-size:18px">Buying the share back costs what it is worth now, 15% of 3,28,200. ${qb('back').replace('class="q"','class="q" style="display:inline-flex;width:30px;height:30px;font-size:17px;vertical-align:middle"')}</div>`;
+   return base()+sheet('Who owns the bakery','Monsoon, year 3',I.person,h)+confirmCard()}},
+ buyout:{label:'6 · A rival\'s offer to buy',notes:[
+  ['What to check',['A rival offers 90 to 110% of the bakery\'s worth, never under what it holds. The card is open 24 hours (48 when the business is a quarter or more of your net worth).','Every coin is on the card before you decide: the outside share is paid first, then tax, severance, then you.','Refusing is the free default. Accepting is a sale, so it takes a hold.']]],
+  render(){
+   state.back='';
+   if(state.done)return base()+`<div class="toast">${state.done}</div>`;
+   return base(2)+'<div class="scrim"></div>'+`<div class="card" style="top:47%;width:800px"><div style="display:flex;gap:20px;align-items:flex-start">${pics.offer}<div style="flex:1"><div style="display:flex;align-items:center;gap:10px"><h3 style="text-align:left;font-size:34px;flex:1">An offer for your bakery<span class="tag" style="background:#e4f2d4;border-color:var(--green2);color:var(--green2)">Opportunity</span></h3>${qb('buyout')}</div><div class="note" style="font-size:19px;margin-top:6px">Lala Sweets & Co., a rival, offers 3,41,000 coins, 104% of what the bakery is worth.</div></div></div>
+   ${cr('The offer','3,41,000')}${cr('Ramesh Seth\'s 15% is paid first','−51,150')}${cr('Business tax on the gain of 2,28,600 (8%)','−18,288')}${cr('Severance for Meena and Radha','−1,900')}<div class="cost hi"><span><b>You would receive</b></span><b>2,69,662 coins</b></div>
+   <div class="choice def" style="margin-top:12px"><div class="tx">Refuse<span class="tag">If you wait</span><small>Costs nothing · the bakery stays yours</small></div><button class="btn sand" data-done="You refused the offer. The bakery is still yours."><span>Refuse</span></button></div>
+   <div class="choice"><div class="tx">Accept<small>The bakery is sold today and its people are released</small></div>${hold('Hold to sell','','accept')}</div>
+   <div class="note timer">If you do not answer: Refuse in 21 h</div></div>`}}
+};
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:780px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 28px var(--display)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost" style="font-size:19px;padding:6px"><span>${r[0]}</span><b style="white-space:nowrap;margin-left:12px">${r[1]}</b></div>`).join('')}${w.foot?`<div class="note" style="font-size:18px">${w.foot}</div>`:''}<div class="btnrow"><button class="btn" data-close="1" style="max-width:220px;margin:0 auto"><span>OK</span></button></div></div>`}
+function render(){
+ const v=views[tab];let html=v.render();
+ if(state.toast)html+=`<div class="toast">${state.toast}</div>`;
+ if(state.why)html+=whyCard(state.why);
+ $('#stage').innerHTML=html;
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ $('#ctl').innerHTML=(v.ctl&&v.ctl.length?'<span>Show:</span>':'')+(v.ctl||[]).map(c=>`<button data-set="${c[0]}:${c[1]}" aria-pressed="${String(state[c[0]])===c[1]}">${c[2]}</button>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;Object.assign(state,{why:null,toast:null,confirm:null,done:null});render()});
+$('#ctl').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b)return;const [g,v]=b.dataset.set.split(':');state[g]=(v==='true'?true:v==='false'?false:isNaN(+v)?v:+v);state.done=null;render()});
+let holdT=null;
+function endHold(){clearTimeout(holdT);holdT=null;document.querySelectorAll('.holdbtn.holding').forEach(b=>b.classList.remove('holding'))}
+$('#stage').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-hold]');if(!b)return;b.classList.add('holding');const k=b.dataset.hold;holdT=setTimeout(()=>{holdT=null;
+ if(k==='list'){state.listed=true;state.confirm=null;state.toast='Listed. A buyer takes 3 to 6 days.'}
+ else if(k==='rush'){state.confirm=null;tab='sold';state.toast=null}
+ else if(k==='accept'){state.done='Sold to Lala Sweets & Co. for 3,41,000 coins. You receive 2,69,662.'}
+ render()},700)});
+addEventListener('pointerup',endHold);addEventListener('pointercancel',endHold);
+$('#stage').addEventListener('click',e=>{
+ const t=e.target.closest('[data-why],[data-close],[data-go],[data-confirm],[data-no],[data-cancel],[data-toast],[data-done],[data-buy]');
+ if(!t)return;const d=t.dataset;
+ if(d.why)state.why=d.why;else if(d.close)state.why=null;
+ else if(d.go!==undefined){if(d.go){tab=d.go;Object.assign(state,{why:null,toast:null,confirm:null,done:null})}}
+ else if(d.confirm)state.confirm=d.confirm;
+ else if(d.no)state.confirm=null;
+ else if(d.cancel){state.listed=false;state.toast='The sale is cancelled. The bakery was never closed.'}
+ else if(d.toast)state.toast=d.toast;
+ else if(d.done)state.done=d.done;
+ else if(d.buy){state.confirm=null;state.toast='Bought back Ramesh Seth\'s 15% for 49,230 coins. You own the bakery.'}
+ render();
+});
+addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>

@@ -140,7 +140,7 @@ namespace Sim.View.Views
             WhyVm vm = New(ctx, BusinessWords.Key(ctx, "why.businessMarket.title", t), t.Kind == ShopKind.Veg ? ctx.Strings.Get(b.BuyFromMarket ? "business.yes" : "business.no") // many goods, each at its own price
                 : t.TakesMilk ? ctx.Fmt.PricePerLitre(BusinessRules.NeighbourMilkPrice(ctx.Sim, t)) : ctx.Fmt.PricePerKg(MarketRules.Ceiling(ctx.Sim, input)));
             Text(vm, ctx, BusinessWords.Key(ctx, "why.businessMarket.price", t));
-            if (!t.ByRecipe && !t.IsShop && !t.IsKiln && t.Outputs.Count > 0 && t.Input >= 0) // the mill (ADR 0140)
+            if (!t.ByRecipe && !t.IsShop && !t.IsKiln && !t.IsTuition && t.Outputs.Count > 0 && t.Input >= 0) // the mill (ADR 0140)
             {
                 var region = ctx.Sim.Config.Game.Market.Region;
                 Text(vm, ctx, "why.businessMarket.cap", "atta", ctx.Fmt.Kg(region.TraderBuyPerDay(ctx.Sim.Config.Game.Market.IndexOf("atta"))),
@@ -173,7 +173,8 @@ namespace Sim.View.Views
             WhyVm vm = New(ctx, BusinessWords.Key(ctx, "why.plan." + line + ".title", t), line == "payback" ? BusinessPlanSheet.Payback(ctx, p) : ctx.Fmt.Coins(value),
                 "role", ctx.Strings.Get("business.role." + t.Worker));
             Text(vm, ctx, BusinessWords.Key(ctx, "why.plan." + line, t), "days", ctx.Fmt.Integer(days), "area", ctx.Fmt.Kg(p.AreaGrams / days), "own", ctx.Fmt.Kg(p.OwnGrams / days),
-                "fee", ctx.Fmt.PricePerKg(t.Fee * index), "power", ctx.Fmt.PricePerKg(t.PowerPerKg * index), "share", ctx.Fmt.Percent(t.RepairsShare),
+                "fee", t.IsTuition ? ctx.Fmt.Coins(TuitionRules.FeeAt(ctx.Sim, t.Tuition, Fixed.One)) : ctx.Fmt.PricePerKg(t.Fee * index), "power", ctx.Fmt.PricePerKg(t.PowerPerKg * index), "share", ctx.Fmt.Percent(t.RepairsShare),
+                "pupils", t.IsTuition ? ctx.Fmt.Integer(p.OwnGrams) : "", "places", t.IsTuition ? ctx.Fmt.Integer(t.Tuition.Capacity) : "", "books", t.IsTuition ? ctx.Fmt.Coins(MarketRules.Indexed(ctx.Sim, t.Tuition.SuppliesPerPupil)) : "",
                 "cost", ctx.Fmt.Coins(p.Cost), "profit", ctx.Fmt.Coins(p.Profit), "role", ctx.Strings.Get("business.role." + t.Worker),
                 "loan", ctx.Fmt.Coins(p.Loan), "ltv", ctx.Fmt.Percent(BusinessRules.Defs(ctx.Sim).BusinessLtv), "seasons", ctx.Fmt.Integer(BusinessRules.Defs(ctx.Sim).TermSeasons),
                 "rate", ctx.Fmt.Percent(p.Loan > 0 ? Fixed.FromRatio(p.Interest, p.Loan) : Fixed.Zero),
@@ -191,7 +192,7 @@ namespace Sim.View.Views
             Business b = BusinessBooksSheet.BusinessOf(ctx, id, out int back, out int line);
             BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
             Sim.Core.Business.BusinessReport r = BusinessBooksSheet.ReportOf(ctx, b, back);
-            long Amount(int l) { return BusinessBooksSheet.Amount(r, l); }
+            long Amount(int l) { return BusinessBooksSheet.Amount(ctx, b, back, l); }
             Fixed index = sim.State.Market.PriceIndex;
             string when = back == 0 ? ctx.Strings.Get("why.books.now") : ReportSheet.PeriodName(ctx, r.Period);
             WhyVm vm = New(ctx, "why.books.title", Money(ctx, Amount(line)), "line", BusinessBooksSheet.Label(ctx, b, line), "period", when);
@@ -208,7 +209,13 @@ namespace Sim.View.Views
                     Row(vm, ctx, "why.books.rowRunning", "−" + Money(ctx, Amount(BusinessBooksSheet.Wages) + Amount(BusinessBooksSheet.Power) + Amount(BusinessBooksSheet.Repairs)
                         + Amount(BusinessBooksSheet.Depreciation) + Amount(BusinessBooksSheet.Interest) + Amount(BusinessBooksSheet.Rent)));
             }
-            if (line >= BusinessBooksSheet.CashStart && line <= BusinessBooksSheet.CashEnd)
+            if (line >= BusinessBooksSheet.BridgeProfit && line <= BusinessBooksSheet.BridgeOther)
+            {
+                foreach (int l in new[] { BusinessBooksSheet.BridgeProfit, BusinessBooksSheet.BridgeWear, BusinessBooksSheet.BridgeCustomers, BusinessBooksSheet.BridgeSuppliers, BusinessBooksSheet.BridgeStock, BusinessBooksSheet.BridgeTax })
+                    if (l != BusinessBooksSheet.BridgeTax || Amount(l) != 0) Row(vm, ctx, "why.books.rowBridge", Money(ctx, Amount(l)), "line", BusinessBooksSheet.Label(ctx, b, l));
+                vm.Footnote = ctx.Strings.Get("why.books.cashLesson");
+            }
+            else if (line >= BusinessBooksSheet.CashStart && line <= BusinessBooksSheet.CashEnd)
             {
                 Row(vm, ctx, "why.books.rowStart", Money(ctx, r.Opening));
                 Row(vm, ctx, "why.books.rowIn", Money(ctx, r.Inflows));

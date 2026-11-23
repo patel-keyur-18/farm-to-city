@@ -88,6 +88,22 @@ namespace Sim.Core.Events
         protected override string Describe() { return "MachineHiredOut(id=" + MachineId + ", kind=" + Kind + ", acres=" + Acres + ", fee=" + Fee + ", diesel=" + Diesel + ")"; }
     }
 
+    /// <summary>Your tempo carried neighbours' goods on the legs you did not use yesterday (US-245): the legs, what they paid and what the diesel and wear cost.</summary>
+    public sealed class TempoLetOut : SimEvent
+    {
+        public long MachineId { get; }
+        public int Legs { get; }
+        public long Pay { get; }
+        public long Cost { get; }
+
+        public TempoLetOut(long simTime, long machineId, int legs, long pay, long cost) : base(simTime)
+        {
+            MachineId = machineId; Legs = legs; Pay = pay; Cost = cost;
+        }
+
+        protected override string Describe() { return "TempoLetOut(id=" + MachineId + ", legs=" + Legs + ", pay=" + Pay + ", cost=" + Cost + ")"; }
+    }
+
     /// <summary>A broken machine works again.</summary>
     public sealed class MachineRepaired : SimEvent
     {

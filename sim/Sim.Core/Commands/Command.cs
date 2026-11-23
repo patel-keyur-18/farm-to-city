@@ -331,6 +331,55 @@ namespace Sim.Core.Commands
         // Spec 025 §3.5 (hills and apples, US-147)
         /// <summary>The tree grows on hill land only.</summary>
         HillOnly,
+
+        // Spec 028 §3.2 (managers, US-124)
+        /// <summary>The business already has a manager (one a business), or has one and so is not run by you.</summary>
+        HasManager,
+
+        /// <summary>The business has no manager.</summary>
+        NoManager,
+
+        // Spec 028 §3.3 (selling and branches, US-125)
+        /// <summary>The business is already listed for sale.</summary>
+        AlreadyListed,
+
+        /// <summary>The business is not listed for sale.</summary>
+        NotListedForSale,
+
+        /// <summary>The business is still being built: only an open one is sold.</summary>
+        NotOpen,
+
+        /// <summary>The kind already has its first business and the most branches.</summary>
+        TooManyBranches,
+
+        // Spec 028 §3.4 (investors, partners and buy-outs, US-247)
+        /// <summary>The business already has that kind of outside owner (one investor and one partner a business).</summary>
+        HasStake,
+
+        /// <summary>Outside owners together would hold more than the most a business allows.</summary>
+        OutsideCap,
+
+        /// <summary>The business has no such outside owner.</summary>
+        NoStake,
+
+        /// <summary>An investor's share can be bought back only after the seasons it must stand.</summary>
+        BuyBackTooEarly,
+
+        // Spec 028 §3.8 (benefits and night shifts, US-258)
+        /// <summary>Health cover needs the clinic, with its doctor in post.</summary>
+        NoClinic,
+
+        /// <summary>The night shift needs the grid (a generator will not do).</summary>
+        NoGrid,
+
+        /// <summary>This kind of business has no night shift (the mill, bakery, dairy and sweet shop have).</summary>
+        NoNightShift,
+
+        /// <summary>The business has not yet been too busy for its day shift, so no night shift is offered.</summary>
+        NightNotOffered,
+
+        /// <summary>It already runs a night shift, or has none to stop.</summary>
+        NightState,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

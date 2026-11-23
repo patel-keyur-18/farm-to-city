@@ -41,6 +41,12 @@ namespace Sim.Core.Maths
 
         /// <summary>The event engine (spec 027 §3.1): key = the day, counter = what is drawn (1 a major, 2 a minor, 3 the pick, 100+ a target).</summary>
         Events = 21,
+
+        /// <summary>A manager mis-setting a day (spec 028 §3.2): key = the business, counter = the day.</summary>
+        Managers = 22,
+
+        /// <summary>A business's sale (spec 028 §3.3): key = the business, counter = day × 8 + what is drawn (1 the buyer, 2 the days, 3 the share).</summary>
+        Exit = 23,
     }
 
     /// <summary>

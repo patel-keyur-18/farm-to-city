@@ -228,6 +228,42 @@ namespace Sim.Core.Business
         public long KilnSold { get; internal set; }
         public long KilnSeason { get; internal set; }
 
+        // Selling and branching (spec 028 §3.3; save schema 23). Zero until listed.
+
+        /// <summary>When it was listed for sale, and when a buyer completes (0: not listed); the buyer's kind and the share of its worth he pays; whether it is a rushed sale.</summary>
+        public long ListedAt { get; internal set; }
+        public long CompletesAt { get; internal set; }
+        public int ListBuyer { get; internal set; }
+        public Fixed ListShare { get; internal set; }
+        public bool Rushed { get; internal set; }
+
+        /// <summary>The id of the first business of its kind this one is a branch of, or 0.</summary>
+        public long BranchOf { get; internal set; }
+
+        public bool Listed { get { return CompletesAt != 0 && Status != BusinessStatus.Closed; } }
+
+        /// <summary>Outside owners (spec 028 §3.4): an investor and a partner at most; and the period a rival last offered to buy it (0: never).</summary>
+        public List<Stake> Stakes { get; internal set; } = new List<Stake>();
+        public long BoughtOutOfferedAt { get; internal set; }
+
+        /// <summary>Benefits it gives all its workers (spec 028 §3.8; the bits are <see cref="People.Benefit"/>), the season +1 its festival bonus was last paid in, and the last days its day shift could not keep up with the day's plan (bit 0 the latest), with the day +1 last recorded.</summary>
+        public int Benefits { get; internal set; }
+        public long FestivalPaid { get; internal set; }
+        public int ShortDays { get; internal set; }
+        public long ShortDay { get; internal set; }
+
+        /// <summary>A tuition centre's pupils this season (US-244, ADR 0161, schema 23): your children by citizen id, the old village's as a head-count, and the fees it took this season.</summary>
+        public List<long> Pupils { get; internal set; } = new List<long>();
+        public int CohortPupils { get; internal set; }
+        public long TuitionFees { get; internal set; }
+
+        /// <summary>A restaurant's dishes switched off (US-246, schema 23): bit k is the k-th dish; a dish off hands its diners to the other.</summary>
+        public int DishesOff { get; internal set; }
+
+        private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0 || Stakes.Count > 0 || BoughtOutOfferedAt != 0 || Benefits != 0 || FestivalPaid != 0 || ShortDays != 0 || ShortDay != 0; } }
+
+        private bool TuitionUsed { get { return Pupils.Count > 0 || CohortPupils != 0 || TuitionFees != 0; } }
+
         private bool KilnUsed { get { return Yard != 0 || YardCost != 0 || KilnMade != 0 || KilnToBuilds != 0 || KilnSold != 0 || KilnSeason != 0; } }
 
         internal Business Clone()
@@ -241,6 +277,8 @@ namespace Sim.Core.Business
             c.PutOut = (long[])PutOut.Clone();
             c.Plan = Plan.Clone();
             c.Reports = new List<BusinessReport>(Reports); // reports are immutable
+            c.Stakes = Stakes.ConvertAll(x => x.Clone());
+            c.Pupils = new List<long>(Pupils);
             return c;
         }
 
@@ -296,6 +334,21 @@ namespace Sim.Core.Business
             if (h.Hashing ? KilnUsed : !(h is SaveWriter k21 && k21.Schema < Saves.MapMigration.RingSchema)) // schema 21; hashed once a kiln has fired
                 foreach (long v in new[] { Yard, YardCost, KilnMade, KilnToBuilds, KilnSold, KilnSeason }) h.WriteLong(v);
             if (h.Hashing ? VillageToday != 0 : !(h is SaveWriter v22 && v22.Schema < Town.TownshipState.TownLifeSchema)) h.WriteLong(VillageToday); // schema 22; hashed once a mill has sold at the village
+            if (h.Hashing ? ExitUsed : !(h is SaveWriter x23 && x23.Schema < Town.TownshipState.GrowthSchema)) // schema 23; hashed once listed or a branch
+            {
+                h.WriteLong(ListedAt); h.WriteLong(CompletesAt); h.WriteInt(ListBuyer); h.WriteFixed(ListShare); h.WriteBool(Rushed); h.WriteLong(BranchOf);
+                h.WriteInt(Stakes.Count);
+                foreach (Stake k in Stakes) k.WriteTo(h);
+                h.WriteLong(BoughtOutOfferedAt);
+                h.WriteInt(Benefits); h.WriteLong(FestivalPaid); h.WriteInt(ShortDays); h.WriteLong(ShortDay);
+            }
+            if (h.Hashing ? TuitionUsed : !(h is SaveWriter t23 && t23.Schema < Town.TownshipState.GrowthSchema)) // schema 23; hashed once a tuition centre has pupils
+            {
+                h.WriteInt(Pupils.Count);
+                foreach (long id in Pupils) h.WriteLong(id);
+                h.WriteInt(CohortPupils); h.WriteLong(TuitionFees);
+            }
+            if (h.Hashing ? DishesOff != 0 : !(h is SaveWriter m23 && m23.Schema < Town.TownshipState.GrowthSchema)) h.WriteInt(DishesOff); // schema 23; hashed once a dish has been switched off
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -363,6 +416,18 @@ namespace Sim.Core.Business
                 b.Yard = r.ReadLong(); b.YardCost = r.ReadLong(); b.KilnMade = r.ReadLong(); b.KilnToBuilds = r.ReadLong(); b.KilnSold = r.ReadLong(); b.KilnSeason = r.ReadLong();
             }
             if (r.Schema >= Town.TownshipState.TownLifeSchema) b.VillageToday = r.ReadLong();
+            if (r.Schema >= Town.TownshipState.GrowthSchema)
+            {
+                b.ListedAt = r.ReadLong(); b.CompletesAt = r.ReadLong(); b.ListBuyer = r.ReadInt(); b.ListShare = r.ReadFixed(); b.Rushed = r.ReadBool(); b.BranchOf = r.ReadLong();
+                int stakes = r.ReadCount();
+                for (int i = 0; i < stakes; i++) b.Stakes.Add(Stake.ReadFrom(r));
+                b.BoughtOutOfferedAt = r.ReadLong();
+                b.Benefits = r.ReadInt(); b.FestivalPaid = r.ReadLong(); b.ShortDays = r.ReadInt(); b.ShortDay = r.ReadLong();
+                int pupils = r.ReadCount();
+                for (int i = 0; i < pupils; i++) b.Pupils.Add(r.ReadLong());
+                b.CohortPupils = r.ReadInt(); b.TuitionFees = r.ReadLong();
+                b.DishesOff = r.ReadInt();
+            }
             return b;
         }
     }

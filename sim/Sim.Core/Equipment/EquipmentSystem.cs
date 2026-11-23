@@ -9,6 +9,7 @@ namespace Sim.Core.Equipment
 
         public void OnPass(Simulation sim, ItemClass pass)
         {
+            if (pass == ItemClass.Hourly) TempoRules.Midnight(sim); // a tempo let out settles the day that ended
             if (pass != ItemClass.Daily) return;
             EquipmentRules.Daily(sim);
             sim.State.Equipment.SownTools.RemoveAll(k => sim.State.Farm.Crops.Find(c => c.Id == k.Key) == null); // cleared, harvested or seized

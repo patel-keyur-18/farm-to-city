@@ -47,7 +47,7 @@ namespace Sim.Content
                 JObject t = Object(tokens[i], p);
                 OnlyFields(t, p, "id", "nameKey", "era", "building", "equipment", "buildHours", "worker", "workerSkill", "wage", "kgPerHour", "powerPerKg", "repairsShare",
                     "openHour", "closeHour", "fee", "ownPerDay", "input", "outputs", "recipes", "shops", "takesMilk", "neighbourMilkPremium",
-                    "kind", "pitchBuilding", "capacityPerHour", "goods", "cup", "good", "kiln");
+                    "kind", "pitchBuilding", "capacityPerHour", "goods", "cup", "good", "kiln", "tuition", "meals");
                 var x = new BusinessTypeDef { Id = UniqueId(t, p, types.ConvertAll(y => y.Id)), NameKey = String(Required(t, p, "nameKey"), p + ".nameKey") };
                 string era = String(Required(t, p, "era"), p + ".era");
                 x.Era = -1;
@@ -66,6 +66,19 @@ namespace Sim.Content
                 x.Wage = Money(Required(t, p, "wage"), p + ".wage");
                 Shop(x, t, p, market);
                 // A stall or tea stall sells what it's given, at its own rate (capacityPerHour); the others work kg an hour.
+                if (t["tuition"] != null)
+                {
+                    if (t["recipes"] != null || t["input"] != null || t["outputs"] != null || t["kind"] != null || t["kiln"] != null) throw new ContentException(p + ".tuition", "a tuition centre teaches pupils: no recipes, input, outputs, shop kind or kiln");
+                    x.Tuition = Tuition(t, p);
+                    x.GramsPerHour = 0;
+                    x.PowerPerKg = Fixed.Zero;
+                    x.RepairsShare = Bounded(t, p, "repairsShare", "0", "1");
+                    x.OpenHour = BoundedInt(t, p, "openHour", 0, 23);
+                    x.CloseHour = BoundedInt(t, p, "closeHour", x.OpenHour + 1, 24);
+                    if ((x.CloseHour - x.OpenHour) % x.Tuition.Batches != 0) throw new ContentException(p + ".tuition.batches", "the open hours must split into whole batches");
+                    types.Add(x);
+                    continue;
+                }
                 if (t["kiln"] != null)
                 {
                     if (t["recipes"] != null || t["input"] != null || t["outputs"] != null || t["kind"] != null) throw new ContentException(p + ".kiln", "a kiln fires bricks: no recipes, input, outputs or shop kind");
@@ -99,6 +112,7 @@ namespace Sim.Content
                 if (x.IsShop) // a stall or tea stall: no input or outputs of its own
                 {
                     if (t["input"] != null || t["outputs"] != null) throw new ContentException(p + ".input", "a shop sells goods, it doesn't grind them");
+                    if (x.IsMeals && (x.Meals.BreakFrom <= x.OpenHour || x.Meals.BreakTo >= x.CloseHour)) throw new ContentException(p + ".meals.break", "the break is between the two sittings, inside the open hours");
                     types.Add(x);
                     continue;
                 }
@@ -120,6 +134,34 @@ namespace Sim.Content
                 types.Add(x);
             }
             d.Types = types.AsReadOnly();
+            return d;
+        }
+
+        /// <summary>The tuition centre's fields (US-244): batches, the fee and its presets, the stars and take-up, the supplies and the skill gain.</summary>
+        private static TuitionDef Tuition(JObject t, string p)
+        {
+            string tp = p + ".tuition";
+            JObject k = Object(t["tuition"], tp);
+            OnlyFields(k, tp, "batches", "batchSize", "ageMin", "ageMax", "fee", "presets", "startStars", "takeUpLow", "takeUpHigh", "suppliesPerPupil", "gainPerSeason", "gainMax");
+            var presets = new List<Fixed>();
+            List<JToken> list = NonEmptyArray(k, tp, "presets");
+            for (int i = 0; i < list.Count; i++)
+            {
+                Fixed f = Number(list[i], Index(tp + ".presets", i));
+                Range(f, Fixed.FromRatio(1, 2), Fixed.FromInt(2), Index(tp + ".presets", i));
+                presets.Add(f);
+            }
+            if (presets[0] != Fixed.One) throw new ContentException(tp + ".presets", "the first preset is the reference fee (1)");
+            var d = new TuitionDef
+            {
+                Batches = BoundedInt(k, tp, "batches", 1, 6), BatchSize = BoundedInt(k, tp, "batchSize", 1, 200), AgeMin = BoundedInt(k, tp, "ageMin", 3, 18), AgeMax = BoundedInt(k, tp, "ageMax", 3, 25),
+                Fee = Money(Required(k, tp, "fee"), tp + ".fee"), Presets = presets.AsReadOnly(), StartStars = Bounded(k, tp, "startStars", "0", "5"),
+                TakeUpLow = Bounded(k, tp, "takeUpLow", "0", "1"), TakeUpHigh = Bounded(k, tp, "takeUpHigh", "0", "1"),
+                SuppliesPerPupil = Money(Required(k, tp, "suppliesPerPupil"), tp + ".suppliesPerPupil"), GainPerSeason = BoundedInt(k, tp, "gainPerSeason", 1, 10), GainMax = BoundedInt(k, tp, "gainMax", 1, 50),
+            };
+            if (d.AgeMax < d.AgeMin) throw new ContentException(tp + ".ageMax", "no younger than ageMin");
+            if (d.TakeUpHigh < d.TakeUpLow) throw new ContentException(tp + ".takeUpHigh", "no lower than takeUpLow");
+            if (d.GainMax < d.GainPerSeason) throw new ContentException(tp + ".gainMax", "at least one season's gain");
             return d;
         }
 
@@ -146,10 +188,12 @@ namespace Sim.Content
                 return;
             }
             string kind = String(t["kind"], p + ".kind");
-            x.Kind = kind == "veg" ? ShopKind.Veg : kind == "chai" ? ShopKind.Chai : kind == "sweets" ? ShopKind.Sweets
-                : throw new ContentException(p + ".kind", "expected veg, chai or sweets");
+            x.Kind = kind == "veg" ? ShopKind.Veg : kind == "chai" ? ShopKind.Chai : kind == "sweets" ? ShopKind.Sweets : kind == "meals" ? ShopKind.Meals
+                : throw new ContentException(p + ".kind", "expected veg, chai, sweets or meals");
+            if ((x.Kind == ShopKind.Meals) != (t["meals"] != null)) throw new ContentException(p + ".meals", "the restaurant, and only it, has a menu");
+            if (x.Kind == ShopKind.Meals) x.Meals = Meals(t, p, market);
             if ((x.Kind == ShopKind.Sweets) != (t["recipes"] != null)) throw new ContentException(p + ".recipes", "the sweet shop, and only it, makes by recipes");
-            x.CapacityPerHour = BoundedInt(t, p, "capacityPerHour", 1, 100000) * (x.Kind == ShopKind.Chai ? 1L : 1000L);
+            x.CapacityPerHour = BoundedInt(t, p, "capacityPerHour", 1, 100000) * (x.Kind == ShopKind.Chai || x.Kind == ShopKind.Meals ? 1L : 1000L);
             if (t["pitchBuilding"] != null)
             {
                 JObject b = Object(t["pitchBuilding"], p + ".pitchBuilding");
@@ -194,9 +238,47 @@ namespace Sim.Content
                 x.GoodCupMilkMl = (Bounded(good, gp, "milkLitres", "0.001", "1") * Fixed.FromInt(1000)).RoundToLong();
                 if (x.GoodCupMilkMl < x.CupMilkMl) throw new ContentException(gp + ".milkLitres", "a good cup has at least the standard cup's milk");
             }
-            if ((x.Kind == ShopKind.Sweets) != (good["recipeCost"] != null)) throw new ContentException(gp + ".recipeCost", "the sweet shop, and only it, has a recipe cost");
+            if ((x.Kind == ShopKind.Sweets || x.Kind == ShopKind.Meals) != (good["recipeCost"] != null)) throw new ContentException(gp + ".recipeCost", "the sweet shop and the restaurant, and only they, have a recipe cost");
             if (good["recipeCost"] != null) x.GoodRecipeExtra = Bounded(good, gp, "recipeCost", "0", "2");
             x.GoodFresh = good["fresh"] != null && Bool(good["fresh"], gp + ".fresh");
+        }
+
+        /// <summary>The restaurant's menu (US-246): its two sittings, the dishes with their inputs, and what a household's leisure sends it.</summary>
+        private static MealsDef Meals(JObject t, string p, MarketDefs market)
+        {
+            string mp = p + ".meals";
+            JObject m = Object(t["meals"], mp);
+            OnlyFields(m, mp, "break", "dishes", "leisureShare", "minIncome");
+            List<JToken> br = NonEmptyArray(m, mp, "break");
+            if (br.Count != 2) throw new ContentException(mp + ".break", "expected the hour it shuts and the hour it opens again");
+            var dishes = new List<DishDef>();
+            List<JToken> list = NonEmptyArray(m, mp, "dishes");
+            for (int i = 0; i < list.Count; i++)
+            {
+                string dp = Index(mp + ".dishes", i);
+                JObject o = Object(list[i], dp);
+                OnlyFields(o, dp, "id", "nameKey", "price", "share", "inputs", "fuel", "supplies");
+                var inputs = new List<KeyValuePair<int, long>>();
+                foreach (JProperty prop in Object(Required(o, dp, "inputs"), dp + ".inputs").Properties())
+                {
+                    int g = market.IndexOf(prop.Name);
+                    if (g < 0) throw new ContentException(Join(dp + ".inputs", prop.Name), "unknown good");
+                    Fixed kg = Number(prop.Value, Join(dp + ".inputs", prop.Name));
+                    Range(kg, Fixed.FromRatio(1, 1000), Fixed.FromInt(10), Join(dp + ".inputs", prop.Name));
+                    inputs.Add(new KeyValuePair<int, long>(g, (kg * Fixed.FromInt(1000)).RoundToLong()));
+                }
+                dishes.Add(new DishDef
+                {
+                    Id = UniqueId(o, dp, dishes.ConvertAll(y => y.Id)), NameKey = String(Required(o, dp, "nameKey"), dp + ".nameKey"), Price = Bounded(o, dp, "price", "1", "100000"),
+                    Share = BoundedInt(o, dp, "share", 1, 100), Inputs = inputs.AsReadOnly(), Fuel = Bounded(o, dp, "fuel", "0", "1000"), Supplies = Bounded(o, dp, "supplies", "0", "1000"),
+                });
+            }
+            int from = Int(br[0], mp + ".break[0]"), to = Int(br[1], mp + ".break[1]");
+            if (from >= to) throw new ContentException(mp + ".break", "it shuts before it opens again");
+            return new MealsDef
+            {
+                BreakFrom = from, BreakTo = to, Dishes = dishes.AsReadOnly(), LeisureShare = Bounded(m, mp, "leisureShare", "0.01", "1"), MinIncome = Money(Required(m, mp, "minIncome"), mp + ".minIncome"),
+            };
         }
 
         /// <summary>Recipes (spec 016 §3.9c): each a batch of goods into one product; the shops' amounts a person for its products.</summary>

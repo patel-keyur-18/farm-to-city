@@ -287,6 +287,7 @@ namespace Sim.Core.Equipment
             foreach (Machine m in sim.State.Equipment.Machines.ToArray())
             {
                 MachineDef d = Defs(sim).Machines[m.Kind];
+                if (d.IsTempo) TempoRules.CloseSeason(m);
                 long diesel = Diesel(sim, d, Acres(sim, m.Kind));
                 if (m.Leased)
                 {
@@ -357,6 +358,21 @@ namespace Sim.Core.Equipment
                     continue;
                 }
                 Fixed chance = m.Maintained ? Defs(sim).BreakdownMaintained : Defs(sim).BreakdownSkipped;
+                if (d.IsTempo)
+                {
+                    if (m.LetDay == (long)day) chance = chance * Fixed.FromInt(Defs(sim).CustomWear); // the neighbours' legs this midnight wore it
+                    Fixed ut = Fixed.FromRaw((long)(Rng.Next(sim.State.Seed, RngStream.Equipment, (ulong)m.Id, day) >> 32));
+                    if (ut >= chance) continue;
+                    if (!changed) FarmSystem.Accrue(sim);
+                    changed = true;
+                    long tcost = Repair(sim, m);
+                    bool tpaid = sim.State.Ledger.CanAfford(tcost);
+                    if (tpaid && tcost > 0) Post(sim, "ledger.machineRepair", m, new Posting(Account.Repairs, tcost));
+                    if (!tpaid) m.RepairDue = tcost;
+                    m.BrokenUntil = t + ClockDef.SecondsPerDay;
+                    sim.Emit(new MachineBroke(t, m.Id, d.Id, tcost, tpaid));
+                    continue;
+                }
                 bool hiring = HiringOut(sim, m);
                 long fee = hiring ? HireFee(sim, d) : 0, fuel = hiring ? HireDiesel(sim, d) : 0;
                 if (hiring && sim.State.Ledger.Cash + fee - fuel >= 0) // a day's diesel with no cash to pay it is not driven (the books never go below 0)

@@ -64,6 +64,10 @@ namespace Sim.Content
                 if (game.Township != null) game.Events = LoadEvents(read("events.json")); // events start at the Township (spec 027)
                 if (game.Events != null) game.Insurance = LoadInsurance(read("insurance.json")); // and so does insurance (spec 027 §3.5)
                 if (game.Events != null) game.Contracts = LoadContracts(read("contracts.json"), market); // and the trader's forward contracts (spec 027 §3.7)
+                if (game.Events != null && game.Shops != null) game.Invoices = LoadInvoices(read("invoices.json"), market, game.Shops); // and sales between businesses on terms (spec 028 §3.1)
+                if (game.Invoices != null && game.People != null) game.Managers = LoadManagers(read("managers.json")); // and managers for them to run (spec 028 §3.2)
+                if (game.Managers != null) game.Exit = LoadExit(read("exit.json")); // and a worth to sell them at (spec 028 §3.3)
+                if (game.Managers != null) game.Benefits = LoadBenefits(read("benefits.json")); // and benefits to keep their people (spec 028 §3.8)
             }
             return game;
         }

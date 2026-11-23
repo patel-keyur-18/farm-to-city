@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 16 Invoices and managers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen, scaled to fit, with a tab bar for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink);cursor:pointer}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.sheet.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:700px}
+.card.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.card h3{margin:0;font:700 32px var(--display);text-align:center}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.cost.hi{background:var(--cream2);border-radius:10px;border:0;margin-top:6px}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.btnrow .btn{flex:1}
+.pic{width:170px;height:128px;border-radius:14px;border:3px solid var(--wood);overflow:hidden;flex:none}
+.tag{display:inline-block;font:700 14px var(--body);padding:2px 9px;border-radius:9px;background:#e9d9a8;border:2px solid var(--wood);color:var(--wood);vertical-align:middle;margin-left:8px}
+.tag.major{background:var(--saffron,#E8892A);border-color:#9b5412;color:#fff}
+.tag.warn{background:#fde2cf;border-color:var(--warn);color:var(--warn)}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice.def{background:#efe2bd;border-color:#d8c68e}
+.choice .tx{flex:1;font-size:21px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px;font-weight:400}
+.choice .btn{min-width:190px}
+.note{font-size:17px;color:var(--wood);margin:10px 4px 0;line-height:1.4}
+.note.warn{color:var(--warn);font-weight:600}
+.timer{font:600 19px var(--body);color:var(--warn)}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:760px;text-align:center}
+.banner{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fde2cf;border:4px solid var(--warn);border-radius:16px;padding:9px 20px;font:600 21px var(--body);color:var(--warn);cursor:pointer}
+@keyframes flick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) translateY(-2px)}}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick .5s infinite}
+@media (prefers-reduced-motion:reduce){.flame{animation:none}}
+.body{overflow-y:auto}
+.tabrow{display:flex;gap:10px;padding:0 20px 6px}
+.tabrow .btn{flex:1;min-width:0;padding:8px 6px 10px;font-size:20px}
+.pill{display:inline-block;font:700 15px var(--body);padding:2px 10px;border-radius:10px;border:2px solid;margin-left:8px;vertical-align:middle}
+.pill.cur{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.pill.late{background:#fde9c4;border-color:#b9770e;color:#8a5200}
+.pill.over{background:#fbd9d2;border-color:var(--warn);color:var(--warn)}
+.pill.met{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.dd{font:700 18px var(--body);background:var(--sand);border:3px solid var(--sand2);border-radius:12px;padding:6px 12px;color:var(--ink);cursor:pointer;min-width:168px;text-align:center}
+.dd:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.alert{display:flex;gap:12px;align-items:center;background:#fde2cf;border:3px solid var(--warn);border-radius:14px;padding:10px 14px;margin:10px 0 2px;font-size:19px;color:#7a2d08;font-weight:600}
+.stars{color:#e8a31c;letter-spacing:1px;font-size:20px}.stars i{color:#cfc19a;font-style:normal}
+.seg{display:flex;gap:8px}.seg .btn{min-width:120px;padding:6px 12px 8px;font-size:19px}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center;color:#d9c9a8;font-size:14px}
+.ctl button{font:600 14px var(--body);padding:6px 12px;border-radius:9px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.ctl button[aria-pressed=true]{background:var(--sand);border-color:var(--sand2);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 16: invoices, managers and the manager's report</h1>
+  <p class="lead">Sprint 25, US-123 and US-124 (spec 028 §3.1, §3.2, §7). Every screen is drawn at the game's own 1280 × 720 size with its palette and type, in the layout of the Store, People and business sheets. Tap the tabs below, then the terms buttons, the ? chips and the switches the way you would on the phone. The town is a Township in its third year; numbers follow the spec and are placeholders for the balance pass.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="ctl" id="ctl"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const fmt=n=>{n=Math.round(n);const s=String(Math.abs(n));let r=s.length>3?s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+s.slice(-3):s;return (n<0?'−':'')+r};
+const I={
+ bakery:'<svg viewBox="0 0 30 30"><rect x="4" y="13" width="22" height="12" rx="2" fill="#d9a05b" stroke="#8a5a2b" stroke-width="2"/><path d="M3 14c1-7 7-9 12-9s11 2 12 9z" fill="#c2410c" stroke="#8a5a2b" stroke-width="2"/><rect x="12" y="17" width="6" height="8" fill="#6b4423"/></svg>',
+ mill:'<svg viewBox="0 0 30 30"><rect x="6" y="12" width="18" height="14" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><path d="M4 13l11-9 11 9z" fill="#a8743c" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="19" r="4" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ stall:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#4a9bd6" stroke="#8a5a2b" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><rect x="3" y="24" width="24" height="3" fill="#8a5a2b"/></svg>',
+ grocer:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#79c84a" stroke="#8a5a2b" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#f3c777" stroke="#8a5a2b" stroke-width="2"/><circle cx="11" cy="18" r="2.5" fill="#c2410c"/><circle cx="18" cy="18" r="2.5" fill="#79c84a"/></svg>',
+ person:'<svg viewBox="0 0 30 30"><circle cx="15" cy="9" r="5" fill="#8a5a2b"/><path d="M5 27c0-8 4-11 10-11s10 3 10 11z" fill="#c2410c"/></svg>',
+ env:'<svg viewBox="0 0 30 30"><rect x="3" y="7" width="24" height="17" rx="2" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M4 9l11 8 11-8" fill="none" stroke="#8a5a2b" stroke-width="2.5"/><circle cx="15" cy="17" r="3" fill="#c2410c"/></svg>',
+ coin:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/><path d="M15 8v14M11 12h8M11 18h8" stroke="#9a6a2a" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ bill:'<svg viewBox="0 0 30 30"><rect x="5" y="3" width="20" height="24" rx="3" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M9 10h12M9 15h12M9 20h7" stroke="#8a5a2b" stroke-width="2.5" stroke-linecap="round"/></svg>',
+ bell:'<svg viewBox="0 0 30 30"><path d="M15 4a8 8 0 0 0-8 8v6l-3 4h22l-3-4v-6a8 8 0 0 0-8-8z" fill="#8a5a2b"/><circle cx="15" cy="26" r="3" fill="#8a5a2b"/></svg>',
+ chart:'<svg viewBox="0 0 30 30"><path d="M4 24l7-9 5 5 10-13" fill="none" stroke="#3f7d20" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+const WHY={
+ owed:{t:'Owed to the bakery',h:'6,480 coins',rows:[['The village grocer: 20 kg of pav at 72 a kg, sold on Day 2','1,440'],['The village grocer: 15 kg of curd at 68 a kg, sold on Day 2','1,020'],['Your tea stall: 40 kg of pav at 72 a kg, sold on Day 3','2,880'],['Your tea stall: 15 kg of pav at 72 a kg, sold on Day 3','1,140']],foot:'A sale on terms is money you will be paid, not money you have. It counts in the shop\'s profit now and in its cash at the due date.'},
+ terms:{t:'Why Half-season?',h:'2 real days',rows:[['Cash: paid at once, the buyer has the goods and you have the money','0 days'],['Half-season: paid 2 real days after the sale','2 days'],['Season: paid 4 real days after the sale','4 days']],foot:'A longer term never earns you more. It only makes the buyer\'s cash last longer and yours shorter. Between your own businesses it moves cash from one to the other and nothing else.'},
+ late:{t:'Why is this invoice late?',h:'Overdue',rows:[['Due on Day 4 at 06:00; the bakery\'s cash then','1,210 coins'],['Its overdraft room left then','0 coins'],['The invoice','13,600 coins'],['Up to one term past the due date it is late; past that, overdue','4 days late now']],foot:'No fee and no write-off. It stays on the books until it is paid.'},
+ stop:{t:'Why did the mill stop delivering?',h:'Atta stopped',rows:[['An invoice more than one term past due is overdue','13,600 coins'],['A seller stops delivering to a buyer with an overdue invoice','until paid'],['The bakery has no atta, so it can bake nothing','0 kg baked today']],foot:'Put money into the bakery or let its sales come in, pay the invoice, and the mill delivers again the same hour.'},
+ cash:{t:'Why cash grew less than profit',h:'8,220 coins',rows:[['The bakery\'s profit this season','11,200'],['Wear and tear is not cash paid out, so it comes back','+2,400'],['Customers who have not paid yet: more owed to you than last season','−6,480'],['Suppliers you have not paid yet: more owed by you than last season','+3,000'],['Stock grew: flour and fuel bought and not yet used','−1,900']],foot:'A profitable business can run out of cash. Profit is what you earned; cash is what you hold.'},
+ wage:{t:'Meena\'s pay',h:'4,000 + a tenth',rows:[['A season\'s base pay, paid at the start from the bakery\'s cash','4,000'],['A tenth of the bakery\'s profit when it is positive, paid at the close','1,420 so far'],['When the bakery loses money the second part is nothing','so she never turns a profit into a loss']],foot:'She is paid from the bakery\'s cash, not yours. Her wage is part of why the bakery\'s profit is lower than when you run it yourself.'},
+ style:{t:'Growth-chaser',h:'Sells more',rows:[['Prices 5% under the usual price','sells more'],['Standard quality','no change'],['Keeps 2 days of stock and never runs out','costs more stock'],['Hires the most skilled applicant','pays more']],foot:'A cost-cutter keeps prices and costs low; a quality-first manager charges 5% more for good quality. None is best for every business.'},
+ mis:{t:'Days she mis-set the stock',h:'9 of 90 days',rows:[['At 3 stars a manager mis-sets the stock on about 11 days in 100','about 10 days'],['On such a day that day\'s sales are halved','−50%'],['This season it happened on','9 days'],['Sales lost, about','1,100 coins']],foot:'Five stars mis-set 2 days in 100; one star 20. Skill grows with each season she manages.'},
+ target:{t:'Her target',h:'Profit 15,000',rows:[['You set it: profit or growth','profit'],['This season\'s profit','14,200'],['Met means at or above the target','missed by 800']],foot:'Two misses in a row and she works less gladly. A target is a promise to yourself; she does not change prices for it, her style does.'},
+ raise:{t:'Why she asks for more',h:'4,500 base',rows:[['Her skill grew from 3 to 4 stars while she managed the bakery','+1 star'],['What a 4-star manager usually asks for the base','4,500'],['If you refuse and she is still underpaid she leaves at the next close','any skill']],foot:''}
+};
+let tab='orders',state={terms:{grocer:'half',tea:'half'},late:false,report:'met',why:null,toast:null,hire:'asked',manager:true,target:'profit'};
+const TERMS={cash:'Cash',half:'Half-season',season:'Season'};
+const qb=k=>`<button class="q" data-why="${k}" aria-label="Why?">?</button>`;
+const row=(ic,t,sub,right,k)=>`<div class="row">${ic?`<div class="ico">${ic}</div>`:''}<div class="grow">${t}<small>${sub||''}</small></div>${right||''}${k?qb(k):''}</div>`;
+const sec=t=>`<div class="sec">${t}</div>`;
+function mapSvg(){
+ let t='';
+ for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+520,y=140+(c+r)*46;const col=(c*7+r*3)%5;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][col];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f6a2a" stroke-width="2" opacity=".95"/>`}
+ return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}</svg>`;
+}
+function base(bell){
+ return `<div class="map">${mapSvg()}</div>
+ <div class="hud l"><div class="s">Monsoon · 3 days left</div><div class="big">10:24</div><div class="s">Rain until 15:00</div></div>
+ <div class="hud r"><div class="big" style="font-size:40px">1.12 L</div></div><div class="hud r2">Store 48%</div><div class="hud r3">184 people &nbsp;78</div>
+ <div class="roundbtn" style="left:20px;bottom:20px;width:110px;border-radius:22px;height:70px;background:#c9c2b0;border-color:#8a8372;color:#6e6858;align-items:center;padding:0">Collect all</div>
+ <div class="roundbtn" style="right:112px;bottom:128px;width:84px;height:84px">${I.bell.replace('<svg','<svg style="width:40px;height:40px;margin-top:-10px"')}<span class="badge">${bell||1}</span></div>
+ <div class="roundbtn" style="right:20px;bottom:20px"><span style="color:#fff;background:#b02a1e;position:absolute;top:18px;left:28px;width:42px;height:34px;border-radius:6px"></span>Menu</div>`;
+}
+function sheet(title,sub,icon,body,tabs){return `<div class="scrim"></div><div class="sheet"><div class="head"><div class="cbtn">←</div><div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div>${tabs||''}<div class="body">${body}</div></div>`}
+const bizTabs=a=>`<div class="tabrow">${['Today','Orders','Books','Settings'].map(t=>`<button class="btn ${t===a?'':'sand'}" data-tab="${t}"><span>${t}</span></button>`).join('')}</div>`;
+const inv=(ic,t,sub,pill,amt,k)=>row(ic,t+(pill?`<span class="pill ${pill[0]}">${pill[1]}</span>`:''),sub,`<div class="val">${amt}</div>`,k);
+const termBtn=k=>`<button class="dd" data-term="${k}">${TERMS[state.terms[k]]} ▾</button>`;
+
+const views={
+ orders:{label:'1 · Orders and invoices',ctl:['late'],notes:[
+  ['What to check',['A new tab on every business sheet from the Township: <b>Orders</b>. It has who buys from the bakery and on what terms, what is owed to it, and what it owes.','Tap a terms button: it goes Cash, Half-season, Season. Half-season is the default. Each number has its own ?.','Turn on <b>A late payer</b> above the picture to see the ageing tags and the stop rule.']],
+  ['How it works',['A sale between two businesses (yours to yours, or yours to the village grocer and tea stall) is an invoice. The farm\'s own wheat and milk, households, the trader and the supermarket stay cash.','Late means up to one term past due; overdue is more. No fee. A seller stops delivering to a buyer with an overdue invoice.','Between your own businesses the receivable and the payable cancel in your net worth: terms never create money.']]],
+  render(){
+   const L=state.late;
+   let h='';
+   if(L)h+=`<div class="alert"><div class="ico" style="width:42px;height:42px;background:#fff3d1;border-color:var(--warn)">${I.mill}</div><div class="grow">Your flour mill stopped delivering atta: 13,600 coins overdue. It starts again when the bakery pays.<div style="font-size:16px;font-weight:400;margin-top:2px">The bakery's cash is 1,210 coins and its overdraft is used up.</div></div>${qb('stop')}<button class="btn" style="min-width:210px"><span>Put in 12,400</span><small>from your cash</small></button></div>`;
+   h+=sec('Who buys from the bakery');
+   h+=row(I.grocer,'The village grocer','Pav and curd, up to 20 kg a day',termBtn('grocer'),'terms');
+   h+=row(I.stall,'Your tea stall','Pav, 55 kg a week',termBtn('tea'),'terms');
+   h+=sec('Owed to the bakery');
+   h+=row(I.coin,'Everything owed','4 invoices','<div class="val">6,480 coins</div>','owed');
+   h+=inv(I.grocer,'The village grocer: 20 kg pav','Sold Day 2 · due Day 4 06:00',['cur','Current'],'1,440');
+   h+=inv(I.grocer,'The village grocer: 15 kg curd','Sold Day 2 · due Day 4 06:00',['cur','Current'],'1,020');
+   h+=inv(I.stall,'Your tea stall: 40 kg pav','Sold Day 1 · due Day 3 06:00',L?['late','Late']:['cur','Current'],'2,880');
+   h+=inv(I.stall,'Your tea stall: 15 kg pav','Sold Day 3 · due Day 5 06:00',['cur','Current'],'1,140');
+   h+=sec('The bakery owes');
+   h+=inv(I.mill,'Your flour mill: 400 kg atta',L?'Sold Day 1 · due Day 3 06:00 · 4 days late':'Sold Day 3 · due Day 5 06:00',L?['over','Overdue']:['cur','Current'],'13,600',L?'late':'owed');
+   return base()+sheet('Bakery',L?'Closed for lack of atta':'Open now · until 18:00',I.bakery,h,bizTabs('Orders'))}},
+ books:{label:'2 · Why profit is not cash',notes:[
+  ['What to check',['The bakery\'s Books tab already has its profit and cash. The cash flow lists each reason cash moved; two rows are new: <b>Customers who have not paid yet</b> and <b>Suppliers you have not paid yet</b>.','The ? on each row says it in words.']],
+  ['What it teaches',['The bakery made 11,200 coins of profit and its cash grew by 8,220. The difference is 6,480 coins that customers owe it, less 3,000 it owes its suppliers.']]],
+  render(){
+   let h=sec('Where the cash went this season');
+   h+=row('','The bakery\'s profit','','<div class="val">11,200 coins</div>','cash');
+   h+=row('','Wear and tear, not paid out','','<div class="val">+2,400 coins</div>','cash');
+   h+=row('','Customers who have not paid yet','They owe the bakery more than last season','<div class="val" style="color:var(--warn)">−6,480 coins</div>','owed');
+   h+=row('','Suppliers you have not paid yet','The bakery owes more than last season','<div class="val">+3,000 coins</div>','cash');
+   h+=row('','Stock grew','Flour and fuel on the shelf','<div class="val">−1,900 coins</div>','cash');
+   h+=`<div class="row" style="background:var(--cream2);border-radius:10px;margin-top:8px"><div class="grow"><b>Cash from running the bakery</b><small>11,200 of profit, but only this much arrived</small></div><div class="val">8,220 coins</div>${qb('cash')}</div>`;
+   h+=`<div class="note" style="font-size:18px">A profitable business can run out of cash. If the mill stops delivering because the bakery cannot pay, the profit stops too.</div>`;
+   return base()+sheet('Bakery','Monsoon, year 3',I.bakery,h,bizTabs('Books'))}},
+ board:{label:'3 · The hiring board: Manager',notes:[
+  ['What to check',['Manager is a fifth post on the board, like a miller or a baker. It runs one business of yours; you pick which one when you offer.','Each applicant has stars for skill and a style: <b>cost-cutter</b>, <b>growth-chaser</b> or <b>quality-first</b>, with one plain sentence on what that means. The ? says it in full.','Pay is a base of 4,000 coins a season and a tenth of the business\'s profit when it is positive.']]],
+  render(){
+   let h=row(I.person,'<b style="font-size:24px">Manager</b>','4,000 coins a season and a tenth of the profit, usually','','style');
+   h+=`<div class="row"><div class="ico">${I.env}</div><div class="grow">At the usual wage</div><div class="val">Word is out for 3 d 23 h more</div>${qb('wage')}</div>`;
+   h+=sec('Asking for work');
+   h+=`<div class="row" style="min-height:104px"><div class="ico">${I.person}</div><div class="grow"><b style="font-size:23px">Meena</b><small><span class="stars">★★★<i>★★</i></span> Capable · Growth-chaser · Hardworking</small><small style="color:var(--ink);font-weight:700">From your town: you know them well</small></div>${qb('style')}<button class="btn" data-offer="1"><span>Offer</span></button></div>`;
+   h+=`<div class="row" style="min-height:104px"><div class="ico">${I.person}</div><div class="grow"><b style="font-size:23px">Arjun</b><small><span class="stars">★★<i>★★★</i></span> Learning · Cost-cutter · Frugal</small><small style="color:var(--ink);font-weight:700">From another village: you have not met</small></div>${qb('style')}<button class="btn" data-offer="2"><span>Offer</span></button></div>`;
+   const tabsHtml=`<div class="tabrow">${['Farm hand','Miller','Baker','Dairyman','Manager'].map(t=>`<button class="btn ${t==='Manager'?'':'sand'}" style="font-size:19px"><span>${t}</span></button>`).join('')}</div>`;
+   return base()+sheet('Hiring board','Send word for a job, then choose who to hire.',I.env,h,tabsHtml)}},
+ offer:{label:'4 · Offer a manager the job',notes:[
+  ['What to check',['The same offer sheet as any worker: what she asks, 10% less, 10% more, with a plain line on what each does.','New: <b>which business</b> she will run, chosen first. One manager a business, so a business that has one is greyed.','The base is paid from the business\'s cash now; the tenth of the profit at each close.']]],
+  render(){
+   let h=sec('Which business?');
+   h+=row(I.bakery,'Bakery','No manager · profit last season 14,200','<span class="tag" style="font-size:16px">Chosen</span>');
+   h+=row(I.mill,'Flour mill','No manager · you run it','<button class="btn sand" style="min-width:110px;padding:6px 14px 8px"><span>Choose</span></button>');
+   h+=row(I.stall,'Tea stall','Has a manager already','<span class="tag warn" style="font-size:16px">Taken</span>');
+   const o=(t,w,sub,why,main,now)=>`<div class="row" style="min-height:96px"><div class="grow"><b style="font-size:23px">${t}</b><small>${w}</small><small style="color:var(--ink);font-weight:700">${sub}</small></div>${qb(why)}<button class="btn ${main?'':'sand'}" data-take="1" style="min-width:230px"><span>Offer</span><small>${now}</small></button></div>`;
+   h+=sec('Her terms');
+   h+=o('4,000 coins and a tenth, what she asks','She\'ll take it','A fair wage for her skill',"wage",true,'4,000 coins now, from its cash');
+   h+=o('3,600 coins and a tenth, 10% less','Maybe','Saves money now, but she remembers it and works less gladly','wage',false,'3,600 coins now, from its cash');
+   h+=o('4,400 coins and a tenth, 10% more','She\'ll take it','Surer, and she starts out glad of it','wage',false,'4,400 coins now, from its cash');
+   return base()+sheet('Offer Meena the job','A season\'s contract as manager of your bakery.',I.person,h)}},
+ today:{label:'5 · The business with a manager',notes:[
+  ['What to check',['Today shows <b>Manager</b> as its own line above <b>Who works here</b>: her stars and style. The worker she hired is a normal line.','Settings has her section: the target (profit or growth), her pay so far, and <b>Let her go</b> (severance as for a worker, then you run it yourself or hire again).','A managed business counts as passive income, as a hired one does.']]],
+  render(){
+   const set=state.setTab;
+   let h='';
+   if(!set){
+    h+=sec('Who runs it');
+    h+=row(I.person,'<b>Manager</b>: Meena','<span class="stars">★★★<i>★★</i></span> Growth-chaser · 4,000 and a tenth of the profit','','wage');
+    h+=row(I.person,'<b>Who works here</b>: Radha','<span class="stars">★★★★<i>★</i></span> Baker · hired by Meena','','wage');
+    h+=sec('Today');
+    h+=row(I.bakery,'Pav made','','<div class="val">52 kg of 60 kg</div>','');
+    h+=row(I.coin,'The shop\'s cash','','<div class="val">9,430 coins</div>','');
+    h+=row(I.coin,'Overdraft','','<div class="val">0 coins of 15,200 coins</div>','');
+   } else {
+    h+=sec('Manager');
+    h+=row(I.person,'Meena','<span class="stars">★★★<i>★★</i></span> Growth-chaser · hired Spring, year 3','','style');
+    h+=`<div class="row"><div class="grow">Her target</div><div class="seg"><button class="btn ${state.target==='profit'?'':'sand'}" data-set="target:profit"><span>Profit</span></button><button class="btn ${state.target==='growth'?'':'sand'}" data-set="target:growth"><span>Growth</span></button></div>${qb('target')}</div>`;
+    h+=row('','Target this season',state.target==='profit'?'Profit of 15,000 coins':'Sales 10% above last season','<div class="val">'+(state.target==='profit'?'9,800 so far':'4% so far')+'</div>','target');
+    h+=row('','Her pay this season','4,000 paid; a tenth of the profit at the close','<div class="val">980 so far</div>','wage');
+    h+=`<div class="row"><div class="grow">Let her go<small>Severance as for any worker. You can run it yourself or hire another.</small></div><button class="btn sand" style="min-width:170px"><span>Let her go</span></button></div>`;
+   }
+   return base()+sheet('Bakery','Open now · until 18:00',I.bakery,h,`<div class="tabrow">${['Today','Orders','Books','Settings'].map(t=>`<button class="btn ${(t==='Settings'&&set)||(t==='Today'&&!set)?'':'sand'}" ${t==='Settings'||t==='Today'?`data-set="setTab:${t==='Settings'?'1':''}"`:''}><span>${t}</span></button>`).join('')}</div>`)}},
+ report:{label:'6 · The manager\'s report',ctl:['report'],notes:[
+  ['What to check',['At each close she reports: the target met or missed, what she changed and why, her mis-set days, her pay. Every line has a ?.','Turn on <b>Missed twice</b> above the picture: two misses in a row lower her motivation, and a skill that grew makes her ask for a raise.','She never acts without telling you; you can change the target or let her go from Settings.']]],
+  render(){
+   const miss=state.report==='missed';
+   let h=sec('Your target: profit 15,000 coins');
+   h+=`<div class="row"><div class="grow"><b style="font-size:23px">Profit this season</b><small>${miss?'Missed by 1,600. Missed last season too.':'Missed by 800'}</small></div><div class="val">${miss?'13,400':'14,200'} coins</div><span class="pill ${miss?'over':'late'}">Missed</span>${qb('target')}</div>`;
+   h+=sec('What she changed, and why');
+   h+=row('','Pav 5% under the grocer\'s price','To sell more: a growth-chaser','','style');
+   h+=row('','Kept 2 days of atta in stock','So the bakery never runs out','<div class="val">no stock-outs</div>','style');
+   h+=row('','Hired Radha, the most skilled applicant','Wage 31,200 a season','','style');
+   h+=sec('How the season went');
+   h+=row('','Days she mis-set the stock','Those days\' sales were halved','<div class="val">9 of 90</div>','mis');
+   h+=row('','Her pay this season','4,000 and a tenth of the profit','<div class="val">5,420 coins</div>','wage');
+   if(miss)h+=`<div class="alert" style="background:#fff3d1;border-color:var(--wood);color:var(--ink)"><div>Meena works less gladly after two misses. She also asks for a raise: her skill grew to 4 stars and she asks 4,500 coins.</div>${qb('raise')}</div>`;
+   return base(2)+sheet('Meena\'s report','Bakery · Monsoon, year 3',I.chart,h)+`<div class="btnrow" style="position:absolute;left:446px;width:388px;bottom:36px"><button class="btn" style="flex:1"><span>OK</span></button></div>`}}
+};
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:760px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 28px var(--display)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}${w.foot?`<div class="note" style="font-size:18px">${w.foot}</div>`:''}<div class="btnrow"><button class="btn" data-close="1" style="max-width:220px;margin:0 auto"><span>OK</span></button></div></div>`}
+function render(){
+ const v=views[tab];let html=v.render();
+ if(state.toast)html+=`<div class="toast">${state.toast}</div>`;
+ if(state.why)html+=whyCard(state.why);
+ $('#stage').innerHTML=html;
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ $('#ctl').innerHTML=(v.ctl||[]).map(c=>c==='late'?`<span>Show:</span><button data-set="late:0" aria-pressed="${!state.late}">Everything paid on time</button><button data-set="late:1" aria-pressed="${state.late}">A late payer</button>`:`<span>Show:</span><button data-set="report:met" aria-pressed="${state.report==='met'}">Missed once</button><button data-set="report:missed" aria-pressed="${state.report==='missed'}">Missed twice</button>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;Object.assign(state,{why:null,toast:null});render()});
+$('#ctl').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b)return;const [g,v]=b.dataset.set.split(':');state[g]=g==='late'?v==='1':v;render()});
+$('#stage').addEventListener('click',e=>{
+ const t=e.target.closest('[data-why],[data-close],[data-term],[data-set],[data-offer],[data-take]');
+ if(!t)return;const d=t.dataset;
+ if(d.why)state.why=d.why;else if(d.close)state.why=null;
+ else if(d.term){const o=['cash','half','season'];const k=d.term;state.terms[k]=o[(o.indexOf(state.terms[k])+1)%3];state.toast=null}
+ else if(d.set){const [g,v]=d.set.split(':');state[g]=v==='1'?true:v===''?false:v}
+ else if(d.offer){state.toast='Offers to a manager are made on the next screen.'}
+ else if(d.take){state.toast='Meena will start tomorrow: 4,000 coins paid from the bakery\'s cash.'}
+ render();
+});
+addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>

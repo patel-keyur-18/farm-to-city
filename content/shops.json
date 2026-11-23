@@ -14,7 +14,8 @@
   "kinds": {
     "veg":    { "kgPerPerson": 0.20,  "adultShare": 1.0, "elasticity": 0.5 },
     "chai":   { "cupsPerPerson": 0.4, "adultShare": 0.7, "elasticity": 0.8, "reference": 12, "snackShare": 0.5 },
-    "sweets": { "kgPerPerson": 0.015, "adultShare": 1.0, "elasticity": 1.2, "references": { "rasgulla": 300, "atta_laddoo": 360 } }
+    "sweets": { "kgPerPerson": 0.015, "adultShare": 1.0, "elasticity": 1.2, "references": { "rasgulla": 300, "atta_laddoo": 360 } },
+    "meals":  { "elasticity": 0.8 }
   },
   "vegShares": {
     "potato": 0.30, "radish": 0.08, "spinach": 0.08, "coriander": 0.02, "methi": 0.05, "amaranth": 0.05, "okra": 0.10, "peas": 0.08,
@@ -23,7 +24,8 @@
   "rivals": [
     { "id": "grocer",      "kind": "veg",    "place": "grocery",   "priceFactor": 1.0, "quality": "standard", "stars": 3, "openHour": 7, "closeHour": 21, "reacts": true },
     { "id": "village_tea", "kind": "chai",   "place": "tea_stall", "priceFactor": 1.0, "quality": "standard", "stars": 3, "openHour": 6, "closeHour": 22, "capacityPerHour": 200, "reacts": true },
-    { "id": "town_halwai", "kind": "sweets", "metres": 1500,       "priceFactor": 1.0, "quality": "good",     "stars": 4, "openHour": 8, "closeHour": 20 }
+    { "id": "town_halwai", "kind": "sweets", "metres": 1500,       "priceFactor": 1.0, "quality": "good",     "stars": 4, "openHour": 8, "closeHour": 20 },
+    { "id": "town_dhaba",  "kind": "meals",  "metres": 300,        "priceFactor": 1.0, "quality": "standard", "stars": 3, "openHour": 11, "closeHour": 22, "capacityPerHour": 60 }
   ],
   "newcomers": { "gap": 0.8, "chance": 0.5, "exitShare": 0.1, "exitSeasons": 2, "stars": 2.5, "quality": "standard", "cartPlace": "tea_stall", "cartMetres": 100 },
   "reaction": { "step": 0.05, "floor": 0.85, "change": 0.3333 },

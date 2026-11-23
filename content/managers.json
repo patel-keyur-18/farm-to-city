@@ -1,0 +1,15 @@
+{
+  "wageOfRole": 0.60,
+  "wageProfitShare": 0.10,
+  "starPoints": 20,
+  "missDay": [0.20, 0.155, 0.11, 0.065, 0.02],
+  "missOutput": 0.5,
+  "profitGoalRise": 1.05,
+  "growthGoalRise": 1.10,
+  "missedMood": -0.10,
+  "styles": [
+    { "id": "cost_cutter",   "nameKey": "manager.style.cost_cutter",   "priceFactor": 1.00, "quality": 1, "stockDays": 1 },
+    { "id": "growth_chaser", "nameKey": "manager.style.growth_chaser", "priceFactor": 0.95, "quality": 1, "stockDays": 2 },
+    { "id": "quality_first", "nameKey": "manager.style.quality_first", "priceFactor": 1.05, "quality": 2, "stockDays": 1 }
+  ]
+}

@@ -40,6 +40,7 @@ namespace Sim.View.Views
         /// <summary>"Works 6 fields · labour −15% · Tools ×1.03 · carts 500 kg".</summary>
         internal static string Does(ViewContext ctx, MachineDef d)
         {
+            if (d.IsTempo) return TempoSheet.Does(ctx, d);
             return ctx.Strings.Get("equipment.doesValue", "acres", ctx.Fmt.Integer(d.Acres), "cut", ctx.Fmt.Percent(d.LabourCut), "tools", WhyView.Effect(ctx, d.Tools),
                 "cart", ctx.Fmt.Kg(d.CartKg * 1000));
         }
@@ -53,6 +54,7 @@ namespace Sim.View.Views
             string state = EquipmentRules.Broken(sim, m) ? (m.RepairDue > 0 ? s.Get("equipment.waitsRepair", "cost", ctx.Fmt.Coins(m.RepairDue))
                     : s.Get("equipment.broken", "time", ctx.Fmt.Duration(m.BrokenUntil - ctx.Now)))
                 : m.Unpaid ? s.Get(m.Leased ? "equipment.unpaidLease" : "equipment.unpaid")
+                : d.IsTempo ? TempoSheet.State(ctx, m)
                 : d.Bullocks > 0 && EquipmentRules.Bullocks(sim) < d.Bullocks ? s.Get("equipment.noBullocks")
                 : s.Plural("equipment.working", acres);
             vm.Lines.Add(new LineVm(s.Get(m.Leased ? "equipment.leased" : "equipment.bought"), state, "machine", m.Kind) { Icon = Icon(d) });
@@ -72,7 +74,8 @@ namespace Sim.View.Views
                     });
                 }
             }
-            if (d.CustomAcresPerDay > 0) HireOut(ctx, vm, m, d);
+            if (d.IsTempo) TempoSheet.LetOut(ctx, vm, m, d); // US-245: its idle legs to neighbours, and whether it pays
+            else if (d.CustomAcresPerDay > 0) HireOut(ctx, vm, m, d);
             long mid = m.Id;
             vm.Lines.Add(new LineVm(s.Get(m.Leased ? "equipment.giveBack" : "equipment.sell"), null)
             {
@@ -141,7 +144,7 @@ namespace Sim.View.Views
                 buttons.Add(Act(ctx, "lease:" + id, s.Get("equipment.lease"), s.Get("equipment.leaseValue", "cost", ctx.Fmt.Coins(EquipmentRules.Lease(sim, d))), Icon(d), d,
                     at => new LeaseMachine(at, id)));
             bool hired = EquipmentRules.Hired(sim, k);
-            buttons.Add(Act(ctx, "hire:" + id, s.Get(hired ? "equipment.hiredToday" : "equipment.hire"), s.Get("equipment.hireValue", "cost", ctx.Fmt.Coins(EquipmentRules.Hire(sim, d))),
+            if (!d.IsTempo) buttons.Add(Act(ctx, "hire:" + id, s.Get(hired ? "equipment.hiredToday" : "equipment.hire"), s.Get("equipment.hireValue", "cost", ctx.Fmt.Coins(EquipmentRules.Hire(sim, d))),
                 Icon(d), d, at => new HireMachine(at, id)));
             for (int i = 0; i < buttons.Count; i += 2) vm.Lines.Add(new LineVm(null, null) { Buttons = buttons.GetRange(i, System.Math.Min(2, buttons.Count - i)) }); // two a row: four were cramped
         }

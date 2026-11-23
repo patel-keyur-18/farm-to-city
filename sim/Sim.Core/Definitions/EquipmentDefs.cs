@@ -40,6 +40,23 @@ namespace Sim.Core.Definitions
         }
     }
 
+    /// <summary>
+    /// A vehicle's trips to the mandi (spec 028 §3.6, US-245, ADR 0162): the load a leg carries, the hours a leg takes, what a leg costs (diesel and wear, year-0
+    /// money), the legs it can make in a day and what neighbours pay for a leg when it is let out.
+    /// </summary>
+    public sealed class TripDef
+    {
+        public long LoadKg { get; set; }
+        public int Hours { get; set; }
+        public long Diesel { get; set; }
+        public long Wear { get; set; }
+        public int LegsPerDay { get; set; }
+        public long NeighbourPay { get; set; }
+
+        /// <summary>A leg's own cost: diesel and wear.</summary>
+        public long LegCost { get { return Diesel + Wear; } }
+    }
+
     public sealed class MachineDef
     {
         public string Id { get; set; }
@@ -78,6 +95,11 @@ namespace Sim.Core.Definitions
 
         /// <summary>The bank lends against it (its book value at the lender's <c>equipmentLtv</c>).</summary>
         public bool Loan { get; set; }
+
+        /// <summary>The tempo's trips (US-245), or null: it works no field and is never hired for a day, it carries goods to the mandi.</summary>
+        public TripDef Trip { get; set; }
+
+        public bool IsTempo { get { return Trip != null; } }
     }
 
 }

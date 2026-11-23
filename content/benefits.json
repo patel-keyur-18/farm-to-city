@@ -1,0 +1,23 @@
+{
+  "mealCost": 1800,
+  "mealMotivation": 0.03,
+  "healthCost": 600,
+  "healthMotivation": 0.02,
+  "healthSick": 0.5,
+  "festivalCost": 1000,
+  "festivalMotivation": 0.04,
+  "festivalReputation": 1,
+  "leaveCost": 900,
+  "leaveMotivation": 0.03,
+  "leaveDays": 4,
+  "leaveOf": 90,
+  "leaveFatigue": 0.10,
+  "loyalty": 0.85,
+  "keptForReputation": 2,
+  "nightWageUp": 0.25,
+  "nightFatigue": 0.07,
+  "nightStart": 20,
+  "nightEnd": 4,
+  "nightNeedDays": 3,
+  "nightLookBack": 8
+}

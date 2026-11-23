@@ -17,6 +17,7 @@ using Sim.View.Views;
 using UnityEngine;
 using UnityEngine.UIElements;
 using ViewCollect = Sim.View.Views.CollectAll;
+using OwnerRules = Sim.Core.Business.OwnerRules;
 
 namespace Game.Presentation
 {
@@ -306,6 +307,9 @@ namespace Game.Presentation
                     case EventRaised er: // spec 027: a card comes up on its own unless a sheet is open; closing it keeps it on the bell
                         if (!away && !_open.HasValue) { long cardId = er.Id; _safeRoot.schedule.Execute(() => { if (!_open.HasValue) OpenSheet(new SheetRequest(EventSheet.CardKind, cardId)); }); }
                         break;
+                    case DealOffered dofr: // spec 028 §3.4: an investor's, a partner's or a buyer's card comes up on its own unless a sheet is open; closing it keeps it on the bell
+                        if (!away && !_open.HasValue) { long dealId = dofr.OfferId; _safeRoot.schedule.Execute(() => { if (!_open.HasValue) OpenSheet(new SheetRequest(OwnerSheet.CardKind, dealId)); }); }
+                        break;
                     case OrderCompleted _: Toast(_strings.Get("toast.orderDone")); break;
                     case ContractLapsed _: Toast(_strings.Get("toast.lapsed")); break;
                 }
@@ -446,6 +450,18 @@ namespace Game.Presentation
                     if (Sim.State.People.Applicant(r.Id) == null) { _sheet.Close(); break; } // hired, or gone while it was open
                     _sheet.Show(HiringBoard.Offer(_ctx, r.Id), refreshOnly);
                     break;
+                case ManagerSheet.OfferKind:
+                    if (Sim.State.People.Applicant(r.Id) == null) { _sheet.Close(); break; } // hired, or gone while it was open
+                    _sheet.Show(ManagerSheet.Offer(_ctx, r.Id, r.Arg), refreshOnly);
+                    break;
+                case ExitSheet.Kind: _sheet.Show(ExitSheet.Build(_ctx, r.Id), refreshOnly); break; // sell or expand (spec 028 §3.3)
+                case OwnerSheet.OwnersKind: _sheet.Show(OwnerSheet.Owners(_ctx, r.Id), refreshOnly); break; // who owns it (spec 028 §3.4)
+                case OwnerSheet.CardKind:
+                    if (OwnerRules.Find(Sim, r.Id) == null) { _sheet.Close(); break; } // answered, lapsed or gone while it was open
+                    _sheet.Show(OwnerSheet.Card(_ctx, r.Id), refreshOnly);
+                    break;
+                case ExitSheet.ReceiptKind: _sheet.Show(ExitSheet.Receipt(_ctx, r.Id), refreshOnly); break; // where every coin of a sale went
+                case ManagerSheet.ReportKind: _sheet.Show(ManagerSheet.Report(_ctx, r.Id), refreshOnly); break; // a manager's report at the close (spec 028 §3.2)
                 case "TownOffer": _sheet.Show(HiringBoard.TownOffer(_ctx, r.Id), refreshOnly); break; // offering work from a card (ADR 0083)
                 case "Hand":
                     if (Sim.State.People.Hand(r.Id) == null) { _sheet.Close(); break; } // the hand left

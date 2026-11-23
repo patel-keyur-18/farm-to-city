@@ -33,7 +33,7 @@ namespace Game.Presentation.Map
                 bool pair = m.Sprite == "plough_team";
                 float scale = pair ? PloughScale : MachineScale;
                 // At work: a little toward the field's front, over its crop; parked: in the middle of the lane's acre.
-                Vector2 at = m.Parked ? Vector2.zero : new Vector2(0.06f, -0.08f);
+                Vector2 at = m.Parked ? new Vector2(m.ParkX, m.ParkY) : new Vector2(0.06f, -0.08f);
                 Vector3 pos = OnAcre(m.TileId, at);
                 SpriteRenderer r = _machines[i];
                 r.sprite = SpriteBank.Rendered(m.Sprite);

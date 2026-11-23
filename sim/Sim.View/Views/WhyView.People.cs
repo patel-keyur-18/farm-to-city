@@ -226,7 +226,7 @@ namespace Sim.View.Views
 
         private static WhyVm StaffOutput(ViewContext ctx, long id) { return Output(ctx, HandOf(ctx, id)); }
 
-        private static WhyVm StaffOutputAt(ViewContext ctx, long id) { return Output(ctx, ctx.Sim.State.People.WorkerAt(id)); }
+        private static WhyVm StaffOutputAt(ViewContext ctx, long id) { return Output(ctx, ctx.Sim.State.People.StaffAt(id)); }
 
         /// <summary>Output = skill × motivation × (1 − tiredness) (spec 015 §3.4), each against a typical worker's, in words.</summary>
         private static WhyVm Output(ViewContext ctx, IStaff w)

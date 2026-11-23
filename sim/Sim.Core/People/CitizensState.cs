@@ -123,6 +123,9 @@ namespace Sim.Core.People
 
         public bool Living { get { return Gone == CitizenGone.Here; } }
 
+        /// <summary>Seasons at a tuition centre (US-244, ADR 0161, schema 23): +1 farming and crafting each, up to the cap in all.</summary>
+        public int TuitionSeasons { get; internal set; }
+
         internal Citizen Clone()
         {
             var c = (Citizen)MemberwiseClone();
@@ -162,6 +165,7 @@ namespace Sim.Core.People
             if (!(h is SaveWriter sw && sw.Schema < 10) && (!h.Hashing || Employer != 0)) h.WriteLong(Employer); // hashed only once used
             if (!(h is SaveWriter sw11 && sw11.Schema < 11)) h.WriteFixed(Crafting);
             if (h.Hashing ? SchoolYears != 0 : !(h is SaveWriter sw15 && sw15.Schema < 15)) h.WriteInt(SchoolYears); // hashed only once used
+            if (h.Hashing ? TuitionSeasons != 0 : !(h is SaveWriter sw23 && sw23.Schema < Town.TownshipState.GrowthSchema)) h.WriteInt(TuitionSeasons); // schema 23; hashed once used
         }
 
         internal static Citizen ReadFrom(SaveReader r)
@@ -178,6 +182,7 @@ namespace Sim.Core.People
             if (r.Schema >= 10) c.Employer = r.ReadLong();
             if (r.Schema >= 11) c.Crafting = r.ReadFixed();
             if (r.Schema >= 15) c.SchoolYears = r.ReadInt();
+            if (r.Schema >= Town.TownshipState.GrowthSchema) c.TuitionSeasons = r.ReadInt();
             return c;
         }
     }

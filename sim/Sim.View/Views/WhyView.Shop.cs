@@ -111,6 +111,7 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             BusinessTypeDef t = BusinessRules.Defs(sim).Types[(int)type];
+            if (t.IsMeals) return MealsDemand(ctx, type); // from the households' leisure, not people × an amount
             ShopKindDef k = ShopRules.Defs(sim).Kind(t.Kind);
             long total = 0;
             foreach (int g in ShopRules.KindGoods(sim, t.Kind))

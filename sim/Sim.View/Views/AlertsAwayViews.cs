@@ -141,6 +141,34 @@ namespace Sim.View.Views
                             Action = ActionVm.Open("business:" + b.Id, s.Get("action.open"), new SheetRequest("Business", b.Id)),
                         });
 
+            // A seller stopped delivering to a business that has not paid (spec 028 §3.1): its Orders tab says how to start it again.
+            if (sim.State.Businesses != null && Sim.Core.Business.InvoiceRules.State(sim) != null)
+                foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)
+                    if (b.Status == Sim.Core.Business.BusinessStatus.Open && Sim.Core.Business.InvoiceRules.Of(sim, b, false).Exists(i => i.Stage == Sim.Core.Business.InvoiceStage.Overdue))
+                        list.Add(new AlertVm
+                        {
+                            Level = AlertLevel.Urgent, Note = "invoiceStopped", NoteKey = b.Id,
+                            Text = s.Get("alert.invoiceStopped", "name", BusinessWords.InSentence(ctx, Sim.Core.Business.BusinessRules.TypeOf(sim, b))),
+                            Action = ActionVm.Open("business:" + b.Id, s.Get("action.open"), new SheetRequest("Business", b.Id, InvoiceSheet.Tab)),
+                        });
+
+            // A business sold in the last two days (spec 028 §3.3): the card says where every coin went.
+            if (Sim.Core.Business.ExitRules.State(sim) != null)
+                foreach (Sim.Core.Business.SaleRecord sale in Sim.Core.Business.ExitRules.State(sim).Sales)
+                    if (t - sale.At < 2 * 86_400L)
+                    {
+                        long saleId = sale.Id;
+                        list.Add(new AlertVm
+                        {
+                            Level = AlertLevel.Info, Note = "businessSold", NoteKey = saleId,
+                            Text = s.Get("alert.businessSold", "name", s.Get(sim.Config.Game.Businesses.Types[sim.Config.Game.Businesses.IndexOfType(sale.TypeId)].NameKey).ToLowerInvariant(), "price", ctx.Fmt.Coins(sale.Price)),
+                            Action = ActionVm.Open("sale:" + saleId, s.Get("action.open"), new SheetRequest(ExitSheet.ReceiptKind, saleId)),
+                        });
+                    }
+
+            // An investor, a partner or a rival waiting for your answer (spec 028 §3.4).
+            OwnerSheet.Alerts(ctx, list);
+
             // Decisions: pests, spoiling soon, the store nearly full.
             long grace = sim.Config.Game.Farm.Farm.ReadyGraceSeconds, warn = ctx.Ui.SpoilWarningHours * 3600L;
             foreach (Crop c in sim.State.Farm.Crops)
@@ -400,7 +428,8 @@ namespace Sim.View.Views
             long milkMl = 0, milkPaid = 0, fodderBought = 0, fodderSold = 0, calves = 0, vet = 0, godownRent = 0, interest = 0, savingsPaid = 0;
             int calfCount = 0, vetCount = 0, keptCount = 0, noRoomCount = 0, grownCount = 0;
             long silagePut = 0, silageFed = 0, hiredFee = 0, hiredDiesel = 0;
-            int hiredAcres = 0;
+            int hiredAcres = 0, tempoLegs = 0;
+            long tempoNet = 0;
             foreach (SimEvent e in events)
             {
                 switch (e)
@@ -430,6 +459,7 @@ namespace Sim.View.Views
                         break;
                     case MandiTripReturned r: vm.MandiSales += r.Net; break;
                     case MilkCollected mc: milkMl += mc.Millilitres - mc.HomeMillilitres; milkPaid += mc.Amount; break;
+                    case TempoLetOut tl: tempoLegs += tl.Legs; tempoNet += tl.Pay - tl.Cost; break;
                     case MachineHiredOut mh: hiredAcres += mh.Acres; hiredFee += mh.Fee; hiredDiesel += mh.Diesel; break;
                     case AnimalsFed af: fodderBought += af.GreenBoughtAmount; fodderSold += af.GreenSoldAmount; silagePut += af.SilagePut; silageFed += af.SilageFed; break;
                     case CalfBorn cb: calves += cb.Amount; calfCount++; break;
@@ -517,6 +547,8 @@ namespace Sim.View.Views
             if (hiredAcres > 0)
                 rows.Add(new LineVm(s.Get("away.tractor"), s.Get("away.tractorValue", "acres", ctx.Fmt.Integer(hiredAcres), "fees", ctx.Fmt.Coins(hiredFee)), "away", (long)AwayRow.Tractor)
                     { Icon = "tractor", Note = s.Get("away.tractorNote", "diesel", ctx.Fmt.Coins(hiredDiesel)) });
+            if (tempoLegs > 0)
+                rows.Add(new LineVm(s.Get("away.tempo"), s.Get("away.tempoValue", "legs", ctx.Fmt.Integer(tempoLegs), "net", ctx.Fmt.Coins(tempoNet)), "away", (long)AwayRow.Tractor) { Icon = "tempo" });
             if (fodderBought > 0) rows.Add(new LineVm(s.Get("away.fodderBought"), "−" + ctx.Fmt.Coins(fodderBought), "away", (long)AwayRow.Dairy) { Icon = "green_fodder" });
             if (silagePut > 0) rows.Add(new LineVm(s.Get("away.silagePut"), ctx.Fmt.Kg(silagePut), "away", (long)AwayRow.Dairy) { Icon = "silage_pit" });
             if (silageFed > 0) rows.Add(new LineVm(s.Get("away.silageFed"), ctx.Fmt.Kg(silageFed), "away", (long)AwayRow.Dairy) { Icon = "silage_pit" });
@@ -732,7 +764,7 @@ namespace Sim.View.Views
             // Spec 012.
             { "ShedStarted", Use.Motion }, { "ShedBuilt", Use.Motion }, { "AnimalBought", Use.Motion }, { "AnimalSold", Use.Motion },
             // Spec 013 §3.4 (ADR 0087).
-            { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "ColdStoreRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
+            { "BenefitChanged", Use.StateOnly }, { "NightShiftChanged", Use.StateOnly }, { "DealOffered", Use.StateOnly }, { "DealAnswered", Use.StateOnly }, { "ShareBoughtBack", Use.StateOnly }, { "BusinessListed", Use.StateOnly }, { "BusinessSaleCancelled", Use.StateOnly }, { "BusinessSold", Use.StateOnly }, { "ManagerHired", Use.StateOnly }, { "ManagerLeft", Use.StateOnly }, { "ManagerReported", Use.StateOnly }, { "InvoiceIssued", Use.StateOnly }, { "InvoicePaid", Use.StateOnly }, { "InvoiceOverdue", Use.StateOnly }, { "SupplyStopped", Use.StateOnly }, { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "ColdStoreRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
             // Spec 023 (the Township).
             { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },
@@ -753,7 +785,7 @@ namespace Sim.View.Views
             { "OrchardPlanted", Use.Motion }, { "OrchardBearing", Use.Motion }, { "OrchardRipe", Use.Motion }, { "OrchardPicked", Use.Motion },
             { "OrchardSoldOnTrees", Use.Motion }, { "OrchardGone", Use.StateOnly },
             { "MachineBought", Use.Motion }, { "MachineLeased", Use.Motion }, { "MachineHired", Use.Motion }, { "MachineSold", Use.Motion }, { "MachineReturned", Use.Away },
-            { "MachineBroke", Use.Alert }, { "MachineHiredOut", Use.Away }, { "MachineRepaired", Use.Away }, { "MachineSeized", Use.Alert },
+            { "MachineBroke", Use.Alert }, { "MachineHiredOut", Use.Away }, { "TempoLetOut", Use.Away }, { "MachineRepaired", Use.Away }, { "MachineSeized", Use.Alert },
             { "MilkCollected", Use.Motion }, { "AnimalDry", Use.Away }, { "CalfBorn", Use.Away }, { "SilagePitBuilt", Use.Motion }, { "ChaffCutterBought", Use.Motion }, { "CalfKept", Use.Away }, { "CalfNoRoom", Use.Away }, { "HeiferGrown", Use.Away }, { "FeedLow", Use.Alert }, { "AnimalsFed", Use.Away }, { "FodderEnded", Use.Away }, { "VaccinationMissed", Use.Alert }, { "AnimalSick", Use.Away }, { "AnimalSeized", Use.Alert },
         };
     }

@@ -233,7 +233,7 @@ namespace Sim.Core.Commands
         protected override CommandResult ApplyAt(Simulation sim)
         {
             Applicant a = sim.State.People?.Applicant(ApplicantId);
-            if (a == null) return CommandResult.Reject(RejectReason.UnknownApplicant);
+            if (a == null || a.Place == HiringRules.ManagerPlace) return CommandResult.Reject(RejectReason.UnknownApplicant); // a manager's offer says which business (HireManager)
             long wage = HiringRules.OfferWage(sim, a, Level);
             long prepay = PeopleRules.RestOfSeason(sim, wage);
             if (a.Place == 0)

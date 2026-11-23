@@ -100,13 +100,16 @@ namespace Sim.Core.Business
     /// </summary>
     public sealed class ShopsState
     {
+        /// <summary>Slots in the by-kind counts: none, vegetables, chai, sweets and meals. The first four are the older layout; meals are saved with the restaurant's own section (schema 23).</summary>
+        internal const int Kinds = 5, OlderKinds = 4;
+
         public List<Rival> Rivals { get; internal set; } = new List<Rival>();
 
         /// <summary>Newcomers (schema 15), at most one of each kind, in the order they came.</summary>
         public List<Rival> Newcomers { get; internal set; } = new List<Rival>();
 
         /// <summary>This season's customers no shop served by <see cref="Definitions.ShopKind"/> (schema 15): a gap draws a newcomer.</summary>
-        public long[] LostSeason { get; internal set; } = new long[4];
+        public long[] LostSeason { get; internal set; } = new long[Kinds];
 
         /// <summary>The village's rivals, then the newcomers.</summary>
         public List<Rival> All()
@@ -123,7 +126,7 @@ namespace Sim.Core.Business
         public long Day { get; internal set; }
 
         /// <summary>Customers lost today by <see cref="Definitions.ShopKind"/> (every shop closed or full; cups or grams).</summary>
-        public long[] LostToday { get; internal set; } = new long[4];
+        public long[] LostToday { get; internal set; } = new long[Kinds];
 
         /// <summary>Grams by good your town bought at your stalls today and yesterday.</summary>
         public long[] TownToday { get; internal set; }
@@ -156,10 +159,10 @@ namespace Sim.Core.Business
 
         internal void WriteTo(IStateWriter h)
         {
-            h.WriteInt(Rivals.Count);
-            foreach (Rival x in Rivals) x.WriteTo(h);
+            h.WriteInt(Rivals.FindAll(x => x.Kind != Definitions.ShopKind.Meals).Count);
+            foreach (Rival x in Rivals) if (x.Kind != Definitions.ShopKind.Meals) x.WriteTo(h);
             h.WriteLong(Day);
-            foreach (long v in LostToday) h.WriteLong(v);
+            for (int k = 0; k < OlderKinds; k++) h.WriteLong(LostToday[k]);
             h.WriteInt(TownToday.Length);
             for (int i = 0; i < TownToday.Length; i++)
             {
@@ -167,12 +170,23 @@ namespace Sim.Core.Business
                 h.WriteLong(TownYesterday[i]);
             }
             // Schema 15 (ADR 0095): newcomers and the season's lost customers; hashed only once there's any, so older replays keep their hash.
-            bool any = Newcomers.Count > 0 || System.Array.Exists(LostSeason, v => v != 0);
+            bool any = Newcomers.Count > 0 || System.Array.FindIndex(LostSeason, 0, OlderKinds, v => v != 0) >= 0;
             if (h.Hashing ? any : !(h is SaveWriter w && w.Schema < 15))
             {
                 h.WriteInt(Newcomers.Count);
                 foreach (Rival x in Newcomers) x.WriteNewcomer(h);
-                foreach (long v in LostSeason) h.WriteLong(v);
+                for (int k = 0; k < OlderKinds; k++) h.WriteLong(LostSeason[k]);
+            }
+            // Schema 23 (spec 028 §3.7): the restaurant's diners (the town dhaba's figures and the customers nobody fed); hashed only once the restaurant has opened.
+            bool meals = LostToday[(int)Definitions.ShopKind.Meals] != 0 || LostSeason[(int)Definitions.ShopKind.Meals] != 0
+                || Rivals.Exists(x => x.Kind == Definitions.ShopKind.Meals && (x.LastArrivals != 0 || x.CustomersToday != 0 || x.SeasonServed != 0 || x.LastShare != Fixed.Zero || x.ChangedAt != 0));
+            if (h.Hashing ? meals : !(h is SaveWriter m23 && m23.Schema < Town.TownshipState.GrowthSchema))
+            {
+                h.WriteLong(LostToday[(int)Definitions.ShopKind.Meals]);
+                h.WriteLong(LostSeason[(int)Definitions.ShopKind.Meals]);
+                List<Rival> dining = Rivals.FindAll(x => x.Kind == Definitions.ShopKind.Meals);
+                h.WriteInt(dining.Count);
+                foreach (Rival x in dining) x.WriteTo(h);
             }
         }
 
@@ -187,7 +201,7 @@ namespace Sim.Core.Business
                 if (x.Def >= 0) s.Rivals[x.Def] = x;
             }
             s.Day = r.ReadLong();
-            for (int k = 0; k < s.LostToday.Length; k++) s.LostToday[k] = r.ReadLong();
+            for (int k = 0; k < OlderKinds; k++) s.LostToday[k] = r.ReadLong();
             int goods = r.ReadCount();
             for (int i = 0; i < goods; i++)
             {
@@ -198,7 +212,16 @@ namespace Sim.Core.Business
             if (r.Schema < 15) return s; // schema 14: no newcomers yet
             int m = r.ReadCount();
             for (int i = 0; i < m; i++) s.Newcomers.Add(Rival.ReadNewcomer(r, config));
-            for (int k = 0; k < s.LostSeason.Length; k++) s.LostSeason[k] = r.ReadLong();
+            for (int k = 0; k < OlderKinds; k++) s.LostSeason[k] = r.ReadLong();
+            if (r.Schema < Town.TownshipState.GrowthSchema) return s;
+            s.LostToday[(int)Definitions.ShopKind.Meals] = r.ReadLong();
+            s.LostSeason[(int)Definitions.ShopKind.Meals] = r.ReadLong();
+            int dining = r.ReadCount();
+            for (int i = 0; i < dining; i++)
+            {
+                Rival x = Rival.ReadFrom(r, config);
+                if (x.Def >= 0) s.Rivals[x.Def] = x;
+            }
             return s;
         }
     }

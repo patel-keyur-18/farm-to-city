@@ -239,6 +239,8 @@ namespace Sim.View.Views
                 vm.Lines.Add(line);
             }
 
+            if (p.Hands.Count > 0) BenefitSheet.AddSection(ctx, vm, 0); // spec 028 §3.8: what your farm gives its hands
+
             // Who's asking for work: chosen on the hiring board (spec 015 §7).
             if (p.Applicants.Count > 0)
                 vm.Lines.Add(new LineVm(s.Get("people.applicants"), s.Plural("people.askingN", p.Applicants.Count), "applicant")
@@ -987,7 +989,7 @@ namespace Sim.View.Views
         private static string StaffName(ViewContext ctx, long place, long id)
         {
             if (place == 0) return HandName(ctx, id);
-            Worker w = ctx.Sim.State.People.WorkerAt(place);
+            Worker w = ctx.Sim.State.People.StaffAt(place);
             return w == null || w.Id != id ? ctx.Strings.Get("away.formerWorker") : PeopleWords.Name(ctx, w.Name);
         }
 

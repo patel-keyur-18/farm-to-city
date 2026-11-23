@@ -56,10 +56,7 @@ namespace Sim.Core.Commands
             bool preset = false;
             foreach (Maths.Fixed f in sim.Config.Game.Shops.PricePresets) if (f == PriceFactor) preset = true;
             if (!preset || Quality < 1 || Quality > 2) return CommandResult.Reject(RejectReason.InvalidArgument);
-            b.PriceFactor = PriceFactor;
-            Definitions.BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
-            if (Quality != b.Quality && t.TakesMilk) b.OwnPerDay = b.OwnPerDay * t.CupMl(Quality) / t.CupMl(b.Quality); // the same cups a day
-            b.Quality = Quality;
+            ShopRules.SetLook(sim, b, PriceFactor, Quality);
             return CommandResult.Ok;
         }
     }
@@ -222,6 +219,7 @@ namespace Sim.Core.Commands
             Business.Business b = sim.State.Businesses?.Find(BusinessId);
             if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
             if (b.Worker == WorkerKind.None) return CommandResult.Reject(RejectReason.NoWorker);
+            if (sim.State.People?.ManagerAt(b.Id) != null) return CommandResult.Reject(RejectReason.HasManager); // he works it: let him go instead
             People.Worker w = sim.State.People?.WorkerAt(b.Id);
             long severance = 0;
             if (w != null && w.SeasonsWorked > 0)
@@ -254,10 +252,227 @@ namespace Sim.Core.Commands
             Business.Business b = sim.State.Businesses?.Find(BusinessId);
             if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
             if (b.Worker != WorkerKind.None) return CommandResult.Reject(RejectReason.AlreadyStaffed);
+            if (sim.State.People?.ManagerAt(b.Id) != null) return CommandResult.Reject(RejectReason.HasManager); // his to run: let him go first
             Farm.FarmSystem.Accrue(sim);
             b.Worker = WorkerKind.Founder;
             Farm.FarmSystem.Refresh(sim);
             return CommandResult.Ok;
         }
+    }
+
+    /// <summary>
+    /// The payment term a seller offers one buyer (spec 028 §3.1): a business of yours (<see cref="BuyerId"/>) or a village shop (<see cref="BuyerRival"/>, its content id,
+    /// with <see cref="BuyerId"/> 0). The term is one of <c>invoices.json</c>'s ids; it applies to sales from then on.
+    /// </summary>
+    public sealed class SetTerms : TimedCommand
+    {
+        public long SellerId { get; }
+        public long BuyerId { get; }
+        public string BuyerRival { get; }
+        public string Term { get; }
+
+        public SetTerms(long at, long sellerId, long buyerId, string buyerRival, string term) : base(at)
+        {
+            SellerId = sellerId;
+            BuyerId = buyerId;
+            BuyerRival = buyerRival ?? "";
+            Term = term;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return InvoiceRules.SetTerms(sim, SellerId, BuyerId, BuyerRival, Term); }
+    }
+    /// <summary>
+    /// Offers the manager's post to an applicant of the board's manager post, to run one of your businesses (spec 028 §3.2): the asked wage,
+    /// 10% less or 10% more, the base wage for the rest of the season prepaid from the business's cash. One manager a business.
+    /// </summary>
+    public sealed class HireManager : TimedCommand
+    {
+        public long ApplicantId { get; }
+        public long BusinessId { get; }
+        public People.OfferLevel Level { get; }
+
+        public HireManager(long at, long applicantId, long businessId, People.OfferLevel level = People.OfferLevel.Asked) : base(at)
+        {
+            ApplicantId = applicantId;
+            BusinessId = businessId;
+            Level = level;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            if (!ManagerRules.On(sim)) return CommandResult.Reject(RejectReason.NoTownship);
+            People.Applicant a = sim.State.People.Applicant(ApplicantId);
+            if (a == null || a.Place != People.HiringRules.ManagerPlace) return CommandResult.Reject(RejectReason.UnknownApplicant);
+            Business.Business b = sim.State.Businesses.Find(BusinessId);
+            if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (sim.State.People.ManagerAt(b.Id) != null) return CommandResult.Reject(RejectReason.HasManager);
+            if (b.Worker == WorkerKind.Citizen || b.Worker == WorkerKind.Neighbour) return CommandResult.Reject(RejectReason.AlreadyStaffed); // he works it himself: let your worker go first
+            long wage = People.HiringRules.OfferWage(sim, a, Level, b.Id);
+            if (BusinessBooks.CanSpend(sim, b) < People.PeopleRules.RestOfSeason(sim, wage)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            if (a.CitizenId != 0 && !People.HouseholdRules.WorksOutside(sim, sim.State.Citizens.Citizen(a.CitizenId))) return CommandResult.Reject(RejectReason.UnknownApplicant);
+            People.HiringRules.Offer(sim, a, Level, wage, false, b);
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>Lets a business's manager go (spec 028 §3.2): he keeps the season's pay; after his first season, severance of 10% of his wage; you can run it yourself or hire another.</summary>
+    public sealed class DismissManager : TimedCommand
+    {
+        public long BusinessId { get; }
+
+        public DismissManager(long at, long businessId) : base(at) { BusinessId = businessId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return ManagerRules.Dismiss(sim, BusinessId); }
+    }
+
+    /// <summary>What you judge a manager on at each close (spec 028 §3.2): the season's profit, or its sales.</summary>
+    public sealed class SetManagerTarget : TimedCommand
+    {
+        public long BusinessId { get; }
+        public People.ManagerTarget Target { get; }
+
+        public SetManagerTarget(long at, long businessId, People.ManagerTarget target) : base(at)
+        {
+            BusinessId = businessId;
+            Target = target;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return ManagerRules.SetTarget(sim, BusinessId, Target); }
+    }
+    /// <summary>
+    /// Lists a business for sale (spec 028 §3.3): a buyer completes in 3 to 6 days at 90 to 105% of its worth then, never under what it holds; rushed, in a day at 85%.
+    /// It runs until the day it closes.
+    /// </summary>
+    public sealed class ListBusiness : TimedCommand
+    {
+        public long BusinessId { get; }
+        public bool Rushed { get; }
+
+        public ListBusiness(long at, long businessId, bool rushed) : base(at)
+        {
+            BusinessId = businessId;
+            Rushed = rushed;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return ExitRules.List(sim, BusinessId, Rushed); }
+    }
+
+    /// <summary>Takes a business off the market before a buyer completes (spec 028 §3.3).</summary>
+    public sealed class CancelBusinessSale : TimedCommand
+    {
+        public long BusinessId { get; }
+
+        public CancelBusinessSale(long at, long businessId) : base(at) { BusinessId = businessId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return ExitRules.Cancel(sim, BusinessId); }
+    }
+
+    /// <summary>Takes an investor's cash or a partner's savings into a business for a share of it (spec 028 §3.4).</summary>
+    public sealed class AcceptDeal : TimedCommand
+    {
+        public long OfferId { get; }
+
+        public AcceptDeal(long at, long offerId) : base(at) { OfferId = offerId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return OwnerRules.Accept(sim, OfferId); }
+    }
+
+    /// <summary>Says no to an offer: it costs nothing and may come again (spec 028 §3.4).</summary>
+    public sealed class DeclineDeal : TimedCommand
+    {
+        public long OfferId { get; }
+
+        public DeclineDeal(long at, long offerId) : base(at) { OfferId = offerId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return OwnerRules.Decline(sim, OfferId); }
+    }
+
+    /// <summary>Sells the business today to the rival who offered for it (spec 028 §3.4): the outside shares are paid first, as in any sale (§3.3).</summary>
+    public sealed class AcceptBuyOut : TimedCommand
+    {
+        public long OfferId { get; }
+
+        public AcceptBuyOut(long at, long offerId) : base(at) { OfferId = offerId; }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return OwnerRules.AcceptBuyOut(sim, OfferId); }
+    }
+
+    /// <summary>Buys an outside owner's share back at the business's worth × the share (spec 028 §3.4): an investor's after four seasons, a partner's any time.</summary>
+    public sealed class BuyBackShare : TimedCommand
+    {
+        public long BusinessId { get; }
+        public StakeKind Kind { get; }
+
+        public BuyBackShare(long at, long businessId, StakeKind kind) : base(at)
+        {
+            BusinessId = businessId;
+            Kind = kind;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return OwnerRules.BuyBack(sim, BusinessId, Kind); }
+    }
+
+    /// <summary>Gives (or stops giving) one benefit to all of an employer's workers (spec 028 §3.8): a business's id, or 0 for your farm's hands.</summary>
+    public sealed class SetBenefit : TimedCommand
+    {
+        public long Employer { get; }
+        public People.Benefit Benefit { get; }
+        public bool On { get; }
+
+        public SetBenefit(long at, long employer, People.Benefit benefit, bool on) : base(at)
+        {
+            Employer = employer;
+            Benefit = benefit;
+            On = on;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return People.BenefitRules.Set(sim, Employer, Benefit, On); }
+    }
+
+    /// <summary>Starts or stops a business's night shift (spec 028 §3.8).</summary>
+    public sealed class SetNightShift : TimedCommand
+    {
+        public long BusinessId { get; }
+        public bool On { get; }
+
+        public SetNightShift(long at, long businessId, bool on) : base(at)
+        {
+            BusinessId = businessId;
+            On = on;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return On ? NightRules.Start(sim, BusinessId) : NightRules.Stop(sim, BusinessId); }
+    }
+
+    /// <summary>Sets a tuition centre's fee preset for the next enrolment (spec 028 §3.5): the pupils already in keep the fee they came at.</summary>
+    public sealed class SetTuitionFee : TimedCommand
+    {
+        public long BusinessId { get; }
+        public int Preset { get; }
+
+        public SetTuitionFee(long at, long businessId, int preset) : base(at)
+        {
+            BusinessId = businessId;
+            Preset = preset;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return TuitionRules.SetFee(sim, BusinessId, Preset); }
+    }
+
+    /// <summary>Switches one of a restaurant's dishes on or off (spec 028 §3.7): a dish off hands its diners to the rest, and the last cannot be switched off.</summary>
+    public sealed class SetDish : TimedCommand
+    {
+        public long BusinessId { get; }
+        public int Dish { get; }
+        public bool On { get; }
+
+        public SetDish(long at, long businessId, int dish, bool on) : base(at)
+        {
+            BusinessId = businessId;
+            Dish = dish;
+            On = on;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return MealsRules.SetDish(sim, BusinessId, Dish, On); }
     }
 }

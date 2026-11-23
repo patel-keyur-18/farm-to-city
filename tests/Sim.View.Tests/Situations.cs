@@ -321,6 +321,111 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>A Township with a flour mill and a bakery trading on terms (spec 028 §3.1, US-123): invoices standing between them and to the village shops, one gone overdue.</summary>
+        public static Simulation Invoicing()
+        {
+            Simulation sim = Township();
+            SetCash(sim, 3_000_000_00);
+            int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "flour_mill", tile, 300_000_00, false));
+            Hire(sim);
+            int tile2 = sim.State.Land.Tiles.First(t => t.Id != tile && Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "bakery", tile2, 300_000_00, false));
+            Hire(sim);
+            sim.State.Market.Stock[sim.Config.Game.Market.IndexOf("wheat")] += 20_000_000;
+            sim.AdvanceTo((T(sim) / 86_400 + 3) * 86_400 + 14 * 3600);
+            var open = sim.State.Township.Invoices.Open;
+            Assert.That(open.Count, Is.GreaterThan(0));
+            open.First(i => i.Buyer != 0).Stage = Sim.Core.Business.InvoiceStage.Overdue; // the bakery's atta, long unpaid
+            return sim;
+        }
+
+        /// <summary>The first applicant for the manager's post: a townsperson at once, else the first migrant to come.</summary>
+        internal static Applicant ManagerApplicant(Simulation sim)
+        {
+            for (int i = 0; i < 24 * 10 && sim.State.People.ApplicantsFor(HiringRules.ManagerPlace).Count == 0; i++) sim.AdvanceTo(T(sim) + Hour);
+            Assert.That(sim.State.People.ApplicantsFor(HiringRules.ManagerPlace), Is.Not.Empty, "nobody applied for the manager's post");
+            return sim.State.People.ApplicantsFor(HiringRules.ManagerPlace).First();
+        }
+
+        /// <summary>A Township with a bakery run by a manager (spec 028 §3.2, US-124): hired, a season closed with a report, and a mill beside it that has none.</summary>
+        public static Simulation Managed()
+        {
+            Simulation sim = Township();
+            SetCash(sim, 3_000_000_00);
+            int tile = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "bakery", tile, 300_000_00, false));
+            Hire(sim);
+            long bakery = sim.State.Businesses.Businesses.Last().Id;
+            int tile2 = sim.State.Land.Tiles.First(t => t.Id != tile && Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "flour_mill", tile2, 300_000_00, false));
+            Hire(sim);
+            Ok(sim, new PostJob(T(sim), HiringRules.ManagerPlace, false));
+            Applicant a = ManagerApplicant(sim);
+            Ok(sim, new LetWorkerGo(T(sim), bakery)); // he works it himself
+            Ok(sim, new HireManager(T(sim), a.Id, bakery, OfferLevel.High));
+            sim.AdvanceTo((T(sim) / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason + 2 * Hour);
+            Assert.That(sim.State.People.Workers.Any(w => w.IsManager && w.Mgr.ReportPeriod != 0), Is.True, "he reported at the close");
+            return sim;
+        }
+
+        /// <summary>A Township whose bakery has an investor (a share he can buy back) and whose mill has offers waiting: an investor's, a partner's and a rival's (spec 028 §3.4, US-247).</summary>
+        public static Simulation Owned()
+        {
+            Simulation sim = Managed();
+            // US-244: a tuition centre with pupils, a family of yours (two children, three seasons sat) beside the old village's.
+            int tile3 = sim.State.Land.Tiles.First(t => Sim.Core.Business.BusinessRules.Place(sim, t.Id) == RejectReason.None).Id;
+            Ok(sim, new FoundBusiness(T(sim), "tuition", tile3, 300_000_00, false));
+            Hire(sim);
+            Sim.Core.Business.Business centre = sim.State.Businesses.Businesses.Last();
+            Ok(sim, new FoundBusiness(T(sim), "restaurant", 0, 300_000_00, false, null, 0)); // US-246: a restaurant on a pitch in the square, built beside the centre
+            Hire(sim);
+            Sim.Core.Business.Business diner = sim.State.Businesses.Businesses.Last();
+            sim.AdvanceTo(System.Math.Max(centre.ReadyAt, diner.ReadyAt) + 60);
+            Sim.Core.People.CitizensState cs = sim.State.Citizens;
+            var family = new Sim.Core.People.Household { Id = cs.NextHouseholdId++, HomeId = 0, Savings = 500_000 * 100, Schooling = 4 * 800 * 100 };
+            foreach (int age in new[] { 35, 33, 9, 12 })
+            {
+                var c = new Sim.Core.People.Citizen { Id = cs.NextCitizenId++, Name = 0, BornSeason = Sim.Core.People.CitizenRules.BornFor(sim, age), HouseholdId = family.Id, Health = Sim.Core.Maths.Fixed.One, TuitionSeasons = age < 18 ? 3 : 0 };
+                cs.Citizens.Add(c);
+                family.Members.Add(c.Id);
+            }
+            cs.Households.Add(family);
+            centre.Stars = Sim.Core.Maths.Fixed.FromInt(4);
+            Sim.Core.Business.TuitionRules.Enrol(sim, centre);
+            centre.TuitionFees = 2_400 * 100;
+            Ok(sim, new BuyMachine(T(sim), "tempo")); // US-245: a tempo in the shed
+            foreach (Sim.Core.People.Household h in sim.State.Citizens.Households) { h.Income = 40_000 * 100; h.Leisure = 5_700 * 100; } // the households' leisure to eat out on
+            sim.AdvanceTo(T(sim) / 86_400 * 86_400 + 15 * 3600); // lunch is served
+            Assert.That(diner.SeasonServed, Is.GreaterThan(0), "the restaurant served diners at lunch");
+
+            Sim.Core.Business.Business bakery = sim.State.Businesses.Businesses.First(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == "bakery");
+            Sim.Core.Business.Business mill = sim.State.Businesses.Businesses.First(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == "flour_mill");
+            Sim.Core.Business.ExitState x = sim.State.Township.Exit;
+            Sim.Core.Business.DealOffer Add(Sim.Core.Business.DealKind kind, Sim.Core.Business.Business b, int pct, long coins, long who)
+            {
+                var o = new Sim.Core.Business.DealOffer { Id = x.NextOfferId++, Kind = kind, BusinessId = b.Id, Who = who, Share = Sim.Core.Maths.Fixed.FromRatio(pct, 100), Cash = coins * 100, RaisedAt = T(sim), ExpiresAt = T(sim) + 48 * 3600 };
+                x.Offers.Add(o);
+                return o;
+            }
+            Ok(sim, new AcceptDeal(T(sim), Add(Sim.Core.Business.DealKind.Investor, bakery, 15, 43_500, 0).Id));
+            bakery.Stakes[0].Period -= 5; // five seasons ago: it can be bought back
+            bakery.Stakes[0].Paid = 2_130 * 100;
+            foreach (Sim.Core.People.Household h in sim.State.Citizens.Households) h.Savings = 500_000 * 100;
+            Add(Sim.Core.Business.DealKind.Investor, mill, 20, 71_550, 2);
+            Add(Sim.Core.Business.DealKind.Partner, mill, 20, 28_800, sim.State.Citizens.Households[0].Id);
+            Add(Sim.Core.Business.DealKind.BuyOut, bakery, 104, 341_000, 1);
+            // US-258: benefits on the bakery and the farm, the grid on, the bakery on a night shift and the mill offered one.
+            Ok(sim, new SetBenefit(T(sim), bakery.Id, Sim.Core.People.Benefit.Meal, true));
+            Ok(sim, new SetBenefit(T(sim), bakery.Id, Sim.Core.People.Benefit.Leave, true));
+            sim.State.Township.UtilitiesBuilt |= 1 << Sim.Core.Definitions.UtilityDef.Grid;
+            bakery.ShortDays = 0b11;
+            mill.ShortDays = 0b111;
+            bakery.ShortDays = 0b111;
+            Ok(sim, new SetNightShift(T(sim), bakery.Id, true));
+            return sim;
+        }
+
         /// <summary>The Township with its works built and land in use: the clinic and quarters, the civic works, and three bought parcels leased, zoned and listed (spec 023, 024).</summary>
         /// <summary>The built Township with a card waiting for every kind of event, and some answered (US-154).</summary>
         public static Simulation Events()
@@ -456,6 +561,9 @@ namespace Sim.View.Tests
             yield return Irrigated();
             yield return Equipped();
             yield return Township();
+            yield return Invoicing();
+            yield return Managed();
+            yield return Owned();
             yield return TownshipBuilt();
             yield return Kiln();
             yield return Promises();

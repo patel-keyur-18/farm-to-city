@@ -121,7 +121,9 @@ namespace Sim.Core.Farm
         {
             if (sim.State.Market.Trip == null) return Fixed.Zero;
             MandiDef m = sim.Config.Game.Market.Mandi;
-            return m.FounderHours.MulRatio(24, m.TripHours);
+            Market.MandiTrip trip = sim.State.Market.Trip;
+            int legs = System.Math.Max(1, trip.Legs); // a tempo's leg takes your half hour each (spec 028 §3.6)
+            return m.FounderHours.MulRatio(24 * legs, System.Math.Max(1, (int)((trip.ReturnAt - trip.DepartedAt) / 3600)));
         }
 
         /// <summary>The founder's hours a day on their own fields: rate × (1 − dayLabourShare). Spec 006 adds hired hours.</summary>

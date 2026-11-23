@@ -103,11 +103,15 @@ namespace Sim.View.Views
             { "businessArea", BusinessArea }, { "businessFee", BusinessFee }, { "businessTrader", BusinessTrader }, { "businessWage", BusinessWage },
             { "businessOwn", BusinessOwn }, { "businessWorker", BusinessWorker }, { "businessHours", BusinessHours }, { "businessMarket", BusinessMarket },
             { "businessCash", BusinessCash }, { "booksLine", BooksLine }, { "booksPlan", BooksPlan },
+            { "businessWorth", BusinessWorthWhy }, { "businessHolds", BusinessHoldsWhy }, { "businessSale", BusinessSaleWhy }, { "businessBranch", BusinessBranchWhy }, // spec 028 §3.3
+            { "benefit", BenefitWhy }, { "loyalty", LoyaltyWhy }, { "night", NightWhy }, { "investorOffer", InvestorOfferWhy }, { "partnerOffer", PartnerOfferWhy }, { "dealBuyout", DealBuyoutWhy }, { "ownerRow", OwnerRowWhy }, { "ownerPaid", OwnerPaidWhy }, { "outsideLimit", OutsideLimitWhy }, { "shareBack", ShareBackWhy }, { "dealOffer", DealOfferWhy }, // spec 028 §3.4
+            { "managerWage", ManagerWage }, { "managerStyle", ManagerStyle }, { "managerApplicant", ManagerApplicant }, { "managerMiss", ManagerMiss }, { "managerTarget", ManagerGoal }, { "managerRaise", ManagerRaise }, // spec 028 §3.2
+            { "invoiceTerms", InvoiceTerms }, { "invoiceOwed", InvoiceOwed }, { "invoiceLine", InvoiceLineWhy }, { "invoiceStop", InvoiceStop }, // spec 028 §3.1
             { "planCost", (c, i) => PlanLine(c, i, "cost") }, { "planFees", (c, i) => PlanLine(c, i, "fees") }, { "planSales", (c, i) => PlanLine(c, i, "sales") },
             { "planWheat", (c, i) => PlanLine(c, i, "wheat") }, { "planPower", (c, i) => PlanLine(c, i, "power") }, { "planRepairs", (c, i) => PlanLine(c, i, "repairs") },
             { "planDepreciation", (c, i) => PlanLine(c, i, "depreciation") }, { "planWage", (c, i) => PlanLine(c, i, "wage") },
             { "planProfit", (c, i) => PlanLine(c, i, "profit") }, { "planCash", (c, i) => PlanLine(c, i, "cash") }, { "planPayback", (c, i) => PlanLine(c, i, "payback") },
-            { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planMonsoon", (c, i) => PlanLine(c, i, "monsoon") }, { "kiln", KilnWhy }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
+            { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planMonsoon", (c, i) => PlanLine(c, i, "monsoon") }, { "kiln", KilnWhy }, { "tempo", TempoWhy }, { "tuition", TuitionWhy }, { "meals", MealsWhy }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
             { "businessOverdraft", BusinessOverdraft }, { "businessClose", BusinessClose },
             { "businessPeople", BusinessPeople }, { "recipeShops", RecipeShops }, { "recipeInput", RecipeInput }, { "recipeMade", RecipeMade },
             { "recipeStock", RecipeStock }, { "recipeMix", RecipeMix }, { "dairyMilk", DairyMilk }, { "dairyNeighbours", DairyNeighbours },
@@ -119,7 +123,7 @@ namespace Sim.View.Views
             // The school (spec 018).
             { "road", RoadWhy }, { "clinic", ClinicWhy }, { "civic", CivicWhy }, { "utility", UtilityWhy }, { UpgradeSheet.Why, UpgradeHouseWhy }, { "utilityTown", UtilityTownWhy }, { "lane", LaneWhy }, { "build", BuildWhy }, { "cohort", CohortWhyView },
             { "schoolCost", SchoolCost }, { "schoolUpkeep", SchoolUpkeep }, { "schoolPupils", SchoolPupils },
-            { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "codex", Codex },
+            { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "citizen.tuition", CitizenTuition }, { "codex", Codex },
             // The town treasury (spec 021).
             { "treasuryBalance", TreasuryBalance }, { "treasuryUntied", TreasuryUntied }, { "treasuryTied", TreasuryTied }, { "treasuryRents", TreasuryRents },
             { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryWindow", TreasuryWindow }, { "policy", PolicyWhy }, { "taxHouse", TaxHouseWhy }, { "taxBusiness", TaxBusinessWhy }, { "taxCollected", TaxCollectedWhy }, { "treasuryAccount", TreasuryAccount },

@@ -37,13 +37,13 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuildSilagePit), typeof(BuyChaffCutter), typeof(FitSolarPanel), typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(AnswerEvent), typeof(AcceptContract), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition), typeof(ScheduleFestival));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(HireManager), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(AnswerEvent), typeof(AcceptContract), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition), typeof(ScheduleFestival), typeof(BuyBackShare), typeof(SetNightShift));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
-                typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(RepealPolicy));
+                typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(DismissManager), typeof(ListBusiness), typeof(RepealPolicy), typeof(AcceptBuyOut));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
                 typeof(SellToTrader), typeof(DeliverOrder), typeof(GoToMandi), typeof(Buy), typeof(BuyMedicine), typeof(HireLabourers), typeof(Offer), typeof(Withdraw),
                 typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetKeepHeifers), typeof(SetHireOut), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
-                typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetStandingOrder),
+                typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetTerms), typeof(SetManagerTarget), typeof(CancelBusinessSale), typeof(AcceptDeal), typeof(DeclineDeal), typeof(SetBenefit), typeof(SetTuitionFee), typeof(SetDish), typeof(SetStandingOrder),
                 typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(UnzoneParcel), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
                 typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(PostCivicJob), typeof(DismissStaff), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
                 typeof(CompleteStep), typeof(SkipFirstSession), typeof(FindCodexCards), typeof(ReadCodexCard), typeof(HearAdvisors), typeof(SetCropInsurance), typeof(SetPropertyInsurance), typeof(SetBusinessInsurance));
@@ -122,6 +122,7 @@ namespace Sim.View.Views
             long cash = after.State.Ledger.Cash - sim.State.Ledger.Cash;
             if (c is AnswerEvent && cash == 0) return null; // a choice that costs nothing is just answered (spec 027 §3.1)
             if ((c is RentWarehouse || c is RentColdStore) && cash == 0) return null; // stopping or cutting the rent spends nothing: no card (ADR 0103)
+            if (c is SetNightShift stop && !stop.On) return null; // stopping it spends nothing: no card
             if (c is SetSavingsCover cover && !cover.Always) return null; // back to Ask me: nothing can move, so nothing to ask
             long owedBefore = Owed(sim), owedAfter = Owed(after);
             long taken = NewLoans(sim, after, out Loan newest);
@@ -144,6 +145,8 @@ namespace Sim.View.Views
             else if (c is ScheduleFestival fest) Festival(ctx, vm, sim, after, fest);
             else if (c is RepealPolicy repeal) Repealing(ctx, vm, sim, repeal);
             else if (c is ListParcel || c is CancelSale) Listing(ctx, vm, c);
+            else if (c is ListBusiness sellIt) ListingBusiness(ctx, vm, sellIt);
+            else if (c is SetNightShift night) NightCard(ctx, vm, night);
             else if (c is ZoneParcel zp) Zoning(ctx, vm, zp);
             else if (c is LeaseOutLand || c is EndLease) Leasing(ctx, vm, c);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
@@ -226,6 +229,40 @@ namespace Sim.View.Views
         }
 
         /// <summary>A slow sale's card (spec 024 §3.4): the land value now, the wait, what comes then; or the listing taken off. A tap, and good news: nothing is lost either way.</summary>
+        /// <summary>Listing a business (spec 028 §3.3): its worth, what a buyer pays and when; nothing is paid, and it can be taken back until a buyer completes.</summary>
+        private static void ListingBusiness(ViewContext ctx, ConfirmCardVm vm, ListBusiness c)
+        {
+            var s = ctx.Strings;
+            Sim.Core.Business.Business b = ctx.Sim.State.Businesses.Find(c.BusinessId);
+            Sim.Core.Business.Worth w = Sim.Core.Business.ExitRules.Valuation(ctx.Sim, b);
+            Sim.Core.Definitions.ExitDef d = Sim.Core.Business.ExitRules.Defs(ctx.Sim);
+            vm.Reassure = true;
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ListBusiness.worth"), ctx.Fmt.Coins(w.Value)));
+            if (b.Stakes.Count > 0) vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ListBusiness.outside"), ctx.Fmt.Percent(Sim.Core.Business.OwnerRules.Outside(b)))); // gap 11: outside owners are paid first, from the price
+            if (c.Rushed)
+            {
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ListBusiness.wait"), ctx.Fmt.Duration(d.RushedDays * 86_400L)));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ListBusiness.receiveRushed"), ctx.Fmt.Coins(Sim.Core.Business.ExitRules.PriceAt(w, d.RushedShare)), total: true));
+            }
+            else
+            {
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ListBusiness.wait"), s.Get("exit.days", "min", ctx.Fmt.Integer(d.SaleDaysMin), "max", ctx.Fmt.Integer(d.SaleDaysMax))));
+                vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.ListBusiness.receive"), ctx.Fmt.Coins(Sim.Core.Business.ExitRules.PriceAt(w, d.BuyerLow)) + " – " + ctx.Fmt.Coins(Sim.Core.Business.ExitRules.PriceAt(w, d.BuyerHigh)), total: true));
+            }
+        }
+
+        /// <summary>Starting a night shift (spec 028 §3.8): the second worker's wage a season, what the business pays now, and the hours; the business's cash, not yours.</summary>
+        private static void NightCard(ViewContext ctx, ConfirmCardVm vm, SetNightShift c)
+        {
+            var s = ctx.Strings;
+            Sim.Core.Business.Business b = ctx.Sim.State.Businesses.Find(c.BusinessId);
+            Sim.Core.Definitions.BenefitsDef d = Sim.Core.People.BenefitRules.Defs(ctx.Sim);
+            long wage = Sim.Core.Business.NightRules.Wage(ctx.Sim, b);
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetNightShift.wage"), ctx.Fmt.Coins(wage)));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetNightShift.hours"), s.Get("night.hours", "from", ctx.Fmt.Integer(d.NightStart), "to", ctx.Fmt.Integer(d.NightEnd))));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetNightShift.now"), ctx.Fmt.Coins(Sim.Core.People.PeopleRules.RestOfSeason(ctx.Sim, wage)), total: true));
+        }
+
         private static void Listing(ViewContext ctx, ConfirmCardVm vm, Command c)
         {
             var s = ctx.Strings;

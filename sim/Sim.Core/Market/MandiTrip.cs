@@ -32,9 +32,12 @@ namespace Sim.Core.Market
         /// <summary>The cart hire paid at departure (1/100 coin).</summary>
         public long CartHire { get; internal set; }
 
+        /// <summary>The legs a tempo makes on this trip (US-245, schema 23), or 0 when another vehicle carries it.</summary>
+        public int Legs { get; internal set; }
+
         internal MandiTrip Clone()
         {
-            var copy = new MandiTrip { DepartedAt = DepartedAt, ReturnAt = ReturnAt, JobId = JobId, CartHire = CartHire };
+            var copy = new MandiTrip { DepartedAt = DepartedAt, ReturnAt = ReturnAt, JobId = JobId, CartHire = CartHire, Legs = Legs };
             copy.Loads.AddRange(Loads);
             return copy;
         }
@@ -47,6 +50,7 @@ namespace Sim.Core.Market
             h.WriteLong(ReturnAt);
             h.WriteLong(JobId);
             h.WriteLong(CartHire);
+            if (h.Hashing ? Legs != 0 : !(h is SaveWriter w23 && w23.Schema < Town.TownshipState.GrowthSchema)) h.WriteInt(Legs); // schema 23; hashed once a tempo carries it
         }
 
         internal static MandiTrip ReadFrom(SaveReader r)
@@ -62,6 +66,7 @@ namespace Sim.Core.Market
             t.ReturnAt = r.ReadLong();
             t.JobId = r.ReadLong();
             t.CartHire = r.ReadLong();
+            if (r.Schema >= Town.TownshipState.GrowthSchema) t.Legs = r.ReadInt();
             return t;
         }
     }

@@ -26,7 +26,8 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
             if (b.Worker == WorkerKind.Founder) return s.Get("business.workerYou");
-            Worker w = ctx.Sim.State.People?.WorkerAt(b.Id);
+            Worker w = ctx.Sim.State.People?.StaffAt(b.Id);
+            if (w != null && w.IsManager) return s.Get("business.workerManager", "name", PeopleWords.Name(ctx, w.Name));
             if (w != null) return s.Get("business.workerCitizen", "name", PeopleWords.Name(ctx, w.Name), "role", s.Get("business.role." + t.Worker));
             return s.Get("business.workerNone");
         }
@@ -111,6 +112,7 @@ namespace Sim.View.Views
             if (t.IsShop) ShopResearch.Add(ctx, vm, t, type); // spec 017: who buys, the rivals, your share
             else if (t.ByRecipe) AddRecipeResearch(ctx, vm, t, type);
             else if (t.IsKiln) KilnSheet.AddResearch(ctx, vm, t, type);
+            else if (t.IsTuition) TuitionSheet.AddResearch(ctx, vm, t, type);
             else AddMillResearch(ctx, vm, t, type);
             vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "research.cost", t)), ctx.Fmt.Coins(BusinessRules.Cost(sim, t, t.IsShop ? 0 : -1)), "planCost", BusinessWords.PlanId(type, false)) { Icon = t.Id });
             vm.Actions.Add(ActionVm.Open("plan", s.Get("research.plan"), new SheetRequest("BusinessPlan", type, "hire")));
@@ -207,9 +209,9 @@ namespace Sim.View.Views
                 new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(self, !loan)));
             vm.Lines.Add(funding);
             vm.Lines.Add(LineVm.Header(s.Get(BusinessWords.Key(ctx, "plan.season", t))));
-            if (!t.ByRecipe && !t.IsShop && !t.IsKiln) vm.Lines.Add(new LineVm(s.Get("plan.fees"), ctx.Fmt.Coins(p.Fees), "planFees", id));
+            if (!t.ByRecipe && !t.IsShop && !t.IsKiln && !t.IsTuition) vm.Lines.Add(new LineVm(s.Get("plan.fees"), ctx.Fmt.Coins(p.Fees), "planFees", id));
             vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.sales", t)), ctx.Fmt.Coins(p.Sales), "planSales", id));
-            if (!t.IsKiln) vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.wheat", t), "kg", t.TakesMilk ? ctx.Fmt.Litres(BusinessRules.DefaultOwnPerDay(sim, t)) : ctx.Fmt.Kg(t.OwnPerDay)),
+            if (!t.IsKiln && !t.IsTuition) vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.wheat", t), "kg", t.TakesMilk ? ctx.Fmt.Litres(BusinessRules.DefaultOwnPerDay(sim, t)) : ctx.Fmt.Kg(t.OwnPerDay)),
                 "−" + ctx.Fmt.Coins(p.Wheat), "planWheat", id));
             if (!t.IsShop || p.Power > 0) vm.Lines.Add(new LineVm(s.Get(BusinessWords.Key(ctx, "plan.power", t)), "−" + ctx.Fmt.Coins(p.Power), "planPower", id));
             if (!t.IsShop || p.Repairs > 0) vm.Lines.Add(new LineVm(s.Get("plan.repairs"), "−" + ctx.Fmt.Coins(p.Repairs), "planRepairs", id)); // a handcart needs none
@@ -239,7 +241,7 @@ namespace Sim.View.Views
         /// <summary>The hours a day you'd work there (its day, up to yours) and what they'd earn a season as day labour.</summary>
         public static void HoursOff(Simulation sim, BusinessTypeDef t, out int hours, out long value)
         {
-            hours = System.Math.Min(t.CloseHour - t.OpenHour, (int)sim.State.Farm.Founder.TodayHours.RoundToLong());
+            hours = System.Math.Min(t.OpenSpan(t.OpenHour, t.CloseHour), (int)sim.State.Farm.Founder.TodayHours.RoundToLong());
             value = Sim.Core.Finance.Money.MulRate(MarketRules.Indexed(sim, sim.Config.Game.Farm.Founder.DayLabourWagePerHour), Fixed.FromInt(hours * sim.Clock.DaysPerSeason));
         }
 
@@ -328,9 +330,10 @@ namespace Sim.View.Views
             if (b.Status == BusinessStatus.Closed) return s.Get("business.closed");
             int hour = (int)(ctx.Now % 86_400 / 3600);
             if (BusinessRules.TypeOf(ctx.Sim, b).IsKiln && !KilnRules.Fires(ctx.Sim)) return s.Get("business.kilnMonsoon"); // wet clay can't be fired
-            if (BusinessRules.OpenAt(ctx.Sim, b, hour)) return s.Get("business.openNow", "close", b.CloseHour + ":00");
+            MealsDef sittings = BusinessRules.TypeOf(ctx.Sim, b).Meals; // a restaurant shuts between lunch and dinner
+            if (BusinessRules.OpenAt(ctx.Sim, b, hour)) return s.Get("business.openNow", "close", (sittings != null && hour < sittings.BreakFrom ? sittings.BreakFrom : b.CloseHour) + ":00");
             if (!BusinessRules.Staffed(ctx.Sim, b)) return s.Get(b.Worker == WorkerKind.None ? "business.shutNoWorker" : "business.shutAway");
-            return s.Get("business.shutNow", "open", b.OpenHour + ":00");
+            return s.Get("business.shutNow", "open", (sittings != null && hour >= sittings.BreakFrom && hour < sittings.BreakTo ? sittings.BreakTo : b.OpenHour) + ":00");
         }
 
         public static SheetVm Build(ViewContext ctx, long id, string tab = null)
@@ -349,7 +352,9 @@ namespace Sim.View.Views
                 ActionVm.Open("tab:" + Settings, s.Get("business.tabSettings"), new SheetRequest("Business", id, Settings)),
             };
             if (t.IsShop) vm.Tabs.Insert(1, ActionVm.Open("tab:" + ShopSheet.Customers, s.Get("shop.tabCustomers"), new SheetRequest("Business", id, ShopSheet.Customers)));
-            if (tab == ShopSheet.Customers && t.IsShop) ShopSheet.AddCustomers(ctx, vm, b, t);
+            if (InvoiceSheet.Applies(ctx, b)) vm.Tabs.Insert(t.IsShop ? 2 : 1, ActionVm.Open("tab:" + InvoiceSheet.Tab, s.Get("business.tabOrders"), new SheetRequest("Business", id, InvoiceSheet.Tab))); // spec 028 §3.1, from the Township
+            if (tab == InvoiceSheet.Tab && InvoiceSheet.Applies(ctx, b)) InvoiceSheet.AddOrders(ctx, vm, b, t);
+            else if (tab == ShopSheet.Customers && t.IsShop) ShopSheet.AddCustomers(ctx, vm, b, t);
             else if (tab == Settings) AddSettings(ctx, vm, b, t);
             else if (tab == Books) BusinessBooksSheet.AddBooks(ctx, vm, b);
             else AddToday(ctx, vm, b, t);
@@ -363,6 +368,7 @@ namespace Sim.View.Views
             if (t.IsShop) ShopSheet.AddToday(ctx, vm, b, t); // spec 017: sold today, what's out
             if (t.ByRecipe) AddRecipeToday(ctx, vm, b, t);
             else if (t.IsKiln) KilnSheet.AddToday(ctx, vm, b, t);
+            else if (t.IsTuition) TuitionSheet.AddToday(ctx, vm, b, t);
             else if (!t.IsShop) AddMillToday(ctx, vm, b, t);
             if (!t.IsShop && ShopRules.Rated(t) && ShopRules.Defs(sim) != null) vm.Lines.Add(ShopSheet.StarsLine(ctx, b)); // the mill earns stars too (ADR 0092)
             AddMoney(ctx, vm, b, t);
@@ -410,6 +416,7 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
+            ManagerSheet.AddToday(ctx, vm, b); // spec 028 §3.2: who runs it, above who works here
             vm.Lines.Add(WorkerLine(ctx, b));
             Worker hired = BusinessRules.HiredWorker(sim, b);
             if (hired != null && b.Status == BusinessStatus.Open) vm.Lines.Add(StaffView.Output(ctx, b.Id, hired));
@@ -446,9 +453,16 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             long id = b.Id;
-            Worker w = sim.State.People?.WorkerAt(b.Id);
+            Worker w = sim.State.People?.StaffAt(b.Id);
             var line = new LineVm(s.Get("business.worker"), BusinessWords.Worker(ctx, b), "businessWorker", b.Id)
                 { Icon = b.Worker == WorkerKind.Founder ? "person_founder" : w != null && PeopleWords.Female(ctx, w.Name) ? "person_hand_f" : "person_hand_m" };
+            if (w != null && w.IsManager)
+            {
+                int stars = (int)w.Skill.RoundToLong();
+                line.Stars = PeopleWords.Stars(ctx, stars, stars);
+                line.Note = s.Get("business.managerWorks"); // he works it himself; he is let go from his own section
+                return line;
+            }
             if (w == null)
             {
                 if (b.Worker == WorkerKind.None) { line.Note = s.Get("business.needsWorker"); line.NoteTone = Tone.Warn; }
@@ -475,6 +489,16 @@ namespace Sim.View.Views
 
         private static void AddSettings(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
         {
+            ManagerSheet.AddSettings(ctx, vm, b); // spec 028 §3.2: his section first
+            ExitSheet.AddSettings(ctx, vm, b); // spec 028 §3.3: what it is worth, and selling it
+            AddSettingsCore(ctx, vm, b, t);
+            BenefitSheet.AddSection(ctx, vm, b.Id); // spec 028 §3.8: what it gives its workers
+            BenefitSheet.AddNight(ctx, vm, b); // and a night shift when the day shift can't keep up
+            ManagerSheet.MarkSet(ctx, vm, b); // what he sets each morning is no longer yours to change
+        }
+
+        private static void AddSettingsCore(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
+        {
             if (t.IsShop) // spec 017: its own hours, price and goods
             {
                 ShopSheet.AddSettings(ctx, vm, b, t);
@@ -491,6 +515,7 @@ namespace Sim.View.Views
             bool market = b.BuyFromMarket;
             int open = b.OpenHour, close = b.CloseHour;
 
+            if (t.IsTuition) { TuitionSheet.AddSettings(ctx, vm, b, t); AddCash(ctx, vm, b, t); return; } // its evening is fixed; its fee is the choice
             var hours = new LineVm(s.Get("business.hours"), BusinessWords.Hours(ctx, open, close), "businessHours", id);
             hours.Action = ActionVm.Checked(ctx, "hours", s.Get("business.change"), BusinessWords.Hours(ctx, nextHours[0], nextHours[1]), ActionKind.Secondary,
                 at => new SetBusiness(at, id, nextHours[0], nextHours[1], fee, ownNow, market));

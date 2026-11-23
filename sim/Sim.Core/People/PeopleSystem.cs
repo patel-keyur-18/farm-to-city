@@ -346,6 +346,7 @@ namespace Sim.Core.People
             };
             h.PrepaymentId = Accrual.Open(sim, Account.HiredLabour, Account.PrepaidWages, prepay, t, (t / S + 1) * S, "hand:" + h.Id).Id;
             s.Hands.Add(h);
+            BenefitRules.ChargeNew(sim, 0); // spec 028 §3.8
             if (town == null) CitizenRules.HandHired(sim, h, a);
             else CitizenRules.TownHandHired(sim, h, town);
             s.Applicants.Remove(a);
@@ -417,6 +418,8 @@ namespace Sim.Core.People
                 h.Skill = skill > Fixed.FromInt(100) ? Fixed.FromInt(100) : skill;
                 sim.Emit(new HandSkillGrew(t, h.Id, h.Skill));
             }
+            BenefitRules.Renew(sim, 0); // spec 028 §3.8: the season's benefits for your hands, paid with their wages
+            BenefitRules.AtClose(sim); // and two or more kept through the close raise your name
             foreach (Hand h in s.Hands) if (h.Contract == ContractState.Active) HrRules.Draw(sim, h);
             FarmSystem.Refresh(sim);
         }

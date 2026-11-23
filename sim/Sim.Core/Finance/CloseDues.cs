@@ -150,6 +150,8 @@ namespace Sim.Core.Finance
                 if (loan != null && loan.IsOpen) due.Loan = CreditRules.NextPayment(sim, loan, out _, out _);
                 Worker w = sim.State.People?.WorkerAt(b.Id);
                 if (b.Status == BusinessStatus.Open && w != null && !HrRules.Leaves(sim, w)) due.Wage = System.Math.Max(0, Town.PolicyRules.WageFloor(sim, w.Wage, People.HiringRules.MarketWage(sim, b.Id)) - w.Hr.Advance);
+                Worker boss = b.Status == BusinessStatus.Open ? sim.State.People?.ManagerAt(b.Id) : null; // his base wage too (the share of the profit comes out of the season's profit, not as a due)
+                if (boss != null && !HrRules.Leaves(sim, boss)) due.Wage += System.Math.Max(0, Town.PolicyRules.WageFloor(sim, boss.Wage, Business.ManagerRules.MarketWage(sim, b.Id)) - boss.Hr.Advance);
                 if (b.Pitch >= 0 && sim.Config.Game.Shops != null) due.Rent = MarketRules.Indexed(sim, sim.Config.Game.Shops.PitchRent);
                 due.Insurance = Town.InsuranceRules.NextBusiness(sim, b);
                 if (due.Total > 0) list.Add(due);

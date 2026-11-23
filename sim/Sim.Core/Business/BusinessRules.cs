@@ -109,6 +109,7 @@ namespace Sim.Core.Business
             if (tile < 0 && pitch < 0) tile = PlanTile(sim);
             if (t.IsShop) return ShopRules.Projected(sim, t, runYourself, loan, pitch, tile);
             if (t.IsKiln) return KilnRules.Projected(sim, t, runYourself, loan);
+            if (t.IsTuition) return TuitionRules.Projected(sim, t, runYourself, loan);
             if (t.ByRecipe) return ProjectedByRecipe(sim, t, runYourself, loan, mix ?? DefaultMix(sim, t), ownPerDay);
             int days = sim.Clock.DaysPerSeason;
             Fixed index = sim.State.Market.PriceIndex;
@@ -373,6 +374,8 @@ namespace Sim.Core.Business
             if (type < 0) return CommandResult.Reject(RejectReason.UnknownBusiness);
             BusinessTypeDef t = d.Types[type];
             if (!Unlocked(sim, t)) return CommandResult.Reject(RejectReason.EraLocked);
+            RejectReason tooMany = ExitRules.Branch(sim, type, out Business first); // spec 028 §3.3: a second of a kind is a branch of the first, up to the most
+            if (tooMany != RejectReason.None) return CommandResult.Reject(tooMany);
             if (pitch >= 0)
             {
                 // A pitch in the square (spec 017 §3.4): shops only, one shop a pitch.
@@ -406,12 +409,13 @@ namespace Sim.Core.Business
                 OpenHour = t.OpenHour, CloseHour = t.CloseHour, Fee = t.Fee, OwnPerDay = ownPerDay, Worker = runYourself ? WorkerKind.Founder : WorkerKind.None,
                 Ledger = new Ledger(), Stock = new long[goods], StockCost = new long[goods], Plan = plan, Day = now / Day,
                 Mix = t.Kind == ShopKind.Sweets ? ShopRules.DefaultMix(sim, t, tileId) : DefaultMix(sim, t), MadeToday = new long[goods],
-                BuyFromMarket = !t.IsKiln && t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
-                Pitch = pitch, PutOut = t.IsShop ? ShopRules.DefaultPutOut(sim, t, tileId) : new long[goods], Stars = sim.Config.Game.Shops?.StartStars ?? Fixed.FromRatio(5, 2),
+                BuyFromMarket = !t.IsKiln && t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg || t.IsMeals, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
+                Pitch = pitch, PutOut = t.IsShop ? ShopRules.DefaultPutOut(sim, t, tileId) : new long[goods], Stars = t.IsTuition ? t.Tuition.StartStars : sim.Config.Game.Shops?.StartStars ?? Fixed.FromRatio(5, 2),
             };
             string reference = "business:" + b.Id;
             sim.State.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.InvestmentInBusinesses, capital), new Posting(Account.Cash, -capital));
             b.Ledger.Post(now, sim.Period, "ledger.putCash", reference, new Posting(Account.Cash, capital), new Posting(Account.OwnersCapital, -capital));
+            if (first != null) ExitRules.StartAs(b, first); // its settings start as the first one's, its books and its manager its own
             s.Businesses.Add(b);
             if (financing != null) b.LoanId = CreditSystem.Create(sim, lender, loan, financing.TermSeasons, b.Id).Id; // to the business, your guarantee (§3.8)
             long building = MarketRules.Indexed(sim, ShopRules.BuildingValue(t, pitch)), equipment = MarketRules.Indexed(sim, t.EquipmentValue);
@@ -440,6 +444,7 @@ namespace Sim.Core.Business
                 sim.CompleteJob(job);
                 if (b == null || b.Status != BusinessStatus.Building) return;
                 b.Status = BusinessStatus.Open;
+                TuitionRules.Opened(sim, b); // a tuition centre's first pupils, at once
                 sim.Emit(new BusinessOpened(sim.State.Clock.SimTime, b.Id, b.Worker, b.WorkerCitizen));
             }
         }
@@ -454,7 +459,9 @@ namespace Sim.Core.Business
             Citizen c = sim.State.Citizens.Citizen(b.WorkerCitizen);
             bool working = c != null && c.Living && c.Job == CitizenJob.Business && c.Employer == b.Id;
             if (working && !HouseholdRules.IsElder(sim, c)) return;
-            long worker = sim.State.People.WorkerAt(b.Id)?.Id ?? 0;
+            People.Worker staff = sim.State.People.StaffAt(b.Id);
+            long worker = staff?.Id ?? 0;
+            bool manager = staff?.Mgr != null;
             LoseWorker(sim, b);
             if (working)
             {
@@ -462,12 +469,14 @@ namespace Sim.Core.Business
                 c.Story.Add(new StoryLine(StoryKind.Retired, sim.State.Clock.SimTime, 0));
                 HouseholdRules.SetBudget(sim, sim.State.Citizens.Household(c.HouseholdId));
             }
-            sim.Emit(new WorkerLeft(sim.State.Clock.SimTime, b.Id, worker, 0));
+            if (manager) sim.Emit(new ManagerLeft(sim.State.Clock.SimTime, b.Id, worker, 0));
+            else sim.Emit(new WorkerLeft(sim.State.Clock.SimTime, b.Id, worker, 0));
         }
 
         /// <summary>The worker leaves: a townsperson goes back to outside work (their household's budget follows).</summary>
         internal static void LoseWorker(Simulation sim, Business b)
         {
+            NightRules.Remove(sim, b, true); // no day worker, no night shift (spec 028 §3.8)
             HiringRules.WorkerGone(sim, b);
             if (b.Worker == WorkerKind.Citizen)
             {
@@ -496,9 +505,13 @@ namespace Sim.Core.Business
         {
             bool morning = MarketRules.HourOfDay(sim) == (sim.Config.Game.Market.Truck?.ArriveHour ?? 6);
             long[] took = null;
+            InvoiceRules.Hourly(sim); // spec 028 §3.1: invoices at their term's end are paid before the hour's work
+            ExitRules.Hourly(sim); // spec 028 §3.3: a buyer whose day has come completes, before the hour's work
+            if (morning) ManagerRules.Morning(sim); // spec 028 §3.2: each manager sets his business first, before the stalls fill and the makers start
             if (sim.State.Shops != null) ShopRules.NewDay(sim, (sim.State.Clock.SimTime - Hour) / Day); // yesterday's stars, then today's counts
             if (morning)
             {
+                TuitionRules.Morning(sim); // a tuition centre's stars move a tenth toward their target
                 KilnRules.Morning(sim); // the trader's stock, with what your kiln sells him, is set first: a build draws on it all day
                 // A new day's batches for every maker first (so what your shops still need is counted), then the stalls fill up from your
                 // store and businesses before the village shops buy what's left (spec 017 §5, ADR 0091 §2).
@@ -511,7 +524,7 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
                 if (b.Status == BusinessStatus.Open)
                 {
-                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsKiln && !Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour) && !Town.EventRules.Shut(sim, b)) Morning(sim, b, took);
+                    if (morning && !ShopRules.Stocked(TypeOf(sim, b)) && !TypeOf(sim, b).IsMeals && !TypeOf(sim, b).IsKiln && !TypeOf(sim, b).IsTuition && !Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour) && !Town.EventRules.Shut(sim, b)) Morning(sim, b, took);
                     Work(sim, b);
                 }
             ShopRules.Hourly(sim); // the customers (spec 017 §3.8), after the businesses' hour
@@ -520,7 +533,10 @@ namespace Sim.Core.Business
         /// <summary>Whether the business works in the hour of day <paramref name="hour"/>: open then and staffed (its worker not away on a course).</summary>
         public static bool OpenAt(Simulation sim, Business b, int hour)
         {
+            if (NightRules.Active(sim, b) && NightRules.NightHour(sim, hour)) // spec 028 §3.8: the night shift, on the grid, its worker not away
+                return b.Status == BusinessStatus.Open && !Town.EventRules.Shut(sim, b) && !WorkRules.Away(NightRules.Of(sim, b));
             if (b.Worker == WorkerKind.None || hour < b.OpenHour || hour >= b.CloseHour) return false;
+            if (TypeOf(sim, b).IsMeals && !MealsRules.Sitting(TypeOf(sim, b), hour)) return false; // the break between lunch and dinner
             if (Town.FestivalRules.ClosedForFestival(sim, TypeOf(sim, b), sim.State.Clock.SimTime - Hour)) return false; // a festival's day: only the stalls stay open (owner, 2026-11-20)
             if (Town.EventRules.Shut(sim, b)) return false; // a strike's pause or a fire's repair (spec 027)
             Worker w = HiredWorker(sim, b);
@@ -551,14 +567,15 @@ namespace Sim.Core.Business
         }
 
         /// <summary>The business's hired worker, or null when nobody is hired or you run it yourself.</summary>
-        public static Worker HiredWorker(Simulation sim, Business b) { return b.Worker == WorkerKind.Founder ? null : sim.State.People?.WorkerAt(b.Id); }
+        public static Worker HiredWorker(Simulation sim, Business b) { return b.Worker == WorkerKind.Founder ? null : sim.State.People?.StaffAt(b.Id); }
 
         /// <summary>The rate an hour (spec 015 §3.4): its grams an hour × its worker's share (a skill-50 worker's is 1); yours as rated when you run it.</summary>
-        public static long Capacity(Simulation sim, Business b)
+        public static long Capacity(Simulation sim, Business b, Worker by = null)
         {
             BusinessTypeDef t = TypeOf(sim, b);
-            Worker w = HiredWorker(sim, b);
-            return w == null ? t.GramsPerHour : WorkRules.RelativeOutput(sim, w).MulRatio(t.GramsPerHour, 1).RoundToLong();
+            Worker w = by ?? HiredWorker(sim, b);
+            long rate = w == null ? t.GramsPerHour : WorkRules.RelativeOutput(sim, w).MulRatio(t.GramsPerHour, 1).RoundToLong();
+            return ManagerRules.Scale(sim, b, rate); // a mis-set day makes only part of it (spec 028 §3.2)
         }
 
         /// <summary>The product of the worker's two traits' <paramref name="factor"/> (creative's sale, frugal's costs); 1 when you run it.</summary>
@@ -594,11 +611,19 @@ namespace Sim.Core.Business
             }
             int hour = (int)(start % Day / Hour);
             KeepStaffed(sim, b);
+            if (hour == t.CloseHour && b.Worker != WorkerKind.None) NightRules.EndOfDay(sim, b, t, start / Day); // spec 028 §3.8: did the day shift keep up with the day's plan?
             if (!OpenAt(sim, b, hour)) return;
             b.OpenToday = true;
-            Worker hired = HiredWorker(sim, b);
-            if (hired != null && Overtime(sim, b, hour) && !WorkRules.Pay(sim, hired, WorkRules.OvertimeHour(sim, hired), "ledger.overtime")) return; // past the overdraft: no overtime
-            if (ShopRules.Stocked(t)) return; // a stall sells in the shops' hour (spec 017 §3.8)
+            bool night = NightRules.Active(sim, b) && NightRules.NightHour(sim, hour);
+            Worker hired = night ? NightRules.Of(sim, b) : HiredWorker(sim, b);
+            if (!night && hired != null && Overtime(sim, b, hour) && !WorkRules.Pay(sim, hired, WorkRules.OvertimeHour(sim, hired), "ledger.overtime")) return; // past the overdraft: no overtime (a night worker's wage is the whole of it)
+            if (ShopRules.Stocked(t) || t.IsMeals) return; // a stall and a kitchen sell in the shops' hour (spec 017 §3.8)
+            if (t.IsTuition)
+            {
+                TuitionRules.Teach(sim, b, hour);
+                BusinessBooks.Sweep(sim, b);
+                return;
+            }
             if (t.IsKiln)
             {
                 KilnRules.Fire(sim, b);
@@ -609,13 +634,13 @@ namespace Sim.Core.Business
             {
                 long made = 0;
                 foreach (int p in t.Products) made += b.MadeToday[p];
-                long used = Make(sim, b, t);
+                long used = Make(sim, b, t, night ? hired : null);
                 if (made == 0 && used > 0) HrRules.FirstBatch(sim, b);
                 BusinessBooks.Sweep(sim, b);
                 if (used > 0) sim.Emit(new BusinessWorked(sim.State.Clock.SimTime, b.Id, 0, used));
                 return;
             }
-            long capacity = Capacity(sim, b), now = sim.State.Clock.SimTime;
+            long capacity = Capacity(sim, b, night ? hired : null), now = sim.State.Clock.SimTime;
             Fixed index = sim.State.Market.PriceIndex;
             string reference = "business:" + b.Id;
 
@@ -779,9 +804,9 @@ namespace Sim.Core.Business
         /// hour), from its stock and, if allowed, inputs bought at the market's import price, as far as its cash and overdraft pay;
         /// fuel is expensed, supplies go into the product's cost. Returns the grams of inputs used.
         /// </summary>
-        private static long Make(Simulation sim, Business b, BusinessTypeDef t)
+        private static long Make(Simulation sim, Business b, BusinessTypeDef t, Worker by = null)
         {
-            long capacity = Capacity(sim, b), used = 0;
+            long capacity = Capacity(sim, b, by), used = 0;
             foreach (RecipeDef r in t.Recipes)
             {
                 long want = b.Mix[r.Output] - b.MadeToday[r.Output];
@@ -803,7 +828,7 @@ namespace Sim.Core.Business
         }
 
         /// <summary>Good quality's extra on a batch's cost (the sweet shop's pure ghee and fresh paneer, §3.5, ADR 0092), or 0.</summary>
-        private static long GoodExtra(Simulation sim, Business b, long cost)
+        internal static long GoodExtra(Simulation sim, Business b, long cost)
         {
             BusinessTypeDef t = TypeOf(sim, b);
             return b.Quality == 2 && t.GoodRecipeExtra > Fixed.Zero ? Money.MulRate(cost, t.GoodRecipeExtra) : 0;
@@ -882,7 +907,7 @@ namespace Sim.Core.Business
                 foreach (int p in t.Products)
                 {
                     long q = System.Math.Min(b.Stock[p], ShopGramsPerDay(sim, t, p) - (took == null ? 0 : took[p])); // less what your stalls took (ADR 0091 §2)
-                    if (q > 0) Sold(sim, b, p, q, SalePrice(sim, b, MarketRules.Value(sim, p, q, MarketRules.Floor(sim, p))));
+                    if (q > 0) InvoiceRules.VillageShops(sim, b, p, q, SalePrice(sim, b, MarketRules.Value(sim, p, q, MarketRules.Floor(sim, p)))); // the grocer and tea stall, on terms from the Township (spec 028 §3.1)
                 }
                 foreach (int p in t.Products)
                 {
@@ -938,7 +963,7 @@ namespace Sim.Core.Business
         {
             if (b.Status != BusinessStatus.Open || b.Stock[good] <= 0) return 0;
             BusinessTypeDef t = TypeOf(sim, b);
-            if (t.IsShop || t.ByRecipe || t.IsKiln) return 0;
+            if (t.IsShop || t.ByRecipe || t.IsKiln || t.IsTuition) return 0;
             bool makes = false;
             foreach (BusinessOutput o in t.Outputs) if (o.Good == good) makes = true;
             if (!makes) return 0;
@@ -975,18 +1000,14 @@ namespace Sim.Core.Business
         {
             foreach (Business to in sim.State.Businesses.Businesses)
             {
-                if (to == from || to.Status != BusinessStatus.Open || from.Stock[good] <= 0) continue;
+                if (to == from || to.Status != BusinessStatus.Open || from.Stock[good] <= 0 || InvoiceRules.Blocked(sim, from, to)) continue;
                 long need = NeedOf(sim, to, good);
                 long q = System.Math.Min(from.Stock[good], need);
                 if (q <= 0) continue;
                 long value = MarketRules.Value(sim, good, q, MarketRules.Floor(sim, good));
                 q = System.Math.Min(q, BusinessBooks.CanSpend(sim, to) >= value ? q : 0);
                 if (q <= 0) continue;
-                BusinessBooks.Draw(sim, to, value);
-                to.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.boughtFromBusiness", "business:" + to.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
-                to.Stock[good] += q;
-                to.StockCost[good] += value;
-                Sold(sim, from, good, q, value);
+                InvoiceRules.Sale(sim, from, to, good, q, value);
             }
         }
 
@@ -1046,14 +1067,15 @@ namespace Sim.Core.Business
             b.StockCost[good] += value;
         }
 
-        internal static void Sold(Simulation sim, Business b, int good, long grams, long amount)
+        /// <summary>A business sells grams of a good: its stock leaves at cost, the sale is booked against <paramref name="paidTo"/> (cash, or Owed by buyers for a sale on terms).</summary>
+        internal static void Sold(Simulation sim, Business b, int good, long grams, long amount, Account paidTo = Account.Cash)
         {
             long cost = (long)((System.Numerics.BigInteger)b.StockCost[good] * grams / b.Stock[good]);
             b.Stock[good] -= grams;
             b.StockCost[good] -= cost;
             long now = sim.State.Clock.SimTime;
             string reference = "business:" + b.Id;
-            if (amount > 0) b.Ledger.Post(now, sim.Period, "ledger.sales", reference, new Posting(Account.Cash, amount), new Posting(Account.Sales, -amount));
+            if (amount > 0) b.Ledger.Post(now, sim.Period, "ledger.sales", reference, new Posting(paidTo, amount), new Posting(Account.Sales, -amount));
             if (cost > 0) b.Ledger.Post(now, sim.Period, "ledger.costOfGoods", reference, new Posting(Account.CostOfGoodsSold, cost), new Posting(Account.BusinessStock, -cost));
         }
 
@@ -1065,7 +1087,7 @@ namespace Sim.Core.Business
             if (sim.State.Businesses == null) return Fixed.Zero;
             Fixed day = sim.State.Farm.Founder.TodayHours, hours = Fixed.Zero;
             foreach (Business b in sim.State.Businesses.Businesses)
-                if (b.Status == BusinessStatus.Open && b.Worker == WorkerKind.Founder) hours += Fixed.FromInt(b.CloseHour - b.OpenHour);
+                if (b.Status == BusinessStatus.Open && b.Worker == WorkerKind.Founder) hours += Fixed.FromInt(TypeOf(sim, b).OpenSpan(b.OpenHour, b.CloseHour));
             return (hours < day ? hours : day) * Farm.FounderRules.Nutrition(sim);
         }
 
@@ -1100,10 +1122,15 @@ namespace Sim.Core.Business
                 }
                 long interest = Money.MulRate(BusinessBooks.Overdrawn(b), Defs(sim).OverdraftRate);
                 if (interest > 0) b.Ledger.Post(now, closing, "ledger.overdraftInterest", reference, new Posting(Account.Interest, interest), new Posting(Account.Overdraft, -interest));
+                ManagerRules.PayShare(sim, b, closing); // spec 028 §3.2: a tenth of the profit to his manager, before the tax
                 Town.TaxRules.BillBusiness(sim, b, closing); // spec 022 §3.2: tax on the season's profit, from its own cash
+                OwnerRules.PayProfit(sim, b, closing); // spec 028 §3.4: each outside owner's share of what is left
+                ManagerRules.Report(sim, b, closing); // and his report against the target, on the profit as the books show it
                 BusinessBooks.CloseSeason(sim, b, closing);
             }
             ShopRules.CloseSeason(sim);
+            TuitionRules.AtClose(sim); // spec 028 §3.5: a season of tuition adds its skill, then the new season's pupils are enrolled
+            OwnerRules.AtClose(sim); // spec 028 §3.4: what a profitable business is offered now
         }
 
         /// <summary>
@@ -1116,6 +1143,7 @@ namespace Sim.Core.Business
             foreach (Business b in sim.State.Businesses.Businesses)
             {
                 if (b.Status == BusinessStatus.Closed) continue;
+                if (b.Status == BusinessStatus.Open) ManagerRules.Renew(sim, b); // spec 028 §3.2: his new season's wage upfront, or he goes
                 Worker w = sim.State.People?.WorkerAt(b.Id);
                 if (b.Status == BusinessStatus.Open && w != null && HrRules.Leaves(sim, w))
                 {
@@ -1139,6 +1167,11 @@ namespace Sim.Core.Business
                         sim.Emit(new WagesMissed(sim.State.Clock.SimTime, b.Id, wage));
                         HrRules.Repute(sim, sim.Config.Game.People.Reputation.Lapse);
                     }
+                }
+                if (b.Status == BusinessStatus.Open)
+                {
+                    NightRules.Renew(sim, b); // spec 028 §3.8: the night worker's new season, upfront
+                    People.BenefitRules.Renew(sim, b.Id); // and the season's benefits for everyone it pays
                 }
                 if (b.Status == BusinessStatus.Open || b.Status == BusinessStatus.Building) ShopRules.PayRent(sim, b, sim.Period); // the new season's pitch rent, upfront (spec 017 §3.4)
                 Town.InsuranceRules.CloseBusiness(sim, b); // spec 027 §3.6: its premium from its own cash, or the policy ends

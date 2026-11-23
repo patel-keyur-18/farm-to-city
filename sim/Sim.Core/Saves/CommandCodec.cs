@@ -62,6 +62,12 @@ namespace Sim.Core.Saves
             AnswerEvent,
             SetCropInsurance, SetPropertyInsurance, SetBusinessInsurance,
             AcceptContract,
+            SetTerms,
+            HireManager, DismissManager, SetManagerTarget,
+            ListBusiness, CancelBusinessSale,
+            AcceptDeal, DeclineDeal, AcceptBuyOut, BuyBackShare,
+            SetBenefit, SetNightShift,
+            SetTuitionFee, SetDish,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -200,6 +206,20 @@ namespace Sim.Core.Saves
                 case SetPropertyInsurance c: At(c, Tag.SetPropertyInsurance); w.WriteBool(c.On); break;
                 case SetBusinessInsurance c: At(c, Tag.SetBusinessInsurance); w.WriteLong(c.BusinessId); w.WriteBool(c.On); break;
                 case AcceptContract c: At(c, Tag.AcceptContract); w.WriteLong(c.OfferId); break;
+                case ListBusiness c: At(c, Tag.ListBusiness); w.WriteLong(c.BusinessId); w.WriteBool(c.Rushed); break;
+                case CancelBusinessSale c: At(c, Tag.CancelBusinessSale); w.WriteLong(c.BusinessId); break;
+                case SetBenefit c: At(c, Tag.SetBenefit); w.WriteLong(c.Employer); w.WriteInt((int)c.Benefit); w.WriteBool(c.On); break;
+                case SetNightShift c: At(c, Tag.SetNightShift); w.WriteLong(c.BusinessId); w.WriteBool(c.On); break;
+                case SetTuitionFee c: At(c, Tag.SetTuitionFee); w.WriteLong(c.BusinessId); w.WriteInt(c.Preset); break;
+                case SetDish c: At(c, Tag.SetDish); w.WriteLong(c.BusinessId); w.WriteInt(c.Dish); w.WriteBool(c.On); break;
+                case AcceptDeal c: At(c, Tag.AcceptDeal); w.WriteLong(c.OfferId); break;
+                case DeclineDeal c: At(c, Tag.DeclineDeal); w.WriteLong(c.OfferId); break;
+                case AcceptBuyOut c: At(c, Tag.AcceptBuyOut); w.WriteLong(c.OfferId); break;
+                case BuyBackShare c: At(c, Tag.BuyBackShare); w.WriteLong(c.BusinessId); w.WriteInt((int)c.Kind); break;
+                case HireManager c: At(c, Tag.HireManager); w.WriteLong(c.ApplicantId); w.WriteLong(c.BusinessId); w.WriteInt((int)c.Level); break;
+                case DismissManager c: At(c, Tag.DismissManager); w.WriteLong(c.BusinessId); break;
+                case SetManagerTarget c: At(c, Tag.SetManagerTarget); w.WriteLong(c.BusinessId); w.WriteInt((int)c.Target); break;
+                case SetTerms c: At(c, Tag.SetTerms); w.WriteLong(c.SellerId); w.WriteLong(c.BuyerId); w.WriteString(c.BuyerRival); w.WriteString(c.Term); break;
                 case AnswerPetition c: At(c, Tag.AnswerPetition); w.WriteInt(c.PetitionId); w.WriteInt(c.Closes); break;
                 case ListParcel c: At(c, Tag.ListParcel); w.WriteString(c.ParcelId); break;
                 case CancelSale c: At(c, Tag.CancelSale); w.WriteString(c.ParcelId); break;
@@ -381,6 +401,20 @@ namespace Sim.Core.Saves
                 case Tag.SetPropertyInsurance: return new SetPropertyInsurance(at, r.ReadBool());
                 case Tag.SetBusinessInsurance: return new SetBusinessInsurance(at, r.ReadLong(), r.ReadBool());
                 case Tag.AcceptContract: return new AcceptContract(at, r.ReadLong());
+                case Tag.ListBusiness: return new ListBusiness(at, r.ReadLong(), r.ReadBool());
+                case Tag.CancelBusinessSale: return new CancelBusinessSale(at, r.ReadLong());
+                case Tag.SetBenefit: return new SetBenefit(at, r.ReadLong(), (People.Benefit)r.ReadInt(), r.ReadBool());
+                case Tag.SetNightShift: return new SetNightShift(at, r.ReadLong(), r.ReadBool());
+                case Tag.SetTuitionFee: return new SetTuitionFee(at, r.ReadLong(), r.ReadInt());
+                case Tag.SetDish: return new SetDish(at, r.ReadLong(), r.ReadInt(), r.ReadBool());
+                case Tag.AcceptDeal: return new AcceptDeal(at, r.ReadLong());
+                case Tag.DeclineDeal: return new DeclineDeal(at, r.ReadLong());
+                case Tag.AcceptBuyOut: return new AcceptBuyOut(at, r.ReadLong());
+                case Tag.BuyBackShare: return new BuyBackShare(at, r.ReadLong(), (Business.StakeKind)r.ReadInt());
+                case Tag.HireManager: return new HireManager(at, r.ReadLong(), r.ReadLong(), (OfferLevel)r.ReadInt());
+                case Tag.DismissManager: return new DismissManager(at, r.ReadLong());
+                case Tag.SetManagerTarget: return new SetManagerTarget(at, r.ReadLong(), (ManagerTarget)r.ReadInt());
+                case Tag.SetTerms: return new SetTerms(at, r.ReadLong(), r.ReadLong(), r.ReadString(), r.ReadString());
                 case Tag.AnswerPetition: return new AnswerPetition(at, r.ReadInt(), r.ReadInt());
                 case Tag.ListParcel: return new ListParcel(at, r.ReadString());
                 case Tag.CancelSale: return new CancelSale(at, r.ReadString());

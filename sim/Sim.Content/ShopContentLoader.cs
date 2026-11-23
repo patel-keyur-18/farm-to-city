@@ -64,11 +64,18 @@ namespace Sim.Content
 
             string kp = root + ".kinds";
             JObject k = Object(Required(o, root, "kinds"), kp);
-            OnlyFields(k, kp, "veg", "chai", "sweets");
-            var kinds = new ShopKindDef[4];
+            OnlyFields(k, kp, "veg", "chai", "sweets", "meals");
+            var kinds = new ShopKindDef[5];
             kinds[(int)ShopKind.Veg] = Kind(k, kp, "veg", "kgPerPerson", market);
             kinds[(int)ShopKind.Chai] = Kind(k, kp, "chai", "cupsPerPerson", market);
             kinds[(int)ShopKind.Sweets] = Kind(k, kp, "sweets", "kgPerPerson", market);
+            if (k["meals"] != null) // the restaurant's diners (spec 028 §3.7): how fast they stay home as prices rise; how many comes from the leisure budget
+            {
+                string mp = Join(kp, "meals");
+                JObject m = Object(k["meals"], mp);
+                OnlyFields(m, mp, "elasticity");
+                kinds[(int)ShopKind.Meals] = new ShopKindDef { AdultShare = Fixed.One, Elasticity = Bounded(m, mp, "elasticity", "0", "5") };
+            }
             d.Kinds = kinds;
 
             string vp = root + ".vegShares";
@@ -103,7 +110,7 @@ namespace Sim.Content
                 x.Stars = Bounded(r, p, "stars", "0", "5");
                 x.OpenHour = BoundedInt(r, p, "openHour", 0, 23);
                 x.CloseHour = BoundedInt(r, p, "closeHour", x.OpenHour + 1, 24);
-                x.CapacityPerHour = r["capacityPerHour"] == null ? 0 : BoundedInt(r, p, "capacityPerHour", 1, 100000) * (x.Kind == ShopKind.Chai ? 1L : 1000L);
+                x.CapacityPerHour = r["capacityPerHour"] == null ? 0 : BoundedInt(r, p, "capacityPerHour", 1, 100000) * (x.Kind == ShopKind.Chai || x.Kind == ShopKind.Meals ? 1L : 1000L);
                 x.Reacts = r["reacts"] != null && Bool(r["reacts"], p + ".reacts");
                 rivals.Add(x);
             }
@@ -177,7 +184,8 @@ namespace Sim.Content
                 case "veg": return ShopKind.Veg;
                 case "chai": return ShopKind.Chai;
                 case "sweets": return ShopKind.Sweets;
-                default: throw new ContentException(path, "expected veg, chai or sweets");
+                case "meals": return ShopKind.Meals;
+                default: throw new ContentException(path, "expected veg, chai, sweets or meals");
             }
         }
 

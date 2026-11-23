@@ -30,13 +30,19 @@ namespace Sim.Core.People
     {
         private const long Hour = 3600;
 
+        /// <summary>The place of the manager's post on the board (spec 028 §3.2; -1 is the masons' tab in the views): one post for the town, the business chosen when you offer.</summary>
+        public const long ManagerPlace = -2;
+
+        /// <summary>What a worker's role asks at skill 50: a manager's is the post's, any other the business's.</summary>
+        public static long MarketWageOf(Simulation sim, Worker w) { return w.Mgr != null ? Business.ManagerRules.MarketWage(sim, w.Place) : MarketWage(sim, w.Place); }
+
         // Draws of the Applicants stream (key = applicant id): 0 the wait, 1–4 the profile (PeopleSystem), 5 the first offer, 6 after a counter.
         private const ulong FirstOffer = 5, AfterCounter = 6;
 
         /// <summary>A business's role reads farming (the dairyman) or crafting (the miller, the baker); the farm hand farming.</summary>
         public static bool Farms(Simulation sim, long place)
         {
-            return place == 0 || BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).WorkerFarms;
+            return place == 0 || (place > 0 && BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).WorkerFarms);
         }
 
         /// <summary>A citizen's skill in the place's role, rounded.</summary>
@@ -48,6 +54,7 @@ namespace Sim.Core.People
         /// <summary>The role's market wage a season at skill 50, year-0 (spec 015 §3.1).</summary>
         public static long MarketWage(Simulation sim, long place)
         {
+            if (place == ManagerPlace) return Business.ManagerRules.MarketWage(sim, 0);
             return place == 0 ? sim.Config.Game.People.Hand.MarketWage : BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).Wage;
         }
 
@@ -58,12 +65,13 @@ namespace Sim.Core.People
         }
 
         /// <summary>The wage at an offer level: the asked wage, or 10% less or more, in whole coins.</summary>
-        public static long OfferWage(Simulation sim, Applicant a, OfferLevel level)
+        public static long OfferWage(Simulation sim, Applicant a, OfferLevel level, long business = 0)
         {
-            long asked = AskedWage(sim, a.Place, Fixed.FromInt(a.Skill), a.AboveMarket);
+            long market = a.Place == ManagerPlace && business > 0 ? Business.ManagerRules.MarketWage(sim, business) : MarketWage(sim, a.Place); // a manager's base follows the business he will work
+            long asked = PeopleRules.AskedWage(sim, market, Fixed.FromInt(a.Skill), a.AboveMarket);
             HiringDef h = sim.Config.Game.People.Hiring;
             if (level == OfferLevel.Asked) return asked;
-            return Town.PolicyRules.WageFloor(sim, Money.RoundToCoin(Money.MulRate(asked, level == OfferLevel.Low ? h.LowFactor : h.HighFactor)), MarketWage(sim, a.Place)); // the minimum wage binds a low offer too
+            return Town.PolicyRules.WageFloor(sim, Money.RoundToCoin(Money.MulRate(asked, level == OfferLevel.Low ? h.LowFactor : h.HighFactor)), market); // the minimum wage binds a low offer too
         }
 
         /// <summary>
@@ -103,6 +111,7 @@ namespace Sim.Core.People
         /// <summary>A business can take a hire: yours, not closed, with nobody hired there (you may be running it).</summary>
         public static RejectReason BusinessPlace(Simulation sim, long place)
         {
+            if (place == ManagerPlace) return Business.ManagerRules.On(sim) ? RejectReason.None : RejectReason.NoTownship;
             Business.Business b = sim.State.Businesses?.Find(place);
             if (b == null || b.Status == BusinessStatus.Closed) return RejectReason.UnknownBusiness;
             if (b.Worker == WorkerKind.Citizen || b.Worker == WorkerKind.Neighbour) return RejectReason.AlreadyStaffed;
@@ -217,7 +226,7 @@ namespace Sim.Core.People
         /// The offer (spec 015 §3.3), after the command's checks: refused below the asked wage the first time, they counter at it and
         /// wait; any other refusal and they leave. Taken, they're hired at the offered wage, remembered as fair or not.
         /// </summary>
-        internal static void Offer(Simulation sim, Applicant a, OfferLevel level, long wage)
+        internal static void Offer(Simulation sim, Applicant a, OfferLevel level, long wage, bool byManager = false, Business.Business manages = null)
         {
             PeopleState s = sim.State.People;
             long t = sim.State.Clock.SimTime;
@@ -227,7 +236,7 @@ namespace Sim.Core.People
                 if (level == OfferLevel.Low && !a.Countered)
                 {
                     a.Countered = true;
-                    sim.Emit(new CounterOffer(t, a.Id, OfferWage(sim, a, OfferLevel.Asked)));
+                    sim.Emit(new CounterOffer(t, a.Id, OfferWage(sim, a, OfferLevel.Asked, manages?.Id ?? 0)));
                     return;
                 }
                 s.Applicants.Remove(a);
@@ -236,8 +245,13 @@ namespace Sim.Core.People
                 return;
             }
             int fairness = level == OfferLevel.Low ? -1 : level == OfferLevel.High ? 1 : 0;
-            if (fairness < 0) HrRules.Repute(sim, sim.Config.Game.People.Reputation.LowHire);
+            if (fairness < 0 && !byManager) HrRules.Repute(sim, sim.Config.Game.People.Reputation.LowHire); // a manager's low offer is not yours
             Withdraw(s, a.CitizenId);
+            if (manages != null)
+            {
+                Business.ManagerRules.Hire(sim, a, wage, fairness, manages);
+                return;
+            }
             if (a.Place == 0)
             {
                 long prepay = PeopleRules.RestOfSeason(sim, wage);
@@ -279,6 +293,7 @@ namespace Sim.Core.People
             }
             s.Applicants.RemoveAll(x => x.Place == b.Id);
             s.Posts.RemoveAll(x => x.Place == b.Id);
+            BenefitRules.ChargeNew(sim, b.Id); // spec 028 §3.8: the rest of the season's benefits for the new worker
             Farm.FarmSystem.Refresh(sim);
             sim.Emit(new WorkerHired(t, b.Id, w.Id, wage, prepay));
         }
@@ -287,7 +302,7 @@ namespace Sim.Core.People
         internal static void WorkerGone(Simulation sim, Business.Business b)
         {
             PeopleState s = sim.State.People;
-            Worker w = s?.WorkerAt(b.Id);
+            Worker w = s?.StaffAt(b.Id);
             if (w == null) return;
             HrRules.Gone(sim, w);
             s.Workers.Remove(w);

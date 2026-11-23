@@ -1084,7 +1084,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [ ] Save schema 21: migration, fixtures for every new part, every older schema loads
 - [ ] Sheets, cards and the ring's layout previewed to and approved by the owner before each story's code
 - [ ] Balance: the 20% rule, the Village 28–45 days, the Township's pace, the kiln, the generator and grid, the cold store, land payback, the land stress bots, contradictions flagged
-- [ ] Render statistics read for each visible story, growth over 10% reported
+- [x] Render statistics read for each visible story, growth over 10% reported (the farm's triangles +12%, reported in the checklist)
 - [ ] Test checklist with device-only rows marked; Development build; both frame-time p95s and golden replays on the phone (the owner)
 - [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR (ADR 0154)
 - [x] `STATUS.md`, feature files and this file updated
@@ -1135,13 +1135,65 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
 - [x] Spec 028 written and approved; the apple figures re-approved
 - [x] Save schema 22: migration, fixtures for every new part (`schema22.ftc`, `schema22-townlife.ftc`, `schema22-risk.ftc`), every older schema loads
 - [x] Sheets and cards previewed to and approved by the owner before each story's code
 - [x] Balance: the 20% rule, the Village, the Township's pace, crime, `eventPart`, the exploit bots, the mill, the 200-seed Township (ADR 0154)
 - [x] Render statistics read for each visible story, growth over 10% reported (`docs/planning/render-stats.json`; the review's changes are numbers and text only)
 - [x] Test checklist with device-only rows marked (`docs/test-checklists/s24-town-life-events.md`); the Development build is the owner's to make
+- [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR (0164: nine findings, all fixed or answered)
+- [x] `STATUS.md`, feature files and this file updated
+- [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it
+
+## Sprint 25 · 9–22 Aug 2027 · Phase 3 (business growth: invoices, managers, sell or expand, investors, benefits and night shifts, the tuition centre, the tempo and the restaurant; spec 028; 2 weeks, ADR 0155)
+
+- **Status:** Started 2026-11-21 (Sprint 24 merged, PR #35). **Plan shown to the owner before any code and approved 2026-11-21** (ADR 0155).
+- **Branch:** `sprint/25-business-growth`, from `main` after PR #35 (c32cecb4)
+- **Goal:** The player grows from owning businesses to running an empire. Sales between businesses carry terms, so a profitable business can run out of cash; a manager runs a business and costs a share of profit; a business has a value, can be sold, branched or part-owned by an investor or partner; benefits keep good people; a richer town gets a tuition centre, a tempo and a restaurant. Save schema 23 ships once, with a fixture.
+- **Points:** 39 = US-123 5, US-124 8, US-125 5, US-247 5, US-258 3, US-244 5, US-245 5, US-246 3
+- **Specs to write and review:** none (spec 028 approved, ADR 0153); spec 029 (the Chronicle, the Almanac, citizen stories) is written in this sprint for Sprint 26 (ADR 0057); its gaps one per message
+- **Device build:** Yes: a Development build
+- **Milestone and labels:** `Phase 3 · Township`; `type:feature`, `type:adr`, `type:balance` (and `type:spec` if spec 029 or a spec 028 correction lands); `area:sim`, `area:content`, `area:ui`, `area:art`; `documentation`
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-123 | Invoices | [F12.5](features/F12.5-invoices-and-payment-terms.md) | 5 | Must | Done 2026-11-21, approved (ADR 0156) |
+| US-124 | Managers | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 8 | Must | Done 2026-11-22, approved (ADR 0157) |
+| US-125 | Sell or expand | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 5 | Should | Done 2026-11-22, approved (ADR 0158) |
+| US-247 | Investors, partners and buy-outs | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 5 | Should | Done 2026-11-22, approved (ADR 0159) |
+| US-258 | Benefits and night shifts | [F11.4](features/F11.4-full-hiring-and-hr.md) | 3 | Should | Done 2026-11-22, approved (ADR 0160) |
+| US-244 | Tuition centre | [F12.7](features/F12.7-township-businesses.md) | 5 | Should | Done 2026-11-22, approved (ADR 0161) |
+| US-245 | Tempo transport | [F12.7](features/F12.7-township-businesses.md) | 5 | Should | Done 2026-11-23, approved (ADR 0162) |
+| US-246 | Restaurant | [F12.7](features/F12.7-township-businesses.md) | 3 | Could | Done 2026-11-23, approved (ADR 0163) |
+
+**Order of work** (one stop for the owner's review after each story; every sheet previewed as an artifact that looks exactly like the game before its UI code):
+
+1. **Branch, ADR 0155, this section.** Owner approves the plan.
+2. **Preview 16** (the business sheet's *Orders and invoices* tab, the hiring board's manager post and card, the manager's close report), **Preview 17** (*Sell or expand*, the investor's offer card, the shares ledger, a buy-out card), **Preview 18** (the tuition centre's Today, the tempo on the Equipment sheet and the mandi sheet's "who carries it" line, the restaurant menu, the Benefits and night shift section): made first, each approved before its screens; the sim code does not wait for them.
+3. **The Editor re-check** of what Sprint 24's review changed (event card, banner, the Money page's premiums), in the first Editor session.
+4. **US-123** (gaps 1 to 4 closed first; schema 23 begins: the receivable and payable accounts, invoices, terms), then **US-124** (gaps 5 to 8), **US-125** (gap 9; ADR 0154's closed-policy fix), **US-247** (gap 10), **US-258**, **US-244**, **US-245**, **US-246**.
+5. **Balance** (the 20% rule; the pace; the new shops' targets; managed against hired; the exploit bots; the 200-seed hands-off Township), the checklist in the Editor by scripted touch, render statistics, Editor saves backed up before and restored and diffed after, **Development build**, **independent Opus 5.5 high-effort review**, ADRs (as built), `STATUS.md`, feature files, this file, the pull request.
+
+**If it runs over,** cut in this order (spec 028 §11): US-246, US-245, US-244, US-258 (the night shift goes first inside it), US-247, US-125. **Never cut:** US-123 and US-124, every number's *Why?*, the schema 23 fixture, the exploit checks.
+
+**Carried risks:** new hot paths (a daily invoice pass, the growth pass at the close) inside the fixed order, the per-system guard and the 72 h catch-up guards; the 200-seed run takes 15–20 minutes (background, no content edits while it runs); the device-only rows of the Sprint 23 and 24 checklists are still with the owner; the goldens must not move (every new field hashed only when used).
+
+**Definition of Ready (ADR 0025)**
+
+- [x] Every story checked against spec 028 and the code at `main` (c32cecb4); ten gaps listed with recommendations (ADR 0155)
+- [x] Spec 028 approved (ADR 0153)
+- [x] This section approved by the owner (2026-11-21)
+- [ ] Each story's gaps closed before its code (1 to 4 closed for US-123, 2026-11-21; 5 to 8 before US-124, and so on)
+
+**Sprint end checklist**
+
+- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [x] Save schema 23: migration, the fixture `schema23-growth.ftc`, every older schema loads, goldens unmoved (the review found the schema 23 block hashed for towns using no feature; fixed, ADR 0164)
+- [x] Previews 16, 17 and 18 approved before their screens
+- [x] Balance: the 20% rule, the pace, the new businesses' targets, managed against hired, the exploit bots, the 200-seed Township (ADR 0164; `KhataWorst` and `MarketingSpiral` wait for US-260)
+- [ ] Render statistics read for each visible story, growth over 10% reported
+- [x] Test checklist with device-only rows marked (`docs/test-checklists/s25-business-growth.md`)
 - [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
 - [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it

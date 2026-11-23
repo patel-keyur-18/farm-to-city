@@ -338,6 +338,10 @@ namespace Sim.View.Views
         public string Sprite { get; internal set; }
         public int TileId { get; internal set; }
         public bool Parked { get; internal set; }
+
+        /// <summary>Where it stands on its acre when parked, from the middle (the tempo beside the tractor): a fraction of the acre's width.</summary>
+        public float ParkX { get; internal set; }
+        public float ParkY { get; internal set; }
     }
 
     public sealed class MapVm
@@ -687,6 +691,11 @@ namespace Sim.View.Views
             {
                 MachineDef d = defs.Machines[k];
                 Sim.Core.Equipment.Machine m = Sim.Core.Equipment.EquipmentRules.OfKind(sim, k);
+                if (d.IsTempo) // US-245: parked on the farm lane beside the tractor, away while a trip of its legs is on
+                {
+                    if (m != null && !(sim.State.Market.Trip != null && sim.State.Market.Trip.Legs > 0)) map.Machines.Add(new MachineVm { Sprite = "tempo", TileId = defs.ParkTile, Parked = true, ParkX = 0.22f, ParkY = 0.12f });
+                    continue;
+                }
                 bool hired = Sim.Core.Equipment.EquipmentRules.Hired(sim, k);
                 if (m == null && !hired) continue;
                 var fields = new List<int>();

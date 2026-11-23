@@ -19,7 +19,7 @@ namespace Sim.Core.People
     public static class HrRules
     {
         private const long Day = ClockDef.SecondsPerDay;
-        private const ulong RaiseDraw = 0, PoachDraw = 1, SickDraw = 2, EmergencyDraw = 3, BatchDraw = 4;
+        private const ulong RaiseDraw = 0, PoachDraw = 1, SickDraw = 2, EmergencyDraw = 3, BatchDraw = 4, LeaveDraw = 5;
 
         public static long Season(Simulation sim) { return sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason; }
 
@@ -53,7 +53,7 @@ namespace Sim.Core.People
         public static long Asked(Simulation sim, IStaff w)
         {
             var traits = sim.Config.Game.People.Traits;
-            long asked = w is Worker k ? HiringRules.AskedWage(sim, k.Place, w.Skill, false) : PeopleRules.AskedWage(sim, w.Skill, false);
+            long asked = w is Worker k ? PeopleRules.AskedWage(sim, HiringRules.MarketWageOf(sim, k), w.Skill, false) : PeopleRules.AskedWage(sim, w.Skill, false);
             Fixed factor = traits[w.Trait1].RenewalWageFactor * traits[w.Trait2].RenewalWageFactor;
             return factor == Fixed.One ? asked : Money.RoundToCoin(Money.MulRate(asked, factor));
         }
@@ -71,7 +71,12 @@ namespace Sim.Core.People
         }
 
         /// <summary>At a close: took an offer from elsewhere, or was refused a raise and is still underpaid (they look elsewhere at the contract's end).</summary>
-        public static bool Leaves(Simulation sim, IStaff w) { return w.Hr.Leaving || (w.Hr.RaiseRefusals > 0 && Underpaid(sim, w)); }
+        public static bool Leaves(Simulation sim, IStaff w)
+        {
+            bool leaves = w.Hr.Leaving || (w.Hr.RaiseRefusals > 0 && Underpaid(sim, w));
+            Fixed loyal = leaves ? BenefitRules.Loyalty(sim, w) : Fixed.One;
+            return leaves && (loyal == Fixed.One || Rng.Chance(Roll(sim, w, Season(sim), LeaveDraw), loyal)); // spec 028 §3.8: each benefit makes leaving unhappy less likely (one draw a season, so the answer holds)
+        }
 
         /// <summary>
         /// The wage memory after a renewal or a raise (spec 015 §3.3): paid what they ask clears a low hire's memory; paid less, a high
@@ -92,10 +97,10 @@ namespace Sim.Core.People
         {
             Fixed m = w.Hr.MoodSeason >= Season(sim) ? w.Hr.Mood : Fixed.Zero;
             if (w.Hr.RaiseRefusals > 0 && Underpaid(sim, w)) m += sim.Config.Game.People.Hr.RaiseRefusedMood;
-            return m;
+            return m + BenefitRules.Mood(sim, w); // spec 028 §3.8: what the employer's benefits add
         }
 
-        private static void SetMood(Simulation sim, IStaff w, Fixed mood)
+        internal static void SetMood(Simulation sim, IStaff w, Fixed mood)
         {
             w.Hr.Mood = mood;
             w.Hr.MoodSeason = Season(sim);
@@ -125,6 +130,7 @@ namespace Sim.Core.People
             Fixed chance = d.PoachChance;
             if (Underpaid(sim, w)) chance = chance.MulRatio(d.PoachUnderpaidFactor, 1);
             if (w.Hr.RaiseRefusals >= 2) chance = chance.MulRatio(d.PoachRefusedFactor, 1);
+            chance = chance * BenefitRules.Loyalty(sim, w); // spec 028 §3.8: each benefit makes them harder to poach
             long offer = Money.RoundToCoin(Money.MulRate(Asked(sim, w), Fixed.One + d.PoachMatch)); // 15% over what their skill is worth
             if (offer > Paid(w) && Rng.Chance(Roll(sim, w, day, PoachDraw), chance)) Raise(sim, HrEventKind.Poaching, w, offer);
         }
@@ -156,7 +162,7 @@ namespace Sim.Core.People
             foreach (IStaff w in staff)
             {
                 if (w.CourseUntil != 0 || w.Hr.SickUntil != 0 || Waiting(sim, w)) continue;
-                Fixed sick = d.SickChance.MulRatio(w.Fatigue > d.SickTiredAbove ? d.SickTiredFactor : 1, days);
+                Fixed sick = d.SickChance.MulRatio(w.Fatigue > d.SickTiredAbove ? d.SickTiredFactor : 1, days) * BenefitRules.SickFactor(sim, w); // health cover halves it (spec 028 §3.8)
                 ulong sickRoll = Roll(sim, w, day, SickDraw);
                 Fixed clinic = Town.ClinicRules.EffectTown(sim); // spec 023 §3.2: the clinic cuts sick leave too
                 if (Rng.Chance(sickRoll, Town.ClinicRules.SickChance(sim, sick, clinic)))
@@ -219,6 +225,12 @@ namespace Sim.Core.People
             FarmSystem.Accrue(sim);
             w.Hr.SickUntil = sim.State.Clock.SimTime + days * Day;
             FarmSystem.Refresh(sim);
+            if (BenefitRules.Has(sim, w, Benefit.Health)) // health cover pays the sick days: no card, nothing lost (spec 028 §3.8)
+            {
+                SetMood(sim, w, sim.Config.Game.People.Hr.SickPaidMood);
+                Repute(sim, sim.Config.Game.People.Reputation.SickPaid);
+                return;
+            }
             Raise(sim, HrEventKind.SickLeave, w, (long)((System.Numerics.BigInteger)w.Wage * days * Day / sim.Clock.SecondsPerSeason));
         }
 

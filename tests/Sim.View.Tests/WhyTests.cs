@@ -56,12 +56,18 @@ namespace Sim.View.Tests
                     yield return Named("business books " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Books));
                     yield return Named("business settings " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Settings));
                     yield return Named("business customers " + b.Id, BusinessSheet.Build(ctx, b.Id, ShopSheet.Customers));
+                    yield return Named("business orders " + b.Id, BusinessSheet.Build(ctx, b.Id, InvoiceSheet.Tab));
+                    yield return Named("sell expand " + b.Id, ExitSheet.Build(ctx, b.Id)); // spec 028 §3.3
+                    yield return Named("manager report " + b.Id, ManagerSheet.Report(ctx, b.Id)); // spec 028 §3.2: every number has a Why?
+                    yield return Named("owners " + b.Id, OwnerSheet.Owners(ctx, b.Id)); // spec 028 §3.4
                     yield return Named("put cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Put));
                     yield return Named("take cash " + b.Id, BusinessCashSheet.Build(ctx, b.Id, BusinessCashSheet.Take));
                     yield return Named("close " + b.Id, BusinessCloseSheet.Build(ctx, b.Id));
                     for (int back = 1; back <= b.Reports.Count; back++)
                         yield return Named("business report " + b.Id + " " + back, BusinessReportSheet.Build(ctx, b.Id, back.ToString(System.Globalization.CultureInfo.InvariantCulture)));
                 }
+                if (sim.State.Township?.Exit != null)
+                    foreach (Sim.Core.Business.DealOffer o in sim.State.Township.Exit.Offers) yield return Named("deal card " + o.Id, OwnerSheet.Card(ctx, o.Id)); // spec 028 §3.4
             }
             if (Sim.Core.Town.TreasuryRules.IsOpen(sim)) // the town treasury (spec 021)
             {
@@ -91,7 +97,7 @@ namespace Sim.View.Tests
         private static KeyValuePair<string, SheetVm> Named(string name, SheetVm s) { return new KeyValuePair<string, SheetVm>(name, s); }
 
         /// <summary>A factor: a decimal number with no unit after it (5.30 /kg, 3.4 h, 70.7 kg, 6.3%, fertility 45.2 / 100, +0.4 points, 2.5 stars and a milk price of 57.50 coins are fine; 0.875 is not).</summary>
-        private static readonly Regex Factor = new Regex(@"\d\.\d+(?!\d|\s*(?:/kg|/brick\b|/L\b|h\b|kg|%|L\b|Cr\b|M\b|/ 100|of 100|points?\b|coins?\b|stars?\b|seasons\b))|×");
+        private static readonly Regex Factor = new Regex(@"\d\.\d+(?!\d|\s*(?:/kg|/brick\b|/L\b|h\b|kg|%|L\b|Cr\b|M\b|/ 100|of 100|points?\b|coins?\b|stars?\b|seasons\b|times\b))|×");
 
         public static void AssertWords(string where, WhyVm why)
         {
