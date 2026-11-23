@@ -226,6 +226,8 @@ namespace Game.Presentation.Map
 
         private void LateUpdate()
         {
+            // A domain reload in play mode keeps this component but loses its delegates (they aren't serialised): switch off instead of throwing every frame.
+            if (_reduced == null || _spell == null || _dayLight == null || _look == null) { enabled = false; return; }
             bool reduced = _reduced();
             _look.Override = DevOverride;
             WeatherFrame f = _look.Step(Time.unscaledDeltaTime, _spell(), reduced, _dayLight());
