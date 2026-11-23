@@ -362,6 +362,7 @@ namespace Sim.View.Tests
             Hire(sim);
             Ok(sim, new PostJob(T(sim), HiringRules.ManagerPlace, false));
             Applicant a = ManagerApplicant(sim);
+            Ok(sim, new LetWorkerGo(T(sim), bakery)); // he works it himself
             Ok(sim, new HireManager(T(sim), a.Id, bakery, OfferLevel.High));
             sim.AdvanceTo((T(sim) / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason + 2 * Hour);
             Assert.That(sim.State.People.Workers.Any(w => w.IsManager && w.Mgr.ReportPeriod != 0), Is.True, "he reported at the close");

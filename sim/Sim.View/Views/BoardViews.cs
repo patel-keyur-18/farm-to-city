@@ -68,7 +68,7 @@ namespace Sim.View.Views
                 { Icon = place == 0 ? "person_hand_m" : BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).Id, Note = where });
             if (place == 0) return;
             Business b = sim.State.Businesses.Find(place);
-            Worker w = sim.State.People.WorkerAt(place);
+            Worker w = sim.State.People.StaffAt(place);
             if (w != null)
                 vm.Lines.Add(new LineVm(s.Get("board.worksHere"), PeopleWords.Name(ctx, w.Name) + " · " + PeopleWords.Band(ctx, (int)w.Skill.RoundToLong()), "businessWorker", place)
                     {

@@ -32,8 +32,11 @@ namespace Sim.Core.Business
 
         public static Stake Of(Business b, StakeKind kind) { return b.Stakes.Find(x => x.Kind == kind); }
 
-        /// <summary>What it costs to buy a share back: the worth now × the share, to the coin.</summary>
-        public static long BuyBackPrice(Simulation sim, Business b, Stake k) { return Money.RoundToCoin(Money.MulRate(ExitRules.Valuation(sim, b).Value, k.Share)); }
+        /// <summary>
+        /// What it costs to buy a share back: the worth now × the share, to the coin, and never less than what the owner put in (Sprint 25 balance, ADR 0164: without the floor a business
+        /// whose profit was let fall bought its investor out for less than he paid, a loop the InvestorDilution bot found).
+        /// </summary>
+        public static long BuyBackPrice(Simulation sim, Business b, Stake k) { return System.Math.Max(k.Put, Money.RoundToCoin(Money.MulRate(ExitRules.Valuation(sim, b).Value, k.Share))); }
 
         /// <summary>Seasons still to wait before an investor's share may be bought back (a partner is bought out any time).</summary>
         public static long SeasonsLeft(Simulation sim, Stake k)

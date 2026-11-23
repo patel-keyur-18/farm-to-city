@@ -4,6 +4,7 @@
 - Date: 2026-11-22
 - Deciders: Keyur Patel
 - Related ADRs: 0027, 0069, 0081, 0082, 0153, 0155, 0156
+- **Amended by ADR 0164 (Sprint 25 balance pass, 2026-11-23):** the manager works the business himself (it has no other worker), his base wage is 60% of a worker's of the trade, and the styles no longer hire a worker. The rest of this record stands.
 
 ## Context
 

@@ -3,15 +3,7 @@ using Sim.Core.Maths;
 
 namespace Sim.Core.Definitions
 {
-    /// <summary>How a manager of this style hires (spec 028 §3.2): the offer he makes and which applicant he picks.</summary>
-    public enum ManagerOffer
-    {
-        Low = 0,
-        Asked = 1,
-        High = 2,
-    }
-
-    /// <summary>One style of manager (spec 028 §3.2): the price, quality and days of stock he sets, and how he hires.</summary>
+    /// <summary>One style of manager (spec 028 §3.2): the price, quality and days of stock he sets.</summary>
     public sealed class ManagerStyleDef
     {
         public string Id { get; internal set; }
@@ -25,19 +17,13 @@ namespace Sim.Core.Definitions
 
         /// <summary>Days of stock he puts out (a stall) or of inputs he buys ahead (a maker).</summary>
         public int StockDays { get; internal set; }
-
-        /// <summary>The offer he makes a worker: 10% less, the asked wage, or 10% more.</summary>
-        public ManagerOffer Offer { get; internal set; }
-
-        /// <summary>He picks the cheapest applicant (lowest asked wage) rather than the most skilled.</summary>
-        public bool PicksCheapest { get; internal set; }
     }
 
     /// <summary>Managers (spec 028 §3.2, <c>content/managers.json</c>), from the Township's content, or null.</summary>
     public sealed class ManagersDef
     {
-        /// <summary>The post's market wage a season at skill 50, at year-0 prices (the asked wage follows his skill and the price index, as any role's).</summary>
-        public long WageBase { get; internal set; }
+        /// <summary>The share of the business's own worker's market wage that is his base (a season at skill 50, year-0): he works it himself and takes a tenth of the profit besides. The asked wage follows his skill and the price index, as any role's.</summary>
+        public Fixed WageOfRole { get; internal set; }
 
         /// <summary>The share of the season's profit (before his share) he is paid when it is positive.</summary>
         public Fixed WageProfitShare { get; internal set; }

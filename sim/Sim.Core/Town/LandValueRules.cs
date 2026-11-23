@@ -106,7 +106,7 @@ namespace Sim.Core.Town
             int n = 0;
             foreach (Business.Business b in bs.Businesses)
             {
-                if (b.Status != BusinessStatus.Open || b.TileId < 0 || sim.State.People.WorkerAt(b.Id) == null) continue;
+                if (b.Status != BusinessStatus.Open || b.TileId < 0 || sim.State.People.StaffAt(b.Id) == null) continue;
                 if (CoverageRules.Within(sim, tileId, b.TileId, d.JobReach) && ++n >= d.JobMax) break;
             }
             return n;

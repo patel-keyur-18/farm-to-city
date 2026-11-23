@@ -26,7 +26,8 @@ namespace Sim.View.Views
             var s = ctx.Strings;
             BusinessTypeDef t = BusinessRules.TypeOf(ctx.Sim, b);
             if (b.Worker == WorkerKind.Founder) return s.Get("business.workerYou");
-            Worker w = ctx.Sim.State.People?.WorkerAt(b.Id);
+            Worker w = ctx.Sim.State.People?.StaffAt(b.Id);
+            if (w != null && w.IsManager) return s.Get("business.workerManager", "name", PeopleWords.Name(ctx, w.Name));
             if (w != null) return s.Get("business.workerCitizen", "name", PeopleWords.Name(ctx, w.Name), "role", s.Get("business.role." + t.Worker));
             return s.Get("business.workerNone");
         }
@@ -452,12 +453,14 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             long id = b.Id;
-            Worker w = sim.State.People?.WorkerAt(b.Id);
+            Worker w = sim.State.People?.StaffAt(b.Id);
             var line = new LineVm(s.Get("business.worker"), BusinessWords.Worker(ctx, b), "businessWorker", b.Id)
                 { Icon = b.Worker == WorkerKind.Founder ? "person_founder" : w != null && PeopleWords.Female(ctx, w.Name) ? "person_hand_f" : "person_hand_m" };
-            if (w == null && ManagerRules.Of(sim, b.Id) != null && b.Worker == WorkerKind.None)
+            if (w != null && w.IsManager)
             {
-                line.Note = s.Get("business.managerHires"); // he posts the job and picks by his style
+                int stars = (int)w.Skill.RoundToLong();
+                line.Stars = PeopleWords.Stars(ctx, stars, stars);
+                line.Note = s.Get("business.managerWorks"); // he works it himself; he is let go from his own section
                 return line;
             }
             if (w == null)

@@ -44,8 +44,13 @@ namespace Sim.View.Tests
             Assert.That(vm.Lines.Count(l => l.Badge == "Taken"), Is.EqualTo(1), "the bakery has one already");
             Assert.That(vm.Lines.Count(l => l.Badge == "Chosen"), Is.EqualTo(1), "the mill is chosen");
             Assert.That(vm.Subtitle, Does.Contain("flour mill"));
+            Assert.That(vm.Lines.Any(l => l.Value != null && l.Value.Contains("A worker works there")), Is.True, "the mill's worker must go first: he works it himself");
             var offers = vm.Lines.Where(l => l.Action != null && l.Action.Id.StartsWith("offerManager")).ToList();
             Assert.That(offers.Count, Is.EqualTo(3));
+            Assert.That(offers.All(o => !o.Action.Enabled), Is.True, "so the offers wait");
+            Assert.That(sim.Execute(new LetWorkerGo(sim.State.Clock.SimTime, Of(sim, "flour_mill").Id)).Accepted, Is.True);
+            vm = ManagerSheet.Offer(ViewKit2.Context(sim), a.Id, null);
+            offers = vm.Lines.Where(l => l.Action != null && l.Action.Id.StartsWith("offerManager")).ToList();
             Assert.That(sim.Execute(offers[0].Action.Create(sim.State.Clock.SimTime)).Accepted, Is.True);
             Assert.That(sim.State.People.ManagerAt(Of(sim, "flour_mill").Id), Is.Not.Null);
         }

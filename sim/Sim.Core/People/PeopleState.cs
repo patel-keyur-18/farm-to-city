@@ -638,6 +638,9 @@ namespace Sim.Core.People
         /// <summary>The worker who works a business (not its manager).</summary>
         public Worker WorkerAt(long place) { return Workers.Find(x => x.Place == place && x.Mgr == null && !x.Night); }
 
+        /// <summary>Who works a business by day: its worker, or its manager when it has one (he works it himself, spec 028 §3.2 as built, ADR 0164), or null.</summary>
+        public Worker StaffAt(long place) { return WorkerAt(place) ?? ManagerAt(place); }
+
         /// <summary>The business's night worker (spec 028 §3.8), or null.</summary>
         public Worker NightAt(long place) { return Workers.Find(x => x.Place == place && x.Night); }
 

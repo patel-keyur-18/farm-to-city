@@ -69,7 +69,7 @@ namespace Sim.Core.Business
             if (b.Status != BusinessStatus.Open) return RejectReason.NotOpen;
             if (!Eligible(BusinessRules.TypeOf(sim, b))) return RejectReason.NoNightShift;
             if (Of(sim, b) != null) return RejectReason.NightState;
-            if (sim.State.People?.WorkerAt(b.Id) == null) return RejectReason.NoWorker;
+            if (sim.State.People?.StaffAt(b.Id) == null) return RejectReason.NoWorker;
             if (!Grid(sim)) return RejectReason.NoGrid;
             if (!Offered(sim, b)) return RejectReason.NightNotOffered;
             return RejectReason.None;

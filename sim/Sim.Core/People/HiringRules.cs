@@ -34,7 +34,7 @@ namespace Sim.Core.People
         public const long ManagerPlace = -2;
 
         /// <summary>What a worker's role asks at skill 50: a manager's is the post's, any other the business's.</summary>
-        public static long MarketWageOf(Simulation sim, Worker w) { return w.Mgr != null ? Business.ManagerRules.MarketWage(sim) : MarketWage(sim, w.Place); }
+        public static long MarketWageOf(Simulation sim, Worker w) { return w.Mgr != null ? Business.ManagerRules.MarketWage(sim, w.Place) : MarketWage(sim, w.Place); }
 
         // Draws of the Applicants stream (key = applicant id): 0 the wait, 1–4 the profile (PeopleSystem), 5 the first offer, 6 after a counter.
         private const ulong FirstOffer = 5, AfterCounter = 6;
@@ -54,7 +54,7 @@ namespace Sim.Core.People
         /// <summary>The role's market wage a season at skill 50, year-0 (spec 015 §3.1).</summary>
         public static long MarketWage(Simulation sim, long place)
         {
-            if (place == ManagerPlace) return Business.ManagerRules.MarketWage(sim);
+            if (place == ManagerPlace) return Business.ManagerRules.MarketWage(sim, 0);
             return place == 0 ? sim.Config.Game.People.Hand.MarketWage : BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).Wage;
         }
 
@@ -65,12 +65,13 @@ namespace Sim.Core.People
         }
 
         /// <summary>The wage at an offer level: the asked wage, or 10% less or more, in whole coins.</summary>
-        public static long OfferWage(Simulation sim, Applicant a, OfferLevel level)
+        public static long OfferWage(Simulation sim, Applicant a, OfferLevel level, long business = 0)
         {
-            long asked = AskedWage(sim, a.Place, Fixed.FromInt(a.Skill), a.AboveMarket);
+            long market = a.Place == ManagerPlace && business > 0 ? Business.ManagerRules.MarketWage(sim, business) : MarketWage(sim, a.Place); // a manager's base follows the business he will work
+            long asked = PeopleRules.AskedWage(sim, market, Fixed.FromInt(a.Skill), a.AboveMarket);
             HiringDef h = sim.Config.Game.People.Hiring;
             if (level == OfferLevel.Asked) return asked;
-            return Town.PolicyRules.WageFloor(sim, Money.RoundToCoin(Money.MulRate(asked, level == OfferLevel.Low ? h.LowFactor : h.HighFactor)), MarketWage(sim, a.Place)); // the minimum wage binds a low offer too
+            return Town.PolicyRules.WageFloor(sim, Money.RoundToCoin(Money.MulRate(asked, level == OfferLevel.Low ? h.LowFactor : h.HighFactor)), market); // the minimum wage binds a low offer too
         }
 
         /// <summary>
@@ -235,7 +236,7 @@ namespace Sim.Core.People
                 if (level == OfferLevel.Low && !a.Countered)
                 {
                     a.Countered = true;
-                    sim.Emit(new CounterOffer(t, a.Id, OfferWage(sim, a, OfferLevel.Asked)));
+                    sim.Emit(new CounterOffer(t, a.Id, OfferWage(sim, a, OfferLevel.Asked, manages?.Id ?? 0)));
                     return;
                 }
                 s.Applicants.Remove(a);
@@ -301,7 +302,7 @@ namespace Sim.Core.People
         internal static void WorkerGone(Simulation sim, Business.Business b)
         {
             PeopleState s = sim.State.People;
-            Worker w = s?.WorkerAt(b.Id);
+            Worker w = s?.StaffAt(b.Id);
             if (w == null) return;
             HrRules.Gone(sim, w);
             s.Workers.Remove(w);

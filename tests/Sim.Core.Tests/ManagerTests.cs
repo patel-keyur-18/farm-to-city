@@ -35,6 +35,7 @@ namespace Sim.Core.Tests
         /// <summary>Hires the first applicant for a business at 10% over the asked wage (a townsperson always takes it) in the given style (0 cost-cutter, 1 growth-chaser, 2 quality-first).</summary>
         internal static Worker Manage(Simulation sim, Business.Business b, int style = 0)
         {
+            if (b.Worker == WorkerKind.Citizen || b.Worker == WorkerKind.Neighbour) Ok(sim, new LetWorkerGo(sim.State.Clock.SimTime, b.Id)); // he works it himself: its worker goes first
             if (P(sim).PostAt(HiringRules.ManagerPlace) == null) Post(sim);
             Applicant a = P(sim).ApplicantsFor(HiringRules.ManagerPlace).First();
             Ok(sim, new HireManager(sim.State.Clock.SimTime, a.Id, b.Id, OfferLevel.High));
@@ -53,16 +54,20 @@ namespace Sim.Core.Tests
             Business.Business b = InvoiceTests.Found(sim, "bakery");
             Applicant a = Post(sim);
             Assert.That(sim.Execute(new PostJob(sim.State.Clock.SimTime, HiringRules.ManagerPlace, false)).Reason, Is.EqualTo(RejectReason.AlreadyPosted));
-            long cash = b.Ledger.Cash;
-            long wage = HiringRules.OfferWage(sim, a, OfferLevel.Asked);
+            long wage = HiringRules.OfferWage(sim, a, OfferLevel.Asked, b.Id);
             Assert.That(wage, Is.GreaterThan(0));
             Assert.That(sim.Execute(new HireManager(sim.State.Clock.SimTime, a.Id, 999, OfferLevel.Asked)).Reason, Is.EqualTo(RejectReason.UnknownBusiness));
+            Assert.That(sim.Execute(new HireManager(sim.State.Clock.SimTime, a.Id, b.Id, OfferLevel.Asked)).Reason, Is.EqualTo(RejectReason.AlreadyStaffed), "he works it himself: its worker goes first");
+            Ok(sim, new LetWorkerGo(sim.State.Clock.SimTime, b.Id));
+            long cash = b.Ledger.Cash;
             Ok(sim, new HireManager(sim.State.Clock.SimTime, a.Id, b.Id, OfferLevel.Asked));
             Worker m = P(sim).ManagerAt(b.Id);
             Assert.That(m.Wage, Is.EqualTo(wage), "the asked wage");
             Assert.That(m.Mgr, Is.Not.Null);
             Assert.That(cash - b.Ledger.Cash, Is.EqualTo(PeopleRules.RestOfSeason(sim, wage)), "the rest of the season from the business's cash");
-            Assert.That(P(sim).WorkerAt(b.Id)?.IsManager ?? false, Is.False);
+            Assert.That(P(sim).WorkerAt(b.Id), Is.Null, "no other worker");
+            Assert.That(P(sim).StaffAt(b.Id), Is.SameAs(m), "he is the one who works it");
+            Assert.That(b.Worker, Is.Not.EqualTo(WorkerKind.None));
             Assert.That(m.Skill.RoundToLong(), Is.EqualTo(a.Skill));
             Assert.That(sim.Execute(new HireManager(sim.State.Clock.SimTime, a.Id, b.Id, OfferLevel.Asked)).Accepted, Is.False, "one manager a business");
             Reconciles(sim);
@@ -77,6 +82,7 @@ namespace Sim.Core.Tests
             Worker first = Manage(sim, b);
             Applicant a = P(sim).ApplicantsFor(HiringRules.ManagerPlace).First();
             Assert.That(sim.Execute(new HireManager(sim.State.Clock.SimTime, a.Id, b.Id, OfferLevel.High)).Reason, Is.EqualTo(RejectReason.HasManager));
+            Ok(sim, new LetWorkerGo(sim.State.Clock.SimTime, c.Id)); // he works it himself
             Ok(sim, new HireManager(sim.State.Clock.SimTime, a.Id, c.Id, OfferLevel.High));
             Assert.That(P(sim).ManagerAt(c.Id).Id, Is.Not.EqualTo(first.Id), "another business, another manager");
             Assert.That(sim.Execute(new RunBusinessYourself(sim.State.Clock.SimTime, b.Id)).Accepted, Is.False, "you do not run what he runs");
@@ -93,7 +99,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new PostJob(sim.State.Clock.SimTime, HiringRules.ManagerPlace, false)).Reason, Is.EqualTo(RejectReason.NoTownship));
         }
 
-        // AC-5: taking over a business you ran yourself frees your hours at once and leaves it for him to staff.
+        // AC-5: taking over a business you ran yourself frees your hours at once: he works it himself.
         [Test]
         public void Takes_Your_Place()
         {
@@ -104,7 +110,8 @@ namespace Sim.Core.Tests
             Ok(sim, new RunBusinessYourself(sim.State.Clock.SimTime, b.Id));
             Assert.That(b.Worker, Is.EqualTo(WorkerKind.Founder));
             Manage(sim, b);
-            Assert.That(b.Worker, Is.EqualTo(WorkerKind.None), "your hours are free");
+            Assert.That(b.Worker, Is.Not.EqualTo(WorkerKind.Founder), "your hours are free: he works it");
+            Assert.That(b.Worker, Is.Not.EqualTo(WorkerKind.None));
             Assert.That(BusinessRules.FounderHours(sim) == Fixed.Zero || sim.State.Businesses.Businesses.All(x => x.Worker != WorkerKind.Founder), Is.True);
         }
 
@@ -213,34 +220,32 @@ namespace Sim.Core.Tests
             Assert.That(missed, Is.InRange(days / 20, days * 2 / 5), "about one day in five at one star");
         }
 
-        // AC-6 (gap 6): with nobody at work he posts the job on his first morning and picks by his style: the cheapest applicant (10% less) or the best (10% more).
+        // Sprint 25 balance (ADR 0164): he works it himself. He is the business's one worker, so a staffed business must let its worker go first, nobody else is hired, a manager's
+        // base follows what a worker of the trade earns, and when he goes the seat is empty.
         [Test]
-        public void Hires_By_Style()
+        public void Works_It_Himself()
         {
-            foreach (int style in new[] { 0, 2 })
-            {
-                Simulation sim = Township();
-                Business.Business b = InvoiceTests.Found(sim, "bakery");
-                Ok(sim, new LetWorkerGo(sim.State.Clock.SimTime, b.Id));
-                Worker m = Manage(sim, b, style);
-                Assert.That(b.Worker, Is.EqualTo(WorkerKind.None));
-                long t = sim.State.Clock.SimTime;
-                HiringRules.AddPost(P(sim), new JobPost { Place = b.Id, PostedAt = t, ExpiresAt = t + 8 * Day });
-                HiringRules.TownApply(sim, b.Id);
-                var list = P(sim).ApplicantsFor(b.Id);
-                Assert.That(list.Count, Is.GreaterThanOrEqualTo(2), "your townspeople apply");
-                for (int i = 0; i < list.Count; i++)
-                {
-                    list[i].Skill = i == 0 ? 30 : i == 1 ? 70 : 50; // a townsperson's skill is their own
-                    sim.State.Citizens.Citizen(list[i].CitizenId).Crafting = Fixed.FromInt(list[i].Skill);
-                }
-                for (int d = 0; d < 4 && b.Worker == WorkerKind.None; d++) InvoiceTests.ToHour(sim, 7, 1);
-                Assert.That(b.Worker, Is.Not.EqualTo(WorkerKind.None), "he hired");
-                Worker w = P(sim).WorkerAt(b.Id);
-                Assert.That(w.Skill.RoundToLong(), Is.EqualTo(style == 0 ? 30 : 70), style == 0 ? "the cheapest" : "the best");
-                if (style == 2) Assert.That(w.Fairness, Is.EqualTo(1), "paid 10% more");
-                Reconciles(sim);
-            }
+            Simulation sim = Township();
+            Business.Business mill = InvoiceTests.Found(sim, "flour_mill");
+            Business.Business bakery = InvoiceTests.Found(sim, "bakery", mill.TileId);
+            Worker m = Manage(sim, bakery, 2);
+            Assert.That(P(sim).StaffAt(bakery.Id), Is.SameAs(m));
+            Assert.That(BusinessRules.HiredWorker(sim, bakery), Is.SameAs(m), "the business is worked by him");
+            Assert.That(sim.Execute(new LetWorkerGo(sim.State.Clock.SimTime, bakery.Id)).Reason, Is.EqualTo(RejectReason.HasManager), "he goes by Dismiss, not Let go");
+            for (int d = 0; d < 4; d++) InvoiceTests.ToHour(sim, 7, 1);
+            Assert.That(P(sim).Workers.Count(w => w.Place == bakery.Id), Is.EqualTo(1), "nobody else is hired, whatever his style");
+            Assert.That(P(sim).PostAt(bakery.Id), Is.Null);
+            Assert.That(bakery.MadeToday.Sum() + bakery.Reports.Count, Is.GreaterThan(0), "the bakery works");
+            // His base follows the trade: the same applicant asks more for a mill (27,000) or a bakery (30,000) than for a stall (12,000), by the share of a worker's wage.
+            Applicant a = P(sim).ApplicantsFor(HiringRules.ManagerPlace).FirstOrDefault() ?? Post(sim);
+            long forMill = HiringRules.OfferWage(sim, a, OfferLevel.Asked, mill.Id), forBakery = HiringRules.OfferWage(sim, a, OfferLevel.Asked, bakery.Id);
+            Assert.That(forBakery, Is.GreaterThan(forMill), "a baker earns more than a miller here (30,000 against 27,000)");
+            Assert.That(ManagerRules.MarketWage(sim, mill.Id), Is.EqualTo(Finance.Money.RoundToCoin(Finance.Money.MulRate(BusinessRules.TypeOf(sim, mill).Wage, sim.Config.Game.Managers.WageOfRole))));
+            // He goes: the seat is empty and you can run it yourself again.
+            Ok(sim, new DismissManager(sim.State.Clock.SimTime, bakery.Id));
+            Assert.That((bakery.Worker, P(sim).StaffAt(bakery.Id)), Is.EqualTo((WorkerKind.None, (Worker)null)));
+            Ok(sim, new RunBusinessYourself(sim.State.Clock.SimTime, bakery.Id));
+            Reconciles(sim);
         }
 
         // AC-7: the target is profit or growth; at the close he reports against it (the goal from last season, raised) and two misses in a row sour his mood.
@@ -313,7 +318,6 @@ namespace Sim.Core.Tests
             Hub.Passive(sim, out _, out _, out long business);
             Assert.That(business, Is.EqualTo(BusinessBooks.NetProfit(b.Reports.Last())).And.GreaterThan(0));
             Ok(sim, new DismissManager(sim.State.Clock.SimTime, b.Id));
-            Ok(sim, new LetWorkerGo(sim.State.Clock.SimTime, b.Id));
             Ok(sim, new RunBusinessYourself(sim.State.Clock.SimTime, b.Id));
             Hub.Passive(sim, out _, out _, out business);
             Assert.That(business, Is.EqualTo(0), "yours to run: your labour");
@@ -339,10 +343,10 @@ namespace Sim.Core.Tests
         {
             string json = TestContent.ReadContent("managers.json");
             Sim.Core.Definitions.ManagersDef d = Sim.Content.ContentLoader.LoadManagers(json);
-            Assert.That((d.WageBase, d.Styles.Count, d.MissDay.Count), Is.EqualTo((4000L * 100, 3, 5)));
+            Assert.That((d.WageOfRole, d.Styles.Count, d.MissDay.Count), Is.EqualTo((Fixed.FromRatio(60, 100), 3, 5)));
             Assert.Throws<Sim.Content.ContentException>(() => Sim.Content.ContentLoader.LoadManagers(json.Replace("0.155", "0.5")), "more stars never mis-set more days");
-            Assert.Throws<Sim.Content.ContentException>(() => Sim.Content.ContentLoader.LoadManagers(json.Replace("\"pick\": \"cheapest\"", "\"pick\": \"cheap\"")));
-            Assert.Throws<Sim.Content.ContentException>(() => Sim.Content.ContentLoader.LoadManagers(json.Replace("\"wageBase\"", "\"wage\"")));
+            Assert.Throws<Sim.Content.ContentException>(() => Sim.Content.ContentLoader.LoadManagers(json.Replace("\"stockDays\": 2", "\"stockDays\": 2, \"pick\": \"best\"")), "the old hiring fields are gone");
+            Assert.Throws<Sim.Content.ContentException>(() => Sim.Content.ContentLoader.LoadManagers(json.Replace("\"wageOfRole\"", "\"wage\"")));
         }
     }
 }

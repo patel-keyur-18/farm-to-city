@@ -13,10 +13,10 @@ namespace Sim.Content
         {
             const string root = "managers";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "wageBase", "wageProfitShare", "starPoints", "missDay", "missOutput", "profitGoalRise", "growthGoalRise", "missedMood", "styles");
+            OnlyFields(o, root, "wageOfRole", "wageProfitShare", "starPoints", "missDay", "missOutput", "profitGoalRise", "growthGoalRise", "missedMood", "styles");
             var def = new ManagersDef
             {
-                WageBase = Money(Required(o, root, "wageBase"), Join(root, "wageBase")),
+                WageOfRole = Number(Required(o, root, "wageOfRole"), Join(root, "wageOfRole")),
                 WageProfitShare = Number(Required(o, root, "wageProfitShare"), Join(root, "wageProfitShare")),
                 StarPoints = Int(Required(o, root, "starPoints"), Join(root, "starPoints")),
                 MissOutput = Number(Required(o, root, "missOutput"), Join(root, "missOutput")),
@@ -24,7 +24,7 @@ namespace Sim.Content
                 GrowthGoalRise = Number(Required(o, root, "growthGoalRise"), Join(root, "growthGoalRise")),
                 MissedMood = Number(Required(o, root, "missedMood"), Join(root, "missedMood")),
             };
-            if (def.WageBase < 0) throw new ContentException(Join(root, "wageBase"), "not below 0");
+            Range(def.WageOfRole, Fixed.Zero, Fixed.FromInt(2), Join(root, "wageOfRole"));
             Range(def.WageProfitShare, Fixed.Zero, Fixed.One, Join(root, "wageProfitShare"));
             Range(def.StarPoints, 10, 50, Join(root, "starPoints"));
             Range(def.MissOutput, Fixed.Zero, Fixed.One, Join(root, "missOutput"));
@@ -49,15 +49,12 @@ namespace Sim.Content
             {
                 string at = Index(Join(root, "styles"), i);
                 JObject s = Object(sarr[i], at);
-                OnlyFields(s, at, "id", "nameKey", "priceFactor", "quality", "stockDays", "offer", "pick");
-                string offer = String(Required(s, at, "offer"), Join(at, "offer")), pick = String(Required(s, at, "pick"), Join(at, "pick"));
+                OnlyFields(s, at, "id", "nameKey", "priceFactor", "quality", "stockDays");
                 var style = new ManagerStyleDef
                 {
                     Id = String(Required(s, at, "id"), Join(at, "id")), NameKey = String(Required(s, at, "nameKey"), Join(at, "nameKey")),
                     PriceFactor = Number(Required(s, at, "priceFactor"), Join(at, "priceFactor")), Quality = Int(Required(s, at, "quality"), Join(at, "quality")),
                     StockDays = Int(Required(s, at, "stockDays"), Join(at, "stockDays")),
-                    Offer = offer == "low" ? ManagerOffer.Low : offer == "asked" ? ManagerOffer.Asked : offer == "high" ? ManagerOffer.High : throw new ContentException(Join(at, "offer"), "low, asked or high"),
-                    PicksCheapest = pick == "cheapest" ? true : pick == "best" ? false : throw new ContentException(Join(at, "pick"), "cheapest or best"),
                 };
                 Range(style.PriceFactor, Fixed.FromRatio(1, 2), Fixed.FromInt(2), Join(at, "priceFactor"));
                 Range(style.Quality, 1, 2, Join(at, "quality"));

@@ -564,7 +564,7 @@ namespace Sim.Core.Business
         }
 
         /// <summary>The business's hired worker, or null when nobody is hired or you run it yourself.</summary>
-        public static Worker HiredWorker(Simulation sim, Business b) { return b.Worker == WorkerKind.Founder ? null : sim.State.People?.WorkerAt(b.Id); }
+        public static Worker HiredWorker(Simulation sim, Business b) { return b.Worker == WorkerKind.Founder ? null : sim.State.People?.StaffAt(b.Id); }
 
         /// <summary>The rate an hour (spec 015 §3.4): its grams an hour × its worker's share (a skill-50 worker's is 1); yours as rated when you run it.</summary>
         public static long Capacity(Simulation sim, Business b, Worker by = null)

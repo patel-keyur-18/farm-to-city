@@ -219,6 +219,7 @@ namespace Sim.Core.Commands
             Business.Business b = sim.State.Businesses?.Find(BusinessId);
             if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
             if (b.Worker == WorkerKind.None) return CommandResult.Reject(RejectReason.NoWorker);
+            if (sim.State.People?.ManagerAt(b.Id) != null) return CommandResult.Reject(RejectReason.HasManager); // he works it: let him go instead
             People.Worker w = sim.State.People?.WorkerAt(b.Id);
             long severance = 0;
             if (w != null && w.SeasonsWorked > 0)
@@ -305,7 +306,8 @@ namespace Sim.Core.Commands
             Business.Business b = sim.State.Businesses.Find(BusinessId);
             if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
             if (sim.State.People.ManagerAt(b.Id) != null) return CommandResult.Reject(RejectReason.HasManager);
-            long wage = People.HiringRules.OfferWage(sim, a, Level);
+            if (b.Worker == WorkerKind.Citizen || b.Worker == WorkerKind.Neighbour) return CommandResult.Reject(RejectReason.AlreadyStaffed); // he works it himself: let your worker go first
+            long wage = People.HiringRules.OfferWage(sim, a, Level, b.Id);
             if (BusinessBooks.CanSpend(sim, b) < People.PeopleRules.RestOfSeason(sim, wage)) return CommandResult.Reject(RejectReason.InsufficientFunds);
             if (a.CitizenId != 0 && !People.HouseholdRules.WorksOutside(sim, sim.State.Citizens.Citizen(a.CitizenId))) return CommandResult.Reject(RejectReason.UnknownApplicant);
             People.HiringRules.Offer(sim, a, Level, wage, false, b);

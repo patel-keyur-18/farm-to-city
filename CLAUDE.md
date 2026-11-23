@@ -265,6 +265,15 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0152 | US-147 hills and apples as built: the hills open with the Township and the ring, apple orchards on hill land only (100 trees an acre, 3,000 kg in the Monsoon, 4% a day spoilage, a quarter of it in the cold store), hill acres are fields for farming and orchards only |
 | 0153 | Spec 028 (business growth): invoices between businesses with half-season and season terms and a stop rule, managers (4,000 + 10% of profit, three styles), valuation 3–6× profit, selling and branches, investors, partners and buy-outs, a tuition centre, a tempo and a restaurant, benefits and night shifts, supervisors, associations, conflicts and accidents, your kirana, marketing and khata; schema 23 in Sprint 25 and 24 in Sprint 26 |
 | 0154 | Sprint 24 balance and the independent review: events and disasters roll at the first live hour from 6:00 and on return from away, insurance repriced to the measured claims (about 0.1–0.3% of a crop's value), saves name events by id, a land auction's bid charged once, a left-alone town's reputation 65–80 |
+| 0155 | Sprint 25 plan check: business growth in eight stories (39 points), save schema 23, ten gaps closed one per message before their code, Previews 16 to 18 before any UI code |
+| 0156 | US-123 invoices as built: terms (cash, half a season, a season) between your businesses and on the village shops' morning collection, a stop rule, an Orders tab, a cash-flow bridge for why profit and cash differ |
+| 0157 | US-124 managers as built: a worker record that runs the business, three styles that set what a kind has, a half-made mis-set day by stars, a tenth of the profit, a close report (amended by 0164: he works it himself) |
+| 0158 | US-125 sell or expand as built: a worth from the books (3 to 6 times profit, never under what it holds), a listing that completes in 3 to 6 days or a rushed sale at 85%, tax on the gain, a branch as a second of a kind |
+| 0159 | US-247 investors, partners and buy-outs as built: offers raised at the close outside the card limit, a share as a liability on the books, a sale settles outside owners first |
+| 0160 | US-258 benefits and night shifts as built: four benefits paid upfront with the wage, loyalty by benefit, a night shift as a second worker on the grid offered after "behind on the plan" days |
+| 0161 | US-244 the tuition centre as built: pupils from your households and the old village, fees by the day, stars that set take-up, skill gained by your children |
+| 0162 | US-245 the tempo as built: a vehicle of legs rescaled to a four-day season, the cheapest ride chosen, idle legs let out to neighbours at midnight |
+| 0163 | US-246 the restaurant as built: a shop of the kind meals that cooks to order, diners from the households' leisure, the town dhaba as rival, a switch for each dish, a crew wage |
 
 ## Current status
 

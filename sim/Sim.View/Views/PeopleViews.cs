@@ -989,7 +989,7 @@ namespace Sim.View.Views
         private static string StaffName(ViewContext ctx, long place, long id)
         {
             if (place == 0) return HandName(ctx, id);
-            Worker w = ctx.Sim.State.People.WorkerAt(place);
+            Worker w = ctx.Sim.State.People.StaffAt(place);
             return w == null || w.Id != id ? ctx.Strings.Get("away.formerWorker") : PeopleWords.Name(ctx, w.Name);
         }
 

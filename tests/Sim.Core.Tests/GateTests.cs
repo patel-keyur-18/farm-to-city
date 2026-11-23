@@ -12,7 +12,7 @@ namespace Sim.Core.Tests
     /// prints the same numbers.
     /// </summary>
     [Category("Balance")]
-    public class GateTests
+    public partial class GateTests
     {
         private static SimConfig Live() { return LiveWith(null); }
 

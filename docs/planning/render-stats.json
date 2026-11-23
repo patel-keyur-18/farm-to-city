@@ -475,5 +475,8 @@
   {"label":"US-245 tempo","view":"farm","date":"2026-11-23","drawCalls":353,"batches":353,"setPassCalls":9,"triangles":9522,"visibleSprites":400,"sprites":2267},
   {"label":"US-246 restaurant","view":"all","date":"2026-11-23","drawCalls":1064,"batches":1064,"setPassCalls":12,"triangles":22990,"visibleSprites":1312,"sprites":2211},
   {"label":"US-246 restaurant","view":"village","date":"2026-11-23","drawCalls":470,"batches":470,"setPassCalls":9,"triangles":9685,"visibleSprites":557,"sprites":2211},
-  {"label":"US-246 restaurant","view":"farm","date":"2026-11-23","drawCalls":331,"batches":331,"setPassCalls":9,"triangles":6666,"visibleSprites":370,"sprites":2211}
+  {"label":"US-246 restaurant","view":"farm","date":"2026-11-23","drawCalls":331,"batches":331,"setPassCalls":9,"triangles":6666,"visibleSprites":370,"sprites":2211},
+  {"label":"balance-manager","view":"all","date":"2026-11-23","drawCalls":1064,"batches":1064,"setPassCalls":12,"triangles":23775,"visibleSprites":1310,"sprites":2211},
+  {"label":"balance-manager","view":"village","date":"2026-11-23","drawCalls":475,"batches":475,"setPassCalls":9,"triangles":10489,"visibleSprites":560,"sprites":2211},
+  {"label":"balance-manager","view":"farm","date":"2026-11-23","drawCalls":338,"batches":338,"setPassCalls":9,"triangles":7474,"visibleSprites":375,"sprites":2211}
 ]

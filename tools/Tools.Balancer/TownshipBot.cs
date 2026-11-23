@@ -41,11 +41,14 @@ namespace Tools.Balancer
 
         public RiskUse Risk { get; set; }
 
+        /// <summary>Sprint 25's managed-against-hired measurement (spec 028 §3.2, §9): from the Township every business gets a manager of this style (0 cost-cutter, 1 growth-chaser, 2 quality-first), or null for hired workers as before.</summary>
+        public int? ManagerStyle { get; set; }
+
         private readonly List<int> _houseAcres = new List<int>();
 
         public TownshipBot(bool saver = false) : base(saver, "HMS", "flour_mill", "tea_stall", "veg_stall") { }
 
-        public override string Name { get { return (Saver ? "township-saver" : "township") + (Land == LandUse.None ? "" : "-" + Land.ToString().ToLowerInvariant()) + (Policy == null ? "" : "-" + Policy.Value.ToString().ToLowerInvariant()) + (Risk == RiskUse.None ? "" : "-" + Risk.ToString().ToLowerInvariant()); } }
+        public override string Name { get { return (Saver ? "township-saver" : "township") + (Land == LandUse.None ? "" : "-" + Land.ToString().ToLowerInvariant()) + (Policy == null ? "" : "-" + Policy.Value.ToString().ToLowerInvariant()) + (Risk == RiskUse.None ? "" : "-" + Risk.ToString().ToLowerInvariant()) + (ManagerStyle == null ? "" : "-managed" + ManagerStyle.Value); } }
 
         /// <summary>A bought acre kept for houses is never sown.</summary>
         protected override bool KeepsClear(Simulation sim, int tile) { return _houseAcres.Contains(tile) || base.KeepsClear(sim, tile); }
@@ -62,6 +65,24 @@ namespace Tools.Balancer
             if (Policy != null && sim.State.Treasury.Opened && PolicyRules.CanEnact(sim, Policy.Value) == RejectReason.None && !PolicyRules.Of(sim, Policy.Value).Repealing) Ok(sim, new EnactPolicy(t, Policy.Value));
             if (Land != LandUse.None && sim.State.Township != null && sim.State.Township.Cohort.Joined) UseLand(sim, t);
             if (Risk != RiskUse.None && sim.State.Township != null && TownshipRules.Reached(sim)) UseRisk(sim, t);
+            if (ManagerStyle != null && sim.State.Township != null && TownshipRules.Reached(sim)) UseManagers(sim, t);
+        }
+
+        /// <summary>A manager for each open business that has none: he works it himself, so its worker is let go first; his post is put up once and the applicant of the wanted style is hired at the asked wage when the business can pay the season's rest of it.</summary>
+        private void UseManagers(Simulation sim, long t)
+        {
+            if (t % 86_400 / 3600 != 12) return;
+            foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)
+            {
+                if (b.Status != Sim.Core.Business.BusinessStatus.Open || sim.State.People.ManagerAt(b.Id) != null) continue;
+                if (sim.State.People.PostAt(HiringRules.ManagerPlace) == null) Ok(sim, new PostJob(t, HiringRules.ManagerPlace, false));
+                // The style is the applicant's own (spec 028 §3.2): the bot picks the applicant of the style it wants, else the first.
+                var applicants = sim.State.People.ApplicantsFor(HiringRules.ManagerPlace);
+                Applicant a = applicants.Find(x => Sim.Core.Business.ManagerRules.StyleOf(sim, x) == ManagerStyle.Value) ?? applicants.FirstOrDefault();
+                if (a == null) return;
+                if (b.Worker == Sim.Core.Business.WorkerKind.Citizen || b.Worker == Sim.Core.Business.WorkerKind.Neighbour) Ok(sim, new LetWorkerGo(t, b.Id)); // he works it himself
+                Ok(sim, new HireManager(t, a.Id, b.Id));
+            }
         }
 
         /// <summary>The risk exploit bots: once a day at 10:00, whatever the Township offers of that kind is taken.</summary>

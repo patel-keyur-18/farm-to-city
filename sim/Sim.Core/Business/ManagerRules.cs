@@ -11,9 +11,9 @@ using Sim.Core.Time;
 namespace Sim.Core.Business
 {
     /// <summary>
-    /// Managers (spec 028 §3.2, ADR 0157): a worker record that runs a business where a worker works it. He sets what his style says each
-    /// morning (price or fee, quality, stock, inputs ahead), mis-sets some days by his stars, hires the worker his style picks, is paid a base
-    /// wage upfront and a share of the profit at the close, and reports against the target you set.
+    /// Managers (spec 028 §3.2, ADR 0157): a worker record that runs a business and works it himself (Sprint 25 balance, ADR 0164): he is its one worker,
+    /// nobody else is hired. He sets what his style says each morning (price or fee, quality, stock, inputs ahead), mis-sets some days by his stars,
+    /// is paid a base wage upfront and a share of the profit at the close, and reports against the target you set.
     /// </summary>
     public static class ManagerRules
     {
@@ -54,8 +54,16 @@ namespace Sim.Core.Business
         /// <summary>An amount of work, cut to its share on a mis-set day.</summary>
         public static long Scale(Simulation sim, Business b, long amount) { return MisSet(sim, b) ? Money.MulRate(amount, Defs(sim).MissOutput) : amount; }
 
-        /// <summary>What the post asks a season at skill 50, year-0: the market wage the asked wage follows.</summary>
-        public static long MarketWage(Simulation sim) { return Defs(sim).WageBase; }
+        /// <summary>
+        /// What a manager of this business asks a season at skill 50, year-0: the market wage the asked wage follows. It is a share of what a worker of the business's trade earns
+        /// (he works it himself, and takes a tenth of the profit besides); with no business named, the farm hand's wage as the yardstick.
+        /// </summary>
+        public static long MarketWage(Simulation sim, long businessId)
+        {
+            Business b = businessId > 0 ? sim.State.Businesses?.Find(businessId) : null;
+            long role = b == null ? sim.Config.Game.People.Hand.MarketWage : BusinessRules.TypeOf(sim, b).Wage;
+            return Money.RoundToCoin(Money.MulRate(role, Defs(sim).WageOfRole));
+        }
 
         // ---- hiring and letting go ----
 
@@ -76,12 +84,13 @@ namespace Sim.Core.Business
             long prepay = PeopleRules.RestOfSeason(sim, wage);
             BusinessBooks.Draw(sim, b, prepay);
             BusinessRules.PayWage(sim, b, prepay);
-            if (b.Worker == WorkerKind.Founder)
-            {
-                Farm.FarmSystem.Accrue(sim); // your hours go back to the farm
-                b.Worker = WorkerKind.None;
-                Farm.FarmSystem.Refresh(sim);
-            }
+            Farm.FarmSystem.Accrue(sim); // if you ran it, your hours go back to the farm: he works it now
+            b.Worker = c == null ? WorkerKind.Neighbour : WorkerKind.Citizen;
+            b.WorkerCitizen = a.CitizenId;
+            s.Applicants.RemoveAll(x => x.Place == b.Id);
+            s.Posts.RemoveAll(x => x.Place == b.Id);
+            BenefitRules.ChargeNew(sim, b.Id);
+            Farm.FarmSystem.Refresh(sim);
             if (c != null)
             {
                 c.Job = CitizenJob.Business;
@@ -98,6 +107,13 @@ namespace Sim.Core.Business
             PeopleState s = sim.State.People;
             HrRules.Gone(sim, m);
             s.Workers.Remove(m);
+            Business b = sim.State.Businesses?.Find(m.Place);
+            if (b != null && b.Worker != WorkerKind.Founder)
+            {
+                NightRules.Remove(sim, b, true); // no day worker, no night shift
+                b.Worker = WorkerKind.None; // the seat is empty: you run it yourself, or hire a worker
+                b.WorkerCitizen = 0;
+            }
             Citizen c = m.CitizenId == 0 ? null : sim.State.Citizens?.Citizen(m.CitizenId);
             if (c == null) return;
             c.Crafting = m.Skill;
@@ -164,7 +180,6 @@ namespace Sim.Core.Business
                     m.Mgr.MisDays++;
                 }
                 SetByStyle(sim, b, StyleOf(sim, m));
-                Staff(sim, b, StyleOf(sim, m));
             }
         }
 
@@ -205,40 +220,6 @@ namespace Sim.Core.Business
                 b.Stock[g] += want;
                 b.StockCost[g] += value;
             }
-        }
-
-        /// <summary>
-        /// Nobody works it (you were taken off, or the worker left): he posts the job (no fee: it is his word) and, from the applicants, picks by
-        /// his style (the cheapest, or the most skilled) and offers what his style offers: 10% less, the asked wage, or 10% more. A worker
-        /// who countered gets the asked wage next morning. Nothing is offered that the business's cash cannot prepay.
-        /// </summary>
-        private static void Staff(Simulation sim, Business b, ManagerStyleDef style)
-        {
-            if (b.Worker != WorkerKind.None) return;
-            PeopleState s = sim.State.People;
-            long t = sim.State.Clock.SimTime;
-            if (s.PostAt(b.Id) == null)
-            {
-                JobPostDef def = sim.Config.Game.People.JobPost;
-                HiringRules.AddPost(s, new JobPost { Place = b.Id, PostedAt = t, ExpiresAt = t + def.Days * Day });
-                sim.Emit(new JobPosted(t, false, 0, t + def.Days * Day, b.Id));
-                HiringRules.TownApply(sim, b.Id);
-                HiringRules.BusinessArrivals(sim);
-            }
-            Applicant pick = null;
-            foreach (Applicant a in s.ApplicantsFor(b.Id))
-            {
-                if (pick == null) { pick = a; continue; }
-                bool better = style.PicksCheapest
-                    ? HiringRules.OfferWage(sim, a, OfferLevel.Asked) < HiringRules.OfferWage(sim, pick, OfferLevel.Asked)
-                    : a.Skill > pick.Skill;
-                if (better) pick = a;
-            }
-            if (pick == null) return;
-            OfferLevel level = pick.Countered ? OfferLevel.Asked : style.Offer == ManagerOffer.Low ? OfferLevel.Low : style.Offer == ManagerOffer.High ? OfferLevel.High : OfferLevel.Asked;
-            long wage = HiringRules.OfferWage(sim, pick, level);
-            if (BusinessBooks.CanSpend(sim, b) < PeopleRules.RestOfSeason(sim, wage)) return;
-            HiringRules.Offer(sim, pick, level, wage, byManager: true);
         }
 
         // ---- the close ----
@@ -313,7 +294,7 @@ namespace Sim.Core.Business
                 sim.Emit(new ManagerLeft(sim.State.Clock.SimTime, b.Id, m.Id, 0)); // took an offer from elsewhere: no severance
                 return;
             }
-            long wage = Town.PolicyRules.WageFloor(sim, m.Wage, MarketWage(sim));
+            long wage = Town.PolicyRules.WageFloor(sim, m.Wage, MarketWage(sim, b.Id));
             m.Wage = wage;
             if (BusinessBooks.CanSpend(sim, b) >= wage - m.Hr.Advance)
             {

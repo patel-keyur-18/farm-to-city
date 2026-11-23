@@ -202,12 +202,28 @@ namespace Sim.Core.Tests
             Stake k = b.Stakes.Single();
             k.Period -= 4; // four seasons on
             long price = OwnerRules.BuyBackPrice(sim, b, k), cash = sim.State.Ledger.Cash, worth = Reporting.NetWorth(sim).Total;
-            Assert.That(price, Is.EqualTo(Money.RoundToCoin(Money.MulRate(ExitRules.Valuation(sim, b).Value, k.Share))));
+            Assert.That(price, Is.EqualTo(System.Math.Max(k.Put, Money.RoundToCoin(Money.MulRate(ExitRules.Valuation(sim, b).Value, k.Share)))), "the worth × the share, never under what he put in");
             Ok(sim, new BuyBackShare(sim.State.Clock.SimTime, b.Id, StakeKind.Investor));
             Assert.That(cash - sim.State.Ledger.Cash, Is.EqualTo(price), "paid from your cash");
             Assert.That(b.Stakes, Is.Empty);
             Assert.That(OwnerRules.Liability(b), Is.EqualTo(0));
             Assert.That(worth - Reporting.NetWorth(sim).Total, Is.EqualTo(price - o.Cash).Within(Coin), "what it cost beyond what he put in");
+            Reconciles(sim);
+        }
+
+        // Sprint 25 balance (ADR 0164): a business whose profit fell buys its investor back for what he put in, not for less.
+        [Test]
+        public void BuyBack_Floor()
+        {
+            Business.Business b = Profitable(out Simulation sim);
+            DealOffer o = OfferOf(sim, b, DealKind.Investor);
+            Ok(sim, new AcceptDeal(sim.State.Clock.SimTime, o.Id));
+            Stake k = b.Stakes.Single();
+            k.Period -= 4;
+            ExitTests.Seasons(b, 0, 0, 0, 0);
+            Assert.That(Money.RoundToCoin(Money.MulRate(ExitRules.Valuation(sim, b).Value, k.Share)), Is.LessThan(k.Put), "the worth fell below what he put in");
+            Assert.That(OwnerRules.BuyBackPrice(sim, b, k), Is.EqualTo(k.Put), "the price holds at his cash");
+            Ok(sim, new BuyBackShare(sim.State.Clock.SimTime, b.Id, StakeKind.Investor));
             Reconciles(sim);
         }
 

@@ -325,7 +325,7 @@ Each line has a *Why?* tap with a plain-language explanation and the numbers beh
 
 The player's credit score drops, and later loans cost more. This applies to a business's own books. Personal bankruptcy, where the founder's own debts default, is covered under Assets and wealth.
 
-**Delegation.** The player can hire a manager to run a business, which is the only way to scale beyond a handful of businesses. Each manager has a skill level and a style: cost-cutter, growth-chaser, or quality-first. The player receives seasonal reports and sets targets.
+**Delegation.** The player can hire a manager to run a business, which is the only way to scale beyond a handful of businesses. Each manager has a skill level and a style: cost-cutter, growth-chaser, or quality-first. The player receives seasonal reports and sets targets. In Phase 3 (spec 028, ADR 0157, 0164) a manager works the business himself, so it has no other worker: he is paid about 60% of what a worker of the trade earns plus a tenth of the profit, sets the price, quality and stock in his style, and a managed business earns more than a hired one and less than one you run yourself.
 
 **Exit and valuation.** A business can be sold at a valuation of about 3–6x its annual profit, adjusted for growth and risk. Its value shows on the player's net worth. Successful businesses can open branches or become franchises.
 

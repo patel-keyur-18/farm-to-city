@@ -17,7 +17,7 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             ManagersDef d = sim.Config.Game.Managers;
             Worker m = ManagerOf(ctx, id);
-            long usual = HiringRules.AskedWage(sim, HiringRules.ManagerPlace, Fixed.FromInt(50), false);
+            long usual = PeopleRules.AskedWage(sim, ManagerRules.MarketWage(sim, id), Fixed.FromInt(50), false);
             WhyVm vm = New(ctx, "why.managerWage.title", Money(ctx, m == null ? usual : m.Wage));
             Row(vm, ctx, "why.managerWage.base", Money(ctx, m == null ? usual : m.Wage));
             Text(vm, ctx, "why.managerWage.skill");
@@ -43,7 +43,6 @@ namespace Sim.View.Views
                 ? ctx.Strings.Get("manager.priceUnder", "pct", Pct(ctx, Fixed.One - st.PriceFactor)) : ctx.Strings.Get("manager.priceOver", "pct", Pct(ctx, st.PriceFactor - Fixed.One)));
             Row(vm, ctx, "why.managerStyle.quality", ShopWords.Quality(ctx, st.Quality, false));
             Row(vm, ctx, "why.managerStyle.stock", ctx.Fmt.Integer(st.StockDays));
-            Row(vm, ctx, "why.managerStyle.hire", ctx.Strings.Get("why.managerStyle.hire." + st.Id));
             vm.Footnote = ctx.Strings.Get("why.managerStyle.foot");
             return vm;
         }

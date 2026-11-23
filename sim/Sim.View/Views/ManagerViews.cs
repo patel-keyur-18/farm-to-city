@@ -120,8 +120,7 @@ namespace Sim.View.Views
         internal static void AddJob(ViewContext ctx, SheetVm vm)
         {
             var s = ctx.Strings;
-            long usual = HiringRules.AskedWage(ctx.Sim, HiringRules.ManagerPlace, Fixed.FromInt(50), false);
-            vm.Lines.Add(new LineVm(s.Get("board.manager"), s.Get("manager.usual", "wage", ctx.Fmt.Coins(usual)), "managerWage", 0)
+            vm.Lines.Add(new LineVm(s.Get("board.manager"), s.Get("manager.usual", "pct", ctx.Fmt.Percent(ctx.Sim.Config.Game.Managers.WageOfRole)), "managerWage", 0)
                 { Icon = "person_hand_m", Note = s.Get("manager.boardNote") });
         }
 
@@ -148,7 +147,7 @@ namespace Sim.View.Views
                 Business x = b;
                 BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
                 bool taken = ManagerRules.Of(sim, b.Id) != null;
-                string note = taken ? s.Get("manager.hasOne") : b.Worker == WorkerKind.Founder ? s.Get("manager.youRunIt") : s.Get("manager.noManager", "profit", LastProfit(ctx, b));
+                string note = taken ? s.Get("manager.hasOne") : b.Worker == WorkerKind.Founder ? s.Get("manager.youRunIt") : b.Worker != WorkerKind.None ? s.Get("manager.workerThere") : s.Get("manager.noManager", "profit", LastProfit(ctx, b));
                 var line = new LineVm(BusinessWords.Name(ctx, t), note) { Icon = t.Id };
                 if (taken) line.Badge = s.Get("manager.taken");
                 else if (pick != null && pick.Id == b.Id) line.Badge = s.Get("manager.chosen");
@@ -159,11 +158,11 @@ namespace Sim.View.Views
             vm.Lines.Add(LineVm.Header(s.Get("manager.terms")));
             long pickId = pick.Id;
             if (a.Countered)
-                vm.Lines.Add(new LineVm(s.Get("board.counterLine"), ctx.Fmt.Coins(HiringRules.OfferWage(sim, a, OfferLevel.Asked)), "managerWage", pickId) { Note = s.Get("board.counterNote"), NoteTone = Tone.Warn });
+                vm.Lines.Add(new LineVm(s.Get("board.counterLine"), ctx.Fmt.Coins(HiringRules.OfferWage(sim, a, OfferLevel.Asked, pickId)), "managerWage", pickId) { Note = s.Get("board.counterNote"), NoteTone = Tone.Warn });
             foreach (OfferLevel level in new[] { OfferLevel.Asked, OfferLevel.Low, OfferLevel.High })
             {
                 OfferLevel l = level;
-                long wage = HiringRules.OfferWage(sim, a, level);
+                long wage = HiringRules.OfferWage(sim, a, level, pickId);
                 string at = level == OfferLevel.Asked ? "manager.atAsked" : level == OfferLevel.Low ? "manager.atLow" : "manager.atHigh";
                 string note = level == OfferLevel.Asked ? "board.noteAsked" : level == OfferLevel.Low ? "board.noteLow" : "board.noteHigh";
                 var line = new LineVm(s.Get(at, "wage", ctx.Fmt.Coins(wage)), ChanceWord(ctx, HiringRules.AcceptChance(sim, a, level)), "managerWage", pickId) { Note = s.Get(note) };
@@ -224,9 +223,6 @@ namespace Sim.View.Views
                 vm.Lines.Add(new LineVm(s.Get("manager.didStock", "n", ctx.Fmt.Integer(style.StockDays)), s.Get(style.StockDays > 1 ? "manager.whyMoreStock" : "manager.whyOneStock"), "managerStyle", b.Id));
             else if (t.ByRecipe && !t.TakesMilk && b.BuyFromMarket)
                 vm.Lines.Add(new LineVm(s.Get("manager.didAhead", "n", ctx.Fmt.Integer(style.StockDays)), s.Get(style.StockDays > 1 ? "manager.whyMoreStock" : "manager.whyOneStock"), "managerStyle", b.Id));
-            Worker w = sim.State.People.WorkerAt(b.Id);
-            if (w != null && w.HiredAt >= m.HiredAt)
-                vm.Lines.Add(new LineVm(s.Get("manager.didHire", "name", PeopleWords.Name(ctx, w.Name)), s.Get("manager.hire." + style.Id, "wage", ctx.Fmt.Coins(w.Wage)), "managerStyle", b.Id));
             vm.Lines.Add(LineVm.Header(s.Get("manager.howWent")));
             vm.Lines.Add(new LineVm(s.Get("manager.misDays"), s.Get("manager.misDaysValue", "n", ctx.Fmt.Integer(r.ReportMisDays), "of", ctx.Fmt.Integer(r.ReportDays)), "managerMiss", b.Id) { Note = s.Get("manager.misDaysNote") });
             vm.Lines.Add(new LineVm(s.Get("manager.payThen"), ctx.Fmt.Coins(m.Wage + r.ReportShare), "managerWage", b.Id) { Note = s.Get("manager.payThenNote") });
