@@ -242,8 +242,8 @@ Five previews, each an exact artifact that looks like the game and approved befo
 - **Preview 16 (Sprint 25):** the business sheet with an *Orders and invoices* tab (each customer's terms and the invoices with their age), the hiring board's manager post and card, the manager's close report.
 - **Preview 17 (Sprint 25):** the *Sell or expand* sheet (valuation with its ?, a listing, a branch, an offer), an investor's offer card, the shares ledger, a buy-out card.
 - **Preview 18 (Sprint 25):** the tuition centre's Today, the tempo on the Equipment sheet and the mandi sheet's "who carries it" line, the restaurant menu, the Benefits and night shift section.
-- **Preview 19 (Sprint 26):** the supervisor post, the association, conflict and accident cards.
-- **Preview 20 (Sprint 26):** the kirana, marketing and khata sections.
+- **Preview 20 (Sprint 26):** the supervisor post, the association, conflict and accident cards.
+- **Preview 21 (Sprint 26):** the kirana, marketing and khata sections.
 
 *Why?* rows: why an invoice is late, the stop rule, a manager's wage and his mis-set days, a valuation's parts (profit, multiple, growth, risk, book), a sale's price, a share's cost, each business's demand (which households could afford it and why others didn't), the tempo's cost per kg and its worth, each benefit's cost and effect and its "Does it pay?", the accident's chance and its multipliers, the conflict and association triggers, the khata limit and its loss rate, the marketing share gained.
 
