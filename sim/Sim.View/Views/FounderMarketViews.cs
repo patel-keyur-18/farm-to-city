@@ -434,15 +434,17 @@ namespace Sim.View.Views
             }
 
             long commission = Sim.Core.Finance.Money.MulRate(gross, md.CommissionRate);
-            // Your own cart or tractor-trolley takes the load if it fits: no trolley to hire (spec 013 §3.2), as GoToMandi charges it.
-            long hire = weight <= Sim.Core.Equipment.EquipmentRules.CartGrams(sim) ? 0 : MarketRules.Indexed(sim, md.CartHirePerTrip);
+            // The cheapest ride takes the load (spec 028 §3.6), as GoToMandi charges it: your own cart or tractor-trolley, then the tempo, then the hired trolley.
+            Sim.Core.Equipment.MandiRide ride = Sim.Core.Equipment.TempoRules.Choose(sim, weight);
+            long hire = ride.Cost;
             long net = gross - commission - hire;
             vm.Lines.Add(LineVm.Header(s.Get("mandi.sum")));
             vm.Lines.AddRange(sums);
             vm.Lines.Add(new LineVm(s.Get("mandi.atMandi"), ctx.Fmt.Coins(gross), "mandi", 0));
             vm.Lines.Add(new LineVm(s.Get("mandi.commission"), (commission > 0 ? "−" : "") + ctx.Fmt.Coins(commission), "mandi", 1));
-            vm.Lines.Add(new LineVm(s.Get("mandi.hire"), "−" + ctx.Fmt.Coins(hire), "mandi", 2));
-            vm.Lines.Add(new LineVm(s.Get("mandi.time"), s.Get("mandi.timeValue"), "mandi", 3));
+            if (Sim.Core.Equipment.TempoRules.Of(sim) != null) vm.Lines.Add(new LineVm(s.Get("mandi.ride"), TempoSheet.RideText(ctx, ride), TempoSheet.Why, TempoSheet.Ride) { Icon = ride.Ride == Sim.Core.Equipment.Ride.Own ? "tractor" : ride.Ride == Sim.Core.Equipment.Ride.Tempo ? "tempo" : "cart" });
+            vm.Lines.Add(new LineVm(s.Get(ride.Ride == Sim.Core.Equipment.Ride.Tempo ? "mandi.tempoCost" : "mandi.hire"), "−" + ctx.Fmt.Coins(hire), ride.Ride == Sim.Core.Equipment.Ride.Tempo ? TempoSheet.Why : "mandi", ride.Ride == Sim.Core.Equipment.Ride.Tempo ? TempoSheet.Leg : 2));
+            vm.Lines.Add(new LineVm(s.Get("mandi.time"), ride.Legs > 1 ? s.Get("mandi.timeLegs", "hours", ctx.Fmt.Decimal1(Fixed.FromRatio(ride.Legs, 2)), "away", ctx.Fmt.Integer(ride.Hours)) : s.Get("mandi.timeValue"), "mandi", 3));
             vm.Lines.Add(new LineVm(s.Get("mandi.youGet"), ctx.Fmt.Coins(commands.Count == 0 ? 0 : net), "mandi", 0));
             if (MarketRules.TraderBuys(sim))
             {

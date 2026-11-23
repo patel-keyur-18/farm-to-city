@@ -390,6 +390,7 @@ namespace Sim.View.Tests
             centre.Stars = Sim.Core.Maths.Fixed.FromInt(4);
             Sim.Core.Business.TuitionRules.Enrol(sim, centre);
             centre.TuitionFees = 2_400 * 100;
+            Ok(sim, new BuyMachine(T(sim), "tempo")); // US-245: a tempo in the shed
             Sim.Core.Business.Business bakery = sim.State.Businesses.Businesses.First(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == "bakery");
             Sim.Core.Business.Business mill = sim.State.Businesses.Businesses.First(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Id == "flour_mill");
             Sim.Core.Business.ExitState x = sim.State.Township.Exit;

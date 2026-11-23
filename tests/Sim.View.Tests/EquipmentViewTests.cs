@@ -25,7 +25,7 @@ namespace Sim.View.Tests
             ViewContext ctx = ViewKit2.Context(sim);
             Assert.That(MenuSheet.Build(ctx).Lines.Any(l => l.Label == "Equipment"), Is.True);
             SheetVm sheet = EquipmentSheet.Build(ctx);
-            Assert.That(sheet.Lines.Where(l => l.IsHeader).Select(l => l.Label), Is.EqualTo(new[] { "Ox plough", "Tractor" }));
+            Assert.That(sheet.Lines.Where(l => l.IsHeader).Select(l => l.Label), Is.EqualTo(new[] { "Ox plough", "Tractor", "Tempo" }));
             Assert.That(sheet.Lines.First(l => l.Label == "What it does").Value, Is.EqualTo("Works 6 fields · labour −15% · harvests 3% more · carts 500 kg"));
             ActionVm plough = Button(sheet, "buy:ox_plough");
             Assert.That((plough.Enabled, plough.Detail, plough.DisabledReason), Is.EqualTo((false, "70,000 coins with the pair", "Build a second shed for the bullocks, with 2 free places.")));
@@ -33,7 +33,7 @@ namespace Sim.View.Tests
             Assert.That(Button(sheet, "buy:tractor").DisabledReason, Is.EqualTo("Comes once you're a Village"));
             Assert.That(Button(sheet, "lease:tractor").DisabledReason, Is.EqualTo("Comes once you're a Village"));
             Assert.That(Button(sheet, "buyLoan:tractor").DisabledReason, Is.EqualTo("Comes once you're a Village"));
-            Assert.That(sheet.Lines.Where(l => l.Buttons != null).Select(l => l.Buttons.Count), Is.EqualTo(new[] { 2, 2, 2 }), "two a row: the tractor's four on two rows");
+            Assert.That(sheet.Lines.Where(l => l.Buttons != null).Select(l => l.Buttons.Count), Is.EqualTo(new[] { 2, 2, 2, 2, 1 }), "two a row: the tractor's four on two rows, the tempo's three on two");
 
             // In the Village with too little cash: the price stays in sight, and the loan's down payment is refused before its sheet.
             Era(sim, "village");

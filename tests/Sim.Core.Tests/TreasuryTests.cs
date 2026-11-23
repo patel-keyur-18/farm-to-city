@@ -74,7 +74,7 @@ namespace Sim.Core.Tests
             Simulation sim = Start();
             Assert.That(T(sim), Is.Not.Null);
             Assert.That(T(sim).Opened, Is.False);
-            Simulation without = NewFarm(game: Game((f, j) => f == "eras.json" ? j.Replace(",\n    { \"id\": \"township\", \"conditions\": { \"townshipGate\": true } }", "") : f == "businesses.json" ? j.Replace("\"era\": \"township\"", "\"era\": \"village\"") : j), options: new SimOptions { DevCommandsEnabled = true });
+            Simulation without = NewFarm(game: Game((f, j) => f == "eras.json" ? j.Replace(",\n    { \"id\": \"township\", \"conditions\": { \"townshipGate\": true } }", "") : f == "businesses.json" ? j.Replace("\"era\": \"township\"", "\"era\": \"village\"") : f == "farming.json" ? j.Replace("\"unlockEra\": \"township\"", "\"unlockEra\": \"village\"") : j), options: new SimOptions { DevCommandsEnabled = true });
             Assert.That(without.State.Treasury, Is.Null, "no township era, no treasury");
             Era(without, "village");
             Assert.That(sim.State.ComputeHash(), Is.EqualTo(without.State.ComputeHash()), "before it opens the treasury adds nothing to the hash");

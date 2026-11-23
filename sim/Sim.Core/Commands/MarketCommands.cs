@@ -205,21 +205,23 @@ namespace Sim.Core.Commands
             MarketState m = sim.State.Market;
             long t = sim.State.Clock.SimTime;
             if (m.Trip != null) return CommandResult.Reject(RejectReason.TripUnderway);
-            if (m.LastTripDay == t / Definitions.ClockDef.SecondsPerDay) return CommandResult.Reject(RejectReason.AlreadyWentToday);
+            // The cheapest ride takes the load (spec 028 §3.6): your own cart or tractor-trolley, then the tempo, then the hired trolley (spec 013 §3.2).
+            Equipment.MandiRide ride = Equipment.TempoRules.Choose(sim, weight);
+            if (m.LastTripDay == t / Definitions.ClockDef.SecondsPerDay && ride.Ride != Equipment.Ride.Tempo) return CommandResult.Reject(RejectReason.AlreadyWentToday); // a tempo with legs left may go again
             if (sim.State.Farm.Founder.SickToday) return CommandResult.Reject(RejectReason.FounderSick);
-            // Your own cart or tractor-trolley takes the load if it fits: no trolley to hire (spec 013 §3.2).
-            long hire = weight <= Equipment.EquipmentRules.CartGrams(sim) ? 0 : MarketRules.Indexed(sim, def.CartHirePerTrip);
+            long hire = ride.Cost;
             if (!sim.State.Ledger.CanAfford(hire)) return CommandResult.Reject(RejectReason.InsufficientFunds);
 
             FarmSystem.Accrue(sim);
-            var trip = new MandiTrip { DepartedAt = t, ReturnAt = t + def.TripHours * 3600L, CartHire = hire };
+            var trip = new MandiTrip { DepartedAt = t, ReturnAt = t + ride.Hours * 3600L, CartHire = ride.Ride == Equipment.Ride.Tempo ? 0 : hire, Legs = ride.Legs };
             for (int g = 0; g < goods; g++)
             {
                 if (total[g] == 0) continue;
                 Store.Take(sim, g, total[g]);
                 trip.Loads.Add(new KeyValuePair<int, long>(g, total[g]));
             }
-            if (hire > 0)
+            if (ride.Ride == Equipment.Ride.Tempo) Equipment.TempoRules.Depart(sim, Equipment.TempoRules.Of(sim), ride);
+            else if (hire > 0)
                 sim.State.Ledger.Post(t, sim.Period, "ledger.cartHire", "mandi",
                     new Posting(Account.TransportAndSelling, hire), new Posting(Account.Cash, -hire));
             m.Trip = trip;

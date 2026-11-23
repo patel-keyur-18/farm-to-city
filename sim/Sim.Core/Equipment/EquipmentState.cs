@@ -36,6 +36,20 @@ namespace Sim.Core.Equipment
         /// <summary>Hired out to neighbours on the days it works (US-256, ADR 0137): off until the player switches it on. Schema 21.</summary>
         public bool HireOut { get; internal set; }
 
+        /// <summary>
+        /// A tempo's legs (US-245, ADR 0162, schema 23): the day (a sim day index) and the legs it made that day for you, and this season's legs for you and for neighbours.
+        /// Hashed once it has made one.
+        /// </summary>
+        public long LegsDay { get; internal set; }
+        public int LegsUsed { get; internal set; }
+        public int OwnLegs { get; internal set; }
+        public int LetOutLegs { get; internal set; }
+
+        /// <summary>The day (sim day index) it last ran legs for neighbours at midnight: that day's daily pass doubles its chance of breaking.</summary>
+        public long LetDay { get; internal set; }
+
+        private bool TempoUsed { get { return LegsDay != 0 || LegsUsed != 0 || OwnLegs != 0 || LetOutLegs != 0 || LetDay != 0; } }
+
         internal Machine Clone() { return (Machine)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -54,6 +68,7 @@ namespace Sim.Core.Equipment
             h.WriteBool(Unpaid);
             h.WriteLong(LoanId);
             if (h.Hashing ? HireOut : !(h is SaveWriter hw && hw.Schema < MapMigration.RingSchema)) h.WriteBool(HireOut); // schema 21; hashed once it is on
+            if (h.Hashing ? TempoUsed : !(h is SaveWriter t23 && t23.Schema < Town.TownshipState.GrowthSchema)) { h.WriteLong(LegsDay); h.WriteInt(LegsUsed); h.WriteInt(OwnLegs); h.WriteInt(LetOutLegs); h.WriteLong(LetDay); } // schema 23; hashed once a tempo has made a leg
         }
 
         internal static Machine ReadFrom(SaveReader r)
@@ -65,6 +80,7 @@ namespace Sim.Core.Equipment
                 Unpaid = r.ReadBool(), LoanId = r.ReadLong(),
             };
             if (r.Schema >= MapMigration.RingSchema) m.HireOut = r.ReadBool();
+            if (r.Schema >= Town.TownshipState.GrowthSchema) { m.LegsDay = r.ReadLong(); m.LegsUsed = r.ReadInt(); m.OwnLegs = r.ReadInt(); m.LetOutLegs = r.ReadInt(); m.LetDay = r.ReadLong(); }
             if (m.Cost < 0 || m.Depreciated < 0 || m.Depreciated > m.Cost || m.RepairDue < 0) throw new SaveContentException("machine " + m.Id);
             return m;
         }
@@ -86,6 +102,9 @@ namespace Sim.Core.Equipment
         /// <summary>Crops sown under a machine, by crop id, with the Tools factor they were sown at (hand tools aren't listed).</summary>
         public List<KeyValuePair<long, Fixed>> SownTools { get; internal set; } = new List<KeyValuePair<long, Fixed>>();
 
+        /// <summary>The machine kinds that can be hired for a day: the ox plough and the tractor (the tempo, after them, never is).</summary>
+        public const int HiredKinds = 2;
+
         internal EquipmentState Clone()
         {
             var c = (EquipmentState)MemberwiseClone();
@@ -100,8 +119,8 @@ namespace Sim.Core.Equipment
             h.WriteInt(Machines.Count);
             foreach (Machine m in Machines) m.WriteTo(h);
             h.WriteLong(NextMachineId);
-            h.WriteInt(HiredUntil.Length);
-            foreach (long t in HiredUntil) h.WriteLong(t);
+            h.WriteInt(HiredKinds); // a machine added after these (the tempo, US-245) is never hired for a day: only the first kinds are kept
+            for (int i = 0; i < HiredKinds; i++) h.WriteLong(HiredUntil[i]);
             h.WriteInt(SownTools.Count);
             foreach (KeyValuePair<long, Fixed> k in SownTools) { h.WriteLong(k.Key); h.WriteFixed(k.Value); }
         }
@@ -113,8 +132,8 @@ namespace Sim.Core.Equipment
             for (int i = 0; i < n; i++) s.Machines.Add(Machine.ReadFrom(r));
             s.NextMachineId = r.ReadLong();
             int h = r.ReadCount();
-            if (h != kinds) throw new SaveContentException("hired days for " + h + " machines, content has " + kinds);
-            s.HiredUntil = new long[h];
+            if (h != System.Math.Min(HiredKinds, kinds)) throw new SaveContentException("hired days for " + h + " machines, content has " + kinds);
+            s.HiredUntil = new long[kinds];
             for (int i = 0; i < h; i++) s.HiredUntil[i] = r.ReadLong();
             int k = r.ReadCount();
             for (int i = 0; i < k; i++) s.SownTools.Add(new KeyValuePair<long, Fixed>(r.ReadLong(), r.ReadFixed()));

@@ -147,6 +147,7 @@ namespace Sim.Core.Commands
             if (r != RejectReason.None) return CommandResult.Reject(r);
             if (EquipmentRules.OfKind(sim, kind) != null || EquipmentRules.Hired(sim, kind)) return CommandResult.Reject(RejectReason.AlreadyBuilt);
             MachineDef d = EquipmentRules.Defs(sim).Machines[kind];
+            if (d.IsTempo) return CommandResult.Reject(RejectReason.InvalidArgument); // a tempo is bought or leased, never hired for a day
             long t = sim.State.Clock.SimTime, cost = EquipmentRules.Hire(sim, d);
             if (!sim.State.Ledger.CanAfford(cost)) return CommandResult.Reject(RejectReason.InsufficientFunds);
             FarmSystem.Accrue(sim);
@@ -232,7 +233,7 @@ namespace Sim.Core.Commands
             Machine m = EquipmentRules.Find(sim, MachineId);
             if (m == null) return CommandResult.Reject(RejectReason.UnknownMachine);
             if (On && m.Leased) return CommandResult.Reject(RejectReason.LeasedMachine);
-            if (On && EquipmentRules.Defs(sim).Machines[m.Kind].CustomAcresPerDay == 0) return CommandResult.Reject(RejectReason.UnknownMachine);
+            if (On && EquipmentRules.Defs(sim).Machines[m.Kind].CustomAcresPerDay == 0 && !EquipmentRules.Defs(sim).Machines[m.Kind].IsTempo) return CommandResult.Reject(RejectReason.UnknownMachine);
             if (On && !EquipmentRules.HasDriver(sim)) return CommandResult.Reject(RejectReason.NoHandToDrive);
             m.HireOut = On;
             return CommandResult.Ok;

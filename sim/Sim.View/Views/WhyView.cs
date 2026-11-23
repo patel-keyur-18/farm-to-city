@@ -111,7 +111,7 @@ namespace Sim.View.Views
             { "planWheat", (c, i) => PlanLine(c, i, "wheat") }, { "planPower", (c, i) => PlanLine(c, i, "power") }, { "planRepairs", (c, i) => PlanLine(c, i, "repairs") },
             { "planDepreciation", (c, i) => PlanLine(c, i, "depreciation") }, { "planWage", (c, i) => PlanLine(c, i, "wage") },
             { "planProfit", (c, i) => PlanLine(c, i, "profit") }, { "planCash", (c, i) => PlanLine(c, i, "cash") }, { "planPayback", (c, i) => PlanLine(c, i, "payback") },
-            { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planMonsoon", (c, i) => PlanLine(c, i, "monsoon") }, { "kiln", KilnWhy }, { "tuition", TuitionWhy }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
+            { "planLoan", (c, i) => PlanLine(c, i, "loan") }, { "planMonsoon", (c, i) => PlanLine(c, i, "monsoon") }, { "kiln", KilnWhy }, { "tempo", TempoWhy }, { "tuition", TuitionWhy }, { "planHours", PlanHours }, { "planInterest", (c, i) => PlanLine(c, i, "interest") },
             { "businessOverdraft", BusinessOverdraft }, { "businessClose", BusinessClose },
             { "businessPeople", BusinessPeople }, { "recipeShops", RecipeShops }, { "recipeInput", RecipeInput }, { "recipeMade", RecipeMade },
             { "recipeStock", RecipeStock }, { "recipeMix", RecipeMix }, { "dairyMilk", DairyMilk }, { "dairyNeighbours", DairyNeighbours },

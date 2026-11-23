@@ -15,6 +15,8 @@ namespace Sim.Core.Tests
 {
     public partial class MigrationTests
     {
+        private static Equipment.Machine EquipmentRules_Tempo(Simulation sim) { return Equipment.TempoRules.Of(sim); }
+
         private static void ToHour(Simulation sim, int hour)
         {
             long t = sim.State.Clock.SimTime / 86400 * 86400 + hour * 3600;
@@ -72,6 +74,12 @@ namespace Sim.Core.Tests
             ToHour(sim, 15);
             ToHour(sim, 19);
             sim.State.Township.Exit.Offers.Clear();
+            EquipmentTests.Give(sim, 1_000_000); // US-245: a tempo, let out, with a hand to drive it, one send of two legs
+            HireHand(sim);
+            Ok(sim, new BuyMachine(sim.State.Clock.SimTime, "tempo"));
+            Ok(sim, new SetHireOut(sim.State.Clock.SimTime, EquipmentRules_Tempo(sim).Id, true));
+            sim.State.Market.Stock[sim.Config.Game.Market.IndexOf("potato")] += 5_000_000;
+            Ok(sim, new GoToMandi(sim.State.Clock.SimTime, new[] { new Market.MandiLoad("potato", 1_500_000) }));
             Ok(sim, new ListBusiness(sim.State.Clock.SimTime, mill.Id, true)); // US-125: the mill sold in a day, the bakery listed and a buyer still to come
             Ok(sim, new ListBusiness(sim.State.Clock.SimTime, bakery.Id, false));
             sim.AdvanceTo(sim.State.Clock.SimTime + 26 * 3600);
@@ -107,6 +115,8 @@ namespace Sim.Core.Tests
             Assert.That(r.State.People.NightAt(owned.Id)?.Night ?? false, Is.True, "a night worker is kept");
             Business.Business school = r.State.Businesses.Businesses.Single(b => config.Game.Businesses.Types[b.Type].IsTuition);
             Assert.That((school.Pupils.Count > 0, school.TuitionFees > 0, r.State.Citizens.Citizens.Max(c => c.TuitionSeasons) >= 3), Is.EqualTo((true, true, true)), "a tuition centre's pupils, its fees and a child's seasons are kept");
+            Equipment.Machine tempo = r.State.Equipment.Machines.Single(x => config.Game.Equipment.Machines[x.Kind].IsTempo);
+            Assert.That((tempo.OwnLegs, tempo.HireOut), Is.EqualTo((2, true)), "a tempo's legs and its let-out switch are kept");
             Assert.That(r.State.Ledger.Reconcile(), Is.Null);
             foreach (Business.Business b in r.State.Businesses.Businesses) Assert.That(b.Ledger.Reconcile(), Is.Null);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(r.State, config, Wall0), config, MinSchema);

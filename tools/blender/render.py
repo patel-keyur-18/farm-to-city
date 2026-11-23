@@ -3788,6 +3788,30 @@ def model_tractor(tool):
     return group(o, rot_z=math.radians(-30), scale=VEHICLE_SCALE)
 
 
+def model_tempo():
+    """A three-wheeler goods tempo (US-245, no maker's marks): a small blue cab with a windscreen over one front wheel, a low
+    cream-and-timber loading box on two rear wheels, a roof over the cab and a few sacks tied in the box."""
+    paint, dark, cream = toon("tempoBlue", 0x2D6FA3), toon("tempoDark", 0x1E4A70), toon("tempoCream", 0xEDE3C8)
+    tyre, hub, glass = toon("tyre", 0x3A3530), toon("tractorHub", 0xE9C46A), toon("glass", 0x2E4F6E)
+    plank, sack = toon("trolleyPlank", 0x8E5A33), toon("sack", 0xD9C48F)
+    o = [box("chassis", (0.1, 0.3, 0.025), (0, 0.02, 0.055), dark),
+         box("cab", (0.09, 0.09, 0.075), (0, -0.1, 0.115), paint, bevel=0.012),
+         box("screen", (0.07, 0.006, 0.045), (0, -0.147, 0.135), glass, outline=False),
+         box("cabRoof", (0.1, 0.1, 0.01), (0, -0.095, 0.17), cream, bevel=0.003),
+         box("bed", (0.12, 0.17, 0.018), (0, 0.09, 0.075), plank),
+         box("headlamp", (0.02, 0.008, 0.016), (0, -0.152, 0.09), toon("lamp", 0xF3E9B0), outline=False)]
+    for x in (-0.058, 0.058):
+        o.append(box("side%d" % (x > 0), (0.008, 0.17, 0.05), (x, 0.09, 0.1), paint, bevel=0.003))
+        o.append(cylinder("rear%d" % (x > 0), 0.04, 0.04, 0.025, (x * 1.2, 0.12, 0.04), tyre, segs=18, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(cylinder("rearHub%d" % (x > 0), 0.018, 0.018, 0.028, (x * 1.2, 0.12, 0.04), hub, segs=12, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+    o.append(box("tail", (0.12, 0.008, 0.05), (0, 0.175, 0.1), paint, bevel=0.003))
+    o.append(cylinder("front", 0.034, 0.034, 0.022, (0, -0.12, 0.034), tyre, segs=16, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+    o.append(cylinder("frontHub", 0.014, 0.014, 0.025, (0, -0.12, 0.034), hub, segs=10, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+    for i, (x, y) in enumerate(((-0.03, 0.06), (0.03, 0.06), (0.0, 0.12))):
+        o.append(sphere("sack%d" % i, 0.03, (x, y, 0.1), sack, scale=(1.0, 1.3, 0.8), segs=10, rings=6))
+    return group(o, rot_z=math.radians(-30), scale=VEHICLE_SCALE)
+
+
 def model_harvester():
     """A combine harvester hired for the harvest (no maker's marks): a yellow-green body, the wide cutting header with its reel in
     front, a glass cab, the grain tank and the unloading auger folded back, big front drive wheels."""
@@ -3830,7 +3854,7 @@ def model_plough_team():
 
 
 SPRITES.update({"plough_team": model_plough_team, "plough": model_plough, "bullock_cart": model_bullock_cart, "harvester": model_harvester,
-                "tractor": lambda: model_tractor("none"), "tractor_cultivator": lambda: model_tractor("cultivator"),
+                "tempo": model_tempo, "tractor": lambda: model_tractor("none"), "tractor_cultivator": lambda: model_tractor("cultivator"),
                 "tractor_trolley": lambda: model_tractor("trolley")})
 
 

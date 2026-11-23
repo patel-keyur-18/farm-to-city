@@ -1164,7 +1164,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-247 | Investors, partners and buy-outs | [F12.6](features/F12.6-managers-valuation-and-exit.md) | 5 | Should | Done 2026-11-22, approved (ADR 0159) |
 | US-258 | Benefits and night shifts | [F11.4](features/F11.4-full-hiring-and-hr.md) | 3 | Should | Built 2026-11-22, for the owner's review (ADR 0160) |
 | US-244 | Tuition centre | [F12.7](features/F12.7-township-businesses.md) | 5 | Should | Built 2026-11-22, for the owner's review (ADR 0161) |
-| US-245 | Tempo transport | [F12.7](features/F12.7-township-businesses.md) | 5 | Should | To do |
+| US-245 | Tempo transport | [F12.7](features/F12.7-township-businesses.md) | 5 | Should | Built 2026-11-23, for the owner's review (ADR 0162) |
 | US-246 | Restaurant | [F12.7](features/F12.7-township-businesses.md) | 3 | Could | To do |
 
 **Order of work** (one stop for the owner's review after each story; every sheet previewed as an artifact that looks exactly like the game before its UI code):

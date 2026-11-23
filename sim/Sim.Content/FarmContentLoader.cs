@@ -381,18 +381,33 @@ namespace Sim.Content
                 string mp = Index(Join(p, "machines"), i);
                 JObject m = Object(tokens[i], mp);
                 OnlyFields(m, mp, "id", "nameKey", "unlockEra", "price", "lifeSeasons", "bullocks", "leasePerSeason", "hirePerDay", "maintenanceShare",
-                    "dieselPerAcreSeason", "acres", "labourCut", "tools", "cartKg", "customAcresPerDay", "loan");
+                    "dieselPerAcreSeason", "acres", "labourCut", "tools", "cartKg", "customAcresPerDay", "loan", "trip");
+                bool tempo = m["trip"] != null;
                 var def = new MachineDef
                 {
                     Id = UniqueId(m, mp, machines.ConvertAll(x => x.Id)), NameKey = String(Required(m, mp, "nameKey"), Join(mp, "nameKey")), UnlockEra = Era(m, mp),
                     Price = Money(Required(m, mp, "price"), Join(mp, "price")), LifeSeasons = BoundedInt(m, mp, "lifeSeasons", 1, 400),
                     Bullocks = BoundedInt(m, mp, "bullocks", 0, 4), LeasePerSeason = Money(Required(m, mp, "leasePerSeason"), Join(mp, "leasePerSeason")),
                     HirePerDay = Money(Required(m, mp, "hirePerDay"), Join(mp, "hirePerDay")), MaintenanceShare = Bounded(m, mp, "maintenanceShare", "0", "0.5"),
-                    DieselPerAcreSeason = Money(Required(m, mp, "dieselPerAcreSeason"), Join(mp, "dieselPerAcreSeason")), Acres = BoundedInt(m, mp, "acres", 1, 200),
+                    DieselPerAcreSeason = Money(Required(m, mp, "dieselPerAcreSeason"), Join(mp, "dieselPerAcreSeason")), Acres = BoundedInt(m, mp, "acres", tempo ? 0 : 1, 200),
                     LabourCut = Bounded(m, mp, "labourCut", "0", "0.9"), Tools = Bounded(m, mp, "tools", "1", "1.5"), CartKg = BoundedInt(m, mp, "cartKg", 0, 10000), CustomAcresPerDay = BoundedInt(m, mp, "customAcresPerDay", 0, 100),
                     Loan = Bool(Required(m, mp, "loan"), Join(mp, "loan")),
                 };
-                if (def.Price <= 0 || def.HirePerDay <= 0) throw new ContentException(mp, "a machine needs a price and a day's hire");
+                if (tempo)
+                {
+                    string tp = Join(mp, "trip");
+                    JObject tr = Object(m["trip"], tp);
+                    OnlyFields(tr, tp, "loadKg", "hours", "diesel", "wear", "legsPerDay", "neighbourPay");
+                    def.Trip = new TripDef
+                    {
+                        LoadKg = BoundedInt(tr, tp, "loadKg", 1, 100000), Hours = BoundedInt(tr, tp, "hours", 1, 24), Diesel = Money(Required(tr, tp, "diesel"), Join(tp, "diesel")),
+                        Wear = Money(Required(tr, tp, "wear"), Join(tp, "wear")), LegsPerDay = BoundedInt(tr, tp, "legsPerDay", 1, 6), NeighbourPay = Money(Required(tr, tp, "neighbourPay"), Join(tp, "neighbourPay")),
+                    };
+                    if (def.Trip.Hours * def.Trip.LegsPerDay > 24) throw new ContentException(tp, "the day's legs must fit in a day");
+                    if (def.Acres != 0 || def.Bullocks != 0 || def.HirePerDay != 0 || def.CustomAcresPerDay != 0 || def.LabourCut != Fixed.Zero) throw new ContentException(mp, "a tempo works no field and is never hired for a day: no acres, bullocks, hire, labour cut or custom acres");
+                    if (def.Price <= 0) throw new ContentException(mp, "a machine needs a price");
+                }
+                else if (def.Price <= 0 || def.HirePerDay <= 0) throw new ContentException(mp, "a machine needs a price and a day's hire");
                 machines.Add(def);
             }
 
