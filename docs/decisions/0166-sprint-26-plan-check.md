@@ -1,6 +1,6 @@
 # 0166. Sprint 26 plan check: the Chronicle and business growth part 2 in seven stories, 31 points, save schema 24, fourteen gaps to close before their code
 
-- Status: Proposed (shown to the owner before any code; accepted when the owner approves the plan)
+- Status: Accepted (the owner approved the plan and spec 029, 2026-11-23; gap 11 comes back for approval before US-159)
 - Date: 2026-11-23
 - Deciders: Keyur Patel
 - Related ADRs: 0016, 0027, 0057, 0074, 0091 to 0096, 0098, 0107, 0141, 0148, 0153, 0155, 0162, 0163, 0164, 0165

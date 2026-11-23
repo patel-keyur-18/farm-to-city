@@ -1200,7 +1200,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 26 · 23 Aug – 5 Sep 2027 · Phase 3 (the Chronicle, the Almanac and citizen stories; supervisors, associations, conflicts and accidents; your kirana, marketing and khata; the Phase 3 exploit checks; the playtest town and the Release build; spec 029 and spec 028's last two stories; 2 weeks, ADR 0166)
 
-- **Status:** Started 2026-11-23 (Sprint 25 merged, PR #36). **Plan shown to the owner before any code** (ADR 0166, proposed).
+- **Status:** Started 2026-11-23 (Sprint 25 merged, PR #36). **Plan shown to the owner before any code and approved 2026-11-23** (ADR 0166).
 - **Branch:** `sprint/26-chronicle-business-growth-2`, from `main` after PR #36 (`097c19fe`)
 - **Goal:** The town remembers and the businesses get their people and their customers. Every important moment is written down in a warm voice; each Winter closes with an Almanac (the year's best return, its costliest loss, a person to remember); four small arcs follow a few of the town's people. Bigger workplaces have supervisors, accidents, conflicts and associations; a kirana of your own competes with the village grocer, with marketing and khata. Every Phase 3 money path has an exploit check, and the owner gets a town just past the Village on a Release build for the 4-week playtest. Save schema 24 ships once, with a fixture.
 - **Points:** 31 = US-157 5, US-158 3, US-159 5, US-260 5, US-259 5, US-248 5, US-249 3
@@ -1234,8 +1234,8 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 **Definition of Ready (ADR 0025)**
 
 - [x] Every story checked against its spec and the code at `main` (`097c19fe`); fourteen gaps listed with recommendations (ADR 0166)
-- [ ] Spec 029 approved by the owner (gap 1)
-- [ ] This section approved by the owner
+- [x] Spec 029 approved by the owner (gap 1, 2026-11-23)
+- [x] This section approved by the owner (2026-11-23)
 - [ ] Each story's gaps closed before its code (gaps 10 and 12 before US-157 and US-158, 11 before US-159, 6 to 9 before US-260, 3 to 5 before US-259, 13 before US-248, 14 before US-249)
 
 **Sprint end checklist**

@@ -1,6 +1,6 @@
 # 029. The Chronicle, the Almanac and citizen stories
 
-- Status: In review. G1 to G7 (§10) closed one per message on my recommendations (owner, 2026-11-23); ADR 0165. Preview 19 (§7) is shown as an artifact that looks exactly like the game and approved before any UI code.
+- Status: Approved (owner, 2026-11-23, with the Sprint 26 plan, ADR 0166; §3.6's hand's stall is re-confirmed at US-159, gap 11). G1 to G7 (§10) closed one per message on my recommendations (owner, 2026-11-23); ADR 0165. Preview 19 (§7) is shown as an artifact that looks exactly like the game and approved before any UI code.
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Events, disasters and town history (the Chronicle, the Town Almanac, citizen stories); Moments that matter
