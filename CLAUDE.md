@@ -276,6 +276,9 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0163 | US-246 the restaurant as built: a shop of the kind meals that cooks to order, diners from the households' leisure, the town dhaba as rival, a switch for each dish, a crew wage |
 | 0164 | Sprint 25 balance and the independent review: a buy-back never under what the investor put in, a manager who works the business himself (60% of a worker's wage and a tenth of the profit), a business with no closed season worth its book only, drawings stop at the cash beyond the investors' money, the new businesses' targets measured, nine review findings fixed |
 | 0165 | Spec 029 (Chronicle, Almanac, citizen stories): compact chronicle entries with text made at view, 22 kinds with firsts once, record harvests, the Almanac, a story spotlight and four arcs over real events, save schema 24 in Sprint 26 |
+| 0166 | Sprint 26 plan check: fourteen gaps closed one per message before their code, Previews 19 to 21, schema 24 shipped once with fixtures |
+| 0167 | Sprint 26 as built: the Chronicle (22 kinds, 400 kept), the Almanac in first-year coins, four citizen arcs, the kirana with marketing and khata (Bad debt, settled at a close or sale), the supervisor with three timed cards that default after 24 h |
+| 0168 | Sprint 26 balance and the review: five new exploit tests at 200 seeds and no loop, the stall story starts at the Township and waits for your shop's first profit, the supervisor 15,000 and +1.2% a star, eighteen review findings fixed or flagged |
 
 ## Current status
 

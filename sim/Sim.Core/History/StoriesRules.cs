@@ -86,7 +86,7 @@ namespace Sim.Core.History
         public static bool Eligible(Simulation sim, Citizen c)
         {
             StoriesDefs d = Defs(sim);
-            if (!Town.TownshipRules.Reached(sim)) return false; // spec 029 §3.6 (ADR 0167): not before the Township, or a free rival could stand in the way of the gate's three businesses
+            if (!Town.TownshipRules.Reached(sim)) return false; // spec 029 §3.6 (ADR 0168): not before the Township, or a free rival could stand in the way of the gate's three businesses
             if (!c.Living || InArc(sim, c.Id) || Find(State(sim), c.Id, StoryArc.Stall, false) != null) return false;
             if (!Staff(sim, c, out int seasons, out Fixed motivation, out ShopKind trade)) return false;
             Household x = sim.State.Citizens.Household(c.HouseholdId);
@@ -94,7 +94,7 @@ namespace Sim.Core.History
         }
 
         /// <summary>
-        /// A shop of yours of the trade that has not yet had a profitable season (spec 029 §3.6, ADR 0167): a citizen's stall never opens against it, so the Township gate's "3 businesses each with a profitable
+        /// A shop of yours of the trade that has not yet had a profitable season (spec 029 §3.6, ADR 0168): a citizen's stall never opens against it, so the Township gate's "3 businesses each with a profitable
         /// season" is never lost to a rival that came before your shop had its chance (measured: 3 of 48 competent towns never reached the Township, 24 of 200).
         /// </summary>
         public static bool WaitsForFirstProfit(Simulation sim, ShopKind trade)
