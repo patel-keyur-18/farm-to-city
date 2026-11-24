@@ -20,23 +20,28 @@ namespace Tools.Balancer
     {
         public const int ThirdHousehold = 3;
 
-        public static int Save(SimConfig config, ulong seed, string path, string commit)
+        /// <summary>
+        /// Writes the playtest town. <c>stage</c> "hamlet" stops at the close after the third household (the Phase 2 town); "village" stops at the close after the Village unlock, so the playtest
+        /// reaches the Township and lives in it (US-249, ADR 0169).
+        /// </summary>
+        public static int Save(SimConfig config, ulong seed, string path, string commit, string stage = "hamlet")
         {
+            int villageEra = EraIndex(config, "village");
             Simulation sim = Simulation.NewGame(config, new NewGame(seed, Now(), 8 * 3600));
             if (sim.State.Guidance != null) sim.Execute(new SkipFirstSession(sim.State.Clock.SimTime));
             var bot = new VillageBot(false, "HMS");
             bot.Start(sim);
             int reportsAtThird = -1;
-            long end = 40 * sim.Clock.SecondsPerSeason;
+            long end = (stage == "village" ? 80 : 40) * sim.Clock.SecondsPerSeason;
             for (long t = sim.State.Clock.SimTime + 600; t < end; t += 3600)
             {
                 sim.AdvanceTo(t);
                 bot.Play(sim, t);
                 sim.DrainEvents();
-                if (reportsAtThird < 0 && EraRules.Households(sim) >= ThirdHousehold) reportsAtThird = sim.State.Finance.Reports.Count;
+                if (reportsAtThird < 0 && (stage == "village" ? sim.State.Era.Current >= villageEra : EraRules.Households(sim) >= ThirdHousehold)) reportsAtThird = sim.State.Finance.Reports.Count;
                 if (reportsAtThird >= 0 && sim.State.Finance.Reports.Count > reportsAtThird) break;
             }
-            if (reportsAtThird < 0 || sim.State.Finance.Reports.Count <= reportsAtThird) { Console.Error.WriteLine("The bot never reached its third household and the close after it."); return 1; }
+            if (reportsAtThird < 0 || sim.State.Finance.Reports.Count <= reportsAtThird) { Console.Error.WriteLine("The bot never reached its " + (stage == "village" ? "Village unlock" : "third household") + " and the close after it."); return 1; }
 
             long now = Now();
             sim.State.Clock.Reanchor(now); // the town is as it was at this moment: nothing has passed since
@@ -45,6 +50,13 @@ namespace Tools.Balancer
             File.WriteAllBytes(path, bytes);
             Describe(sim, seed, path, bytes.Length, commit);
             return 0;
+        }
+
+        private static int EraIndex(SimConfig config, string id)
+        {
+            var eras = config.Game.Onboarding.Eras;
+            for (int i = 0; i < eras.Count; i++) if (eras[i].Id == id) return i;
+            throw new InvalidOperationException("no era " + id);
         }
 
         private static long Now() { return DateTimeOffset.UtcNow.ToUnixTimeSeconds(); }
