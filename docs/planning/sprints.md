@@ -1241,11 +1241,11 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 **Sprint end checklist**
 
 - [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
-- [ ] Save schema 24: migration, the fixture `schema24-people.ftc`, every older schema loads, goldens unmoved
+- [x] Save schema 24: migration, the fixture `schema24-people.ftc` (`MigrationTests.Schema24_People`), every older schema loads, goldens unmoved
 - [ ] Previews 19, 20 and 21 approved before their screens
-- [ ] Balance: the 20% rule, the pace, the kirana's targets, the hand's stall rate, the exploit bots (`KhataWorst`, `MarketingSpiral`), the 200-seed Township
+- [x] Balance (2026-11-24, ADR 0167): the 20% rule (`Archetypes_WithinTwentyPercent`), the pace (competent median day 102, 90th percentile 144 on 48 seeds; 200 seeds hands-off solvent), the kirana's targets (hired 10,700 a season at the Township in today's coins, no effect on households), the hand's stall rate (2 stalls in 60 seasons, now from the Township), the exploit bots, the supervisor's price (15,000 and +1.2% a star), the Chronicle's size (about 6 entries a game year in a bot town, 86 at season 60, under 2 KB), the 200-seed Township; the full Balance category 66 of 66, Perf 6 of 6, Core 936, View 435
 - [ ] Render statistics read for each visible story, growth over 10% reported
-- [ ] Test checklist with device-only rows marked (`docs/test-checklists/s26-chronicle-business-growth-2.md`)
+- [x] Test checklist with device-only rows marked (`docs/test-checklists/s26-chronicle-business-growth-2.md`)
 - [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
 - [ ] The playtest town shown to the owner; the Release build made from the final commit
 - [ ] `STATUS.md`, feature files and this file updated

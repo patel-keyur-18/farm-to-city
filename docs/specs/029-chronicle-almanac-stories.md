@@ -198,7 +198,7 @@ The player makes no decision in this feature; what they see is the cost of the o
 
 | Metric | Expected effect | Tolerance |
 | --- | --- | --- |
-| Chronicle size | about 25 to 40 entries a game year in a town of 25 households | measured, reported |
+| Chronicle size | about 25 to 40 entries a game year in a town of 25 households | measured, reported: the Township bot's town (10 households, few events) writes about 6 a year, 86 at season 60 (82 to 94 over 200 seeds), and the save holds about 2 KB of them; a livelier town fills toward the 400 cap, which adds under 12 KB |
 | Story steps | about one a season in a Township town; none stacking | measured |
 | A hand's stall | about one hand in five leaves in a town's first 12 seasons; replaced by the board within a season | measured |
 | Almanac | a best return exists in at least 9 of 10 Township years | measured |
