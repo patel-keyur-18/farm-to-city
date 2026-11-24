@@ -233,6 +233,8 @@ namespace Sim.View.Views
                         + (targets.Count == 0 ? s.Get("people.handNoOrders") : s.Get("people.handOrders", "list", string.Join(", ", targets))),
                     NoteTone = lapsed ? Tone.Warn : Tone.Plain,
                 };
+                Citizen leaving = sim.State.Citizens?.OfHand(h.Id);
+                if (leaving != null && Sim.Core.History.StoriesRules.Notice(sim, leaving.Id) != null) { line.Note = s.Get("people.leavingForStall"); line.NoteTone = Tone.Warn; } // spec 029 §3.6: a line, not a card
                 line.Action = lapsed
                     ? ActionVm.Checked(ctx, "renew:" + h.Id, s.Get("action.renew"), ctx.Fmt.Coins(h.Wage), ActionKind.Primary, at => new RenewContract(at, hand.Id))
                     : ActionVm.Open("hand:" + h.Id, s.Get("action.see"), new SheetRequest("Hand", h.Id));

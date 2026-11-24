@@ -22,6 +22,7 @@ namespace Sim.View.Views
         public static string Rival(ViewContext ctx, Rival r)
         {
             if (!r.Newcomer) return Rival(ctx, ShopRules.Defs(ctx.Sim).Rivals[r.Def]);
+            if (r.Owner != 0) return ctx.Strings.Get("shop.ownedStall", "owner", StoryWords.Name(ctx, r.Owner), "kind", ctx.Strings.Get("story.stall.kind." + KindKey(r.Kind))); // a hand's own stall (spec 029 §3.6)
             return ctx.Strings.Get("shop.newcomer", "name", ctx.Strings.Get("shop.newcomerKind." + KindKey(r.Kind)),
                 "where", r.Pitch >= 0 ? ctx.Strings.Get("shop.newcomerOn", "pitch", Pitch(ctx, r.Pitch)) : ctx.Strings.Get("shop.newcomerCart"));
         }

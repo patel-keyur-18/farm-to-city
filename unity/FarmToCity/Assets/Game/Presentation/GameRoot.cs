@@ -197,6 +197,7 @@ namespace Game.Presentation
         {
             ApplySafeArea();
             CodexCovered();
+            StoryCovered();
             MilestoneCovered();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (_dev != null && _dev.IsOpen) { return; }
@@ -310,6 +311,7 @@ namespace Game.Presentation
                     case DealOffered dofr: // spec 028 §3.4: an investor's, a partner's or a buyer's card comes up on its own unless a sheet is open; closing it keeps it on the bell
                         if (!away && !_open.HasValue) { long dealId = dofr.OfferId; _safeRoot.schedule.Execute(() => { if (!_open.HasValue) OpenSheet(new SheetRequest(OwnerSheet.CardKind, dealId)); }); }
                         break;
+                    case StoryStepped ss: if (!away) QueueStory(ss); break; // spec 029 §3.6: a toast with the person's portrait
                     case OrderCompleted _: Toast(_strings.Get("toast.orderDone")); break;
                     case ContractLapsed _: Toast(_strings.Get("toast.lapsed")); break;
                 }

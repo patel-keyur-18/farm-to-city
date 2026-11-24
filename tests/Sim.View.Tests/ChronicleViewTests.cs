@@ -43,8 +43,7 @@ namespace Sim.View.Tests
             string biz = sim.Config.Game.Businesses.Types[0].Id, crop = sim.Config.Game.Farm.Crops[0].Id;
             foreach (ChronicleKind k in System.Enum.GetValues(typeof(ChronicleKind)))
             {
-                if (k == ChronicleKind.Story) continue; // the arcs' own sentences come with US-159
-                var e = new ChronicleEntry { At = 1, Kind = k, A = 2, B = 1, Id = k == ChronicleKind.LoanCleared ? "coop_bank" : k == ChronicleKind.RecordHarvest ? crop : k == ChronicleKind.FirstOrchard ? "mango" : biz };
+                var e = new ChronicleEntry { At = 1, Kind = k, A = 2, B = k == ChronicleKind.Story ? StoriesRules.Code(StoryArc.Stall, 1, 0) : 1, Id = k == ChronicleKind.Story ? "veg" : k == ChronicleKind.LoanCleared ? "coop_bank" : k == ChronicleKind.RecordHarvest ? crop : k == ChronicleKind.FirstOrchard ? "mango" : biz };
                 string text = ChronicleWords.Line(ctx, e);
                 Assert.That(text, Is.Not.Empty, k.ToString());
                 Assert.That(text, Does.Not.Contain("{").And.Not.Contain("chronicle."), k + ": " + text);
@@ -151,6 +150,48 @@ namespace Sim.View.Tests
             Assert.That(vm.Lines[0].Note, Does.Contain("Best: Bakery, 38 for every 100"));
             Assert.That(vm.Lines[1].Note, Does.Contain("a quiet year"));
             Assert.That(vm.Lines[0].Action.Opens.Value, Is.EqualTo(new SheetRequest(AlmanacSheet.Kind, 2)));
+        }
+
+        // US-159 (spec 029 §3.6, §7): every step of every arc reads as a sentence with the person's name, in the Chronicle, the toast and the Why?.
+        [Test]
+        public void Story_Steps_Read_And_Explain()
+        {
+            Simulation sim = Town(out ViewContext ctx);
+            var c = new Sim.Core.People.Citizen { Id = 7, Name = 0, Female = true, Health = Sim.Core.Maths.Fixed.One };
+            sim.State.Citizens.Citizens.Add(c);
+            string name = PeopleWords.Name(ctx, 0);
+            var steps = new (StoryArc arc, int step, int n, string kind, string expect)[]
+            {
+                (StoryArc.Stall, 1, 0, "veg", "has put aside enough for a stall of their own."),
+                (StoryArc.Stall, 2, 0, "chai", "has gone to start a tea stall."),
+                (StoryArc.Stall, 3, 1, "sweets", "sweet shop is doing well."),
+                (StoryArc.Stall, 3, 0, "veg", "stall closed; they would work for wages again."),
+                (StoryArc.Reader, 1, 0, "", "nobody in the family can read yet."),
+                (StoryArc.Reader, 2, 0, "", "the first in the family."),
+                (StoryArc.Reader, 3, 0, "", "taken a paid job."),
+                (StoryArc.Migrant, 1, 0, "", "two seasons"),
+                (StoryArc.Migrant, 2, 0, "", "four seasons"),
+                (StoryArc.Migrant, 3, 0, "", "A child was born"),
+                (StoryArc.LongLife, 2, 70, "", "is 70 and still part of the daily life"),
+                (StoryArc.LongLife, 4, 72_005, "", "died at 72, remembered by 5 family members."),
+            };
+            foreach (var x in steps)
+            {
+                var e = new ChronicleEntry { At = 10, Kind = ChronicleKind.Story, A = 7, B = StoriesRules.Code(x.arc, x.step, x.n), Id = x.kind };
+                string line = ChronicleWords.Line(ctx, e);
+                Assert.That(line, Does.Contain(x.expect), x.arc + " " + x.step);
+                Assert.That(line, Does.Contain(name).And.Not.Contain("{"));
+                sim.State.Chronicle.Entries.Add(e);
+            }
+            SheetVm vm = ChronicleSheet.Build(ctx);
+            foreach (LineVm l in vm.Lines.Where(l => l.WhyKey != null && l.Label.Contains(name)))
+            {
+                Assert.That(WhyView.Has(l.WhyKey), Is.True);
+                WhyTests.AssertWords(l.Label, WhyView.Build(ctx, l.WhyKey, l.WhyId));
+            }
+            var toast = StoryToastVm.Build(ctx, new Sim.Core.Events.StoryStepped(10, (int)StoryArc.Stall, 1, 7, 0, "veg"));
+            Assert.That((toast.Kicker, toast.Text), Is.EqualTo(("A story from your valley · they will leave at the close", name + " has put aside enough for a stall of their own.")));
+            Assert.That(toast.Portrait, Does.StartWith("portrait_"));
         }
     }
 }

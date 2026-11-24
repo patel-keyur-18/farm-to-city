@@ -51,6 +51,7 @@ namespace Sim.View.Views
                 case ChronicleKind.EpidemicSurvived: return s.Get(key, "n", ctx.Fmt.Integer(e.A));
                 case ChronicleKind.LoanCleared: return s.Get(key, "amount", ctx.Fmt.Coins(e.A), "lender", s.Get("lender." + e.Id));
                 case ChronicleKind.PetitionKept: return s.Get(key, "topic", s.Get("chronicle.topic." + e.B));
+                case ChronicleKind.Story: return StoryWords.Line(ctx, e.A, e.B, e.Id);
                 default: return s.Get(key);
             }
         }
@@ -68,9 +69,66 @@ namespace Sim.View.Views
                 case ChronicleKind.BusinessSold:
                 case ChronicleKind.FireSurvived:
                 case ChronicleKind.EpidemicSurvived:
-                case ChronicleKind.LoanCleared: return true;
+                case ChronicleKind.LoanCleared:
+                case ChronicleKind.Story: return true;
                 default: return false;
             }
+        }
+    }
+
+    /// <summary>The words of a citizen's story (spec 029 §3.6): a step's sentence from its code, for the Chronicle's line, the toast and the Why?.</summary>
+    public static class StoryWords
+    {
+        public static StoryArc ArcOf(long code) { return (StoryArc)(code / 1_000_000); }
+        public static int StepOf(long code) { return (int)(code / 100_000 % 10); }
+        public static int NOf(long code) { return (int)(code % 100_000); }
+
+        public static string Name(ViewContext ctx, long citizen)
+        {
+            Sim.Core.People.Citizen c = ctx.Sim.State.Citizens?.Citizen(citizen);
+            return c == null ? ctx.Strings.Get("story.someone") : PeopleWords.Name(ctx, c.Name);
+        }
+
+        /// <summary>"{name} has put aside enough for a stall of their own.", and so on, for the arc, step and numbers a Story line keeps.</summary>
+        public static string Line(ViewContext ctx, long citizen, long code, string kind)
+        {
+            var s = ctx.Strings;
+            StoryArc arc = ArcOf(code);
+            int step = StepOf(code), n = NOf(code);
+            string key = "story." + arc.ToString().ToLowerInvariant() + "." + step;
+            string name = Name(ctx, citizen);
+            switch (arc)
+            {
+                case StoryArc.Stall:
+                    if (step == 3) key += n > 0 ? ".open" : ".closed";
+                    return s.Get(key, "name", name, "stall", s.Get("story.stall.kind." + kind));
+                case StoryArc.LongLife:
+                    return step == 4 ? s.Get(key, "name", name, "age", ctx.Fmt.Integer(n / 1000), "n", ctx.Fmt.Integer(n % 1000)) : s.Get(key, "name", name, "age", ctx.Fmt.Integer(n));
+                default: return s.Get(key, "name", name);
+            }
+        }
+    }
+
+    /// <summary>A story step's toast (spec 029 §7, Preview 19): the person's portrait, a small green line and one sentence; a tap opens the Chronicle.</summary>
+    public sealed class StoryToastVm
+    {
+        public string Portrait { get; internal set; }
+        public string Kicker { get; internal set; }
+        public string Text { get; internal set; }
+        public SheetRequest Opens { get; internal set; }
+
+        public static StoryToastVm Build(ViewContext ctx, Sim.Core.Events.StoryStepped e)
+        {
+            Sim.Core.People.Citizen c = ctx.Sim.State.Citizens?.Citizen(e.CitizenId);
+            long code = StoriesRules.Code((StoryArc)e.Arc, e.Step, e.N);
+            bool leaving = e.Arc == (int)StoryArc.Stall && e.Step == 1;
+            return new StoryToastVm
+            {
+                Portrait = c == null ? "portrait_adult_m" : TownWords.Portrait(ctx, c),
+                Kicker = ctx.Strings.Get(leaving ? "story.toast.leaving" : "story.toast.kicker"),
+                Text = StoryWords.Line(ctx, e.CitizenId, code, e.Kind),
+                Opens = new SheetRequest(ChronicleSheet.Kind, 0),
+            };
         }
     }
 
@@ -109,6 +167,33 @@ namespace Sim.View.Views
             if (c.Entries.Count == 0) vm.Lines.Add(new LineVm(ctx.Strings.Get("chronicle.empty"), null));
         }
 
+        private static void StoryWhy(ViewContext ctx, WhyVm vm, ChronicleEntry e)
+        {
+            var s = ctx.Strings;
+            StoriesDefs d = ctx.Sim.Config.Game.Stories;
+            StoryArc arc = StoryWords.ArcOf(e.B);
+            int step = StoryWords.StepOf(e.B);
+            vm.Title = s.Get("story.why.title");
+            vm.Rows.Add(new WhyRowVm(StoryWords.Line(ctx, e.A, e.B, e.Id), null));
+            string key = "story.why." + arc.ToString().ToLowerInvariant() + "." + step;
+            switch (arc)
+            {
+                case StoryArc.Stall:
+                    vm.Rows.Add(new WhyRowVm(s.Get(key, "seasons", ctx.Fmt.Integer(d.StallSeasons), "savings", ctx.Fmt.Coins(d.StallSavings), "chance", ctx.Fmt.Percent(d.StallChance), "after", ctx.Fmt.Integer(d.StallJudgedAfter)), null));
+                    break;
+                case StoryArc.Migrant:
+                    vm.Rows.Add(new WhyRowVm(s.Get(key, "first", ctx.Fmt.Integer(d.MigrantFirst), "second", ctx.Fmt.Integer(d.MigrantSecond)), null));
+                    break;
+                case StoryArc.Reader:
+                    vm.Rows.Add(new WhyRowVm(s.Get(key, "age", ctx.Fmt.Integer(d.ReaderAdultAge)), null));
+                    break;
+                default:
+                    vm.Rows.Add(new WhyRowVm(s.Get(key, "from", ctx.Fmt.Integer(d.LifeDiedFrom)), null));
+                    break;
+            }
+            vm.Rows.Add(new WhyRowVm(s.Get("story.why.rule"), null));
+        }
+
         /// <summary>A line's Why?: the numbers behind it, in words (never a factor).</summary>
         internal static WhyVm WhyOf(ViewContext ctx, long index)
         {
@@ -136,6 +221,7 @@ namespace Sim.View.Views
                 case ChronicleKind.FireSurvived: vm.Value = ctx.Fmt.Coins(e.A); Row("chronicle.why.fire", ctx.Fmt.Coins(e.A)); break;
                 case ChronicleKind.EpidemicSurvived: vm.Value = ctx.Fmt.Integer(e.A); Row("chronicle.why.epidemic", ctx.Fmt.Integer(e.A)); break;
                 case ChronicleKind.LoanCleared: vm.Value = ctx.Fmt.Coins(e.A); Row("chronicle.why.loan", ctx.Fmt.Coins(e.A)); break;
+                case ChronicleKind.Story: StoryWhy(ctx, vm, e); break;
             }
             vm.Footnote = s.Get("chronicle.why.foot");
             return vm;

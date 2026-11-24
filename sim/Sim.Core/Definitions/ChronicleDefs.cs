@@ -75,4 +75,29 @@ namespace Sim.Core.Definitions
         /// <summary>The kinds the cap never drops: the once-only ones and the line a Chronicle begins with.</summary>
         public static bool Pinned(ChronicleKind k) { return Once(k) || k == ChronicleKind.Begins; }
     }
+
+    /// <summary>The four citizen arcs (spec 029 §3.6): the order is their priority when several steps fall on one close.</summary>
+    public enum StoryArc { Stall = 0, Reader = 1, Migrant = 2, LongLife = 3 }
+
+    /// <summary><c>stories.json</c> (spec 029 §3.6, §4): every number of the four arcs.</summary>
+    public sealed class StoriesDefs
+    {
+        /// <summary>A stall of his own: seasons worked, household savings (1/100 coin, year-0), motivation, the chance each season, and the seasons after leaving the stall is judged.</summary>
+        public int StallSeasons { get; internal set; }
+        public long StallSavings { get; internal set; }
+        public Fixed StallMotivation { get; internal set; }
+        public Fixed StallChance { get; internal set; }
+        public int StallJudgedAfter { get; internal set; }
+
+        /// <summary>The first reader in the family: the age at which a paid job or a hire is the third step.</summary>
+        public int ReaderAdultAge { get; internal set; }
+
+        /// <summary>A migrant family that stays: the seasons of the first and second step.</summary>
+        public int MigrantFirst { get; internal set; }
+        public int MigrantSecond { get; internal set; }
+
+        /// <summary>A long life: the three ages, and the age from which a death is remembered.</summary>
+        public IReadOnlyList<int> LifeAges { get; internal set; }
+        public int LifeDiedFrom { get; internal set; }
+    }
 }

@@ -766,7 +766,7 @@ namespace Sim.View.Views
             // Spec 013 §3.4 (ADR 0087).
             { "BenefitChanged", Use.StateOnly }, { "NightShiftChanged", Use.StateOnly }, { "DealOffered", Use.StateOnly }, { "DealAnswered", Use.StateOnly }, { "ShareBoughtBack", Use.StateOnly }, { "BusinessListed", Use.StateOnly }, { "BusinessSaleCancelled", Use.StateOnly }, { "BusinessSold", Use.StateOnly }, { "ManagerHired", Use.StateOnly }, { "ManagerLeft", Use.StateOnly }, { "ManagerReported", Use.StateOnly }, { "InvoiceIssued", Use.StateOnly }, { "InvoicePaid", Use.StateOnly }, { "InvoiceOverdue", Use.StateOnly }, { "SupplyStopped", Use.StateOnly }, { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "ColdStoreRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
             // Spec 029 (the Chronicle).
-            { "ChronicleWritten", Use.StateOnly }, { "AlmanacWritten", Use.StateOnly }, { "LoanCleared", Use.StateOnly }, { "FireRepaired", Use.StateOnly },
+            { "ChronicleWritten", Use.StateOnly }, { "AlmanacWritten", Use.StateOnly }, { "StoryStepped", Use.StateOnly }, { "LoanCleared", Use.StateOnly }, { "FireRepaired", Use.StateOnly },
             // Spec 023 (the Township).
             { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },

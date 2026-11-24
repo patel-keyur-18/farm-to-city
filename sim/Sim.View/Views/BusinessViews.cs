@@ -417,7 +417,9 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             ManagerSheet.AddToday(ctx, vm, b); // spec 028 §3.2: who runs it, above who works here
-            vm.Lines.Add(WorkerLine(ctx, b));
+            LineVm worker = WorkerLine(ctx, b);
+            if (b.Worker == WorkerKind.Citizen && Sim.Core.History.StoriesRules.Notice(sim, b.WorkerCitizen) != null) { worker.Note = s.Get("people.leavingForStall"); worker.NoteTone = Tone.Warn; } // spec 029 §3.6
+            vm.Lines.Add(worker);
             Worker hired = BusinessRules.HiredWorker(sim, b);
             if (hired != null && b.Status == BusinessStatus.Open) vm.Lines.Add(StaffView.Output(ctx, b.Id, hired));
             if (b.Worker == WorkerKind.None)

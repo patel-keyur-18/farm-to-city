@@ -24,6 +24,9 @@ namespace Sim.Core.Business
         /// <summary>A newcomer drawn by customers nobody served (a gap), else by your prices above the reference.</summary>
         public bool Gap { get; internal set; }
 
+        /// <summary>The citizen whose stall it is (spec 029 §3.6, a hand who left to start one), or 0 for an ordinary newcomer (schema 24).</summary>
+        public long Owner { get; internal set; }
+
         /// <summary>Last season's share of its kind's demand (schema 15): the grocer and tea stall react to its change (ADR 0095 §3).</summary>
         public Fixed LastShare { get; internal set; }
 
@@ -64,6 +67,7 @@ namespace Sim.Core.Business
             h.WriteLong(OpenedAt);
             h.WriteInt(LowSeasons);
             h.WriteBool(Gap);
+            if (h.Hashing ? Owner != 0 : !(h is SaveWriter w24 && w24.Schema < 24)) h.WriteLong(Owner); // hashed only once used
         }
 
         internal static Rival ReadNewcomer(SaveReader r, SimConfig config)
@@ -75,6 +79,7 @@ namespace Sim.Core.Business
             x.OpenedAt = r.ReadLong();
             x.LowSeasons = r.ReadInt();
             x.Gap = r.ReadBool();
+            if (r.Schema >= 24) x.Owner = r.ReadLong();
             return x;
         }
 

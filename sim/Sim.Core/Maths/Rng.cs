@@ -47,6 +47,9 @@ namespace Sim.Core.Maths
 
         /// <summary>A business's sale (spec 028 §3.3): key = the business, counter = day × 8 + what is drawn (1 the buyer, 2 the days, 3 the share).</summary>
         Exit = 23,
+
+        /// <summary>A hand or worker giving notice to start a stall (spec 029 §3.6): key = the citizen, counter = the season that opens.</summary>
+        Stories = 24,
     }
 
     /// <summary>

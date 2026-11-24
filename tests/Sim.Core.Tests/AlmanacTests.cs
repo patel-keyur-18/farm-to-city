@@ -17,7 +17,8 @@ namespace Sim.Core.Tests
     {
         private const long Coin = 100;
 
-        private static Simulation Start() { return TownshipTests.Start(); }
+        /// <summary>A Township town where no long life's story moves by itself (the ages are out of reach), so the spotlight is what a test sets up.</summary>
+        private static Simulation Start() { return TownshipTests.Start(false, (f, j) => f == "stories.json" ? j.Replace("[60, 70, 80]", "[200, 210, 220]") : j); }
 
         private static AlmanacState A(Simulation sim) { return sim.State.Chronicle.Almanac; }
 
@@ -162,8 +163,8 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.Citizens.Citizens, Is.Empty);
             Assert.That(ToWinter(sim).Spot, Is.EqualTo(AlmanacSpot.None), "a quiet year for the people");
 
-            // The same town four times, each with one rank fewer: the same people, the same lines, in the fixed order.
-            foreach ((int ranks, AlmanacSpot spot, string who) in new[] { (4, AlmanacSpot.Reader, "reader"), (3, AlmanacSpot.Baby, "babyB"), (2, AlmanacSpot.Worker, "worker2"), (1, AlmanacSpot.Elder, "elder") })
+            // The same town five times, each with one rank fewer: the same people, the same lines, in the fixed order.
+            foreach ((int ranks, AlmanacSpot spot, string who) in new[] { (5, AlmanacSpot.Arc, "mover"), (4, AlmanacSpot.Reader, "reader"), (3, AlmanacSpot.Baby, "babyB"), (2, AlmanacSpot.Worker, "worker2"), (1, AlmanacSpot.Elder, "elder") })
             {
                 sim = Start();
                 int retire = sim.Config.Game.Population.RetireAge;
@@ -180,6 +181,12 @@ namespace Sim.Core.Tests
                     Add(sim, 0, bornAt: 500);
                     people["babyB"] = Add(sim, 0, bornAt: 800); // youngest, and the lower id of the two born at 800
                     Add(sim, 0, bornAt: 800);
+                }
+                if (ranks >= 5)
+                {
+                    people["mover"] = Add(sim, 25);
+                    var arc = new StoryArcState { Citizen = people["mover"].Id, Arc = StoryArc.Migrant, Step = 1, At = 2 }; // a step in the year
+                    sim.State.Chronicle.Stories.Arcs.Add(arc);
                 }
                 if (ranks >= 4)
                 {

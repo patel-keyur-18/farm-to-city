@@ -879,11 +879,33 @@ namespace Sim.Core.Business
                 Fixed chance = (grant ? d.NewcomerChance * Town.PolicyRules.Def(sim).GrantNewcomerChance : d.NewcomerChance) * Town.PolicyRules.NewcomerFactor(sim);
                 if (!Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Rival, (ulong)kind, (ulong)season), chance)) continue;
                 if (grant) Town.PolicyRules.UseGrantBoost(sim, true);
-                int pitch = FreePitch(sim);
-                s.Newcomers.Add(new Rival { Def = -1, Id = "newcomer_" + kind.ToString().ToLowerInvariant(), Kind = kind, Pitch = pitch, OpenedAt = t,
-                    PriceFactor = Fixed.One, Stars = d.NewcomerStars, Gap = gap });
-                sim.Emit(new RivalOpened(t, kind, pitch, gap));
+                Open(sim, kind, gap, 0);
             }
+        }
+
+        /// <summary>A newcomer of <paramref name="kind"/> opens on the first free pitch or as the cart by the square, owned by a citizen when <paramref name="owner"/> is not 0.</summary>
+        private static void Open(Simulation sim, ShopKind kind, bool gap, long owner)
+        {
+            ShopDefs d = Defs(sim);
+            long t = sim.State.Clock.SimTime;
+            int pitch = FreePitch(sim);
+            sim.State.Shops.Newcomers.Add(new Rival { Def = -1, Id = "newcomer_" + kind.ToString().ToLowerInvariant(), Kind = kind, Pitch = pitch, OpenedAt = t,
+                PriceFactor = Fixed.One, Stars = d.NewcomerStars, Gap = gap, Owner = owner });
+            sim.Emit(new RivalOpened(t, kind, pitch, gap));
+        }
+
+        /// <summary>Whether a stall of a kind could be founded now: its kind is open to the player and no newcomer of it stands (at most one of each kind).</summary>
+        public static bool CanFound(Simulation sim, ShopKind kind)
+        {
+            return sim.State.Shops != null && KindUnlocked(sim, kind) && !sim.State.Shops.Newcomers.Exists(x => x.Kind == kind);
+        }
+
+        /// <summary>Founds a citizen's own stall (spec 029 §3.6, ADR 0167): the story opens it itself, so a hand who gives notice is never left without one. False when it could not.</summary>
+        internal static bool FoundOwned(Simulation sim, ShopKind kind, long owner)
+        {
+            if (!CanFound(sim, kind)) return false;
+            Open(sim, kind, false, owner);
+            return true;
         }
 
         private static Fixed Max(Fixed a, Fixed b) { return a > b ? a : b; }

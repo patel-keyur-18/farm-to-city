@@ -94,7 +94,9 @@ namespace Sim.Core.Finance
             sim.State.Finance.SeasonStartEntry = ledger.NextEntryId;
             sim.State.Finance.Sales.Roll();
             Town.RoadRules.RollSeason(sim);
+            History.StoriesRules.Leaving(sim); // spec 029 §3.6: a hand who gave notice goes, before the village's newcomers roll and before the new season's wages
             Business.BusinessRules.CloseBooks(sim, closing); // spec 016 §3.11: each business's books close too, before the loans are paid
+            History.StoriesRules.AtClose(sim); // and this season's one story step
 
             // Settle and pay upfront (these entries belong to the new season).
             SavingsRules.Cover(sim, closing); // ADR 0101 §2: with the player's yes, what the charges need beyond cash comes from the deposit

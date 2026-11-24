@@ -58,6 +58,7 @@ namespace Sim.Content
                 game.Codex = LoadCodex(read("codex.json")); // the Codex comes with the school (spec 018 §4)
                 game.Advisors = LoadAdvisors(read("advisors.json")); // and the advisors
                 game.Chronicle = LoadChronicle(read("chronicle.json")); // and the town's Chronicle (spec 029)
+                game.Stories = LoadStories(read("stories.json")); // and its citizens' arcs
                 // The treasury opens in a later era than the school's, so it needs the eras (spec 021 §4).
                 if (onboarding != null && System.Linq.Enumerable.Any(onboarding.Eras, e => e.Id == "township")) game.Treasury = LoadTreasury(read("treasury.json"), onboarding);
                 if (game.Treasury != null) CheckTaxGuard(game.Treasury.Taxes, buildings, population);

@@ -45,4 +45,21 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "AlmanacWritten(" + Year + ")"; }
     }
+
+    /// <summary>A citizen's story moved a step (spec 029 §3.6): the arc (<c>StoryArc</c>), the step (1 to 4), the citizen, and the stall's kind or the age or count the line says.</summary>
+    public sealed class StoryStepped : SimEvent
+    {
+        public int Arc { get; }
+        public int Step { get; }
+        public long CitizenId { get; }
+        public int N { get; }
+        public string Kind { get; }
+
+        public StoryStepped(long simTime, int arc, int step, long citizenId, int n, string kind) : base(simTime)
+        {
+            Arc = arc; Step = step; CitizenId = citizenId; N = n; Kind = kind;
+        }
+
+        protected override string Describe() { return "StoryStepped(arc=" + Arc + ", step=" + Step + ", citizen=" + CitizenId + ")"; }
+    }
 }

@@ -48,6 +48,11 @@ namespace Sim.View.Views
 
         private static string SpotLine(ViewContext ctx, AlmanacEntry e, string name)
         {
+            if (e.Spot == AlmanacSpot.Arc) // the person's story that moved: its latest line in the Chronicle
+            {
+                ChronicleEntry last = ctx.Sim.State.Chronicle.Entries.FindLast(x => x.Kind == ChronicleKind.Story && x.A == e.SpotCitizen && x.At <= e.At);
+                if (last != null) return StoryWords.Line(ctx, last.A, last.B, last.Id);
+            }
             return ctx.Strings.Get("almanac.spot." + (int)e.Spot, "name", name);
         }
 

@@ -182,6 +182,11 @@ namespace Sim.Core.History
             CitizensState cs = sim.State.Citizens;
             if (cs == null) return;
             long yearStart = (winter - ClockDef.SeasonsPerYear + 1) * sim.Clock.SecondsPerSeason;
+            StoryArcState moved = null; // a story that moved this year: the latest step, the lowest id on a tie (§3.5 rule 1)
+            foreach (StoryArcState arc in sim.State.Chronicle.Stories.Arcs)
+                if (arc.At >= winter - ClockDef.SeasonsPerYear + 2 && arc.At <= winter + 1 && cs.Citizen(arc.Citizen) != null
+                    && (moved == null || arc.At > moved.At || (arc.At == moved.At && arc.Citizen < moved.Citizen))) moved = arc;
+            if (moved != null) { e.Spot = AlmanacSpot.Arc; e.SpotCitizen = moved.Citizen; return; }
             if (a.Reader != 0 && cs.Citizen(a.Reader) is Citizen reader && reader.Living) { e.Spot = AlmanacSpot.Reader; e.SpotCitizen = reader.Id; return; }
             Citizen baby = null; long babyAt = 0, workerAt = 0;
             Citizen worker = null, elder = null;

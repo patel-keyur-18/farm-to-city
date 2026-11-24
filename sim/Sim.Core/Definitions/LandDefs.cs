@@ -514,6 +514,9 @@ namespace Sim.Core.Definitions
         /// <summary>The town's Chronicle (spec 029, schema 24), with the school's content; else null.</summary>
         public ChronicleDefs Chronicle { get; internal set; }
 
+        /// <summary>The citizen arcs' numbers (spec 029 §3.6), with the Chronicle; else null.</summary>
+        public StoriesDefs Stories { get; internal set; }
+
         /// <summary>The three advisors and their notes (spec 018 §3.4), with the school's content; else null.</summary>
         public AdvisorDefs Advisors { get; internal set; }
 
