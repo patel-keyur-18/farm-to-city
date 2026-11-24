@@ -38,9 +38,12 @@ namespace Sim.Core.History
         public List<StoryArcState> Arcs { get; internal set; } = new List<StoryArcState>();
         public long LastStep { get; internal set; }
 
-        internal bool Unused { get { return Arcs.Count == 0 && LastStep == 0; } }
+        /// <summary>The (citizen, arc) pairs of finished arcs that were pruned from <see cref="Arcs"/> (citizen × 8 + arc), so a finished story never happens twice (review of Sprint 26).</summary>
+        public List<long> Retired { get; internal set; } = new List<long>();
 
-        internal StoriesState Clone() { return new StoriesState { Arcs = Arcs.ConvertAll(x => x.Clone()), LastStep = LastStep }; }
+        internal bool Unused { get { return Arcs.Count == 0 && LastStep == 0 && Retired.Count == 0; } }
+
+        internal StoriesState Clone() { return new StoriesState { Arcs = Arcs.ConvertAll(x => x.Clone()), LastStep = LastStep, Retired = new List<long>(Retired) }; }
 
         internal void WriteTo(IStateWriter h)
         {
@@ -48,6 +51,8 @@ namespace Sim.Core.History
             h.WriteInt(Arcs.Count);
             foreach (StoryArcState a in Arcs) a.WriteTo(h);
             h.WriteLong(LastStep);
+            h.WriteInt(Retired.Count);
+            foreach (long k in Retired) h.WriteLong(k);
         }
 
         internal static StoriesState ReadFrom(SaveReader r)
@@ -56,6 +61,8 @@ namespace Sim.Core.History
             int n = r.ReadCount();
             for (int i = 0; i < n; i++) s.Arcs.Add(StoryArcState.ReadFrom(r));
             s.LastStep = r.ReadLong();
+            int m = r.ReadCount();
+            for (int i = 0; i < m; i++) s.Retired.Add(r.ReadLong());
             return s;
         }
     }

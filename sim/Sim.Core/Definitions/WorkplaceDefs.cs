@@ -13,6 +13,9 @@ namespace Sim.Core.Definitions
         public int SupervisorMinWorkers { get; internal set; }
         public int SupervisorSpan { get; internal set; }
         public Fixed OutputPerStar { get; internal set; }
+
+        /// <summary>What a hand's work is worth the farm in a season at year-0 prices (measured, `GateTests.HandWorth`: he nets about 18,500 after his wage, so about 48,000): the sum a supervisor's stars are worth a share of.</summary>
+        public long HandOutput { get; internal set; }
         public Fixed RiskHalf { get; internal set; }
 
         /// <summary>Hours a new accident, conflict or association card waits before its default answers it.</summary>

@@ -619,7 +619,7 @@ namespace Sim.Core.Town
                 s.LossTotal += cost;
                 if (ev.Id == EventsDef.FireRepair) InsuranceRules.OnRepair(sim, s, p, choice, cost, now); // an insured fire pays back its share of what was paid (spec 027 §3.6)
             }
-            Apply(sim, s, p, ev, choice, now);
+            Apply(sim, s, p, ev, choice, now, cost);
             long cash = -(cost + (bid > 0 && sim.State.Land.Parcels[(int)p.Target].Owned ? bid : 0)); // the history shows what it cost you, a won bid included
             s.History.Add(new EventRecord(p.Def, choice, defaulted, now, cash, p.Target, p.TargetTable));
             while (s.History.Count > d.Engine.KeepHistory) s.History.RemoveAt(0);
@@ -629,7 +629,7 @@ namespace Sim.Core.Town
             return RejectReason.None;
         }
 
-        private static void Apply(Simulation sim, EventsState s, PendingEvent p, EventDef ev, int choice, long now)
+        private static void Apply(Simulation sim, EventsState s, PendingEvent p, EventDef ev, int choice, long now, long paid = 0)
         {
             foreach (EffectDef e in ev.Choices[choice].Effects)
             {
@@ -704,7 +704,7 @@ namespace Sim.Core.Town
                         break;
                 }
             }
-            if (ev.Id == EventsDef.FireRepair) { Repaired(sim, s, p, choice, now); sim.Emit(new FireRepaired(now, p.Target, p.Target2 == 1, p.Param)); } // spec 029 §3.2: the town rebuilt it for what the card carried
+            if (ev.Id == EventsDef.FireRepair) { Repaired(sim, s, p, choice, now); sim.Emit(new FireRepaired(now, p.Target, p.Target2 == 1, InsuranceRules.NetOfClaim(sim, s, p, choice, paid))); } // spec 029 §3.2: the town rebuilt it for what was paid, less what a policy paid back (the slow repair pays half)
         }
 
         private static int FlagCode(string name)

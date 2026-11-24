@@ -3,6 +3,7 @@
   "supervisorMinWorkers": 3,
   "supervisorSpan": 5,
   "outputPerStar": 0.012,
+  "handOutput": 48000,
   "riskHalf": 0.5,
   "expiryHours": 24,
 

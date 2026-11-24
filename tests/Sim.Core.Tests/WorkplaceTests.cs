@@ -259,6 +259,30 @@ namespace Sim.Core.Tests
     /// <summary>US-259: associations: the triggers, the three answers, the stoppage, the farm only.</summary>
     public class AssociationTests
     {
+        // Review of Sprint 26: an association is the whole place's, not one hand's: letting any hand go leaves its card, and a quarrel ends when either of its two goes; a card whose people are gone ends without a word that something was done.
+        [Test]
+        public void Cards_Outlive_Or_End_With_Their_People()
+        {
+            Simulation sim = WorkplaceKit.Farm(5);
+            // formed by the rule, the card names nobody
+            P(sim).Reputation = 5;
+            for (int i = 0; i < 40 && !sim.PendingEvents.OfType<HrEventRaised>().Any(e => e.Kind == HrEventKind.Association); i++) { sim.AdvanceTo(WorkplaceKit.Now(sim) + 4 * 86400); CashTo(sim, 9_000_000 * 100); P(sim).Reputation = 5; }
+            Assert.That(sim.PendingEvents.OfType<HrEventRaised>().First(e => e.Kind == HrEventKind.Association).WorkerId, Is.EqualTo(0L), "an association the rule raises names no worker");
+            while (P(sim).Hands.Count < 5) { Hand h = P(sim).Hands[0].Clone(); h.Id = P(sim).NextHandId++; h.PrepaymentId = 0; P(sim).Hands.Add(h); }
+            HrEvent assoc = WorkplaceKit.Card(sim, HrEventKind.Association, 0, 0);
+            Ok(sim, new DismissHand(WorkplaceKit.Now(sim), P(sim).Hands[0].Id));
+            Assert.That(P(sim).HrEvents.Contains(assoc), Is.True, "letting the lowest hand go leaves it");
+            Assert.That(sim.Execute(new AnswerHrEvent(WorkplaceKit.Now(sim), assoc.Id, 2)).Accepted, Is.True, "and it can be answered");
+
+            // a quarrel ends when the other of the two goes
+            HrEvent quarrel = WorkplaceKit.Card(sim, HrEventKind.Conflict, 0, P(sim).Hands[0].Id, P(sim).Hands[1].Id);
+            Ok(sim, new DismissHand(WorkplaceKit.Now(sim), P(sim).Hands[1].Id));
+            Assert.That(P(sim).HrEvents.Contains(quarrel), Is.False, "the quarrel ends with one of its two");
+            sim.DrainEvents();
+            sim.AdvanceTo(WorkplaceKit.Now(sim) + 30 * 3600);
+            Assert.That(sim.PendingEvents.OfType<HrEventDefaulted>().Any(e => e.EventId == quarrel.Id), Is.False, "nothing is said of a default that was never applied");
+        }
+
         // AC-23: pay more than 5% under the reference, a tired team for 2 closes, or a name under 50 each makes one likely; a place needs 4 workers.
         [Test]
         public void Triggers()

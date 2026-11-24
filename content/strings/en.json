@@ -8553,7 +8553,7 @@
   "why.supervisor.foot": "He asks about {wage} a season. He makes the hands you have a little better and a little safer; he adds none.",
   "why.supervisorPays.title": "Does a supervisor pay?",
   "why.supervisorPays.cost": "What he costs a season",
-  "why.supervisorPays.output": "Output gained: {n} hands, {stars} stars",
+  "why.supervisorPays.output": "Output gained: {n} hands, {stars} stars (a hand's work is worth about {out} a season, more than his wage)",
   "why.supervisorPays.accidents": "Accidents spared, at what each would cost",
   "why.supervisorPays.conflicts": "A quarrel settled: a worker lost half the time",
   "why.supervisorPays.spared": "What he has spared you so far",

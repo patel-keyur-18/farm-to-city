@@ -142,5 +142,33 @@ namespace Sim.Core.Tests
             Assert.That(r.State.Chronicle.Entries.Select(e => (e.Kind, e.A, e.Id)), Is.EqualTo(sim.State.Chronicle.Entries.Select(e => (e.Kind, e.A, e.Id))));
             Assert.That(r.State.Chronicle.SeasonGrams[0], Is.EqualTo(1_500_000));
         }
+
+        // Review of Sprint 26: the crop records (a Chronicle's record harvests, the Almanac's year of crops) are saved by crop id like the farm's seed, so a crop added to the content later leaves the records where they were.
+        [Test]
+        public void Saved_Crop_Records_Survive_A_New_Crop()
+        {
+            Simulation sim = Start();
+            ChronicleState c = sim.State.Chronicle;
+            c.SeasonGrams[2] = 7_000; c.BestGrams[2] = 9_000; c.BestGrams[5] = 4_000;
+            c.Almanac.CropIncome[3] = 123_00; c.Almanac.CropCost[3] = 45_00; c.Almanac.CropSowings[3] = 6;
+            byte[] bytes = SaveCodec.Write(sim.State, sim.Config, TestSim.Wall0);
+            int crops = sim.Config.Game.Farm.Crops.Count;
+            SimConfig more = TestSim.Config(game: TestContent.Game((f, j) =>
+            {
+                if (f == "farming.json") return j.Replace("\"baseRisk\": {", "\"baseRisk\": { \"zzz_new\": 0.03,");
+                if (f != "crops.json") return j;
+                int last = j.LastIndexOf("]", j.IndexOf("\"gardenCrops\"", StringComparison.Ordinal), StringComparison.Ordinal); // the crops list's closing bracket
+                int open = j.LastIndexOf("{", j.LastIndexOf("}", last, StringComparison.Ordinal) - 1, StringComparison.Ordinal);
+                int start = j.LastIndexOf("{ \"id\"", last, StringComparison.Ordinal);
+                string tail = j.Substring(start, j.LastIndexOf("}", last, StringComparison.Ordinal) - start + 1); // the last crop, copied under a new id
+                return j.Insert(j.LastIndexOf("}", last, StringComparison.Ordinal) + 1, ",\n    " + System.Text.RegularExpressions.Regex.Replace(tail, "\"id\": \"[a-z_]+\"", "\"id\": \"zzz_new\""));
+            }));
+            if (more.Game.Farm.Crops.Count != crops + 1) Assert.Inconclusive("the content edit did not add a crop");
+            LoadResult r = SaveCodec.Read(bytes, more, 3);
+            Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
+            ChronicleState d = r.State.Chronicle;
+            Assert.That((d.SeasonGrams[2], d.BestGrams[2], d.BestGrams[5], d.BestGrams[crops]), Is.EqualTo((7_000L, 9_000L, 4_000L, 0L)), "the records stay on their crops and the new crop has none");
+            Assert.That((d.Almanac.CropIncome[3], d.Almanac.CropCost[3], d.Almanac.CropSowings[3], d.Almanac.CropIncome[crops]), Is.EqualTo((123_00L, 45_00L, 6L, 0L)));
+        }
     }
 }

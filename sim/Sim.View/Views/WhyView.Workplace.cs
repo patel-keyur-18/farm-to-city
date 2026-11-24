@@ -33,7 +33,7 @@ namespace Sim.View.Views
             int covered = WorkplaceRules.Workers(ctx.Sim, 0).Count;
             WhyVm vm = New(ctx, "why.supervisorPays.title", (left >= 0 ? "+" : "-") + Money(ctx, System.Math.Abs(left)));
             Row(vm, ctx, "why.supervisorPays.cost", Money(ctx, wage));
-            Row(vm, ctx, "why.supervisorPays.output", "+" + Money(ctx, output), "n", ctx.Fmt.Integer(System.Math.Min(WorkplaceSheet.Defs(ctx).SupervisorSpan, covered)), "stars", ctx.Fmt.Integer(stars));
+            Row(vm, ctx, "why.supervisorPays.output", "+" + Money(ctx, output), "n", ctx.Fmt.Integer(System.Math.Min(WorkplaceSheet.Defs(ctx).SupervisorSpan, covered)), "stars", ctx.Fmt.Integer(stars), "out", Money(ctx, Sim.Core.Market.MarketRules.Indexed(ctx.Sim, WorkplaceSheet.Defs(ctx).HandOutput)));
             Row(vm, ctx, "why.supervisorPays.accidents", "+" + Money(ctx, accidents));
             Row(vm, ctx, "why.supervisorPays.conflicts", "+" + Money(ctx, conflicts));
             if (sv != null) Row(vm, ctx, "why.supervisorPays.spared", ctx.Fmt.Integer(sv.Spared + sv.Settled + sv.Kept));

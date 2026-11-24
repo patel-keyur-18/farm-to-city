@@ -248,6 +248,7 @@ namespace Sim.Core.Business
             }
             BusinessRules.LoseWorker(sim, b);
             InvoiceRules.CollectAll(sim, b); // what its customers owe it, now (spec 028 §3.1)
+            KhataRules.Settle(sim, b); // and its households' khata (spec 028 §3.10)
 
             KilnRules.Clear(sim, b); // a closing kiln's yard goes to the trader
             TuitionRules.Release(b); // a closing tuition centre's pupils go

@@ -90,7 +90,13 @@ namespace Sim.Core.History
             int n = r.ReadInt();
             for (int i = 0; i < n; i++) s.Entries.Add(ChronicleEntry.ReadFrom(r));
             s.Done = r.ReadLong();
-            for (int i = 0; i < crops; i++) { s.SeasonGrams[i] = r.ReadLong(); s.BestGrams[i] = r.ReadLong(); }
+            // The crops the save knew, mapped to today's slots: a crop added to the content since the save has no record, and none may have gone (as FarmState does).
+            if (r.SavedCount(ContentTable.Crop) > crops) throw new SaveContentException("the content has " + crops + " crops, the save " + r.SavedCount(ContentTable.Crop));
+            for (int i = 0; i < r.SavedCount(ContentTable.Crop); i++)
+            {
+                int at = r.Slot(ContentTable.Crop, i);
+                s.SeasonGrams[at] = r.ReadLong(); s.BestGrams[at] = r.ReadLong();
+            }
             s.Almanac = AlmanacState.ReadFrom(r, crops);
             s.Stories = StoriesState.ReadFrom(r);
             return s;

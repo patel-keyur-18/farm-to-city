@@ -283,7 +283,7 @@ namespace Sim.Core.People
         internal static void Gone(Simulation sim, IStaff w)
         {
             PeopleState s = sim.State.People;
-            foreach (HrEvent e in s.HrEvents.FindAll(x => x.Place == Place(w) && x.WorkerId == w.Id))
+            foreach (HrEvent e in s.HrEvents.FindAll(x => x.Place == Place(w) && (x.WorkerId == w.Id || (x.Kind == HrEventKind.Conflict && x.OtherId == w.Id)))) // a quarrel ends when either of the two goes
             {
                 if (e.Kind == HrEventKind.BadBatch) Throw(sim, e);
                 s.HrEvents.Remove(e);

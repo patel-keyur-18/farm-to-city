@@ -172,5 +172,41 @@ namespace Sim.Core.Tests
             Assert.That((loaded.Khata, loaded.KhataLimit, loaded.Marketing, loaded.Credit.Count, loaded.CreditSeason), Is.EqualTo((true, shop.KhataLimit, shop.Marketing, shop.Credit.Count, shop.CreditSeason)));
             Assert.That(r.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), "round-trips");
         }
+
+        // Review of Sprint 26: a shop closed or sold mid-season collects what its households owe it then (the loss rate written off), so no receivable is left on a closed business's books for net worth to count.
+        [Test]
+        public void Close_And_Sale_Settle_The_Khata()
+        {
+            foreach (bool sell in new[] { false, true })
+            {
+                Simulation sim = Town(8, 8_000, out Business.Business shop);
+                sim.AdvanceTo(sim.State.Clock.SimTime + 86400);
+                long owed = KhataRules.Owed(shop);
+                Assert.That(owed, Is.GreaterThan(0), "the households owe it something");
+                if (sell) { Ok(sim, new ListBusiness(sim.State.Clock.SimTime, shop.Id, true)); sim.AdvanceTo(sim.State.Clock.SimTime + 3 * 86400); }
+                else Ok(sim, new CloseBusiness(sim.State.Clock.SimTime, shop.Id));
+                Assert.That(shop.Status, Is.EqualTo(BusinessStatus.Closed), sell ? "sold" : "closed");
+                Assert.That((shop.Credit.Count, shop.Ledger.Balance(Account.OwedByBuyers), BusinessBooks.Equity(shop)), Is.EqualTo((0, 0L, 0L)), "nothing is left owed on a closed shop's books");
+                Assert.That(shop.Ledger.Balance(Account.BadDebt), Is.GreaterThan(0), "the never-paid part is a loss");
+                Reconciles(sim);
+            }
+        }
+
+        // Review of Sprint 26: the derived khata lift is never saved, so a sheet's refresh (or a save and a load) at night must not change what the close keeps (`LastDrew` is hashed): two towns, one refreshed at 22:00, one not.
+        [Test]
+        public void Refresh_Never_Changes_The_Close()
+        {
+            ulong Play(bool refresh)
+            {
+                Simulation sim = Town(5, 8_000, out Business.Business shop);
+                Ok(sim, new SetMarketing(sim.State.Clock.SimTime, shop.Id, 4_000 * Coin));
+                sim.AdvanceTo(BusinessTests.NextClose(sim) - 2 * 3600);
+                if (refresh) KhataRules.Refresh(sim, shop);
+                else shop.KhataLiftNow = Fixed.Zero;
+                sim.AdvanceTo(BusinessTests.NextClose(sim) + 2 * 3600);
+                return sim.State.ComputeHash();
+            }
+            Assert.That(Play(true), Is.EqualTo(Play(false)));
+        }
     }
 }

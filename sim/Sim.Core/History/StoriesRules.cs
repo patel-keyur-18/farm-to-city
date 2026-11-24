@@ -29,14 +29,17 @@ namespace Sim.Core.History
 
         private static StoryArcState Find(StoriesState st, long citizen, StoryArc arc, bool active)
         {
-            return st.Arcs.Find(a => a.Citizen == citizen && a.Arc == arc && (!active || !a.Done));
+            StoryArcState found = st.Arcs.Find(a => a.Citizen == citizen && a.Arc == arc && (!active || !a.Done));
+            if (found != null || active || !st.Retired.Contains(citizen * 8 + (int)arc)) return found;
+            return new StoryArcState { Citizen = citizen, Arc = arc, Step = 99, Done = true }; // a finished arc that was pruned: it happened once and never again
         }
 
         /// <summary>Whether the person has an arc going (one at a time for the same person).</summary>
         public static bool InArc(Simulation sim, long citizen)
         {
             StoriesState st = State(sim);
-            return st != null && st.Arcs.Exists(a => a.Citizen == citizen && !a.Done);
+            // A migrant family at step 2 only waits for a child, who may never come: it must not keep the family's head from a stall or a long life (review of Sprint 26).
+            return st != null && st.Arcs.Exists(a => a.Citizen == citizen && !a.Done && !(a.Arc == StoryArc.Migrant && a.Step >= 2));
         }
 
         /// <summary>The stall arc a person has given notice in (step 1, not yet gone), or null: the People sheet says they will leave at the close.</summary>
@@ -151,6 +154,8 @@ namespace Sim.Core.History
             {
                 int old = st.Arcs.FindIndex(a => a.Done); // the oldest finished ones go past 64
                 if (old < 0) break;
+                StoryArcState gone = st.Arcs[old];
+                st.Retired.Add(gone.Citizen * 8 + (int)gone.Arc);
                 st.Arcs.RemoveAt(old);
             }
             if (st.LastStep == season + 1) return;

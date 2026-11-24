@@ -267,6 +267,31 @@ namespace Sim.Core.Business
             ShopsAtClose(sim, b, lost);
         }
 
+        /// <summary>
+        /// A shop that closes or is sold collects what its households owe it now (US-248 review, spec 028 §3.10): the loss rate of each is written off as Bad debt and the rest comes in as cash, so no receivable
+        /// is left on a closed business's books for net worth to count for ever, and the buyer of a sale takes over what is held, not a debt.
+        /// </summary>
+        internal static void Settle(Simulation sim, Business b)
+        {
+            if (b.Credit.Count == 0) return;
+            long now = sim.State.Clock.SimTime;
+            string reference = "business:" + b.Id;
+            foreach (KhataAccount a in b.Credit)
+            {
+                Household h = sim.State.Citizens?.Households.Find(x => x.Id == a.Household);
+                long owed = a.Balance + a.Late;
+                long loss = h == null ? owed : Money.MulRate(owed, LossRate(sim, h.Income));
+                long paid = owed - loss;
+                if (paid > 0) b.Ledger.Post(now, sim.Period, "ledger.khataPaid", reference, new Posting(Account.Cash, paid), new Posting(Account.OwedByBuyers, -paid));
+                if (loss > 0)
+                {
+                    b.Ledger.Post(now, sim.Period, "ledger.badDebt", reference, new Posting(Account.BadDebt, loss), new Posting(Account.OwedByBuyers, -loss));
+                    sim.Emit(new KhataWrittenOff(now, b.Id, a.Household, loss));
+                }
+            }
+            b.Credit = new List<KhataAccount>();
+        }
+
         private static void ShopsAtClose(Simulation sim, Business b, long lost)
         {
             ShopDefs d = Defs(sim);
@@ -275,7 +300,11 @@ namespace Sim.Core.Business
             b.LastGain = (d.KhataKilos / (Fixed.One + d.KhataKilos)).MulRatio(b.CreditSeason, 1).RoundToLong();
             b.LastLost = lost;
             b.CreditSeason = 0;
+            // Marketing's share of the score without khata's lift: that lift is derived and never saved (a sheet or a load may have refreshed it or not), so the close must not read it (review of Sprint 26).
+            Fixed keep = b.KhataLiftNow;
+            b.KhataLiftNow = Fixed.Zero;
             b.LastDrew = b.MarketLift == Fixed.Zero ? 0 : (b.MarketLift / ShopRules.Attract(sim, b, ShopGroup.Town).Total).MulRatio(b.SeasonServed, 1).RoundToLong();
+            b.KhataLiftNow = keep;
         }
 
         /// <summary>

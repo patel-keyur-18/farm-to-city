@@ -34,7 +34,7 @@ namespace Sim.View.Views
             int covered = System.Math.Min(d.SupervisorSpan, hands.Count);
             long paid = 0;
             for (int i = 0; i < covered; i++) paid += HrRules.Paid(hands[i]);
-            output = Money.MulRate(paid, d.OutputPerStar * Fixed.FromInt(stars));
+            output = Money.MulRate(Sim.Core.Market.MarketRules.Indexed(sim, d.HandOutput) * covered, d.OutputPerStar * Fixed.FromInt(stars)); // a hand's work is worth more than his wage (`handOutput`, measured)
             long each = covered == 0 ? 0 : WorkplaceRules.Bill(sim, hands[0], false) + WorkplaceRules.WageFor(sim, hands[0], WorkplaceRules.OutHours(sim, false));
             Fixed perSeason = d.AccidentChance * Fixed.FromInt((int)Days(ctx)) * (Fixed.One - d.RiskHalf) * Fixed.FromInt(covered);
             accidents = Money.MulRate(each, perSeason);

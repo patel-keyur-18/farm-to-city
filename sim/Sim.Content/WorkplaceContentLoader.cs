@@ -12,7 +12,7 @@ namespace Sim.Content
         {
             const string root = "workplace";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "supervisorWage", "supervisorMinWorkers", "supervisorSpan", "outputPerStar", "riskHalf", "expiryHours",
+            OnlyFields(o, root, "supervisorWage", "supervisorMinWorkers", "supervisorSpan", "outputPerStar", "handOutput", "riskHalf", "expiryHours",
                 "accidentChance", "nightFactor", "overtimeFactor", "skippedFactor", "outHours", "clinicOutHours", "severeShare", "severeHours", "bill", "severeBill",
                 "payMood", "payReputation", "unpaidMood", "unpaidReputation",
                 "conflictMinWorkers", "conflictChance", "conflictFatigue", "talkHours", "talkWindowHours", "talkResolves", "moveMood", "letMood", "letResigns",
@@ -23,7 +23,7 @@ namespace Sim.Content
             long M(string n) { return Money(Required(o, root, n), Join(root, n)); }
             var d = new WorkplaceDef
             {
-                SupervisorWage = M("supervisorWage"), SupervisorMinWorkers = I("supervisorMinWorkers"), SupervisorSpan = I("supervisorSpan"), OutputPerStar = F("outputPerStar"),
+                SupervisorWage = M("supervisorWage"), SupervisorMinWorkers = I("supervisorMinWorkers"), SupervisorSpan = I("supervisorSpan"), OutputPerStar = F("outputPerStar"), HandOutput = M("handOutput"),
                 RiskHalf = F("riskHalf"), ExpiryHours = I("expiryHours"),
                 AccidentChance = F("accidentChance"), NightFactor = F("nightFactor"), OvertimeFactor = F("overtimeFactor"), SkippedFactor = F("skippedFactor"),
                 OutHours = I("outHours"), ClinicOutHours = I("clinicOutHours"), SevereShare = F("severeShare"), SevereHours = I("severeHours"), Bill = M("bill"), SevereBill = M("severeBill"),
@@ -34,6 +34,7 @@ namespace Sim.Content
                 AssocReputation = I("assocReputation"), AssocForms = F("assocForms"), AssocRaise = F("assocRaise"), AssocNegotiateRaise = F("assocNegotiateRaise"),
                 AssocAgrees = F("assocAgrees"), AssocQuietCloses = I("assocQuietCloses"), RefuseMood = F("refuseMood"), RefuseOutput = F("refuseOutput"), StoppageHours = I("stoppageHours"),
             };
+            if (d.HandOutput <= 0) throw new ContentException(Join(root, "handOutput"), "not above 0");
             if (d.SupervisorWage <= 0) throw new ContentException(Join(root, "supervisorWage"), "not above 0");
             Range(d.SupervisorMinWorkers, 2, 10, Join(root, "supervisorMinWorkers"));
             Range(d.SupervisorSpan, d.SupervisorMinWorkers, 12, Join(root, "supervisorSpan"));

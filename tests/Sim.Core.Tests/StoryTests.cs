@@ -64,9 +64,10 @@ namespace Sim.Core.Tests
             Assert.That(StoriesRules.Notice(sim, c.Id), Is.Not.Null, "the People sheet says they will go");
             Assert.That(sim.State.People.Hands.Contains(h), Is.True, "still working the season");
             Assert.That(sim.State.Shops.Newcomers, Is.Empty);
-            long sever = sim.State.Ledger.Cash;
             Close(sim);
             Assert.That(sim.State.People.Hands.Contains(h), Is.False, "left at the next close");
+            Assert.That(sim.State.Ledger.Entries.Any(e => e.DescriptionKey == "ledger.severance" && e.Reference == "hand:" + h.Id), Is.False, "no severance: leaving moves no money");
+            Assert.That(sim.State.Ledger.Reconcile(), Is.Null);
             Rival stall = sim.State.Shops.Newcomers.Single();
             Assert.That((stall.Owner, stall.Kind), Is.EqualTo((c.Id, ShopKind.Veg)), "founded by the story, a hand's trade is a vegetable stall");
             Assert.That(arc.Step, Is.EqualTo(2));
@@ -192,6 +193,7 @@ namespace Sim.Core.Tests
             Assert.That(Arc(sim, head, StoryArc.Migrant)?.Step, Is.EqualTo(1), "stays 2 seasons");
             Close(sim); Close(sim);
             Assert.That(Arc(sim, head, StoryArc.Migrant).Step, Is.EqualTo(2), "stays 4 seasons");
+            Assert.That(StoriesRules.InArc(sim, head.Id), Is.False, "a family waiting for a child does not keep its head from a stall or a long life");
             sim.State.Citizens.Citizen(h.Members[1]).Story.Add(new StoryLine(StoryKind.ChildBorn, sim.State.Clock.SimTime, 99));
             Close(sim);
             Assert.That((Arc(sim, head, StoryArc.Migrant).Step, Arc(sim, head, StoryArc.Migrant).Done), Is.EqualTo((3, true)), "a child is born to them");
@@ -245,6 +247,26 @@ namespace Sim.Core.Tests
             Assert.That(r.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()));
             Assert.That(r.State.Shops.Newcomers.Single().Owner, Is.EqualTo(c.Id));
             Assert.That(r.State.Chronicle.Stories.Arcs.Select(a => (a.Citizen, a.Arc, a.Step)), Is.EqualTo(St(sim).Arcs.Select(a => (a.Citizen, a.Arc, a.Step))));
+        }
+
+        // Review of Sprint 26: past 64 arcs the oldest finished ones are pruned, but a finished story is remembered (citizen and arc) so it never happens twice.
+        [Test]
+        public void Pruned_Arcs_Never_Repeat()
+        {
+            Simulation sim = Start();
+            Citizen c = Person(sim, 30);
+            TownHand(sim, c);
+            StoriesState st = St(sim);
+            st.Arcs.Add(new StoryArcState { Citizen = c.Id, Arc = StoryArc.Stall, Step = 3, At = 1, Done = true }); // c opened a stall once
+            for (int i = 0; i < 70; i++) st.Arcs.Add(new StoryArcState { Citizen = 5_000 + i, Arc = StoryArc.Reader, Step = 3, At = 1, Done = true });
+            Assert.That(StoriesRules.Eligible(sim, c), Is.False, "while the arc is kept he has had his stall");
+            Close(sim);
+            Assert.That(st.Arcs.Count, Is.LessThanOrEqualTo(64), "pruned");
+            Assert.That(st.Arcs.Exists(a => a.Citizen == c.Id && a.Arc == StoryArc.Stall), Is.False, "the oldest one went");
+            Assert.That(st.Retired, Does.Contain(c.Id * 8 + (int)StoryArc.Stall), "but is remembered");
+            Assert.That(StoriesRules.Eligible(sim, c), Is.False, "so he never opens a second stall");
+            LoadResult back = SaveCodec.Read(SaveCodec.Write(sim.State, sim.Config, 0), sim.Config, 3);
+            Assert.That(back.State.Chronicle.Stories.Retired, Is.EqualTo(st.Retired), "and it is saved");
         }
     }
 }

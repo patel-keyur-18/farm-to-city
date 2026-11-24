@@ -296,7 +296,7 @@ namespace Sim.Core.People
                 if (s.Workplace.Supervisor != null && Rng.Chance(roll, FormChance(sim, false))) s.Workplace.Supervisor.Kept++;
                 return;
             }
-            HrEvent e = Raise(sim, HrEventKind.Association, 0, hands[0].Id);
+            HrEvent e = Raise(sim, HrEventKind.Association, 0, 0); // the whole place's: no worker's card, so no worker leaving takes it away (review of Sprint 26)
             sim.Emit(new HrEventRaised(now, e.Id, e.Kind, 0, e.WorkerId));
             sim.Emit(new AssociationFormed(now, 0));
         }
@@ -315,9 +315,10 @@ namespace Sim.Core.People
             foreach (HrEvent e in s.HrEvents.FindAll(x => x.Timed && x.ExpiresAt != 0 && now >= x.ExpiresAt))
             {
                 int choice = DefaultChoice(e.Kind);
-                if (!Answer(sim, e.Id, choice).Accepted) Answer(sim, e.Id, e.Kind == HrEventKind.Accident ? 1 : 2); // pay what can't be paid: the unpaid answer
+                bool applied = Answer(sim, e.Id, choice).Accepted;
+                if (!applied) { choice = e.Kind == HrEventKind.Accident ? 1 : 2; applied = Answer(sim, e.Id, choice).Accepted; } // pay what can't be paid: the unpaid answer
                 if (s.HrEvents.Contains(e)) s.HrEvents.Remove(e);
-                sim.Emit(new HrEventDefaulted(now, e.Id, e.Kind, choice, e.Place, e.WorkerId));
+                if (applied) sim.Emit(new HrEventDefaulted(now, e.Id, e.Kind, choice, e.Place, e.WorkerId)); // told only when something was applied: a card whose people are gone just ends
             }
         }
 
@@ -340,8 +341,8 @@ namespace Sim.Core.People
             if (e == null || !e.Timed) return CommandResult.Reject(RejectReason.UnknownEvent);
             if (choice < 0 || choice > (e.Kind == HrEventKind.Accident ? 1 : 2)) return CommandResult.Reject(RejectReason.InvalidArgument);
             WorkplaceDef d = Defs(sim);
-            IStaff w = WorkRules.Find(sim, e.Place, e.WorkerId);
-            if (w == null) return CommandResult.Reject(RejectReason.UnknownEvent);
+            IStaff w = e.Kind == HrEventKind.Association ? null : WorkRules.Find(sim, e.Place, e.WorkerId);
+            if (w == null && e.Kind != HrEventKind.Association) return CommandResult.Reject(RejectReason.UnknownEvent);
             long now = sim.State.Clock.SimTime;
             switch (e.Kind)
             {

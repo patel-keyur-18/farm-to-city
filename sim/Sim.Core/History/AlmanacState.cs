@@ -147,7 +147,12 @@ namespace Sim.Core.History
             var s = new AlmanacState(crops);
             int n = r.ReadCount();
             for (int i = 0; i < n; i++) s.Entries.Add(AlmanacEntry.ReadFrom(r));
-            for (int i = 0; i < crops; i++) { s.CropIncome[i] = r.ReadLong(); s.CropCost[i] = r.ReadLong(); s.CropSowings[i] = r.ReadLong(); }
+            if (r.SavedCount(ContentTable.Crop) > crops) throw new SaveContentException("the content has " + crops + " crops, the save " + r.SavedCount(ContentTable.Crop));
+            for (int i = 0; i < r.SavedCount(ContentTable.Crop); i++)
+            {
+                int at = r.Slot(ContentTable.Crop, i);
+                s.CropIncome[at] = r.ReadLong(); s.CropCost[at] = r.ReadLong(); s.CropSowings[at] = r.ReadLong();
+            }
             s.YearLabour = r.ReadLong();
             s.WorstLoss = (AlmanacLoss)r.ReadInt(); s.WorstAmount = r.ReadLong(); s.WorstId = r.ReadString();
             s.SpoilDay = r.ReadLong(); s.SpoilValue = r.ReadLong(); s.Reader = r.ReadLong();

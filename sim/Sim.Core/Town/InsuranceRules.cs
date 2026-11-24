@@ -247,6 +247,14 @@ namespace Sim.Core.Town
             Paid(sim, new Claim(business ? Claim.BusinessPolicy : Claim.PropertyPolicy, cause, p.Target, repair + lost, now, days, paid, (int)((Fixed.One - (business ? d.Business.Excess : d.Property.Excess)) * Fixed.FromInt(100)).RoundToLong()));
         }
 
+        /// <summary>What a fire's repair cost you in the end: what was paid, less the repair share an insured fire pays back (the lost days of a business are its own books' and not in it).</summary>
+        internal static long NetOfClaim(Simulation sim, EventsState s, PendingEvent p, int choice, long paid)
+        {
+            if (paid <= 0 || !s.FireInsured || !Available(sim)) return paid;
+            Split(sim, p, choice, paid, out long repair, out _, out _);
+            return System.Math.Max(0, paid - repair);
+        }
+
         /// <summary>What a repair that cost <paramref name="paid"/> pays back: the share of the bill, and for a business its lost days (a share of last season's profit for each day shut).</summary>
         private static void Split(Simulation sim, PendingEvent p, int choice, long paid, out long repair, out long lost, out int days)
         {
