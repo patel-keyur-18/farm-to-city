@@ -339,6 +339,16 @@ namespace Sim.Core.Commands
         /// <summary>The business has no manager.</summary>
         NoManager,
 
+        // Spec 028 §3.9 (supervisors, US-259)
+        /// <summary>The place has fewer workers than the post needs (a supervisor needs 3 hands).</summary>
+        TooFewWorkers,
+
+        /// <summary>You already have a supervisor.</summary>
+        HasSupervisor,
+
+        /// <summary>You have no supervisor.</summary>
+        NoSupervisor,
+
         // Spec 028 §3.3 (selling and branches, US-125)
         /// <summary>The business is already listed for sale.</summary>
         AlreadyListed,

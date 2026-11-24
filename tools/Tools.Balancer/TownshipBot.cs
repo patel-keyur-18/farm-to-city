@@ -44,11 +44,20 @@ namespace Tools.Balancer
         /// <summary>Sprint 25's managed-against-hired measurement (spec 028 §3.2, §9): from the Township every business gets a manager of this style (0 cost-cutter, 1 growth-chaser, 2 quality-first), or null for hired workers as before.</summary>
         public int? ManagerStyle { get; set; }
 
+        /// <summary>US-248 (spec 028 AC-31): found, run a season, sell and found again (a business sold is a business the base bot founds anew).</summary>
+        public bool FoundAndSell { get; set; }
+
+        /// <summary>US-248: the fair landlord answers every lease's renewal with the rent kept; the default (no answer) is the market rise to the cap.</summary>
+        public bool FairRent { get; set; }
+
         private readonly List<int> _houseAcres = new List<int>();
 
-        public TownshipBot(bool saver = false) : base(saver, "HMS", "flour_mill", "tea_stall", "veg_stall") { }
+        /// <summary>With <paramref name="kirana"/> the bot opens your kirana after the three of the gate (US-260's balance pass: what it does to the town's households).</summary>
+        public TownshipBot(bool saver = false, bool kirana = false) : base(saver, "HMS", kirana ? new[] { "flour_mill", "tea_stall", "veg_stall", "kirana" } : new[] { "flour_mill", "tea_stall", "veg_stall" }) { _kirana = kirana; }
 
-        public override string Name { get { return (Saver ? "township-saver" : "township") + (Land == LandUse.None ? "" : "-" + Land.ToString().ToLowerInvariant()) + (Policy == null ? "" : "-" + Policy.Value.ToString().ToLowerInvariant()) + (Risk == RiskUse.None ? "" : "-" + Risk.ToString().ToLowerInvariant()) + (ManagerStyle == null ? "" : "-managed" + ManagerStyle.Value); } }
+        private readonly bool _kirana;
+
+        public override string Name { get { return (Saver ? "township-saver" : "township") + (Land == LandUse.None ? "" : "-" + Land.ToString().ToLowerInvariant()) + (Policy == null ? "" : "-" + Policy.Value.ToString().ToLowerInvariant()) + (Risk == RiskUse.None ? "" : "-" + Risk.ToString().ToLowerInvariant()) + (ManagerStyle == null ? "" : "-managed" + ManagerStyle.Value) + (_kirana ? "-kirana" : "") + (FoundAndSell ? "-sells" : "") + (FairRent ? "-fairrent" : ""); } }
 
         /// <summary>A bought acre kept for houses is never sown.</summary>
         protected override bool KeepsClear(Simulation sim, int tile) { return _houseAcres.Contains(tile) || base.KeepsClear(sim, tile); }
@@ -66,6 +75,16 @@ namespace Tools.Balancer
             if (Land != LandUse.None && sim.State.Township != null && sim.State.Township.Cohort.Joined) UseLand(sim, t);
             if (Risk != RiskUse.None && sim.State.Township != null && TownshipRules.Reached(sim)) UseRisk(sim, t);
             if (ManagerStyle != null && sim.State.Township != null && TownshipRules.Reached(sim)) UseManagers(sim, t);
+            if (FoundAndSell && sim.State.Township != null && TownshipRules.Reached(sim)) SellBusinesses(sim, t);
+            if (FairRent && sim.State.Citizens != null && t % 86_400 / 3600 == 8) foreach (long id in LeaseRules.Due(sim)) Ok(sim, new RenewLease(t, id, LeaseChoice.Keep));
+        }
+
+        /// <summary>Each open business that has run a season is put up for sale (an ordinary listing, 3 to 6 days); the base bot founds the next in its place.</summary>
+        private void SellBusinesses(Simulation sim, long t)
+        {
+            if (t % 86_400 / 3600 != 13) return;
+            foreach (Sim.Core.Business.Business b in sim.State.Businesses.Businesses)
+                if (b.Status == Sim.Core.Business.BusinessStatus.Open && !b.Listed && t - b.ReadyAt >= sim.Clock.SecondsPerSeason) Ok(sim, new ListBusiness(t, b.Id, false));
         }
 
         /// <summary>A manager for each open business that has none: he works it himself, so its worker is let go first; his post is put up once and the applicant of the wanted style is hired at the asked wage when the business can pay the season's rest of it.</summary>

@@ -417,7 +417,9 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             ManagerSheet.AddToday(ctx, vm, b); // spec 028 §3.2: who runs it, above who works here
-            vm.Lines.Add(WorkerLine(ctx, b));
+            LineVm worker = WorkerLine(ctx, b);
+            if (b.Worker == WorkerKind.Citizen && Sim.Core.History.StoriesRules.Notice(sim, b.WorkerCitizen) != null) { worker.Note = s.Get("people.leavingForStall"); worker.NoteTone = Tone.Warn; } // spec 029 §3.6
+            vm.Lines.Add(worker);
             Worker hired = BusinessRules.HiredWorker(sim, b);
             if (hired != null && b.Status == BusinessStatus.Open) vm.Lines.Add(StaffView.Output(ctx, b.Id, hired));
             if (b.Worker == WorkerKind.None)
@@ -493,6 +495,7 @@ namespace Sim.View.Views
             ExitSheet.AddSettings(ctx, vm, b); // spec 028 §3.3: what it is worth, and selling it
             AddSettingsCore(ctx, vm, b, t);
             BenefitSheet.AddSection(ctx, vm, b.Id); // spec 028 §3.8: what it gives its workers
+            WorkplaceSheet.AddSection(ctx, vm, b.Id); // spec 028 §3.9: what each rule needs here
             BenefitSheet.AddNight(ctx, vm, b); // and a night shift when the day shift can't keep up
             ManagerSheet.MarkSet(ctx, vm, b); // what he sets each morning is no longer yours to change
         }

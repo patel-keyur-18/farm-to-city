@@ -11,6 +11,9 @@ namespace Sim.Core.Definitions
         Chai = 2,
         Sweets = 3,
         Meals = 4,
+
+        /// <summary>The kirana's kind (spec 028 §3.10, schema 24): eight staples, the village grocer's staples as the rival.</summary>
+        Grocery = 5,
     }
 
     /// <summary>What people want of a kind of shop a real day (spec 017 §3.2), and how much less they buy as prices rise.</summary>
@@ -106,7 +109,26 @@ namespace Sim.Core.Definitions
         /// <summary>Each vegetable's and fruit's share of a person's vegetables (§3.2), by good; they add up to 1.</summary>
         public IReadOnlyList<KeyValuePair<int, Fixed>> VegShares { get; internal set; }
 
+        /// <summary>Each staple's share of a person's groceries (§3.10, ADR 0167), by good; they add up to 1.</summary>
+        public IReadOnlyList<KeyValuePair<int, Fixed>> GroceryShares { get; internal set; }
+
         public IReadOnlyList<RivalDef> Rivals { get; internal set; }
+
+        // Marketing (spec 028 §3.10): a budget a season (year-0 coins) adds ScorePer1000 to the score for each 1,000, up to Cap, and fades by Fade each close once stopped.
+        public IReadOnlyList<long> MarketBudgets { get; internal set; }
+        public Fixed MarketPer1000 { get; internal set; }
+        public Fixed MarketCap { get; internal set; }
+        public Fixed MarketFade { get; internal set; }
+
+        // Khata (spec 028 §3.10): the limits a household may owe (year-0 coins), the score and kilos it adds for a household under LowIncome, the loss rates by income and the part paid a season late.
+        public IReadOnlyList<long> KhataLimits { get; internal set; }
+        public Fixed KhataScore { get; internal set; }
+        public Fixed KhataKilos { get; internal set; }
+        public long KhataLowIncome { get; internal set; }
+
+        /// <summary>The loss rates: an income under <c>Under</c> loses <c>Rate</c> (the last, Under 0, is for every income above).</summary>
+        public IReadOnlyList<KeyValuePair<long, Fixed>> KhataLoss { get; internal set; }
+        public Fixed KhataLate { get; internal set; }
 
         /// <summary>The next village's chakki (§3.6): its distance from the square, quality and stars.</summary>
         public int ChakkiMetres { get; internal set; }

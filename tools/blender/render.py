@@ -1692,6 +1692,15 @@ def icon_ui(kind):
         o.append(cylinder("seal", 0.026, 0.026, 0.012, (0, 0.0, 0.012), wax, segs=18))
         o.append(cylinder("sealMark", 0.012, 0.012, 0.014, (0, 0.0, 0.013), toon("waxDark", 0x8F2B1E), segs=12, outline=False))
         return turn(turn(o, Matrix.Rotation(math.radians(LEVEL_DEG), 4, "Z")), facing_camera(0.25))
+    elif kind == "megaphone":
+        # Marketing (US-260): a blue megaphone, its horn opening to the right, a handle under it and two curved sound lines.
+        blue, dark, white = toon("megaBlue", 0x4A9BD6), toon("megaDark", 0x2B6A99), toon("megaWhite", 0xF2EBDC)
+        o.append(cylinder("horn", 0.12, 0.04, 0.17, (0.03, 0, 0), blue, segs=24, rot=Matrix.Rotation(math.radians(90), 3, "Y"), smooth=True))
+        o.append(cylinder("rim", 0.125, 0.125, 0.014, (0.115, 0, 0), dark, segs=24, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(cylinder("back", 0.05, 0.05, 0.05, (-0.085, 0, 0), dark, segs=18, rot=Matrix.Rotation(math.radians(90), 3, "Y")))
+        o.append(box("handle", (0.03, 0.03, 0.07), (-0.02, 0, -0.07), dark, bevel=0.004))
+        o.append(cylinder("mouth", 0.105, 0.105, 0.006, (0.12, 0, 0), white, segs=24, rot=Matrix.Rotation(math.radians(90), 3, "Y"), outline=False))
+        return turn(turn(o, Matrix.Rotation(math.radians(LEVEL_DEG), 4, "Z")), facing_camera(0.25))
     elif kind == "bell":
         # The alerts: a brass bell with a knob and a clapper.
         brass, dark = toon("brass", 0xE6B33A), toon("brassDark", 0xA8781E)
@@ -1848,7 +1857,7 @@ for _i in ("seed", "sapling", "compost", "fertiliser", "spray"):
     ICONS["icon_" + _i] = (lambda i=_i: (lambda: icon_input(i)))()
 for _w in ("sun", "cloudy", "rain", "heavy_rain", "heatwave", "frost", "storm"):
     ICONS["icon_weather_" + _w] = (lambda w=_w: (lambda: icon_weather(w)))()
-for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders", "codex", "deed", "savings", "flame", "health", "shield", "scroll"):
+for _u in ("sack", "basket", "star_0", "star_1", "star_2", "close", "letter", "bell", "cart", "menu", "orders", "codex", "deed", "savings", "flame", "health", "shield", "scroll", "megaphone"):
     ICONS["icon_" + _u] = (lambda u=_u: (lambda: icon_ui(u)))()
 SPRITES.update(ICONS)
 
@@ -4259,6 +4268,64 @@ for _f, _deg in FACINGS.items():
     SPRITES["restaurant_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_restaurant("building"), d)))()
 
 
+# ---------------------------------------------------------------- the kirana (US-260, Preview 21): a village grocery with an orange awning, sacks and a crate of greens out front
+
+def model_kirana(stage):
+    """A kirana (spec 028 §3.10): a cream-washed shop under a tiled gable roof, an orange and cream striped awning over a wide open
+    front, a green door, a signboard, and out front three jute sacks of grain, a crate of greens and a brass scale on a small stand.
+    stage 'done' or 'building' (the plinth, half-raised walls, bamboo poles, bricks and sand)."""
+    o = []
+    cream, dado = toon("kiranaCream", 0xF6E7BE), toon("kiranaDado", 0x4A8A3A)
+    brick, plinth = toon("brick", BRICK), toon("plinth", PLINTH)
+    w, d, h, cy = 0.34, 0.20, 0.15, 0.07
+    yard_pad(o, 0.52, 0.36, -0.12)
+    o.append(box("plinth", (w + 0.03, d + 0.03, 0.03), (0, cy, 0.015), plinth, bevel=0.005))
+    if stage == "building":
+        for sx in (-1, 1):
+            o.append(box("wallSide%d" % sx, (0.02, d, 0.07), (sx * (w / 2 - 0.01), cy, 0.065), brick))
+        o.append(box("wallBackHalf", (w, 0.02, 0.09), (0, cy + d / 2 - 0.01, 0.075), brick))
+        o.append(box("wallMid", (0.02, d, 0.05), (0, cy, 0.055), brick))
+        bam = toon("bamboo", BAMBOO)
+        for x in (-w / 2 - 0.02, 0.0, w / 2 + 0.02):
+            for y in (cy - d / 2 - 0.02, cy + d / 2 + 0.02):
+                o.append(cylinder("pole%d%d" % (int(x * 100), int(y * 100)), 0.004, 0.004, 0.2, (x, y, 0.1), bam, segs=6))
+        for i in range(3):
+            for j in range(3):
+                o.append(box("bricks%d%d" % (i, j), (0.05, 0.025, 0.018), (-0.14 + j * 0.055, -0.11, 0.009 + i * 0.018), brick))
+        o.append(dome("sand", 0.05, 0.035, (0.14, -0.11, 0.006), toon("sand", 0xE2C98E)))
+        return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+    o.append(box("walls", (w, d, h), (0, cy, 0.03 + h / 2), cream))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.03), (0, cy, 0.045), dado, outline=False))
+    o.append(gable_roof("roof", w, d, 0.05, 0.03 + h, toon("tile", TILE), overhang=0.02))
+    front = cy - d / 2 - 0.004
+    o.append(box("door", (0.05, 0.010, 0.10), (0.12, front, 0.08), toon("kiranaDoor", 0x6B4423)))
+    o.append(box("opening", (0.15, 0.010, 0.07), (-0.05, front, 0.10), toon("shopDark", 0x4A3424)))
+    orange, band = toon("awnOrange", 0xE8892A), toon("awnCream", 0xF2EBDC)
+    for i in range(7):
+        o.append(box("awn%d" % i, (0.022, 0.05, 0.008), (-0.13 + i * 0.022, front - 0.028, 0.158 - 0.006), orange if i % 2 == 0 else band, outline=False))
+    o.append(box("sign", (0.20, 0.008, 0.03), (0, front - 0.004, 0.03 + h - 0.012), toon("kiranaSign", 0x2E5E3E), outline=False))
+    o.append(box("signLine", (0.14, 0.009, 0.007), (0, front - 0.005, 0.03 + h - 0.012), toon("signText", 0xF2EBDC), outline=False))
+    # Out front: three jute sacks of grain, a crate of greens and a brass scale on a stand.
+    jute = toon("jute", 0xC9A46A)
+    for i, (x, y) in enumerate(((-0.14, -0.105), (-0.095, -0.115), (-0.115, -0.09))):
+        o.append(sphere("sack%d" % i, 0.026, (x, y, 0.03 + 0.012 + (0.018 if i == 2 else 0)), jute, scale=(1.1, 0.9, 0.8), segs=12, rings=8))
+    o.append(box("crate", (0.07, 0.05, 0.035), (0.01, -0.11, 0.0475), toon("crateGreen", 0x3F8F3A), bevel=0.003))
+    for i, x in enumerate((-0.015, 0.01, 0.035)):
+        o.append(sphere("greens%d" % i, 0.018, (x, -0.11, 0.075), toon("greens%d" % i, (0x58BF4A, 0xE9506A, 0xFFB627)[i]), segs=10, rings=6))
+    brass = toon("brass", 0xE6B33A)
+    o.append(box("stand", (0.05, 0.05, 0.035), (0.11, -0.11, 0.0475), toon("wood", WOOD), bevel=0.002))
+    o.append(cylinder("scalePost", 0.004, 0.004, 0.035, (0.11, -0.11, 0.0825), brass, segs=6))
+    o.append(box("scaleBeam", (0.06, 0.006, 0.004), (0.11, -0.11, 0.1), brass))
+    for sx in (-1, 1):
+        o.append(cylinder("scalePan%d" % sx, 0.014, 0.014, 0.003, (0.11 + sx * 0.028, -0.11, 0.088), brass, segs=12))
+    return group(o, scale=BUILDING_SCALE * VILLAGE_SCALE)
+
+
+for _f, _deg in FACINGS.items():
+    SPRITES["kirana_%s" % _f] = (lambda d=_deg: (lambda: refit(model_kirana("done"), d)))()
+    SPRITES["kirana_building_%s" % _f] = (lambda d=_deg: (lambda: refit(model_kirana("building"), d)))()
+
+
 # ---------------------------------------------------------------- shops (spec 017, US-120): previewed to the owner first
 # Pitch pieces are modelled at the people's scale (a door about 0.11 before BUILDING_SCALE), each on the council's brick pitch.
 
@@ -4505,6 +4572,47 @@ def model_restaurant_pitch(on_pitch=True, number=1):
     return group(o, scale=BUILDING_SCALE)
 
 
+def model_kirana_pitch(on_pitch=True, number=1):
+    """The kirana on a pitch (US-260): a small cream kiosk with a green dado and an orange and cream striped awning, a wooden counter in
+    front with a brass scale and a stack of ghee tins on it, and three jute sacks of grain beside it."""
+    o = []
+    if on_pitch:
+        pitch_base(o, number)
+    z0 = 0.02 if on_pitch else 0.0
+    w, d, h = 0.20, 0.08, 0.15
+    cy = 0.055
+    cream, dado = toon("kiranaCream", 0xF6E7BE), toon("kiranaDado", 0x4A8A3A)
+    orange, band = toon("awnOrange", 0xE8892A), toon("awnCream", 0xF2EBDC)
+    o.append(box("back", (w, 0.016, h), (0, cy + d / 2 - 0.008, z0 + h / 2), cream))
+    for sx in (-1, 1):
+        o.append(box("side%d" % sx, (0.016, d, h), (sx * (w / 2 - 0.008), cy, z0 + h / 2), cream))
+    o.append(box("inside", (w - 0.03, 0.006, h - 0.03), (0, cy + d / 2 - 0.018, z0 + (h - 0.03) / 2), toon("shopDark", 0x4A3424), outline=False))
+    o.append(box("dado", (w + 0.004, d + 0.004, 0.03), (0, cy, z0 + 0.015), dado, outline=False))
+    o.append(box("roof", (w + 0.03, d + 0.03, 0.01), (0, cy, z0 + h + 0.005), toon("tile", TILE)))
+    o.append(box("sign", (0.17, 0.008, 0.035), (0, cy - d / 2 - 0.012, z0 + h + 0.02), toon("kiranaSign", 0x2E5E3E)))
+    o.append(box("signText", (0.12, 0.009, 0.008), (0, cy - d / 2 - 0.013, z0 + h + 0.02), toon("signText", 0xF2EBDC), outline=False))
+    for i in range(6):                           # a striped awning over the front
+        x0 = -w / 2 + i * w / 6
+        o.append(poly_mesh("awn%d" % i, [(x0, cy - d / 2, z0 + h - 0.02), (x0 + w / 6, cy - d / 2, z0 + h - 0.02),
+                                         (x0 + w / 6, cy - d / 2 - 0.03, z0 + h - 0.04), (x0, cy - d / 2 - 0.03, z0 + h - 0.04)],
+                           [(0, 1, 2, 3)], orange if i % 2 else band))
+    # The counter in front: a brass scale and a stack of ghee tins.
+    case_y = -0.04
+    brass = toon("brass", 0xE6B33A)
+    o.append(box("case", (0.17, 0.05, 0.05), (0.02, case_y, z0 + 0.025), toon("caseWood", 0x7A4A2A), bevel=0.002))
+    o.append(cylinder("scalePost", 0.004, 0.004, 0.035, (-0.03, case_y, z0 + 0.0675), brass, segs=6))
+    o.append(box("scaleBeam", (0.06, 0.006, 0.004), (-0.03, case_y, z0 + 0.085), brass))
+    for sx in (-1, 1):
+        o.append(cylinder("scalePan%d" % sx, 0.014, 0.014, 0.003, (-0.03 + sx * 0.028, case_y, z0 + 0.073), brass, segs=12))
+    for i in range(3):
+        o.append(cylinder("tin%d" % i, 0.014, 0.014, 0.018, (0.06, case_y, z0 + 0.059 + i * 0.019), toon("tin", 0xC9CDD2), segs=12))
+    # Three jute sacks of grain out front on the left.
+    jute = toon("jute", 0xC9A46A)
+    for i, (x, y) in enumerate(((-0.10, -0.05), (-0.065, -0.06), (-0.085, -0.04))):
+        o.append(sphere("sack%d" % i, 0.026, (x, y, z0 + 0.03 + (0.018 if i == 2 else 0)), jute, scale=(1.1, 0.9, 0.8), segs=12, rings=8))
+    return group(o, scale=BUILDING_SCALE)
+
+
 for _f, _deg in FACINGS.items():
     SPRITES["pitch_veg_%s" % _f] = (lambda d=_deg: (lambda: refit(model_veg_cart(), d)))()
     SPRITES["pitch_tea_%s" % _f] = (lambda d=_deg: (lambda: refit(model_tea_counter(), d)))()
@@ -4518,7 +4626,7 @@ SPRITES["veg_cart_e"] = lambda: refit(model_veg_cart(on_pitch=False), 90)
 # facing as the pitch does (I and II to the camera's left face, III to its right); on your own acre the stall shed, the tea counter and
 # the sweet shop without the council's brick pitch.
 PITCH_FACING = {1: 0, 2: 0, 3: 90}
-SHOP_MODELS = {"veg_stall": model_veg_cart, "tea_stall": model_tea_counter, "sweet_shop": model_sweet_shop, "restaurant": model_restaurant_pitch}
+SHOP_MODELS = {"veg_stall": model_veg_cart, "tea_stall": model_tea_counter, "sweet_shop": model_sweet_shop, "restaurant": model_restaurant_pitch, "kirana": model_kirana_pitch}
 for _id, _fn in SHOP_MODELS.items():
     for _n, _deg in PITCH_FACING.items():
         SPRITES["%s_pitch_%d" % (_id, _n)] = (lambda fn=_fn, n=_n, d=_deg: (lambda: refit(fn(on_pitch=True, number=n), d)))()

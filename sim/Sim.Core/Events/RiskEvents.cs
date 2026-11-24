@@ -89,7 +89,10 @@ namespace Sim.Core.Events
 
     public sealed class EpidemicEnded : SimEvent
     {
-        public EpidemicEnded(long simTime) : base(simTime) { }
+        /// <summary>The share of families it made ill, in percent (spec 029 §3.2: "{n} families were ill").</summary>
+        public int FactorPercent { get; }
+
+        public EpidemicEnded(long simTime, int factorPercent = 0) : base(simTime) { FactorPercent = factorPercent; }
 
         protected override string Describe() { return "EpidemicEnded"; }
     }

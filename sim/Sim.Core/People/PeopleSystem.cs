@@ -63,6 +63,7 @@ namespace Sim.Core.People
             }
             if (pass != ItemClass.Hourly) return;
             HiringRules.Expire(sim);
+            WorkplaceRules.Expire(sim); // spec 028 §3.9: a card past its time is answered by its default, live or away
             if (!sim.State.Clock.IsAway)
             {
                 Grace(sim);
@@ -421,6 +422,7 @@ namespace Sim.Core.People
             BenefitRules.Renew(sim, 0); // spec 028 §3.8: the season's benefits for your hands, paid with their wages
             BenefitRules.AtClose(sim); // and two or more kept through the close raise your name
             foreach (Hand h in s.Hands) if (h.Contract == ContractState.Active) HrRules.Draw(sim, h);
+            WorkplaceRules.AtClose(sim); // spec 028 §3.9: the supervisor's wage, and whether your hands form an association
             FarmSystem.Refresh(sim);
         }
 

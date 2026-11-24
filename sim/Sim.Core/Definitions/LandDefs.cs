@@ -511,6 +511,12 @@ namespace Sim.Core.Definitions
         /// <summary>The Concept Codex (spec 018 §3.3), with the school's content; else null.</summary>
         public CodexDefs Codex { get; internal set; }
 
+        /// <summary>The town's Chronicle (spec 029, schema 24), with the school's content; else null.</summary>
+        public ChronicleDefs Chronicle { get; internal set; }
+
+        /// <summary>The citizen arcs' numbers (spec 029 §3.6), with the Chronicle; else null.</summary>
+        public StoriesDefs Stories { get; internal set; }
+
         /// <summary>The three advisors and their notes (spec 018 §3.4), with the school's content; else null.</summary>
         public AdvisorDefs Advisors { get; internal set; }
 
@@ -540,6 +546,9 @@ namespace Sim.Core.Definitions
 
         /// <summary>Benefits and the night shift (spec 028 §3.8, <c>content/benefits.json</c>), from the Township's content, or null.</summary>
         public BenefitsDef Benefits { get; internal set; }
+
+        /// <summary>Supervisors, accidents, conflicts and associations (spec 028 §3.9, <c>content/workplace.json</c>), with the benefits, or null.</summary>
+        public WorkplaceDef Workplace { get; internal set; }
 
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,

@@ -409,7 +409,7 @@ namespace Sim.Core.Business
                 OpenHour = t.OpenHour, CloseHour = t.CloseHour, Fee = t.Fee, OwnPerDay = ownPerDay, Worker = runYourself ? WorkerKind.Founder : WorkerKind.None,
                 Ledger = new Ledger(), Stock = new long[goods], StockCost = new long[goods], Plan = plan, Day = now / Day,
                 Mix = t.Kind == ShopKind.Sweets ? ShopRules.DefaultMix(sim, t, tileId) : DefaultMix(sim, t), MadeToday = new long[goods],
-                BuyFromMarket = !t.IsKiln && t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg || t.IsMeals, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
+                BuyFromMarket = !t.IsKiln && t.ByRecipe || t.TakesMilk || t.Kind == ShopKind.Veg || t.Kind == ShopKind.Grocery || t.IsMeals, // the bakery buys atta your mill can't give; the dairy and the tea stall, neighbours' milk; the stall, the mandi's vegetables
                 Pitch = pitch, PutOut = t.IsShop ? ShopRules.DefaultPutOut(sim, t, tileId) : new long[goods], Stars = t.IsTuition ? t.Tuition.StartStars : sim.Config.Game.Shops?.StartStars ?? Fixed.FromRatio(5, 2),
             };
             string reference = "business:" + b.Id;
@@ -1122,6 +1122,7 @@ namespace Sim.Core.Business
                 }
                 long interest = Money.MulRate(BusinessBooks.Overdrawn(b), Defs(sim).OverdraftRate);
                 if (interest > 0) b.Ledger.Post(now, closing, "ledger.overdraftInterest", reference, new Posting(Account.Interest, interest), new Posting(Account.Overdraft, -interest));
+                KhataRules.AtClose(sim, b, closing); // spec 028 §3.10: what khata customers owe is collected, the never-paid written off as bad debt
                 ManagerRules.PayShare(sim, b, closing); // spec 028 §3.2: a tenth of the profit to his manager, before the tax
                 Town.TaxRules.BillBusiness(sim, b, closing); // spec 022 §3.2: tax on the season's profit, from its own cash
                 OwnerRules.PayProfit(sim, b, closing); // spec 028 §3.4: each outside owner's share of what is left
@@ -1173,7 +1174,7 @@ namespace Sim.Core.Business
                     NightRules.Renew(sim, b); // spec 028 §3.8: the night worker's new season, upfront
                     People.BenefitRules.Renew(sim, b.Id); // and the season's benefits for everyone it pays
                 }
-                if (b.Status == BusinessStatus.Open || b.Status == BusinessStatus.Building) ShopRules.PayRent(sim, b, sim.Period); // the new season's pitch rent, upfront (spec 017 §3.4)
+                if (b.Status == BusinessStatus.Open || b.Status == BusinessStatus.Building) { ShopRules.PayRent(sim, b, sim.Period); KhataRules.PayMarketing(sim, b, sim.Period); } // the new season's pitch rent and marketing, upfront (spec 017 §3.4, 028 §3.10)
                 Town.InsuranceRules.CloseBusiness(sim, b); // spec 027 §3.6: its premium from its own cash, or the policy ends
                 BusinessBooks.Sweep(sim, b);
                 b.Ledger.DropEntriesBefore(closing - sim.Config.Game.Ledger.RetainSeasons + 1);

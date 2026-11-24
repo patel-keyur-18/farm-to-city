@@ -91,7 +91,7 @@ namespace Sim.Content
                     types.Add(x);
                     continue;
                 }
-                x.GramsPerHour = x.IsShop && t["recipes"] == null && t["kgPerHour"] == null ? x.Kind == ShopKind.Veg ? x.CapacityPerHour : 0
+                x.GramsPerHour = x.IsShop && t["recipes"] == null && t["kgPerHour"] == null ? x.Kind == ShopKind.Veg || x.Kind == ShopKind.Grocery ? x.CapacityPerHour : 0
                     : (Bounded(t, p, "kgPerHour", "1", "10000") * Fixed.FromInt(1000)).RoundToLong();
                 x.PowerPerKg = t["powerPerKg"] == null ? Fixed.Zero : Bounded(t, p, "powerPerKg", "0", "100");
                 x.RepairsShare = Bounded(t, p, "repairsShare", "0", "1");
@@ -189,7 +189,7 @@ namespace Sim.Content
             }
             string kind = String(t["kind"], p + ".kind");
             x.Kind = kind == "veg" ? ShopKind.Veg : kind == "chai" ? ShopKind.Chai : kind == "sweets" ? ShopKind.Sweets : kind == "meals" ? ShopKind.Meals
-                : throw new ContentException(p + ".kind", "expected veg, chai, sweets or meals");
+                : kind == "grocery" ? ShopKind.Grocery : throw new ContentException(p + ".kind", "expected veg, chai, sweets, meals or grocery");
             if ((x.Kind == ShopKind.Meals) != (t["meals"] != null)) throw new ContentException(p + ".meals", "the restaurant, and only it, has a menu");
             if (x.Kind == ShopKind.Meals) x.Meals = Meals(t, p, market);
             if ((x.Kind == ShopKind.Sweets) != (t["recipes"] != null)) throw new ContentException(p + ".recipes", "the sweet shop, and only it, makes by recipes");

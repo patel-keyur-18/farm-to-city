@@ -57,6 +57,8 @@ namespace Sim.Content
                 game.School = LoadSchool(read("buildings.json"), read("population.json"), map, onboarding);
                 game.Codex = LoadCodex(read("codex.json")); // the Codex comes with the school (spec 018 §4)
                 game.Advisors = LoadAdvisors(read("advisors.json")); // and the advisors
+                game.Chronicle = LoadChronicle(read("chronicle.json")); // and the town's Chronicle (spec 029)
+                game.Stories = LoadStories(read("stories.json")); // and its citizens' arcs
                 // The treasury opens in a later era than the school's, so it needs the eras (spec 021 §4).
                 if (onboarding != null && System.Linq.Enumerable.Any(onboarding.Eras, e => e.Id == "township")) game.Treasury = LoadTreasury(read("treasury.json"), onboarding);
                 if (game.Treasury != null) CheckTaxGuard(game.Treasury.Taxes, buildings, population);
@@ -68,6 +70,7 @@ namespace Sim.Content
                 if (game.Invoices != null && game.People != null) game.Managers = LoadManagers(read("managers.json")); // and managers for them to run (spec 028 §3.2)
                 if (game.Managers != null) game.Exit = LoadExit(read("exit.json")); // and a worth to sell them at (spec 028 §3.3)
                 if (game.Managers != null) game.Benefits = LoadBenefits(read("benefits.json")); // and benefits to keep their people (spec 028 §3.8)
+                if (game.Benefits != null) game.Workplace = LoadWorkplace(read("workplace.json")); // and supervisors, accidents, conflicts and associations (spec 028 §3.9)
             }
             return game;
         }

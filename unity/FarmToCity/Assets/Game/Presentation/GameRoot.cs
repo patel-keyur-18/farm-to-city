@@ -53,6 +53,8 @@ namespace Game.Presentation
         private Label _toastText;
 
         private long _lastSyncWall;
+        private bool _alignPending; // match the game's time of day to the phone's before the next Sync
+        private long _holdUntil;    // wall time until which the sim waits for the phone's clock to reach it
         private MapVm _mapVm;
         private Hit _selected = Hit.None;
         private SheetRequest? _open;
@@ -162,6 +164,8 @@ namespace Game.Presentation
             Sim = Simulation.FromState(_config, _snapshot.Clone());
             _lastSyncWall = WallNow(); // the time between is not an away advance: the clock re-anchors
             Sim.State.Clock.Reanchor(_lastSyncWall);
+            _holdUntil = 0;
+            _alignPending = true;
             _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
             _sheet.Close();
             Refresh(false);
@@ -195,14 +199,23 @@ namespace Game.Presentation
 
         private void Update()
         {
+            if (Sim == null) return; // a domain reload in the Editor nulls the fields until the scene is rebuilt
             ApplySafeArea();
             CodexCovered();
+            StoryCovered();
             MilestoneCovered();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (_dev != null && _dev.IsOpen) { return; }
 #endif
             // Sync once per wall-clock second: the sim's time unit is a whole second (spec 001 §3.4).
             long now = WallNow();
+            if (_alignPending) { _alignPending = false; AlignClock(); }
+            if (_holdUntil > 0)
+            {
+                if (now < _holdUntil) return; // the game clock is ahead of the phone's: the sim waits, its saved anchor unchanged
+                Sim.State.Clock.Reanchor(_holdUntil);
+                _holdUntil = 0;
+            }
             if (now == _lastSyncWall) return;
             _lastSyncWall = now;
             Sim.Execute(new Sync(now));
@@ -310,6 +323,7 @@ namespace Game.Presentation
                     case DealOffered dofr: // spec 028 §3.4: an investor's, a partner's or a buyer's card comes up on its own unless a sheet is open; closing it keeps it on the bell
                         if (!away && !_open.HasValue) { long dealId = dofr.OfferId; _safeRoot.schedule.Execute(() => { if (!_open.HasValue) OpenSheet(new SheetRequest(OwnerSheet.CardKind, dealId)); }); }
                         break;
+                    case StoryStepped ss: if (!away) QueueStory(ss); break; // spec 029 §3.6: a toast with the person's portrait
                     case OrderCompleted _: Toast(_strings.Get("toast.orderDone")); break;
                     case ContractLapsed _: Toast(_strings.Get("toast.lapsed")); break;
                 }
@@ -320,7 +334,7 @@ namespace Game.Presentation
             if (sown) _sounds.Sow();
             if (closed >= 0)
             {
-                if (YearSheet.EndsYear(closed)) _yearAfter = closed; // Your year opens once the season page is put away (ADR 0101 §5)
+                if (YearSheet.EndsYear(closed)) { _yearAfter = closed; _almanacAfter = closed / 4 + 1; } // Your year opens once the season page is put away (ADR 0101 §5), then the Almanac
                 _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Report", closed))); // the season's report (spec 008 §3.8)
             }
             if (coins)
@@ -540,6 +554,9 @@ namespace Game.Presentation
         /// <summary>The Winter close whose season page is open: Your year follows it (spec 019 §3.7).</summary>
         private long? _yearAfter;
 
+        /// <summary>The year whose Almanac opens once <i>Your year</i> is put away (spec 029 §3.4): after it, before Dadi's letters and the Codex toast.</summary>
+        private long? _almanacAfter;
+
         private void OnSheetClosed()
         {
             if (_yearAfter.HasValue && _open.HasValue && _open.Value.Kind == "Report" && _open.Value.Id == _yearAfter.Value)
@@ -547,6 +564,12 @@ namespace Game.Presentation
                 long winter = _yearAfter.Value;
                 _yearAfter = null;
                 _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Year", winter))); // before Dadi's letters and the Codex toast, which wait for it
+            }
+            else if (_almanacAfter.HasValue && _open.HasValue && _open.Value.Kind == "Year")
+            {
+                long year = _almanacAfter.Value;
+                _almanacAfter = null;
+                if (AlmanacSheet.Find(_ctx, year) != null) _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest(AlmanacSheet.Kind, year)));
             }
             _open = null;
             _back.Clear();
@@ -560,6 +583,7 @@ namespace Game.Presentation
         private void OnSheetAction(ActionVm action)
         {
             if (action.Id == Alerts.CollectId) { _sheet.Close(); CollectAll(); return; }
+            if (action.Id == AlmanacSheet.CloseId) { _sheet.Close(); return; }
             if (!action.Opens.HasValue && action.Confirm == null && SettingsAction(action)) return;
             if (action.Opens.HasValue)
             {

@@ -96,6 +96,7 @@ namespace Sim.View.Views
         public const string Yes = "yes";
         public const string NotNow = "notNow";
         public const string SeePeople = "seePeople";
+        public const string Decide = "decide";
     }
 
     /// <summary>The Settings sheet (spec 007 §7, ADR 0041 §4): one row per choice with its own button.</summary>

@@ -145,6 +145,9 @@ namespace Sim.View.Views
 
         /// <summary>A red count on a picture button (open orders), 0 for none.</summary>
         public int Count { get; internal set; }
+
+        /// <summary>The one of a row of choices that is the setting now (a marketing budget, a khata limit): drawn gold.</summary>
+        public bool Chosen { get; internal set; }
         private readonly Func<long, Command> _make;
 
         internal ActionVm(string id, string label, string detail, ActionKind kind, bool enabled, string disabledReason, Func<long, Command> make, SheetRequest? opens = null)

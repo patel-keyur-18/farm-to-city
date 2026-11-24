@@ -236,7 +236,13 @@ namespace Sim.Core.Commands
             if (a == null || a.Place == HiringRules.ManagerPlace) return CommandResult.Reject(RejectReason.UnknownApplicant); // a manager's offer says which business (HireManager)
             long wage = HiringRules.OfferWage(sim, a, Level);
             long prepay = PeopleRules.RestOfSeason(sim, wage);
-            if (a.Place == 0)
+            if (a.Place == HiringRules.SupervisorPlace)
+            {
+                RejectReason sr = HiringRules.BusinessPlace(sim, a.Place);
+                if (sr != RejectReason.None) return CommandResult.Reject(sr);
+                if (!sim.State.Ledger.CanAfford(prepay)) return CommandResult.Reject(RejectReason.InsufficientFunds);
+            }
+            else if (a.Place == 0)
             {
                 if (a.CitizenId == 0 && PeopleRules.EmptyHut(sim) == null) return CommandResult.Reject(RejectReason.NoEmptyHut);
                 if (!sim.State.Ledger.CanAfford(prepay)) return CommandResult.Reject(RejectReason.InsufficientFunds);
@@ -523,5 +529,13 @@ namespace Sim.Core.Commands
         public AnswerHrEvent(long at, long eventId, int choice) : base(at) { EventId = eventId; Choice = choice; }
 
         protected override CommandResult ApplyAt(Simulation sim) { return HrRules.Answer(sim, EventId, Choice); }
+    }
+
+    /// <summary>Lets your supervisor go (spec 028 §3.9): he keeps the season's pay; his hands are no longer covered.</summary>
+    public sealed class DismissSupervisor : TimedCommand
+    {
+        public DismissSupervisor(long at) : base(at) { }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return WorkplaceRules.Dismiss(sim); }
     }
 }

@@ -167,6 +167,9 @@ namespace Sim.View.Text
         /// <summary>One decimal, for hours a day ("3.4").</summary>
         public string Decimal1(Fixed v) { return Decimals(v, 1, false); }
 
+        /// <summary>Three decimals: marketing's score a 1,000 (0.019, spec 028 §3.10).</summary>
+        public string Decimal3(Fixed v) { return Decimals(v, 3, false); }
+
         /// <summary>Two decimals: a shop's attraction (spec 017 §3.3).</summary>
         public string Decimal2(Fixed v) { return Decimals(v, 2, false); }
 

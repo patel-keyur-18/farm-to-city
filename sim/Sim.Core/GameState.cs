@@ -90,6 +90,9 @@ namespace Sim.Core
         /// <summary>The Township's road, clinic, gate and cohort (spec 023, save schema 20), or null in content without it; hashed only once something has started.</summary>
         public Town.TownshipState Township { get; internal set; }
 
+        /// <summary>The town's Chronicle (spec 029, save schema 24), or null in content without it; hashed only once it holds a line.</summary>
+        public History.ChronicleState Chronicle { get; internal set; }
+
         /// <summary>Accepted commands, for replay. Not hashed: it's input, not state.</summary>
         public CommandLog CommandLog { get; internal set; } = new CommandLog();
 
@@ -140,6 +143,8 @@ namespace Sim.Core
             if (Treasury != null && !(h is SaveWriter tw && tw.Schema < 19)) Treasury.WriteTo(h);
             // Spec 023 (schema 20), last: a town that hasn't started the Township hashes as before.
             if (Township != null && !(h is SaveWriter tsw && tsw.Schema < 20)) Township.WriteTo(h);
+            // Spec 029 (schema 24), last: a town with no Chronicle line yet hashes as before.
+            if (Chronicle != null && !(h is SaveWriter csw && csw.Schema < 24)) Chronicle.WriteTo(h);
         }
 
         /// <summary>The first session's step count, so a finished session saves as "none" (set with the onboarding state).</summary>
@@ -193,6 +198,8 @@ namespace Sim.Core
             if (g.Shops != null) s.Shops = r.Schema >= 14 ? Business.ShopsState.ReadFrom(r, config) : Business.ShopsState.New(config); // schema 13: the village's rivals, no shops of yours
             if (g.Treasury != null) s.Treasury = r.Schema >= 19 ? Town.TreasuryState.ReadFrom(r) : new Town.TreasuryState(); // schema 18: no treasury yet
             if (g.Township != null) s.Township = r.Schema >= 20 ? Town.TownshipState.ReadFrom(r) : new Town.TownshipState(); // schema 19: nothing of the Township started
+            if (g.Chronicle != null) // schema 23: no Chronicle yet, it begins when the town is loaded (spec 029 §3.1)
+                s.Chronicle = r.Schema >= 24 ? History.ChronicleState.ReadFrom(r, g.Farm.Crops.Count) : new History.ChronicleState(g.Farm.Crops.Count) { NeedsBegin = true };
             return s;
         }
 
@@ -233,6 +240,7 @@ namespace Sim.Core
                 Shops = Shops?.Clone(),
                 Treasury = Treasury?.Clone(),
                 Township = Township?.Clone(),
+                Chronicle = Chronicle?.Clone(),
                 _stepCount = _stepCount,
                 CommandLog = withCommandLog ? CommandLog.Clone() : new CommandLog(),
             };

@@ -140,6 +140,9 @@ namespace Sim.Core.Town
         /// <summary>The save schema that added business growth (spec 028, Sprint 25): invoices first.</summary>
         public const int GrowthSchema = 23;
 
+        /// <summary>Save schema 24 (Sprint 26): the Chronicle, the Almanac, citizen stories, a kirana's marketing and khata, and the workplace (spec 028 §3.9).</summary>
+        public const int WorkplaceSchema = 24;
+
         internal static TownshipState ReadFrom(SaveReader r)
         {
             var s = new TownshipState { Road = RoadState.ReadFrom(r), Clinic = ClinicState.ReadFrom(r), GateMet = r.ReadInt(), Cohort = CohortState.ReadFrom(r) };

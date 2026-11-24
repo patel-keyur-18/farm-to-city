@@ -115,6 +115,7 @@ namespace Game.Presentation
             BuildOverlays();
             BuildToast();
             BuildCodexToast();
+            BuildStoryToast();
             BuildMilestoneToast();
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             _dev = new DevTools.DevPanel(_safeRoot, new DevTools.DevPanel.Host
@@ -154,6 +155,8 @@ namespace Game.Presentation
                 case "Menu": _sheet.Show(MenuSheet.Build(_ctx), refreshOnly); break;
                 case "Letter": _sheet.Show(Letter.List(_ctx), refreshOnly); break;
                 case "Progress": _sheet.Show(ProgressSheet.Build(_ctx), refreshOnly); break;
+                case ChronicleSheet.Kind: _sheet.Show(ChronicleSheet.Build(_ctx, r.Arg), refreshOnly); break;
+                case AlmanacSheet.Kind: _sheet.Show(AlmanacSheet.Build(_ctx, r.Id), refreshOnly); break; // the year's card (spec 029 §7) // spec 029 §7
                 case CodexSheet.Kind: _sheet.Show(CodexSheet.Build(_ctx), refreshOnly); break; // spec 018 §7
                 case "Lands": _sheet.Show(LandsSheet.Build(_ctx, r.Arg), refreshOnly); break;
                 case CropCalendar.Sheet: _sheet.Show(CropCalendar.Build(_ctx), refreshOnly); break; // spec 020 §3.6b

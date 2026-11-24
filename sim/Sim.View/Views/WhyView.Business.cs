@@ -170,6 +170,7 @@ namespace Sim.View.Views
             long value = line == "loan" ? (p.Loan > 0 ? p.Loan : BusinessBooks.MaxLoan(ctx.Sim, t)) : line == "interest" ? p.Interest : line == "cash" ? p.CashNeeded - p.Loan : line == "fees" ? p.Fees : line == "sales" ? p.Sales : line == "wheat" ? p.Wheat : line == "power" ? p.Power : line == "repairs" ? p.Repairs
                 : line == "depreciation" ? p.Depreciation : line == "monsoon" ? p.Off : line == "wage" ? p.Wage : line == "rent" ? p.Rent : line == "profit" ? p.Profit : line == "cost" ? p.Cost : p.CashNeeded;
             RecipeDef first = t.ByRecipe ? BusinessRules.First(t, t.Products[0]) : null;
+            string[] kl = ShopWords.KhataLoss(ctx);
             WhyVm vm = New(ctx, BusinessWords.Key(ctx, "why.plan." + line + ".title", t), line == "payback" ? BusinessPlanSheet.Payback(ctx, p) : ctx.Fmt.Coins(value),
                 "role", ctx.Strings.Get("business.role." + t.Worker));
             Text(vm, ctx, BusinessWords.Key(ctx, "why.plan." + line, t), "days", ctx.Fmt.Integer(days), "area", ctx.Fmt.Kg(p.AreaGrams / days), "own", ctx.Fmt.Kg(p.OwnGrams / days),
@@ -180,7 +181,7 @@ namespace Sim.View.Views
                 "rate", ctx.Fmt.Percent(p.Loan > 0 ? Fixed.FromRatio(p.Interest, p.Loan) : Fixed.Zero),
                 "batch", first == null ? "" : ctx.Fmt.Kg(first.OutputGrams), "fuel", first == null ? "" : ctx.Fmt.Coins(Sim.Core.Finance.Money.MulRate(100, first.Fuel * index)),
                 "supplies", first == null ? "" : ctx.Fmt.Coins(Sim.Core.Finance.Money.MulRate(100, first.Supplies * index)),
-                "rent", ctx.Fmt.Coins(p.Rent), "wage", ctx.Fmt.Coins(p.Wage), "kg", t.IsKiln ? ctx.Fmt.Decimal1(t.Kiln.FuelKg) : "");
+                "rent", ctx.Fmt.Coins(p.Rent), "wage", ctx.Fmt.Coins(p.Wage), "kg", t.IsKiln ? ctx.Fmt.Decimal1(t.Kiln.FuelKg) : "", "shares", ShopWords.GroceryShares(ctx), kl[0], kl[1], kl[2], kl[3], kl[4], kl[5], kl[6], kl[7], kl[8], kl[9]);
             if (line == "profit" || line == "payback") vm.Footnote = ctx.Strings.Get(BusinessWords.Key(ctx, "why.plan.lesson", t));
             return vm;
         }
@@ -194,13 +195,14 @@ namespace Sim.View.Views
             Sim.Core.Business.BusinessReport r = BusinessBooksSheet.ReportOf(ctx, b, back);
             long Amount(int l) { return BusinessBooksSheet.Amount(ctx, b, back, l); }
             Fixed index = sim.State.Market.PriceIndex;
+            string[] kl = ShopWords.KhataLoss(ctx);
             string when = back == 0 ? ctx.Strings.Get("why.books.now") : ReportSheet.PeriodName(ctx, r.Period);
             WhyVm vm = New(ctx, "why.books.title", Money(ctx, Amount(line)), "line", BusinessBooksSheet.Label(ctx, b, line), "period", when);
             Text(vm, ctx, BusinessWords.Key(ctx, "why.books." + BusinessBooksSheet.Names[line], t), "area", ctx.Fmt.Kg(r.AreaGrams), "own", ctx.Fmt.Kg(r.OwnGrams), "kg", ctx.Fmt.Kg(r.AreaGrams + r.OwnGrams),
                 "fee", ctx.Fmt.PricePerKg(b.Fee * index), "power", ctx.Fmt.PricePerKg(t.PowerPerKg * index), "share", ctx.Fmt.Percent(t.RepairsShare),
                 "building", Money(ctx, MarketRules.Indexed(sim, ShopRules.BuildingValue(t, b.Pitch))), "buildingLife", ctx.Fmt.Integer(ShopRules.BuildingLife(t, b.Pitch)),
                 "equipment", Money(ctx, MarketRules.Indexed(sim, t.EquipmentValue)), "equipmentLife", ctx.Fmt.Integer(t.EquipmentLifeSeasons),
-                "role", ctx.Strings.Get("business.role." + t.Worker));
+                "role", ctx.Strings.Get("business.role." + t.Worker), "shares", ShopWords.GroceryShares(ctx), kl[0], kl[1], kl[2], kl[3], kl[4], kl[5], kl[6], kl[7], kl[8], kl[9]);
             if (line == BusinessBooksSheet.Margin || line == BusinessBooksSheet.Profit)
             {
                 Row(vm, ctx, BusinessWords.Key(ctx, "why.books.rowIncome", t), Money(ctx, Amount(BusinessBooksSheet.Fees) + Amount(BusinessBooksSheet.Sales)));

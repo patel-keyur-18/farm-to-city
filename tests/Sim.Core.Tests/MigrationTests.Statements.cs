@@ -47,8 +47,10 @@ namespace Sim.Core.Tests
             People.LeaseRules.Migrate(sim);
             // Part-harvests are schema 17 (ADR 0105): the bots' hands now take parts (ADR 0111), and a schema-15 write can't hold a part taken.
             foreach (Sim.Core.Farm.Crop c in sim.State.Farm.Crops) c.TakenGrams = 0;
+            ChronicleTests.Forget(sim.State.Chronicle); // the Chronicle is schema 24: a schema-15 write can't hold it
             LoadResult old = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0, schema: 15), config, MinSchema);
             Assert.That(old.Error, Is.EqualTo(SaveError.None), old.Detail);
+            ChronicleTests.Forget(old.State.Chronicle); // the older-town pass inside the load began a Chronicle at the load; this town compares without one
             Assert.That(old.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), "a schema-15 write is the same town");
         }
     }

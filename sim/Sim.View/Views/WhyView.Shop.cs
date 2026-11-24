@@ -35,6 +35,8 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.shopShare.stars", Part(ctx, a.Stars), "stars", ShopWords.Stars(ctx, stars));
             Row(vm, ctx, "why.shopShare.distance", Part(ctx, a.Distance), "m", ctx.Fmt.Integer(a.Metres));
             Row(vm, ctx, "why.shopShare.wait", Part(ctx, a.Wait), "min", ctx.Fmt.Integer(a.WaitMinutes.RoundToLong()));
+            if (a.Marketing != Fixed.Zero) Row(vm, ctx, "why.shopShare.marketing", Part(ctx, a.Marketing)); // spec 028 §3.10
+            if (a.Khata != Fixed.Zero) Row(vm, ctx, "why.shopShare.khata", Part(ctx, a.Khata));
             Row(vm, ctx, "why.shopShare.total", Pull(ctx, a.Total));
         }
 
@@ -59,6 +61,7 @@ namespace Sim.View.Views
             {
                 Business b = BusinessOf(ctx, id);
                 BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+                KhataRules.Refresh(sim, b);
                 vm = New(ctx, "why.shopShare.title", ctx.Fmt.Percent(ShopSheet.Share(b.CustomersToday, ShopSheet.Everyone(sim, t.Kind))), "name", BusinessWords.Name(ctx, t));
                 foreach (ShopGroup g in new[] { ShopGroup.Village, ShopGroup.Town }) Parts(vm, ctx, ShopRules.Attract(sim, b, g), g, t.Kind, b.PriceFactor, b.Stars, b.Quality);
             }
@@ -123,7 +126,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.shopDemand.each." + kind, t.Kind == ShopKind.Chai ? ShopWords.Cups(ctx, perDay.RoundToLong()) : ctx.Fmt.Kg(perDay.MulRatio(1000, 1).RoundToLong()));
             if (k.AdultShare < Fixed.One) Row(vm, ctx, "why.shopDemand.adults", ctx.Fmt.Percent(k.AdultShare));
             Row(vm, ctx, "why.shopDemand.price", ctx.Fmt.Percent(k.Elasticity.MulRatio(1, 10))); // 10% dearer: about this much less bought
-            Text(vm, ctx, "why.shopDemand.how." + kind);
+            Text(vm, ctx, "why.shopDemand.how." + kind, "shares", ShopWords.GroceryShares(ctx));
             return vm;
         }
 

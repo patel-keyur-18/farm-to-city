@@ -1,0 +1,33 @@
+{
+  "keep": 400,
+  "recordMinGrams": 1000000,
+  "recordRise": 0.05,
+  "almanacKeep": 8,
+  "minProfit": 1000000,
+  "kinds": [
+    { "id": "founding", "icon": "family_house" },
+    { "id": "hamlet", "icon": "family_house" },
+    { "id": "village", "icon": "family_house" },
+    { "id": "township", "icon": "family_house" },
+    { "id": "firstSettler", "icon": "family_house" },
+    { "id": "firstChild", "icon": "family_house" },
+    { "id": "firstLiterateChild", "icon": "school" },
+    { "id": "firstAdultReader", "icon": "school" },
+    { "id": "firstFestival", "icon": "star" },
+    { "id": "schoolOpened", "icon": "school" },
+    { "id": "clinicBuilt", "icon": "clinic" },
+    { "id": "roadBuilt", "icon": "sign" },
+    { "id": "firstOrchard", "icon": "sapling_mango" },
+    { "id": "firstProfit", "icon": "coin" },
+    { "id": "recordHarvest", "icon": "field" },
+    { "id": "businessFounded", "icon": "flour_mill" },
+    { "id": "businessSold", "icon": "flour_mill" },
+    { "id": "businessClosed", "icon": "flour_mill" },
+    { "id": "fireSurvived", "icon": "gear" },
+    { "id": "epidemicSurvived", "icon": "clinic" },
+    { "id": "loanCleared", "icon": "coin" },
+    { "id": "petitionKept", "icon": "sign" },
+    { "id": "story", "icon": "family_house" },
+    { "id": "begins", "icon": "sign" }
+  ]
+}

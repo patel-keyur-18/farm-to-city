@@ -135,7 +135,7 @@ namespace Sim.Core.Business
                 sim.Emit(new LedgerReconciliationFailed(sim.State.Clock.SimTime, "business " + b.Id + ": " + failure));
             }
             b.Reports.Add(report);
-            if (NetProfit(report) > 0) b.ProfitableSeasons++;
+            if (NetProfit(report) > 0) { b.ProfitableSeasons++; History.ChronicleRules.Profit(sim, b); } // spec 029 §3.2: the first profit
             if (b.Reports.Count > KeptReports) b.Reports.RemoveAt(0);
             b.SeasonOpeningCash = b.Ledger.Cash;
             b.AreaSeason = 0;
@@ -248,6 +248,7 @@ namespace Sim.Core.Business
             }
             BusinessRules.LoseWorker(sim, b);
             InvoiceRules.CollectAll(sim, b); // what its customers owe it, now (spec 028 §3.1)
+            KhataRules.Settle(sim, b); // and its households' khata (spec 028 §3.10)
 
             KilnRules.Clear(sim, b); // a closing kiln's yard goes to the trader
             TuitionRules.Release(b); // a closing tuition centre's pupils go
@@ -312,6 +313,7 @@ namespace Sim.Core.Business
             if (b.Pitch < 0) Land.LandSystem.SetOccupied(sim, b.TileId, false); // a pitch in the square is the village's
             if (sale == null)
             {
+                History.AlmanacRules.Loss(sim, History.AlmanacLoss.BusinessClosed, lost, t.Id); // the money put in that did not come back (spec 029 §3.4)
                 sim.Emit(new BusinessClosed(now, b.Id, t.Id, toYou, guaranteed));
                 return;
             }

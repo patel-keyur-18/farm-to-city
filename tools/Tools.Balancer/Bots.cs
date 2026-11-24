@@ -1203,14 +1203,8 @@ namespace Tools.Balancer
         /// <summary>Whether the i-th business is a shop on a pitch in the square (spec 017 §3.4).</summary>
         private bool OnPitch(Simulation sim, int i) { return Type(sim, _types[i]).IsShop && !OnAcre; }
 
-        /// <summary>The first free pitch, or −1.</summary>
-        private static int FreePitch(Simulation sim)
-        {
-            var d = Sim.Core.Business.ShopRules.Defs(sim);
-            for (int p = 0; d != null && p < d.Pitches; p++)
-                if (sim.State.Businesses.Businesses.All(b => b.Status == Sim.Core.Business.BusinessStatus.Closed || b.Pitch != p)) return p;
-            return -1;
-        }
+        /// <summary>The first free pitch (no shop of yours, no newcomer: a citizen's own stall takes one, spec 029 §3.6), or −1.</summary>
+        private static int FreePitch(Simulation sim) { return Sim.Core.Business.ShopRules.FreePitch(sim); }
 
         public override void Play(Simulation sim, long t)
         {

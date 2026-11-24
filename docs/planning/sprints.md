@@ -1197,3 +1197,56 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
 - [ ] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it
+
+## Sprint 26 · 23 Aug – 5 Sep 2027 · Phase 3 (the Chronicle, the Almanac and citizen stories; supervisors, associations, conflicts and accidents; your kirana, marketing and khata; the Phase 3 exploit checks; the playtest town and the Release build; spec 029 and spec 028's last two stories; 2 weeks, ADR 0166)
+
+- **Status:** Started 2026-11-23 (Sprint 25 merged, PR #36). **Plan shown to the owner before any code and approved 2026-11-23** (ADR 0166).
+- **Branch:** `sprint/26-chronicle-business-growth-2`, from `main` after PR #36 (`097c19fe`)
+- **Goal:** The town remembers and the businesses get their people and their customers. Every important moment is written down in a warm voice; each Winter closes with an Almanac (the year's best return, its costliest loss, a person to remember); four small arcs follow a few of the town's people. Bigger workplaces have supervisors, accidents, conflicts and associations; a kirana of your own competes with the village grocer, with marketing and khata. Every Phase 3 money path has an exploit check, and the owner gets a town just past the Village on a Release build for the 4-week playtest. Save schema 24 ships once, with a fixture.
+- **Points:** 31 = US-157 5, US-158 3, US-159 5, US-260 5, US-259 5, US-248 5, US-249 3
+- **Specs to write and review:** none to write; spec 029 (written in Sprint 25) is approved with this plan; spec 028 (approved, ADR 0153) carries US-259 and US-260
+- **Device build:** Yes: a Development build at the sprint's end (frame time, golden replays, the 72 h cap), then the **Release build** with the playtest town (US-249)
+- **Milestone and labels:** `Phase 3 · Township`; `type:feature`, `type:adr`, `type:balance`, `type:spec`; `area:sim`, `area:content`, `area:ui`, `area:art`, `area:tooling`; `documentation`
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-157 | Chronicle | [F16.3](features/F16.3-chronicle-and-almanac.md) | 5 | Must | Done 2026-11-24 (Preview 19 and the story approved) |
+| US-158 | Almanac | [F16.3](features/F16.3-chronicle-and-almanac.md) | 3 | Must | Done 2026-11-24 (approved) |
+| US-159 | Citizen stories | [F16.4](features/F16.4-citizen-stories.md) | 5 | Should | Done 2026-11-24 (approved) |
+| US-260 | Your kirana, marketing and khata | [F12.3](features/F12.3-services-and-customer-choice.md) | 5 | Should | Done 2026-11-24 (Preview 21 and the story approved) |
+| US-259 | Supervisors, worker associations, conflicts and accidents | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | Could | Done 2026-11-24 (Preview 20 and the story approved) |
+| US-248 | Phase 3 exploit checks | [F20.1](features/F20.1-balancer-and-health-checks.md) | 5 | Must | Done 2026-11-24 (approved) |
+| US-249 | The playtest town and the Release build | [F10.3](features/F10.3-phase-3-playtest-and-gate.md) | 3 | Must | Done 2026-11-24 (gap 14 and the town approved, ADR 0169; Release build from the final commit; checklist `s26-phase-3-playtest.md`) |
+
+**Order of work** (one stop for the owner's review after each story; every sheet previewed as an artifact that looks exactly like the game before its UI code; each preview made at the start of its story's slot):
+
+1. **Branch, ADR 0166, this section.** The owner approves the plan and spec 029 (gap 1; the GDD's "first graduate" lines become "first adult reader" with it) and corrects the preview numbers (gap 2).
+2. **The first Editor session:** the re-check of what Sprint 24's review changed (the event card, the banner, the Money page's premiums, checklist rows 7 and 11 to 12) and the `WeatherPresenter.LateUpdate` fix; Editor saves backed up first.
+3. **US-157 Chronicle** (gaps 10 and 12 closed first; Preview 19; schema 24 begins: `ChronicleState`), then **US-158 Almanac**, then **US-159 Citizen stories** (gap 11 first).
+4. **US-260 kirana, marketing and khata** (gaps 6 to 9 first; Preview 21; `KhataWorst` and `MarketingSpiral` built with it), then **US-259 supervisors, associations, conflicts and accidents** (gaps 3 to 5 first; Preview 20).
+5. **US-248 exploit checks** (gap 13 first: the table of nine checks against named tests, the missing ones added, 200 seeds to game year 8).
+6. **Balance** (the 20% rule; the pace; the kirana's targets; the hand's stall rate; the Chronicle's size; the exploit bots; the 200-seed hands-off Township), the checklist in the Editor by scripted touch, render statistics, Editor saves restored and diffed, **independent Opus 5.5 high-effort review**, fixes, both test projects, **Development build**, then **US-249** (gap 14: the playtest town at the close after the Village unlock, shown to the owner, then the Release build from the final commit), ADRs (as built), `STATUS.md`, feature files, this file, the pull request.
+
+**If it runs over,** cut in this order: US-259; spec 029 §11's items (the hand's stall and its notice, then the long-life arc, then the Almanac's crop returns); US-260 (marketing, then khata, then the kirana). **Never cut:** the Chronicle's record and its sheet, the Almanac card, US-248, US-249, every number's *Why?*, the schema 24 fixture, the exploit checks (`KhataWorst` and `MarketingSpiral` go with US-260 if it is cut).
+
+**Carried risks:** the 200-seed run takes 15 to 20 minutes (background, no content edits while it runs); the Chronicle and the Almanac read many events (a per-system guard, the fixed order and the 72 h catch-up guards must hold); the goldens must not move (every new field hashed only when used); the hand's stall is the one rule that costs the player a worker; the device-only rows of the Sprint 23 to 25 checklists are still with the owner.
+
+**Definition of Ready (ADR 0025)**
+
+- [x] Every story checked against its spec and the code at `main` (`097c19fe`); fourteen gaps listed with recommendations (ADR 0166)
+- [x] Spec 029 approved by the owner (gap 1, 2026-11-23)
+- [x] This section approved by the owner (2026-11-23)
+- [x] Each story's gaps closed before its code (gaps 10 and 12 before US-157 and US-158, 11 before US-159, 6 to 9 before US-260, 3 to 5 before US-259, 13 before US-248; 14 before US-249)
+
+**Sprint end checklist**
+
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [x] Save schema 24: migration, the fixture `schema24-people.ftc` (`MigrationTests.Schema24_People`), every older schema loads, goldens unmoved
+- [x] Previews 19, 20 and 21 approved before their screens
+- [x] Balance (2026-11-24, ADR 0168): the 20% rule (`Archetypes_WithinTwentyPercent`), the pace (competent median day 102, 90th percentile 144 on 48 seeds; 200 seeds hands-off solvent), the kirana's targets (hired 10,700 a season at the Township in today's coins, no effect on households), the hand's stall rate (2 stalls in 60 seasons, now from the Township), the exploit bots, the supervisor's price (15,000 and +1.2% a star), the Chronicle's size (about 6 entries a game year in a bot town, 86 at season 60, under 2 KB), the 200-seed Township; the full Balance category 66 of 66, Perf 6 of 6, Core 936, View 435
+- [x] Render statistics read for each visible story, growth over 10% reported
+- [x] Test checklist with device-only rows marked (`docs/test-checklists/s26-chronicle-business-growth-2.md`)
+- [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
+- [x] The playtest town shown to the owner; the Release build made from the final commit
+- [x] `STATUS.md`, feature files and this file updated
+- [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it

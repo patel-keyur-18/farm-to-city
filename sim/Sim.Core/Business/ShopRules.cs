@@ -17,7 +17,7 @@ namespace Sim.Core.Business
     /// <summary>A shop's attraction to a customer group (spec 017 §3.3), part by part so the *Why?* can show each.</summary>
     public struct Attraction
     {
-        public Fixed Price, Quality, Stars, Distance, Wait, Total;
+        public Fixed Price, Quality, Stars, Distance, Wait, Marketing, Khata, Total;
         public int Metres;
         public Fixed WaitMinutes;
     }
@@ -49,6 +49,13 @@ namespace Sim.Core.Business
             return Fixed.Zero;
         }
 
+        /// <summary>A staple's share of a person's groceries (§3.10), or zero.</summary>
+        public static Fixed GroceryShare(Simulation sim, int good)
+        {
+            foreach (KeyValuePair<int, Fixed> kv in Defs(sim).GroceryShares) if (kv.Key == good) return kv.Value;
+            return Fixed.Zero;
+        }
+
         /// <summary>What the village shops buy of one of your products a person a day of life (spec 016 §3.9c), or zero.</summary>
         public static Fixed ProductKg(Simulation sim, int good)
         {
@@ -68,6 +75,10 @@ namespace Sim.Core.Business
             if (kind == ShopKind.Sweets)
             {
                 foreach (KeyValuePair<int, Fixed> kv in Defs(sim).Kind(kind).References) list.Add(kv.Key);
+            }
+            else if (kind == ShopKind.Grocery)
+            {
+                foreach (KeyValuePair<int, Fixed> kv in Defs(sim).GroceryShares) list.Add(kv.Key);
             }
             else
             {
@@ -95,6 +106,7 @@ namespace Sim.Core.Business
             {
                 case ShopKind.Chai: return (k.PerPerson * people).RoundToLong();
                 case ShopKind.Sweets: return (k.PerPerson * people).MulRatio(1000, k.References.Count).RoundToLong();
+                case ShopKind.Grocery: return (k.PerPerson * GroceryShare(sim, good) * people).MulRatio(1000, 1).RoundToLong(); // the staples' shares of a person's groceries (§3.10)
                 default: return ((product ? ProductKg(sim, good) : k.PerPerson * VegShare(sim, good)) * people).MulRatio(1000, 1).RoundToLong();
             }
         }
@@ -211,7 +223,7 @@ namespace Sim.Core.Business
         /// The attraction (§3.3): max(floor, 1 + wPrice × (1 − price ÷ reference) + wQuality × (quality − 1) + wStars × (stars − 2.5) ÷ 2.5
         /// − wDistance × metres ÷ 100 − wWait × wait ÷ 10 minutes).
         /// </summary>
-        public static Attraction Attract(Simulation sim, Fixed priceFactor, int quality, Fixed stars, int metres, Fixed waitMinutes)
+        public static Attraction Attract(Simulation sim, Fixed priceFactor, int quality, Fixed stars, int metres, Fixed waitMinutes, Fixed marketing = default(Fixed), Fixed khata = default(Fixed))
         {
             ShopDefs d = Defs(sim);
             var a = new Attraction
@@ -221,17 +233,30 @@ namespace Sim.Core.Business
                 Stars = d.WStars * (stars - NeutralStars) / NeutralStars,
                 Distance = -d.WDistance.MulRatio(metres, 100),
                 Wait = -d.WWait.MulRatio(1, 10) * waitMinutes,
+                Marketing = marketing, Khata = khata,
                 Metres = metres, WaitMinutes = waitMinutes,
             };
-            Fixed total = Fixed.One + a.Price + a.Quality + a.Stars + a.Distance + a.Wait;
+            Fixed total = Fixed.One + a.Price + a.Quality + a.Stars + a.Distance + a.Wait + a.Marketing + a.Khata;
             a.Total = total < d.AttractionFloor ? d.AttractionFloor : total;
             return a;
         }
 
-        /// <summary>Your shop's attraction to a group now.</summary>
+        /// <summary>Your shop's attraction to a group now: marketing lifts it for both groups, khata for your town's low-income regulars (§3.10).</summary>
         public static Attraction Attract(Simulation sim, Business b, ShopGroup g)
         {
-            return Attract(sim, b.PriceFactor, b.Quality, b.Stars, Metres(sim, g, b.TileId), WaitMinutes(b.LastArrivals, b.LastCapacity));
+            return Attract(sim, b.PriceFactor, b.Quality, b.Stars, Metres(sim, g, b.TileId), WaitMinutes(b.LastArrivals, b.LastCapacity), b.MarketLift, g == ShopGroup.Town ? b.KhataLiftNow : Fixed.Zero);
+        }
+
+        /// <summary>A shop's attraction to a household at a home tile, without khata's own lift (who its regulars are, §3.10).</summary>
+        internal static Fixed AttractFrom(Simulation sim, Outlet o, int from)
+        {
+            ShopDefs d = Defs(sim);
+            if (o.B != null)
+                return Attract(sim, o.B.PriceFactor, o.B.Quality, o.B.Stars, Between(sim, from, o.B.TileId < 0 ? d.SquareTile : o.B.TileId), WaitMinutes(o.B.LastArrivals, o.B.LastCapacity), o.B.MarketLift).Total;
+            Rival r = o.R;
+            int tile = r.Newcomer ? d.SquareTile : d.Rivals[r.Def].Tile < 0 ? d.SquareTile : d.Rivals[r.Def].Tile;
+            int off = r.Newcomer ? (r.Pitch >= 0 ? 0 : d.CartMetres) : d.Rivals[r.Def].Tile < 0 ? d.Rivals[r.Def].Metres : 0;
+            return Attract(sim, r.PriceFactor, RivalQuality(sim, r), r.Stars, Between(sim, from, tile) + off, WaitMinutes(r.LastArrivals, RivalCapacity(sim, r))).Total;
         }
 
         /// <summary>A rival's attraction to a group now: the village's on its place, a newcomer on a pitch or as the cart by the square.</summary>
@@ -318,13 +343,17 @@ namespace Sim.Core.Business
         // ---- the hour (§3.3, §3.8) ----
 
         /// <summary>A shop open this hour: one of yours or a rival, with what's left of its rate.</summary>
-        private sealed class Outlet
+        internal sealed class Outlet
         {
             public Business B;
             public Rival R;
             public long CapLeft;
             public long Capacity;
             public long Arrivals, Served, Amount;
+
+            /// <summary>What it sold your town this hour (money), and its khata regulars (§3.10) when khata is on.</summary>
+            public long TownAmount;
+            public KhataStanding Standing;
         }
 
         /// <summary>
@@ -339,9 +368,10 @@ namespace Sim.Core.Business
             long start = sim.State.Clock.SimTime - Hour;
             NewDay(sim, start / Day);
             int hour = (int)(start % Day / Hour);
-            foreach (ShopKind kind in new[] { ShopKind.Veg, ShopKind.Chai, ShopKind.Sweets, ShopKind.Meals })
+            foreach (ShopKind kind in new[] { ShopKind.Veg, ShopKind.Chai, ShopKind.Sweets, ShopKind.Meals, ShopKind.Grocery })
             {
                 if (kind == ShopKind.Meals && !MealsRules.Running(sim)) continue; // diners are worked out once a restaurant of yours is open
+                if (kind == ShopKind.Grocery && !Kirana(sim)) continue; // and the village grocer's staples compete once a kirana of yours is open
                 var outlets = new List<Outlet>();
                 foreach (Business b in sim.State.Businesses.Businesses)
                     if (b.Status == BusinessStatus.Open && BusinessRules.TypeOf(sim, b).Kind == kind && BusinessRules.OpenAt(sim, b, hour))
@@ -355,15 +385,40 @@ namespace Sim.Core.Business
                     long cap = RivalCapacity(sim, r);
                     if (r.Kind == kind && RivalOpen(sim, r, hour)) outlets.Add(new Outlet { R = r, CapLeft = cap > 0 ? cap : long.MaxValue, Capacity = cap });
                 }
+                KhataRules.Prepare(sim, outlets); // spec 028 §3.10: who is a regular of which shop, and what khata lifts
+                Fixed cover = Fixed.Zero;
+                foreach (Outlet o in outlets) if (o.B != null) cover += o.B.KhataCover;
                 if (outlets.Count > 0)
                     foreach (int good in KindGoods(sim, kind))
                         foreach (ShopGroup g in new[] { ShopGroup.Town, ShopGroup.Village })
-                            Share(sim, s, kind, good, g, DemandThisHour(sim, kind, good, g, hour), outlets);
+                        {
+                            long demand = DemandThisHour(sim, kind, good, g, hour);
+                            if (g == ShopGroup.Town && cover > Fixed.Zero) demand += (Defs(sim).KhataKilos * cover).MulRatio(demand, 1).RoundToLong(); // low-income regulars on khata buy a tenth more
+                            Share(sim, s, kind, good, g, demand, outlets);
+                        }
                 foreach (Outlet o in outlets) Close(sim, o);
                 foreach (Business b in sim.State.Businesses.Businesses) // a shop shut this hour has no queue next hour
                     if (b.Status == BusinessStatus.Open && BusinessRules.TypeOf(sim, b).Kind == kind && !outlets.Exists(o => o.B == b)) b.LastArrivals = b.LastCapacity = 0;
                 foreach (Rival r in rivals) if (r.Kind == kind && !outlets.Exists(o => o.R == r)) r.LastArrivals = 0;
             }
+        }
+
+        /// <summary>The shops of a kind a customer could choose between, whatever the hour: yours open, then the rivals (a view's khata standing, §3.10).</summary>
+        internal static List<Outlet> OutletsOf(Simulation sim, ShopKind kind)
+        {
+            var list = new List<Outlet>();
+            foreach (Business b in sim.State.Businesses.Businesses)
+                if (b.Status == BusinessStatus.Open && BusinessRules.TypeOf(sim, b).Kind == kind) list.Add(new Outlet { B = b });
+            foreach (Rival r in sim.State.Shops.All()) if (r.Kind == kind) list.Add(new Outlet { R = r });
+            return list;
+        }
+
+        /// <summary>A kirana of yours is open (the village grocer's staples compete with it, and with nothing before).</summary>
+        public static bool Kirana(Simulation sim)
+        {
+            foreach (Business b in sim.State.Businesses.Businesses)
+                if (b.Status == BusinessStatus.Open && BusinessRules.TypeOf(sim, b).Kind == ShopKind.Grocery) return true;
+            return false;
         }
 
         /// <summary>
@@ -495,7 +550,9 @@ namespace Sim.Core.Business
                 o.Served += got[i];
                 if (o.B != null)
                 {
-                    o.Amount += Sell(sim, o.B, kind, good, got[i]);
+                    long sold = Sell(sim, o.B, kind, good, got[i]);
+                    o.Amount += sold;
+                    if (g == ShopGroup.Town) o.TownAmount += sold;
                     if (g == ShopGroup.Town && kind == ShopKind.Veg) s.TownToday[good] += got[i];
                 }
             }
@@ -519,6 +576,7 @@ namespace Sim.Core.Business
             b.SeasonCustomers += o.Arrivals;
             b.SeasonServed += o.Served;
             b.SeasonAtPrice += b.PriceFactor.MulRatio(o.Served, 1).RoundToLong();
+            KhataRules.Credit(sim, o);
             BusinessBooks.Sweep(sim, b);
             if (o.Arrivals > 0) sim.Emit(new ShopSales(sim.State.Clock.SimTime, b.Id, o.Arrivals, o.Served, o.Amount));
         }
@@ -701,6 +759,13 @@ namespace Sim.Core.Business
                 long need = b.PutOut[g] - b.Stock[g];
                 if (need <= 0) continue;
                 bool produce = VegShare(sim, g) > Fixed.Zero;
+                if (t.Kind == ShopKind.Grocery) // §3.10: your store's goods first, then your businesses', then the wholesaler's at the trader's price
+                {
+                    need -= FromStore(sim, b, g, need);
+                    if (need > 0) need -= FromYours(sim, b, g, need, took);
+                    if (need > 0 && b.BuyFromMarket) FromMarket(sim, b, g, need, MarketRules.Floor(sim, g)); // a wholesaler's price, the trader's: the kirana's margin is its markup
+                    continue;
+                }
                 need -= produce ? FromStore(sim, b, g, need) : FromYours(sim, b, g, need, took);
                 if (need > 0 && b.BuyFromMarket) FromMarket(sim, b, g, need, produce ? sim.State.Market.Price[g] : MarketRules.Ceiling(sim, g)); // the mandi's produce, else the import price
             }
@@ -847,7 +912,7 @@ namespace Sim.Core.Business
             if (s == null || sim.State.Businesses == null) return;
             ShopDefs d = Defs(sim);
             long t = sim.State.Clock.SimTime, season = t / sim.Clock.SecondsPerSeason;
-            foreach (ShopKind kind in new[] { ShopKind.Veg, ShopKind.Chai, ShopKind.Sweets, ShopKind.Meals })
+            foreach (ShopKind kind in new[] { ShopKind.Veg, ShopKind.Chai, ShopKind.Sweets, ShopKind.Meals, ShopKind.Grocery })
             {
                 SeasonOf(sim, kind, out long served, out long demand);
                 if (demand <= 0) continue;
@@ -864,6 +929,7 @@ namespace Sim.Core.Business
                     r.ChangedAt = t;
                     sim.Emit(new RivalPriceCut(t, r.Id, kind, r.PriceFactor, r.PriceFactor > before));
                 }
+                if (kind == ShopKind.Grocery) continue; // no newcomer kirana: the village grocer's staples are its one rival (§3.10)
                 Rival n = s.Newcomers.Find(x => x.Kind == kind);
                 if (n != null)
                 {
@@ -879,11 +945,33 @@ namespace Sim.Core.Business
                 Fixed chance = (grant ? d.NewcomerChance * Town.PolicyRules.Def(sim).GrantNewcomerChance : d.NewcomerChance) * Town.PolicyRules.NewcomerFactor(sim);
                 if (!Rng.Chance(Rng.Next(sim.State.Seed, RngStream.Rival, (ulong)kind, (ulong)season), chance)) continue;
                 if (grant) Town.PolicyRules.UseGrantBoost(sim, true);
-                int pitch = FreePitch(sim);
-                s.Newcomers.Add(new Rival { Def = -1, Id = "newcomer_" + kind.ToString().ToLowerInvariant(), Kind = kind, Pitch = pitch, OpenedAt = t,
-                    PriceFactor = Fixed.One, Stars = d.NewcomerStars, Gap = gap });
-                sim.Emit(new RivalOpened(t, kind, pitch, gap));
+                Open(sim, kind, gap, 0);
             }
+        }
+
+        /// <summary>A newcomer of <paramref name="kind"/> opens on the first free pitch or as the cart by the square, owned by a citizen when <paramref name="owner"/> is not 0.</summary>
+        private static void Open(Simulation sim, ShopKind kind, bool gap, long owner)
+        {
+            ShopDefs d = Defs(sim);
+            long t = sim.State.Clock.SimTime;
+            int pitch = FreePitch(sim);
+            sim.State.Shops.Newcomers.Add(new Rival { Def = -1, Id = "newcomer_" + kind.ToString().ToLowerInvariant(), Kind = kind, Pitch = pitch, OpenedAt = t,
+                PriceFactor = Fixed.One, Stars = d.NewcomerStars, Gap = gap, Owner = owner });
+            sim.Emit(new RivalOpened(t, kind, pitch, gap));
+        }
+
+        /// <summary>Whether a stall of a kind could be founded now: its kind is open to the player and no newcomer of it stands (at most one of each kind).</summary>
+        public static bool CanFound(Simulation sim, ShopKind kind)
+        {
+            return sim.State.Shops != null && KindUnlocked(sim, kind) && !sim.State.Shops.Newcomers.Exists(x => x.Kind == kind);
+        }
+
+        /// <summary>Founds a citizen's own stall (spec 029 §3.6, ADR 0167): the story opens it itself, so a hand who gives notice is never left without one. False when it could not.</summary>
+        internal static bool FoundOwned(Simulation sim, ShopKind kind, long owner)
+        {
+            if (!CanFound(sim, kind)) return false;
+            Open(sim, kind, false, owner);
+            return true;
         }
 
         private static Fixed Max(Fixed a, Fixed b) { return a > b ? a : b; }
@@ -920,8 +1008,8 @@ namespace Sim.Core.Business
         public static long[] DefaultPutOut(Simulation sim, BusinessTypeDef t, int tile)
         {
             var put = new long[sim.Config.Game.Market.Goods.Count];
-            if (t.Kind == ShopKind.Veg)
-                foreach (int g in t.Goods) put[g] = ExpectedPerDay(sim, ShopKind.Veg, g, tile);
+            if (t.Kind == ShopKind.Veg || t.Kind == ShopKind.Grocery)
+                foreach (int g in t.Goods) put[g] = ExpectedPerDay(sim, t.Kind, g, tile);
             if (t.Kind == ShopKind.Chai && t.Goods.Count > 0)
                 put[t.Goods[0]] = Defs(sim).Kind(ShopKind.Chai).SnackShare.MulRatio(ExpectedPerDay(sim, ShopKind.Chai, -1, tile), 1).FloorToLong() * t.SnackGrams;
             return put;
@@ -955,7 +1043,7 @@ namespace Sim.Core.Business
             long sales = 0, inputs = 0, fuel = 0;
             foreach (int good in KindGoods(sim, t.Kind))
             {
-                if (t.Kind == ShopKind.Veg && !t.Sells(good)) continue;
+                if ((t.Kind == ShopKind.Veg || t.Kind == ShopKind.Grocery) && !t.Sells(good)) continue;
                 if (t.Kind == ShopKind.Sweets && !t.Makes(good)) continue;
                 if (t.Kind == ShopKind.Meals)
                 {

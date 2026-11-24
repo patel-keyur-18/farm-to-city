@@ -17,6 +17,7 @@ namespace Sim.Core.Tests
             Simulation sim = NewFarm(game: Game(), options: new SimOptions { DevCommandsEnabled = true });
             Assert.That(sim.State.Township, Is.Not.Null, "the content has a Township");
 
+            ChronicleTests.Forget(sim.State.Chronicle); // the Chronicle is schema 24: a schema-19 write can't hold it
             byte[] old = SaveCodec.Write(sim.State, sim.Config, Wall0, schema: 19);
             LoadResult r = SaveCodec.Read(old, sim.Config, MinSchema);
             Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);

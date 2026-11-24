@@ -54,6 +54,7 @@ namespace Sim.Core.People
             };
             c.Story.Add(new StoryLine(StoryKind.Arrived, sim.State.Clock.SimTime, 0));
             s.Citizens.Add(c);
+            History.ChronicleRules.Arrived(sim, c); // spec 029 §3.2: the first settler
             return c;
         }
 

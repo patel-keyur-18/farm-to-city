@@ -109,6 +109,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new AnswerEvent(Now(sim), repair.Id, 0)).Accepted, Is.True);
             Assert.That(sim.State.Ledger.Cash, Is.EqualTo(before - expected));
             Assert.That(sim.State.Ledger.Balance(Account.DisasterLoss), Is.EqualTo(expected), "the books' Disaster loss line");
+            Assert.That(sim.PendingEvents.OfType<FireRepaired>().Single().Cost, Is.EqualTo(expected), "the Chronicle and the Almanac hear what was paid: the whole bill");
 
             // Unanswered, the repair card takes its default after 24 h: slowly, half the bill, and never refused for want of cash.
             Simulation d = AtSix();
@@ -120,6 +121,7 @@ namespace Sim.Core.Tests
             d.AdvanceTo(r2.ExpiresAt + 1);
             Assert.That(EventRules.State(d).History.Last().Choice, Is.EqualTo(1), "the slow repair is the default");
             Assert.That(d.State.Ledger.Cash, Is.EqualTo(cash2 - Money.MulRate(r2.Param, Fixed.FromRatio(1, 2))));
+            Assert.That(d.PendingEvents.OfType<FireRepaired>().Single().Cost, Is.EqualTo(Money.MulRate(r2.Param, Fixed.FromRatio(1, 2))), "the default slow repair is recorded at half the bill, not the whole (review of Sprint 26)");
         }
 
         // AC-9: with cash under half the bill the slow repair can still be chosen by hand (it pays as far as cash goes); the quick one is refused for want of cash.

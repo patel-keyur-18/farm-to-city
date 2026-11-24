@@ -478,5 +478,12 @@
   {"label":"US-246 restaurant","view":"farm","date":"2026-11-23","drawCalls":331,"batches":331,"setPassCalls":9,"triangles":6666,"visibleSprites":370,"sprites":2211},
   {"label":"balance-manager","view":"all","date":"2026-11-23","drawCalls":1064,"batches":1064,"setPassCalls":12,"triangles":23775,"visibleSprites":1310,"sprites":2211},
   {"label":"balance-manager","view":"village","date":"2026-11-23","drawCalls":475,"batches":475,"setPassCalls":9,"triangles":10489,"visibleSprites":560,"sprites":2211},
-  {"label":"balance-manager","view":"farm","date":"2026-11-23","drawCalls":338,"batches":338,"setPassCalls":9,"triangles":7474,"visibleSprites":375,"sprites":2211}
+  {"label":"balance-manager","view":"farm","date":"2026-11-23","drawCalls":338,"batches":338,"setPassCalls":9,"triangles":7474,"visibleSprites":375,"sprites":2211},
+  {"label":"US-260 kirana, marketing, khata (Township bot town with a kirana)","view":"all","date":"2026-11-24","drawCalls":1136,"batches":1136,"setPassCalls":12,"triangles":23457,"visibleSprites":1381,"sprites":2280},
+  {"label":"US-260 kirana, marketing, khata (Township bot town with a kirana)","view":"village","date":"2026-11-24","drawCalls":532,"batches":532,"setPassCalls":10,"triangles":9997,"visibleSprites":619,"sprites":2280},
+  {"label":"US-260 kirana, marketing, khata (Township bot town with a kirana)","view":"farm","date":"2026-11-24","drawCalls":400,"batches":400,"setPassCalls":9,"triangles":7211,"visibleSprites":436,"sprites":2280},
+  {"label":"US-259","view":"all","date":"2026-11-24","drawCalls":1254,"batches":1254,"setPassCalls":12,"triangles":32056,"visibleSprites":1509,"sprites":2402},
+  {"label":"Sprint 26 final","view":"all","date":"2026-11-24","drawCalls":1167,"batches":1167,"setPassCalls":12,"triangles":23654,"visibleSprites":1424,"sprites":2314},
+  {"label":"Sprint 26 final","view":"village","date":"2026-11-24","drawCalls":523,"batches":523,"setPassCalls":10,"triangles":10496,"visibleSprites":617,"sprites":2314},
+  {"label":"Sprint 26 final","view":"farm","date":"2026-11-24","drawCalls":391,"batches":391,"setPassCalls":9,"triangles":7426,"visibleSprites":436,"sprites":2314}
 ]

@@ -24,6 +24,9 @@ namespace Sim.Core.Business
         /// <summary>A newcomer drawn by customers nobody served (a gap), else by your prices above the reference.</summary>
         public bool Gap { get; internal set; }
 
+        /// <summary>The citizen whose stall it is (spec 029 §3.6, a hand who left to start one), or 0 for an ordinary newcomer (schema 24).</summary>
+        public long Owner { get; internal set; }
+
         /// <summary>Last season's share of its kind's demand (schema 15): the grocer and tea stall react to its change (ADR 0095 §3).</summary>
         public Fixed LastShare { get; internal set; }
 
@@ -64,6 +67,7 @@ namespace Sim.Core.Business
             h.WriteLong(OpenedAt);
             h.WriteInt(LowSeasons);
             h.WriteBool(Gap);
+            if (h.Hashing ? Owner != 0 : !(h is SaveWriter w24 && w24.Schema < 24)) h.WriteLong(Owner); // hashed only once used
         }
 
         internal static Rival ReadNewcomer(SaveReader r, SimConfig config)
@@ -75,6 +79,7 @@ namespace Sim.Core.Business
             x.OpenedAt = r.ReadLong();
             x.LowSeasons = r.ReadInt();
             x.Gap = r.ReadBool();
+            if (r.Schema >= 24) x.Owner = r.ReadLong();
             return x;
         }
 
@@ -100,8 +105,8 @@ namespace Sim.Core.Business
     /// </summary>
     public sealed class ShopsState
     {
-        /// <summary>Slots in the by-kind counts: none, vegetables, chai, sweets and meals. The first four are the older layout; meals are saved with the restaurant's own section (schema 23).</summary>
-        internal const int Kinds = 5, OlderKinds = 4;
+        /// <summary>Slots in the by-kind counts: none, vegetables, chai, sweets, meals and groceries. The first four are the older layout; meals are saved with the restaurant's own section (schema 23), groceries with the kirana's (schema 24).</summary>
+        internal const int Kinds = 6, OlderKinds = 4;
 
         public List<Rival> Rivals { get; internal set; } = new List<Rival>();
 
@@ -159,8 +164,8 @@ namespace Sim.Core.Business
 
         internal void WriteTo(IStateWriter h)
         {
-            h.WriteInt(Rivals.FindAll(x => x.Kind != Definitions.ShopKind.Meals).Count);
-            foreach (Rival x in Rivals) if (x.Kind != Definitions.ShopKind.Meals) x.WriteTo(h);
+            h.WriteInt(Rivals.FindAll(x => Older(x.Kind)).Count);
+            foreach (Rival x in Rivals) if (Older(x.Kind)) x.WriteTo(h);
             h.WriteLong(Day);
             for (int k = 0; k < OlderKinds; k++) h.WriteLong(LostToday[k]);
             h.WriteInt(TownToday.Length);
@@ -188,7 +193,21 @@ namespace Sim.Core.Business
                 h.WriteInt(dining.Count);
                 foreach (Rival x in dining) x.WriteTo(h);
             }
+            // Schema 24 (spec 028 §3.10): the kirana's customers (the village grocer's staples and the customers nobody served); hashed only once a kirana has been open.
+            bool grocery = LostToday[(int)Definitions.ShopKind.Grocery] != 0 || LostSeason[(int)Definitions.ShopKind.Grocery] != 0 || Rivals.Exists(x => x.Kind == Definitions.ShopKind.Grocery && Moved(x));
+            if (h.Hashing ? grocery : !(h is SaveWriter g24 && g24.Schema < 24))
+            {
+                h.WriteLong(LostToday[(int)Definitions.ShopKind.Grocery]);
+                h.WriteLong(LostSeason[(int)Definitions.ShopKind.Grocery]);
+                List<Rival> staples = Rivals.FindAll(x => x.Kind == Definitions.ShopKind.Grocery);
+                h.WriteInt(staples.Count);
+                foreach (Rival x in staples) x.WriteTo(h);
+            }
         }
+
+        private static bool Older(Definitions.ShopKind k) { return k != Definitions.ShopKind.Meals && k != Definitions.ShopKind.Grocery; }
+
+        private static bool Moved(Rival x) { return x.LastArrivals != 0 || x.CustomersToday != 0 || x.SeasonServed != 0 || x.LastShare != Fixed.Zero || x.ChangedAt != 0; }
 
         /// <summary>Reads the section; the content's rivals keep their place by id order by id (a rival the content dropped is dropped, a new one starts on its terms).</summary>
         internal static ShopsState ReadFrom(SaveReader r, SimConfig config)
@@ -218,6 +237,15 @@ namespace Sim.Core.Business
             s.LostSeason[(int)Definitions.ShopKind.Meals] = r.ReadLong();
             int dining = r.ReadCount();
             for (int i = 0; i < dining; i++)
+            {
+                Rival x = Rival.ReadFrom(r, config);
+                if (x.Def >= 0) s.Rivals[x.Def] = x;
+            }
+            if (r.Schema < 24) return s;
+            s.LostToday[(int)Definitions.ShopKind.Grocery] = r.ReadLong();
+            s.LostSeason[(int)Definitions.ShopKind.Grocery] = r.ReadLong();
+            int staples = r.ReadCount();
+            for (int i = 0; i < staples; i++)
             {
                 Rival x = Rival.ReadFrom(r, config);
                 if (x.Def >= 0) s.Rivals[x.Def] = x;

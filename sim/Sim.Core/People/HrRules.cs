@@ -174,6 +174,7 @@ namespace Sim.Core.People
                 if (Rng.Chance(Roll(sim, w, day, EmergencyDraw), d.EmergencyChance.MulRatio(1, days)))
                     Raise(sim, HrEventKind.FamilyEmergency, w, Money.RoundToCoin(Money.MulRate(w.Wage, d.AdvanceShare)));
             }
+            WorkplaceRules.Daily(sim); // spec 028 §3.9: accidents and quarrels
         }
 
         /// <summary>
@@ -189,7 +190,7 @@ namespace Sim.Core.People
             if (Rng.Chance(Roll(sim, w, day, BatchDraw), sim.Config.Game.People.Hr.BadBatchChance.MulRatio(1, days))) BadBatch(sim, w);
         }
 
-        private static ulong Roll(Simulation sim, IStaff w, long day, ulong kind)
+        internal static ulong Roll(Simulation sim, IStaff w, long day, ulong kind)
         {
             ulong key = w is Worker ? (1UL << 32) + (ulong)w.Id : (ulong)w.Id;
             return Rng.Next(sim.State.Seed, RngStream.HrEvents, key, (ulong)day * 8 + kind);
@@ -282,7 +283,7 @@ namespace Sim.Core.People
         internal static void Gone(Simulation sim, IStaff w)
         {
             PeopleState s = sim.State.People;
-            foreach (HrEvent e in s.HrEvents.FindAll(x => x.Place == Place(w) && x.WorkerId == w.Id))
+            foreach (HrEvent e in s.HrEvents.FindAll(x => x.Place == Place(w) && (x.WorkerId == w.Id || (x.Kind == HrEventKind.Conflict && x.OtherId == w.Id)))) // a quarrel ends when either of the two goes
             {
                 if (e.Kind == HrEventKind.BadBatch) Throw(sim, e);
                 s.HrEvents.Remove(e);
@@ -321,6 +322,7 @@ namespace Sim.Core.People
             PeopleState s = sim.State.People;
             HrEvent e = s?.HrEvents.Find(x => x.Id == eventId);
             if (e == null) return CommandResult.Reject(RejectReason.UnknownEvent);
+            if (e.Timed) return WorkplaceRules.Answer(sim, eventId, choice); // spec 028 §3.9: the accident, conflict and association cards
             if (choice != 0 && choice != 1) return CommandResult.Reject(RejectReason.InvalidArgument);
             IStaff w = WorkRules.Find(sim, e.Place, e.WorkerId);
             if (w == null) return CommandResult.Reject(RejectReason.UnknownEvent);
@@ -403,7 +405,7 @@ namespace Sim.Core.People
         /// A higher season's pay from now (a raise, a matched offer): the cash wage goes up by <paramref name="more"/>, and the rest of this
         /// season's share of it is paid now (a hand's into their prepaid wage, a business worker's as wages).
         /// </summary>
-        private static void PayFromNow(Simulation sim, IStaff w, long more)
+        internal static void PayFromNow(Simulation sim, IStaff w, long more)
         {
             if (more <= 0) return;
             long now = PeopleRules.RestOfSeason(sim, more);
@@ -421,7 +423,7 @@ namespace Sim.Core.People
         }
 
         /// <summary>Unpaid sick days: their wage for those days back (a hand's out of their prepaid wage, at most what's left of it).</summary>
-        private static void Refund(Simulation sim, IStaff w, long amount)
+        internal static void Refund(Simulation sim, IStaff w, long amount)
         {
             if (w is Hand h)
             {

@@ -428,6 +428,7 @@ namespace Sim.Core.Equipment
             long diff = proceeds - book;
             if (diff > 0) postings.Add(new Posting(Account.GainOnAssetSales, -diff));
             if (diff < 0) postings.Add(new Posting(Account.LossOnAssetSales, -diff));
+            if (diff < 0) History.AlmanacRules.Loss(sim, History.AlmanacLoss.MachineSold, -diff, Defs(sim).Machines[m.Kind].Id);
             FarmSystem.Accrue(sim);
             sim.State.Ledger.Post(t, period, key, "machine:" + m.Id, postings.ToArray());
             foreach (Livestock.Animal a in Pair(sim, m))

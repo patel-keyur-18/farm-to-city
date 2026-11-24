@@ -19,6 +19,7 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(sim.State.Clock.SimTime + 48 * Hour);
             Assert.That(sim.State.Treasury.Opened, Is.False);
 
+            ChronicleTests.Forget(sim.State.Chronicle); // the Chronicle is schema 24: a schema-18 write can't hold it
             byte[] old = SaveCodec.Write(sim.State, sim.Config, Wall0, schema: 18);
             LoadResult r = SaveCodec.Read(old, sim.Config, MinSchema);
             Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);

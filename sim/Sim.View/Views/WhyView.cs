@@ -104,6 +104,7 @@ namespace Sim.View.Views
             { "businessOwn", BusinessOwn }, { "businessWorker", BusinessWorker }, { "businessHours", BusinessHours }, { "businessMarket", BusinessMarket },
             { "businessCash", BusinessCash }, { "booksLine", BooksLine }, { "booksPlan", BooksPlan },
             { "businessWorth", BusinessWorthWhy }, { "businessHolds", BusinessHoldsWhy }, { "businessSale", BusinessSaleWhy }, { "businessBranch", BusinessBranchWhy }, // spec 028 §3.3
+            { "supervisor", SupervisorWhy }, { "supervisorPays", SupervisorPaysWhy }, { "accident", AccidentWhy }, { "conflict", ConflictWhy }, { "association", AssociationWhy }, // spec 028 §3.9
             { "benefit", BenefitWhy }, { "loyalty", LoyaltyWhy }, { "night", NightWhy }, { "investorOffer", InvestorOfferWhy }, { "partnerOffer", PartnerOfferWhy }, { "dealBuyout", DealBuyoutWhy }, { "ownerRow", OwnerRowWhy }, { "ownerPaid", OwnerPaidWhy }, { "outsideLimit", OutsideLimitWhy }, { "shareBack", ShareBackWhy }, { "dealOffer", DealOfferWhy }, // spec 028 §3.4
             { "managerWage", ManagerWage }, { "managerStyle", ManagerStyle }, { "managerApplicant", ManagerApplicant }, { "managerMiss", ManagerMiss }, { "managerTarget", ManagerGoal }, { "managerRaise", ManagerRaise }, // spec 028 §3.2
             { "invoiceTerms", InvoiceTerms }, { "invoiceOwed", InvoiceOwed }, { "invoiceLine", InvoiceLineWhy }, { "invoiceStop", InvoiceStop }, // spec 028 §3.1
@@ -119,11 +120,12 @@ namespace Sim.View.Views
             // Shops and customer choice (spec 017 §7).
             { "shopShare", ShopShare }, { "shopToday", ShopToday }, { "shopLost", ShopLost }, { "shopPeople", ShopPeople }, { "shopDemand", ShopDemand },
             { "shopReference", ShopReference }, { "shopPrice", ShopPrice }, { "shopExpected", ShopExpected }, { "pitchRent", PitchRent }, { "shopPutOut", ShopPutOut },
+            { GrowthSheet.MarketingWhy, GrowthMarketing }, { GrowthSheet.MarketValueWhy, GrowthMarketValue }, { GrowthSheet.KhataWhy, GrowthKhata }, { GrowthSheet.LimitWhy, GrowthLimit }, { GrowthSheet.LossWhy, GrowthLoss }, { GrowthSheet.ValueWhy, GrowthValue }, { GrowthSheet.OwedWhy, GrowthOwed }, { GrowthSheet.HouseholdWhy, GrowthHousehold }, // spec 028 §3.10
             { "shopMilk", ShopMilk }, { "planRent", (c, i) => PlanLine(c, i, "rent") }, { "shopStars", ShopStars }, { "shopQuality", ShopQuality },
             // The school (spec 018).
             { "road", RoadWhy }, { "clinic", ClinicWhy }, { "civic", CivicWhy }, { "utility", UtilityWhy }, { UpgradeSheet.Why, UpgradeHouseWhy }, { "utilityTown", UtilityTownWhy }, { "lane", LaneWhy }, { "build", BuildWhy }, { "cohort", CohortWhyView },
             { "schoolCost", SchoolCost }, { "schoolUpkeep", SchoolUpkeep }, { "schoolPupils", SchoolPupils },
-            { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "citizen.tuition", CitizenTuition }, { "codex", Codex },
+            { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "citizen.tuition", CitizenTuition }, { "codex", Codex }, { ChronicleSheet.Why, ChronicleLine }, { AlmanacSheet.Why, AlmanacWhy },
             // The town treasury (spec 021).
             { "treasuryBalance", TreasuryBalance }, { "treasuryUntied", TreasuryUntied }, { "treasuryTied", TreasuryTied }, { "treasuryRents", TreasuryRents },
             { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryWindow", TreasuryWindow }, { "policy", PolicyWhy }, { "taxHouse", TaxHouseWhy }, { "taxBusiness", TaxBusinessWhy }, { "taxCollected", TaxCollectedWhy }, { "treasuryAccount", TreasuryAccount },

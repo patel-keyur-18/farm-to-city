@@ -1,0 +1,6 @@
+{
+  "stall": { "seasons": 3, "savings": 1000000, "motivation": 1.0, "chance": 0.2, "judgedAfter": 2 },
+  "reader": { "adultAge": 15 },
+  "migrant": { "first": 2, "second": 4 },
+  "longLife": { "ages": [60, 70, 80], "diedFrom": 70 }
+}

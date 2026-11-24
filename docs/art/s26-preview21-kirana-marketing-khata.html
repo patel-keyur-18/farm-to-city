@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 21 The kirana, marketing and khata</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen, scaled to fit, with a tab bar for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink);cursor:pointer}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.sheet.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:700px}
+.card.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.card h3{margin:0;font:700 32px var(--display);text-align:center}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.cost.hi{background:var(--cream2);border-radius:10px;border:0;margin-top:6px}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.btnrow .btn{flex:1}
+.pic{width:170px;height:128px;border-radius:14px;border:3px solid var(--wood);overflow:hidden;flex:none}
+.tag{display:inline-block;font:700 14px var(--body);padding:2px 9px;border-radius:9px;background:#e9d9a8;border:2px solid var(--wood);color:var(--wood);vertical-align:middle;margin-left:8px}
+.tag.major{background:var(--saffron,#E8892A);border-color:#9b5412;color:#fff}
+.tag.warn{background:#fde2cf;border-color:var(--warn);color:var(--warn)}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice.def{background:#efe2bd;border-color:#d8c68e}
+.choice .tx{flex:1;font-size:21px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px;font-weight:400}
+.choice .btn{min-width:190px}
+.note{font-size:17px;color:var(--wood);margin:10px 4px 0;line-height:1.4}
+.note.warn{color:var(--warn);font-weight:600}
+.timer{font:600 19px var(--body);color:var(--warn)}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:760px;text-align:center}
+.banner{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fde2cf;border:4px solid var(--warn);border-radius:16px;padding:9px 20px;font:600 21px var(--body);color:var(--warn);cursor:pointer}
+@keyframes flick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) translateY(-2px)}}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick .5s infinite}
+@media (prefers-reduced-motion:reduce){.flame{animation:none}}
+.body{overflow-y:auto}
+.tabrow{display:flex;gap:10px;padding:0 20px 6px}
+.tabrow .btn{flex:1;min-width:0;padding:8px 6px 10px;font-size:20px}
+.pill{display:inline-block;font:700 15px var(--body);padding:2px 10px;border-radius:10px;border:2px solid;margin-left:8px;vertical-align:middle}
+.pill.cur{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.pill.late{background:#fde9c4;border-color:#b9770e;color:#8a5200}
+.pill.over{background:#fbd9d2;border-color:var(--warn);color:var(--warn)}
+.pill.met{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.dd{font:700 18px var(--body);background:var(--sand);border:3px solid var(--sand2);border-radius:12px;padding:6px 12px;color:var(--ink);cursor:pointer;min-width:168px;text-align:center}
+.dd:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.alert{display:flex;gap:12px;align-items:center;background:#fde2cf;border:3px solid var(--warn);border-radius:14px;padding:10px 14px;margin:10px 0 2px;font-size:19px;color:#7a2d08;font-weight:600}
+.stars{color:#e8a31c;letter-spacing:1px;font-size:20px}.stars i{color:#cfc19a;font-style:normal}
+.seg{display:flex;gap:8px}.seg .btn{min-width:120px;padding:6px 12px 8px;font-size:19px}
+.holdbtn::after{content:"";}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center;color:#d9c9a8;font-size:14px}
+.ctl button{font:600 14px var(--body);padding:6px 12px;border-radius:9px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.ctl button[aria-pressed=true]{background:var(--sand);border-color:var(--sand2);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 21: your kirana, marketing and khata</h1>
+  <p class="lead">Sprint 26, US-260 (spec 028 §3.10, §7). Every screen is drawn at the game\'s own 1280 × 720 size with its palette and type, in the layout of the shop cards you already have (Today, Customers, Books, Settings). Numbers are the spec\'s placeholders; the balance pass tunes the kilos.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="ctl" id="ctl"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const fmt=n=>{n=Math.round(n);const s=String(Math.abs(n));let r=s.length>3?s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+s.slice(-3):s;return (n<0?'−':'')+r};
+const I={
+ bakery:'<svg viewBox="0 0 30 30"><rect x="4" y="13" width="22" height="12" rx="2" fill="#d9a05b" stroke="#8a5a2b" stroke-width="2"/><path d="M3 14c1-7 7-9 12-9s11 2 12 9z" fill="#c2410c" stroke="#8a5a2b" stroke-width="2"/><rect x="12" y="17" width="6" height="8" fill="#6b4423"/></svg>',
+ mill:'<svg viewBox="0 0 30 30"><rect x="6" y="12" width="18" height="14" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><path d="M4 13l11-9 11 9z" fill="#a8743c" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="19" r="4" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ stall:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#4a9bd6" stroke="#8a5a2b" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><rect x="3" y="24" width="24" height="3" fill="#8a5a2b"/></svg>',
+ grocer:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#79c84a" stroke="#8a5a2b" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#f3c777" stroke="#8a5a2b" stroke-width="2"/><circle cx="11" cy="18" r="2.5" fill="#c2410c"/><circle cx="18" cy="18" r="2.5" fill="#79c84a"/></svg>',
+ person:'<svg viewBox="0 0 30 30"><circle cx="15" cy="9" r="5" fill="#8a5a2b"/><path d="M5 27c0-8 4-11 10-11s10 3 10 11z" fill="#c2410c"/></svg>',
+ env:'<svg viewBox="0 0 30 30"><rect x="3" y="7" width="24" height="17" rx="2" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M4 9l11 8 11-8" fill="none" stroke="#8a5a2b" stroke-width="2.5"/><circle cx="15" cy="17" r="3" fill="#c2410c"/></svg>',
+ coin:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/><path d="M15 8v14M11 12h8M11 18h8" stroke="#9a6a2a" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ bill:'<svg viewBox="0 0 30 30"><rect x="5" y="3" width="20" height="24" rx="3" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M9 10h12M9 15h12M9 20h7" stroke="#8a5a2b" stroke-width="2.5" stroke-linecap="round"/></svg>',
+ bell:'<svg viewBox="0 0 30 30"><path d="M15 4a8 8 0 0 0-8 8v6l-3 4h22l-3-4v-6a8 8 0 0 0-8-8z" fill="#8a5a2b"/><circle cx="15" cy="26" r="3" fill="#8a5a2b"/></svg>',
+ chart:'<svg viewBox="0 0 30 30"><path d="M4 24l7-9 5 5 10-13" fill="none" stroke="#3f7d20" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+const WHY={
+ kmoney:{t:'What the kirana earns',h:'+5,400 a season',rows:[['About 84 kg of groceries a day for the village and your town; you take about 40% of it','34 kg a day'],['Sold at the market price +15%, a season of 4 days','28,600'],['What the goods cost you (your store first, the market at +15%)','−9,800'],['Shopkeeper Sushila','−12,000'],['The pitch\'s rent','−3,000'],['Left over, hired','+3,800'],['Run by you, without the wage','+15,800']],foot:'Hired, a kirana earns 3,000 to 8,000 a season; run by you 15,000 to 25,000. It is a long, thin trade.'},
+ kdemand:{t:'Who buys groceries',h:'about 84 kg a day',rows:[['Your town\'s people and the old village\'s, at 0.25 kg each a day, split by shares: atta 35%, rice 25%, lentils 10%, ghee 5%, rusk 5%, pav 10%, paneer 5%, curd 5%','84 kg'],['The village grocer\'s staples and your kirana share it by the shop score: price, quality, stars, distance, waiting','you 41%'],['A rival grocer cuts its prices 5% when you take a third of its share','not yet']],foot:'Shops sell only what is on the shelf: when the atta is out, those customers go to the grocer.'},
+ kshare:{t:'Your share of groceries',h:'41%',rows:[['Your kirana\'s score today (price 1.15 above the reference, standard, 2.8 stars, 120 m)','1.62'],['The village grocer\'s staples (3 stars, 300 m)','2.31'],['Marketing adds','+0.04'],['Khata adds, for households under 20,000 a season','+0.10'],['Your share is your score over all scores','41%']],foot:'Each is a plain sum; the Customers tab shows it again for each group of buyers.'},
+ mkt:{t:'Marketing',h:'+0.04 score',rows:[['Each 1,000 you spend a season adds to your score','+0.019'],['You spend 2,000 this season','+0.038'],['The most it can add, at 8,000 a season','+0.15'],['+0.15 is about half a star, or a 10% price cut','a half star'],['It lasts only while it is spent: stopped, it fades by a fifth each close','−20% a close'],['The share it gained against what it cost','+2.3 points for 2,000']],foot:'Honest value: marketing pays only if the extra sales leave more than it costs.'},
+ mktvalue:{t:'Is marketing worth it?',h:'not at 2,000',rows:[['Spent this season','2,000'],['The share it gained: 41% instead of 38.6%','+2.4 points'],['The extra kilos that is: about 2.0 kg a day, for the season','8 kg'],['Their margin','about 1,000'],['What you get back for 2,000 spent','about 1,000']],foot:'On a thin trade marketing rarely pays for itself in one season. It makes sense when the shop has room to sell more at a good margin.'},
+ khata:{t:'Khata',h:'on',rows:[['A regular household may take goods on credit, up to your limit for each','1,000'],['A regular is a household of yours that this shop attracts most','21 households'],['Households under 20,000 a season buy more from you: score +0.10 and 10% more kilos','+10%'],['Credit sales are owed to the shop and collected at the close','owed 7,400']],foot:'The old village\'s families are never on khata: their households are not named, so a balance could not be kept.'},
+ klimit:{t:'The limit',h:'1,000 a household',rows:[['You may allow 500, 1,000 or 2,000 for each household','1,000'],['A household over its limit or overdue is cut off until it pays','2 cut off'],['You can cut one off yourself at any time','a button'],['A bigger limit sells more to poorer households and loses more to those who never pay','more risk']],foot:'The limit is the most one household can owe the shop at any time.'},
+ kloss:{t:'What khata loses',h:'4% of credit',rows:[['A household that earns under 10,000 a season never pays 8% of what it takes on credit','8%'],['10,000 to 20,000: never pays 4%','4%'],['Above 20,000: never pays 1%','1%'],['A further 5% of what is owed is paid a season late','late'],['What is never paid is written off as bad debt at the close','−296 this season']],foot:'Khata earns its place only if the extra sales are worth more than the losses.'},
+ kvalue:{t:'Is khata worth it?',h:'+1,420 a season',rows:[['Credit sales this season','7,400'],['The extra sales it brought: 10% more kilos and a better score for poorer households','+2,100'],['Their margin at 15%','+315'],['Margin on the credit sales themselves','+1,110'],['Bad debt written off','−296'],['Late payers and waiting','−100'],['Khata\'s gain this season','+1,029']],foot:'A 4% loss on credit is a quarter of a 15% margin. It pays when the shop sells to people who would not buy otherwise.'},
+ owed:{t:'Owed to the shop',h:'7,400',rows:[['Credit sales since the last close, across 21 households','7,400'],['Collected at the close from households that can pay','about 6,950'],['Paid a season late','about 370'],['Never paid, written off as bad debt','about 80']],foot:'A customer\'s balance shows in your shop\'s books as money owed to you, not as cash.'}
+};
+let tab='plan',state={mk:2000,khata:true,limit:1000,preset:1,quality:1,why:null,toast:null,cut:{meera:false,rina:false}};
+const qb=k=>`<button class="q" data-why="${k}" aria-label="Why?">?</button>`;
+const row=(ic,t,sub,right,k)=>`<div class="row">${ic?`<div class="ico">${ic}</div>`:''}<div class="grow">${t}<small>${sub||''}</small></div>${right||''}${k?qb(k):''}</div>`;
+const sec=t=>`<div class="sec">${t}</div>`;
+const val=v=>`<div class="val">${v}</div>`;
+function mapSvg(){
+ let t='';
+ for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+520,y=140+(c+r)*46;const col=(c*7+r*3)%5;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][col];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f6a2a" stroke-width="2" opacity=".95"/>`}
+ return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}</svg>`;
+}
+function base(bell){
+ return `<div class="map">${mapSvg()}</div>
+ <div class="hud l"><div class="s">Monsoon · 3 days left</div><div class="big">16:10</div><div class="s">Clear until 22:00</div></div>
+ <div class="hud r"><div class="big" style="font-size:40px">1.12 L</div></div><div class="hud r2">Store 48%</div><div class="hud r3">184 people &nbsp;78</div>
+ <div class="roundbtn" style="left:20px;bottom:20px;width:110px;border-radius:22px;height:70px;background:#c9c2b0;border-color:#8a8372;color:#6e6858;align-items:center;padding:0">Collect all</div>
+ <div class="roundbtn" style="right:112px;bottom:128px;width:84px;height:84px">${I.bell.replace('<svg','<svg style="width:40px;height:40px;margin-top:-10px"')}<span class="badge">${bell||1}</span></div>
+ <div class="roundbtn" style="right:20px;bottom:20px"><span style="color:#fff;background:#b02a1e;position:absolute;top:18px;left:28px;width:42px;height:34px;border-radius:6px"></span>Menu</div>`;
+}
+function sheet(title,sub,icon,body,tabs){return `<div class="scrim"></div><div class="sheet"><div class="head"><div class="cbtn">←</div><div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div>${tabs||''}<div class="body">${body}</div></div>`}
+const tabsFor=(names,a)=>`<div class="tabrow">${names.map(t=>`<button class="btn ${t===a?'':'sand'}"><span>${t}</span></button>`).join('')}</div>`;
+const shopTabs=a=>tabsFor(['Today','Customers','Books','Settings'],a);
+const cost=(l,v)=>`<div class="cost"><span>${l}</span><b>${v}</b></div>`;
+const ICO={
+ kirana:'<svg viewBox="0 0 30 30"><path d="M3 12l3-8h18l3 8z" fill="#e8892a" stroke="#8a5a2b" stroke-width="2"/><rect x="5" y="12" width="20" height="13" fill="#f3e1b0" stroke="#8a5a2b" stroke-width="2"/><rect x="9" y="16" width="4" height="9" fill="#8a5a2b"/><rect x="16" y="15" width="6" height="5" fill="#79c84a" stroke="#8a5a2b" stroke-width="1.5"/><rect x="2" y="25" width="26" height="3" fill="#8a5a2b"/></svg>',
+ atta:'<svg viewBox="0 0 30 30"><path d="M8 8h14l3 17H5z" fill="#f3e1b0" stroke="#8a5a2b" stroke-width="2.2"/><path d="M8 8c1-4 13-4 14 0" fill="none" stroke="#8a5a2b" stroke-width="2.2"/></svg>',
+ rice:'<svg viewBox="0 0 30 30"><path d="M5 14h20l-2 11H7z" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.2"/><path d="M7 14c0-6 16-6 16 0" fill="#ffffff" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ ledger:'<svg viewBox="0 0 30 30"><rect x="5" y="3" width="19" height="25" rx="2" fill="#c2410c" stroke="#7a2d08" stroke-width="2.2"/><path d="M10 9h10M10 14h10M10 19h6" stroke="#fff3d1" stroke-width="2.2" stroke-linecap="round"/></svg>',
+ mega:'<svg viewBox="0 0 30 30"><path d="M4 12h6l10-6v18L10 18H4z" fill="#4a9bd6" stroke="#4a3320" stroke-width="2.2" stroke-linejoin="round"/><path d="M23 11c3 2 3 6 0 8" fill="none" stroke="#4a3320" stroke-width="2.2" stroke-linecap="round"/></svg>',
+ scale:'<svg viewBox="0 0 30 30"><path d="M15 4v21M6 25h18M5 9h20" stroke="#8a5a2b" stroke-width="2.6" stroke-linecap="round"/><path d="M5 9l-3 8h6zM25 9l-3 8h6z" fill="#ffd968" stroke="#8a5a2b" stroke-width="2"/></svg>'
+};
+const btnrow=(opts,cur,key)=>`<div style="display:grid;grid-template-columns:repeat(${opts.length},1fr);gap:10px;margin:8px 0 4px">${opts.map(o=>`<button class="btn ${cur===o[0]?'':'sand'}" data-${key}="${o[0]}" style="min-width:0;padding:8px 6px 10px"><span>${o[1]}</span><small>${o[2]||''}</small></button>`).join('')}</div>`;
+const mkGain=m=>Math.min(.15,m/1000*.019);
+const share=()=>{const me=1.62+(state.khata?.10*.4:0)+mkGain(state.mk);return Math.round(me/(me+2.31)*100)};
+
+const views={
+ plan:{label:'1 · The kirana: plan',notes:[
+  ['What to check',['A new shop kind, "grocery", from the Township: the kirana on a pitch (3,000 a season) or on your own acre. The plan reads like the other shops: what it costs, what it sells, who buys and what it earns hired and run by you.','It sells eight goods, from your store first and from the market at 15% more. The village grocer gets a second, staples, entry and competes by the same score.','Hired it earns 3,000 to 8,000 a season; run by you 15,000 to 25,000. It is a long, thin trade: this is on purpose.']],
+  ['Teaches',['A grocer\'s margin is small, so its profit comes from volume and credit: the point of marketing and khata.']]],
+  render(){
+   let h=row(ICO.kirana,'Kirana','A village grocery of your own: staples, ghee, bread and dairy',val('From the Township'),'kdemand');
+   h+=sec('What it costs');
+   h+=cost('Building','20,000 coins')+cost('Equipment','8,000 coins')+cost('A shopkeeper, a season','12,000 coins')+cost('The pitch\'s rent, a season','3,000 coins')+cost('Open','07:00 to 21:00');
+   h+=sec('What it sells');
+   h+=row(ICO.atta,'Atta 35% · rice 25% · lentils 10%','Ghee 5% · rusk 5% · pav 10% · paneer 5% · curd 5%','','kdemand');
+   h+=row(I.person,'Who buys','About 84 kg of groceries a day in the village and your town; the village grocer sells too',val('you about 40%'),'kdemand');
+   h+=sec('What it earns, a season');
+   h+=row(I.coin,'Hired: a shopkeeper at 12,000','',val('+3,800'),'kmoney');
+   h+=row(I.coin,'Run by you','without the wage',val('+15,800'),'kmoney');
+   h+=`<div class="btnrow"><button class="btn"><span>Build it</span></button></div>`;
+   return base()+sheet('Kirana','Plan · before you build',ICO.kirana,h)}},
+ today:{label:'2 · The kirana: Today',notes:[
+  ['What to check',['The same Today as the other shops: the shelf (what is in stock of each of the eight goods), the shopkeeper, the shop\'s stars and the day\'s sales. A good out of stock sends those customers to the grocer.','Khata and marketing show a line each, so you can see at a glance that they are on.']]],
+  render(){
+   let h=row(ICO.kirana,'Open now','07:00 to 21:00 · the shopkeeper is Sushila',val('34 kg sold today'),'kshare');
+   h+=sec('The shelf');
+   [[ICO.atta,'Atta','14 of 20 kg'],[ICO.rice,'Rice','10 of 12 kg'],[ICO.atta,'Lentils','3 of 5 kg'],[ICO.atta,'Ghee','0.6 of 2 kg'],[I.bakery,'Pav','2.8 of 5 kg'],[ICO.atta,'Paneer · Curd · Rusk','1.2 · 1.4 · 0.8 kg']].forEach(g=>{h+=row(g[0],g[1],'',val(g[2]),'kdemand')});
+   h+=row(ICO.star,'Stars','',val('2.8 stars'),'kshare');
+   h+=row(ICO.mega,'Marketing','2,000 a season: your score +0.038',val(state.mk?fmt(state.mk)+' coins':'off'),'mkt');
+   h+=row(ICO.ledger,'Khata','21 households on credit · owed 7,400',val(state.khata?'on':'off'),'khata');
+   h+=row(I.coin,'This season so far','28,600 sold',val('+3,800'),'kmoney');
+   return base()+sheet('Kirana','Open now · until 21:00',ICO.kirana,h,shopTabs('Today'))}},
+ customers:{label:'3 · The kirana: Customers',notes:[
+  ['What to check',['Where the kirana\'s share comes from: the score of you and the village grocer, as plain sums, for each group of buyers. Marketing and khata each have their own line so you can see what each adds.','The rival\'s reaction is written in words: it cuts 5% when you take a third of its share.']]],
+  render(){
+   let h=row(I.person,'Your share of groceries','Of about 84 kg a day',val(share()+'%'),'kshare');
+   h+=sec('The score of each shop (higher sells more)');
+   h+=row(ICO.kirana,'Your kirana','Price 1.15 above the reference · 2.8 stars · 120 m',val((1.62+mkGain(state.mk)+(state.khata?.04:0)).toFixed(2)),'kshare');
+   h+=row(ICO.mega,'of which marketing','',val('+'+mkGain(state.mk).toFixed(3)),'mkt');
+   h+=row(ICO.ledger,'of which khata','For households under 20,000 a season',val(state.khata?'+0.10':'off'),'khata');
+   h+=row(I.grocer,'The village grocer, staples','3 stars · 300 m',val('2.31'),'kshare');
+   h+=`<div class="row" style="background:var(--cream2);border-radius:10px;margin-top:6px"><div class="grow"><b>The grocer reacts</b><small>It cuts its prices 5% when you take a third of its share, and comes back up when you lose it. You have ${share()}%: ${share()>=33?'it has cut its prices.':'not yet.'}</small></div>${qb('kdemand')}</div>`;
+   return base()+sheet('Kirana','Open now · until 21:00',ICO.kirana,h,shopTabs('Customers'))}},
+ settings:{label:'4 · The kirana: Marketing and khata',ctl:[['mk','0','No marketing'],['mk','2000','2,000'],['mk','8000','8,000'],['khata','false','Khata off'],['khata','true','Khata on']],notes:[
+  ['What to check',['Two new sections below the price and the hours. <b>Marketing</b>: a budget for the season (0, 2,000, 4,000 or 8,000), each 1,000 adds 0.019 to the score up to 0.15, and it fades a fifth each close once stopped. <b>Khata</b>: a switch, a limit for each household (500, 1,000 or 2,000), and an honest line of what it gained and lost.','Both are on the kirana, the vegetable stall and the tea stall. Marketing is on every shop.','The honest-value lines say plainly when a feature does not pay.']],
+  ['Teaches',['That an advertising budget and credit both buy sales with money, and only pay if the margin on the extra sales is bigger than the cost.']]],
+  render(){
+   let h=row(I.coin,'Price','About the reference + 15%',val('The usual'),'kshare');
+   h+=sec('Marketing');
+   h+=row(ICO.mega,'A budget for this season','Paid at once; lasts only while it is spent',val(state.mk?fmt(state.mk)+' coins':'none'),'mkt');
+   h+=btnrow([[0,'None',''],[2000,'2,000','+0.038'],[4000,'4,000','+0.076'],[8000,'8,000','+0.15 (the most)']],state.mk,'mk');
+   h+=`<div class="row" style="background:var(--cream2);border-radius:10px;margin-top:6px"><div class="grow"><b>${state.mk?'It gained '+(share()-Math.round(1.62/(1.62+2.31)*100+ (state.khata?2:0)))+' points of share':'No marketing'}</b><small>${state.mk?'Against '+fmt(state.mk)+' spent: about '+fmt(state.mk*0.5)+' back in margin. Stopped, it fades by a fifth each close.':'Nothing is spent.'}</small></div>${qb('mktvalue')}</div>`;
+   h+=sec('Khata');
+   h+=row(ICO.ledger,'Credit for regular households','They buy now and pay at the close',`<button class="btn ${state.khata?'':'sand'}" data-sw="khata" style="min-width:150px;padding:8px 14px 10px"><span>${state.khata?'On':'Off'}</span></button>`,'khata');
+   if(state.khata){
+    h+=row(ICO.ledger,'The limit for each household','The most one household can owe at any time',val(fmt(state.limit)+' coins'),'klimit');
+    h+=btnrow([[500,'500',''],[1000,'1,000',''],[2000,'2,000','']],state.limit,'limit');
+    h+=`<div class="row" style="background:var(--cream2);border-radius:10px;margin-top:6px"><div class="grow"><b>Khata gained +1,029 this season</b><small>Credit sales 7,400 · extra sales it brought +2,100 · never paid −296</small></div>${qb('kvalue')}</div>`;
+   }
+   return base()+sheet('Kirana','Open now · until 21:00',ICO.kirana,h,shopTabs('Settings'))}},
+ books:{label:'5 · The kirana: Books and khata',ctl:[['cutm','false','All on credit'],['cutm','true','Meera cut off']],notes:[
+  ['What to check',['The Books tab (the same as the other shops\') gets a <b>Khata</b> section: what is owed, how many households are on credit, and a row for each household that owes, with its balance against its limit and a button to cut it off. A household over its limit or overdue is cut off by itself and says so.','At each close the shop\'s P&L shows <b>Bad debt</b> as its own line, with a ?; the receivable is the "owed to the shop" line already on the books.']],
+  ['Teaches',['That a sale on credit is not cash until it is collected, and that some of it never comes back.']]],
+  render(){
+   const rows=[['Meera\'s family','income 9,000',620,1000,false],['Rina\'s family','income 14,000',1000,1000,true],['Suresh\'s family','income 22,000',240,1000,false],['Kavita\'s family','income 11,500',380,1000,false]];
+   let h=row(ICO.ledger,'Owed to the shop','21 households on credit',val('7,400 coins'),'owed');
+   h+=row(ICO.ledger,'Bad debt, last close','Never paid, written off',val('−296'),'kloss');
+   h+=sec('Households that owe');
+   rows.forEach(r=>{const cut=r[4]||(r[0].startsWith('Meera')&&state.cutm);
+    h+=`<div class="row" style="min-height:92px"><div class="ico">${I.person}</div><div class="grow"><b>${r[0]}</b><small>${r[1]} a season · owes ${fmt(r[2])} of ${fmt(r[3])}${r[4]?' · <span style="color:var(--warn);font-weight:700">at the limit: cut off</span>':cut?' · <span style="color:var(--warn);font-weight:700">cut off by you</span>':''}</small></div>${qb('klimit')}<button class="btn ${cut?'sand':''}" style="min-width:160px"><span>${cut?'Allow again':'Cut off'}</span></button></div>`});
+   h+=`<div class="note" style="margin-top:6px;font-size:18px;color:var(--wood)">Showing 4 of 21. The old village's families are never on khata.</div>`;
+   h+=sec('This season\'s profit and loss');
+   h+=cost('Sales','28,600')+cost('Goods sold','−9,800')+cost('Shopkeeper','−12,000')+cost('The pitch\'s rent','−3,000')+cost('Bad debt','−296')+cost('Left over','+3,504');
+   return base()+sheet('Kirana','Open now · until 21:00',ICO.kirana,h,shopTabs('Books'))}}
+};
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:780px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 28px var(--display)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost" style="font-size:19px;padding:6px"><span>${r[0]}</span><b style="white-space:nowrap;margin-left:12px">${r[1]}</b></div>`).join('')}${w.foot?`<div class="note" style="font-size:18px">${w.foot}</div>`:''}<div class="btnrow"><button class="btn" data-close="1" style="max-width:220px;margin:0 auto"><span>OK</span></button></div></div>`}
+function render(){
+ const v=views[tab];let html=v.render();
+ if(state.toast)html+=`<div class="toast">${state.toast}</div>`;
+ if(state.why)html+=whyCard(state.why);
+ $('#stage').innerHTML=html;
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ $('#ctl').innerHTML=(v.ctl&&v.ctl.length?'<span>Show:</span>':'')+(v.ctl||[]).map(c=>`<button data-set="${c[0]}:${c[1]}" aria-pressed="${String(state[c[0]])===c[1]}">${c[2]}</button>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;Object.assign(state,{why:null,toast:null,confirm:null});render()});
+$('#ctl').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b)return;const [g,v]=b.dataset.set.split(':');state[g]=(v==='true'?true:v==='false'?false:isNaN(+v)?v:+v);render()});
+$('#stage').addEventListener('click',e=>{
+ const t=e.target.closest('[data-why],[data-close],[data-sw],[data-mk],[data-limit],[data-preset],[data-q],[data-confirm],[data-no],[data-lease]');
+ if(!t)return;const d=t.dataset;
+ if(d.why)state.why=d.why;else if(d.close)state.why=null;
+ else if(d.sw){const k=d.sw;if(k.startsWith('ben:')){const b=k.slice(4);state.benefits[b]=!state.benefits[b]}else if(k.startsWith('dish:')){const b=k.slice(5);state.dishes[b]=!state.dishes[b]}else state[k]=!state[k]}
+ else if(d.mk!==undefined)state.mk=+d.mk;
+ else if(d.limit!==undefined)state.limit=+d.limit;
+ else if(d.preset)state.preset=+d.preset;
+ else if(d.q!==undefined)state.quality=+d.q;
+ else if(d.confirm)state.confirm=d.confirm;
+ else if(d.no)state.confirm=null;
+ else if(d.lease){state.confirm=null;state.tempo='leased';state.toast='The tempo is leased and parked on the lane: 18,000 coins paid.'}
+ render();
+});
+addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # 029. The Chronicle, the Almanac and citizen stories
 
-- Status: In review. G1 to G7 (§10) closed one per message on my recommendations (owner, 2026-11-23); ADR 0165. Preview 19 (§7) is shown as an artifact that looks exactly like the game and approved before any UI code.
+- Status: Approved (owner, 2026-11-23, with the Sprint 26 plan, ADR 0166; §3.6's hand's stall is re-confirmed at US-159, gap 11). G1 to G7 (§10) closed one per message on my recommendations (owner, 2026-11-23); ADR 0165. Preview 19 (§7) is shown as an artifact that looks exactly like the game and approved before any UI code.
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Events, disasters and town history (the Chronicle, the Town Almanac, citizen stories); Moments that matter
@@ -88,11 +88,11 @@ At each **Winter close**, after *Your year* and before Dadi's letters and the Co
 | --- | --- |
 | Population | Your households, and the old village's as its head-count, at the close. |
 | Net worth | At the close, in year-0 coins, and the change from last year. |
-| Best return | Of your **businesses** (the year's four season profits ÷ the capital you put in) and your **crops** (the year's income from the crop ÷ the year's seed and planting cost for it), the one with the biggest share, provided its profit is **at least 10,000 coins**; else **"a quiet year"**. Shown as "{name}: it earned {n} coins for every 100 you put in", with the profit and the money put in. |
+| Best return | Of your **businesses** (the year's four season profits ÷ the capital you put in) and your **crops** (the year's income from the crop ÷ what you put into it: the seed and fertiliser of its sowings plus its share of the year's hired labour, shared among the crops by their sowings), the one with the biggest share, provided its profit is **at least 10,000 coins**; else **"a quiet year"**. Shown as "{name}: it earned {n} coins for every 100 you put in", with the profit and the money put in. |
 | Costliest loss | The biggest single line from a **closed list of one-off losses**: a repair after a fire, a loss on selling or closing a business or a machine, spoiled goods, something seized or defaulted, a business's losing season (its loss). **Ordinary costs (wages, seed, rent, fuel) never count.** Shown with its cause. None, and the line says so, when the year had no such loss. |
 | Citizen spotlight | §3.5. |
 
-Each shows a **?** with its working (§7). Crops need a small accumulator (this year's income and seed and planting cost per crop), added at each sowing and season close.
+Each shows a **?** with its working (§7). Crops need a small accumulator (this year's income, sowing cost and number of sowings per crop, and the year's hired labour), added at each sowing and season close.
 
 ### 3.5 The citizen spotlight (US-158, G5)
 
@@ -112,7 +112,7 @@ An **arc** is two to four **steps**, each a short toast with the person's portra
 
 | Arc | Steps | Rules |
 | --- | --- | --- |
-| **A stall of his own** (the one new rule) | 1. **Saving**: "{name} has put aside enough for a stall of their own." 2. **Leaving and opening**: "{name} has gone to start a {stall}." 3. **After two seasons**: "{name}'s {stall} is doing well." or "{name}'s stall closed; they would work for wages again." | A townsperson who has been your hand or a business's worker for **3 or more seasons**, whose household's savings are **at least 10,000 coins** (year-0), and who is on **fair or better terms** (a motivation of 1.0 or more). At each close, **each such person has a 20% chance** (seeded, never while you are away) to give a season's notice: step 1, and a line on the People sheet says they will go at the next close. At that close they leave (no severance owed; their post is empty, so you hire or run it yourself) and **the next newcomer stall that opens within 4 seasons is theirs** (named, on their trade's kind: a tea maker opens a tea stall, a stallholder a vegetable stall, a halwai a sweet shop, any other hand a vegetable stall): step 2. After 2 more seasons the stall is still open (step 3, doing well) or has closed (step 3, closed); a closed stall's owner is a townsperson looking for work again. **The stall is the village's, a rival, not yours** (it competes by the usual shop rules, spec 017). |
+| **A stall of his own** (the one new rule; **only once the Township is reached, and never while a shop of yours of his trade has had no profitable season**, §10 G11) | 1. **Saving**: "{name} has put aside enough for a stall of their own." 2. **Leaving and opening**: "{name} has gone to start a {stall}." 3. **After two seasons**: "{name}'s {stall} is doing well." or "{name}'s stall closed; they would work for wages again." | A townsperson who has been your hand or a business's worker for **3 or more seasons**, whose household's savings are **at least 10,000 coins** (year-0), and who is on **fair or better terms** (a motivation of 1.0 or more). At each close, **each such person has a 20% chance** (seeded, never while you are away) to give a season's notice: step 1, and a line on the People sheet says they will go at the next close. At that close they leave (no severance owed; their post is empty, so you hire or run it yourself) and **the story itself founds their stall at that close** (a newcomer of their trade's kind, owned by them and named for them, on a free pitch or as the cart on the lane's verge: a tea stall's worker opens a tea stall, a sweet shop's a sweet shop, any other hand a vegetable stall): step 2. **A person gives notice only if a stall of that trade can be founded** (its kind is open to you and no newcomer of that kind stands), so nobody leaves for nothing; the founding happens before the village's own newcomers roll at that close (gap 11). After 2 more seasons the stall is still open (step 3, doing well) or has closed (step 3, closed); a closed stall's owner is a townsperson looking for work again. **The stall is the village's, a rival, not yours** (it competes by the usual shop rules, spec 017). |
 | **The first reader in the family** | 1. A child of one of your households starts school and **nobody in the family can read** yet. 2. They become literate: "the first in their family". 3. At 15 or older they take a paid job or a hire. | Read from `StoryKind` lines and `CitizenLiterate`. |
 | **A long life** | 60, 70 and 80 years (a life-year is a season): "{name} is {age} and still part of the daily life of the {place}." If they die at 70 or more: "{name} died at {age}, remembered by {n} family members." | Read from the citizen's age (ADR 0063: only elders die, gently). |
 | **A migrant family that stays** | 1. A migrant household stays **2 seasons**. 2. **4 seasons**. 3. A child is born to them. | Read from `StoryKind.Arrived` and `ChildBorn`. |
@@ -130,21 +130,21 @@ Nothing is asked of the player. A hand's notice is a line, not a card; the town 
 | Definition | Field | Type | Default | Bounds | Notes |
 | --- | --- | --- | --- | --- | --- |
 | chronicle | `keep` | int | 400 | 100 to 2,000 | Entries kept |
-| chronicle | `pinned` | list of kinds | the 14 once-only | | Never dropped |
+| chronicle | `kinds[]` | id, icon | the 22 kinds | | A kind's icon; the once-only kinds, the eras and the founding are pinned in code and never dropped |
 | chronicle | `recordMinGrams`, `recordRise` | int, Fixed | 1,000,000, 0.05 | | §3.3 |
 | chronicle | `almanacKeep`, `minProfit` | int, long | 8, 10,000 | | §3.4 |
-| chronicle | `lossLines[]` | list of ledger accounts | the closed list | | Costliest loss's lines |
-| stories | `handSeasons`, `handSavings`, `handChance`, `handNotice`, `handWindow`, `handFollow` | int, long, Fixed, int, int, int | 3, 10,000, 0.20, 1, 4, 2 | | The hand's stall |
-| stories | `elderAges[]`, `migrantSeasons[]` | list | 60, 70, 80; 2, 4 | | |
-| stories | `perSeason` | int | 1 | 1 to 3 | At most one step a season |
+| stories | `stall` {`seasons`, `savings`, `motivation`, `chance`, `judgedAfter`} | int, long, Fixed, Fixed, int | 3, 10,000, 1.0, 0.20, 2 | | The hand's stall (a notice is one season, the window is the close after) |
+| stories | `reader` {`adultAge`} | int | 15 | | The first reader's third step |
+| stories | `migrant` {`first`, `second`} | int | 2, 4 | | Seasons a migrant family stays |
+| stories | `longLife` {`ages[]`, `diedFrom`} | list, int | 60, 70, 80; 70 | | A long life; one step a season across the town is a rule in code |
 
 **New state** (saved, schema 24, each hashed only when used):
 
 | Entity | Field | Type | Notes |
 | --- | --- | --- | --- |
-| `ChronicleState` | `Entries` (At, Kind, A, B, C), `Done` (a bit per once-only kind), `LastSeason[kind]`, `SeasonGrams[crop]`, `BestGrams[crop]` | | Written and read in id order |
+| `ChronicleState` | `Entries` (At, Kind, A, B, Id: a content id as a string), `Done` (a bit per once-only kind), `SeasonGrams[crop]`, `BestGrams[crop]` | | Written and read in id order; the crop arrays are saved by crop (review of Sprint 26), so a crop added later leaves them where they were |
 | `AlmanacState` | `Entries[]` (year, households, net worth, change, best return (kind, id, profit, put in), costliest loss (kind, amount, cause), spotlight (citizen id, why)), `YearCrops[crop]` (income, cost) | | The last 8 |
-| `StoriesState` | `Arcs[]` (person id, arc, step, at, other), `LastStepSeason` | | |
+| `StoriesState` | `Arcs[]` (person id, arc, step, at, other, done), `LastStep`, `Retired[]` (citizen × 8 + arc of finished arcs pruned past 64, so a story never happens twice) | | |
 
 ## 5. Commands and events
 
@@ -156,8 +156,7 @@ Nothing is asked of the player. A hand's notice is a line, not a card; the town 
 | --- | --- | --- | --- |
 | `ChronicleWritten` | kind | An entry is written | The Chronicle sheet, the bell |
 | `AlmanacWritten` | year | At each Winter close | The Almanac card |
-| `StoryStepped` | arc, step, citizen | An arc step happens | The toast, the Chronicle |
-| `HandGaveNotice` / `HandLeftToStartStall` | citizen | Step 1 and the close after | The People sheet, the away card |
+| `StoryStepped` | arc, step, citizen, n, kind | An arc step happens (a hand's notice is step 1, leaving and opening step 2) | The toast, the Chronicle, the People sheet, the away card |
 
 ## 6. Decision card
 
@@ -198,7 +197,7 @@ The player makes no decision in this feature; what they see is the cost of the o
 
 | Metric | Expected effect | Tolerance |
 | --- | --- | --- |
-| Chronicle size | about 25 to 40 entries a game year in a town of 25 households | measured, reported |
+| Chronicle size | about 25 to 40 entries a game year in a town of 25 households | measured, reported: the Township bot's town (10 households, few events) writes about 6 a year, 86 at season 60 (82 to 94 over 200 seeds), and the save holds about 2 KB of them; a livelier town fills toward the 400 cap, which adds under 12 KB |
 | Story steps | about one a season in a Township town; none stacking | measured |
 | A hand's stall | about one hand in five leaves in a town's first 12 seasons; replaced by the board within a season | measured |
 | Almanac | a best return exists in at least 9 of 10 Township years | measured |
@@ -215,6 +214,11 @@ All closed (owner, 2026-11-23, my recommendations; ADR 0165):
 - **G5 The spotlight.** A fixed story priority, ties by lowest id, never random.
 - **G6 The arcs.** Four arcs over real events; the only new rule is the hand's stall (a seeded 20% chance, a season's notice, the next newcomer stall).
 - **G7 The screens.** A Menu sheet with two tabs, the Almanac card at the Winter close, a toast for a step; no animation or music.
+- **G8 Events that lack a line's facts. Closed (owner, 2026-11-23, my recommendation, ADR 0166 gap 10):** add the fields to the events (`EpidemicEnded` the sick, a loan cleared event with the lender, the fire's repair payment), one `ChronicleSystem` reading the day's events with their own times.
+- **G11 The hand's stall. Closed (owner, 2026-11-24, my recommendation, ADR 0166 gap 11):** the story founds the stall itself at the leaving close, owned by the hand, on a free pitch or the lane's verge; he gives notice only when his trade's kind is free to found, so he is never stranded; the 4-season window is gone. Only townspeople who are your hands or workers qualify (a hut hand moves out of his hut, so he never gives notice). A new `Owner` on the newcomer (schema 24). *Added at build:* the arc's numbers are in `content/stories.json`; the first reader's third step needs a paid job or a hire; a long life's fourth step is the remembered death.
+- **G11 amended by the balance pass (owner, 2026-11-24, my recommendation, ADR 0168):** the exploit checks found that a citizen's stall opening in the Village era, or against a new shop of yours before its first profitable season, left the Township gate's "3 businesses each with a profitable season" unmet (3 of 48 competent towns never reached the Township, 24 of 200; the median day 102 → 109, the 90th percentile 144 → 220). **A hand gives notice only once the Township is reached, and never while a shop of yours of his trade has had no profitable season** (`StoriesRules.Eligible`, `StoriesRules.WaitsForFirstProfit`; a notice already given waits a season if such a shop opened since); with the story on the 48 seeds all reach the Township, day 102, exactly as with it off (`StoryTests.Hand_Stall_Gates`, `GateTests.StallEffect`).
+- **G10 A crop's money put in. Closed (owner, 2026-11-24, my recommendation, found at US-158's review):** seed alone made a crop return 600 for every 100 and a business never the best; a crop's money put in is its seed, fertiliser and its share of the year's hired labour (by sowings).
+- **G9 The costliest loss. Closed (owner, 2026-11-23, my recommendation, ADR 0166 gap 12):** the Almanac keeps a running worst one-off loss for the year, updated at the moment it happens; no ledger scan; `lossLines` in §4 is a list of kinds, not accounts.
 
 ## 11. Cut first
 
