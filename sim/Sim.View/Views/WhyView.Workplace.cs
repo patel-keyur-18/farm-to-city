@@ -49,9 +49,9 @@ namespace Sim.View.Views
             IStaff w = list.Count > 0 ? list[0] : null;
             WhyVm vm = New(ctx, "why.accident.title", w == null ? "" : WorkplaceSheet.Season(ctx, WorkplaceRules.AccidentChance(sim, w, true)));
             Row(vm, ctx, "why.accident.base", ctx.Fmt.Decimal2(d.AccidentChance * Fixed.FromInt(100)) + "%");
-            Row(vm, ctx, "why.accident.night", Pct(ctx, d.NightFactor - Fixed.One) + " more");
-            Row(vm, ctx, "why.accident.overtime", Pct(ctx, d.OvertimeFactor - Fixed.One) + " more");
-            Row(vm, ctx, "why.accident.skipped", Pct(ctx, d.SkippedFactor - Fixed.One) + " more");
+            Row(vm, ctx, "why.accident.night", ctx.Strings.Get("why.pctMore", "pct", Pct(ctx, d.NightFactor - Fixed.One)));
+            Row(vm, ctx, "why.accident.overtime", ctx.Strings.Get("why.pctMore", "pct", Pct(ctx, d.OvertimeFactor - Fixed.One)));
+            Row(vm, ctx, "why.accident.skipped", ctx.Strings.Get("why.pctMore", "pct", Pct(ctx, d.SkippedFactor - Fixed.One)));
             Row(vm, ctx, "why.accident.half", ctx.Fmt.Percent(d.RiskHalf));
             Row(vm, ctx, "why.accident.severe", ctx.Fmt.Percent(d.SevereShare), "hours", ctx.Fmt.Integer(d.SevereHours), "bill", Money(ctx, Sim.Core.Market.MarketRules.Indexed(sim, d.SevereBill)));
             Text(vm, ctx, "why.accident.out", "hours", ctx.Fmt.Integer(d.OutHours), "clinic", ctx.Fmt.Integer(d.ClinicOutHours), "bill", Money(ctx, Sim.Core.Market.MarketRules.Indexed(sim, d.Bill)));
@@ -66,7 +66,7 @@ namespace Sim.View.Views
             List<IStaff> list = WorkplaceRules.Workers(sim, place);
             WhyVm vm = New(ctx, "why.conflict.title", list.Count < d.ConflictMinWorkers ? ctx.Fmt.Integer(d.ConflictMinWorkers) + "+" : WorkplaceSheet.Season(ctx, WorkplaceRules.ConflictChance(sim, place)));
             Row(vm, ctx, "why.conflict.base", ctx.Fmt.Decimal1(d.ConflictChance * Fixed.FromInt(100)) + "%", "n", ctx.Fmt.Integer(d.ConflictMinWorkers));
-            Row(vm, ctx, "why.conflict.tired", ctx.Fmt.Decimal1(WorkplaceRules.AverageFatigue(list) * Fixed.FromInt(100)) + " points", "k", ctx.Fmt.Integer(d.ConflictFatigue.RoundToLong()));
+            Row(vm, ctx, "why.conflict.tired", ctx.Strings.Get("why.points", "n", ctx.Fmt.Decimal1(WorkplaceRules.AverageFatigue(list) * Fixed.FromInt(100))), "k", ctx.Fmt.Integer(d.ConflictFatigue.RoundToLong()));
             Text(vm, ctx, "why.conflict.supervisor");
             Text(vm, ctx, "why.conflict.choices", "hours", ctx.Fmt.Integer(d.TalkHours), "pct", ctx.Fmt.Percent(d.TalkResolves), "resign", ctx.Fmt.Percent(d.LetResigns));
             vm.Footnote = ctx.Strings.Get("why.conflict.foot");

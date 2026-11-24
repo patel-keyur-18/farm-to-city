@@ -61,13 +61,13 @@ namespace Sim.View.Tests
             Assert.That(vm.Lines[0].Note, Does.Contain("Needs 3 hands").And.Contain("you have 2"));
             ActionVm post = vm.Lines.First(l => l.Action != null && l.Action.Id == "postSupervisor").Action;
             Assert.That(post.Enabled, Is.False, "greyed");
-            Assert.That(post.DisabledReason, Does.Contain("3 or more hands"));
+            Assert.That(post.DisabledReason, Does.Contain("bigger team"));
             sim = Farm(4);
             ctx = ViewKit2.Context(sim);
             vm = HiringBoard.Build(ctx, HiringRules.SupervisorPlace);
             Assert.That(vm.Lines[0].Note, Does.Contain("Covers up to 5"));
             LineVm pays = vm.Lines.First(l => l.WhyKey == "supervisorPays");
-            Assert.That(pays.Value, Does.StartWith("Not in coins"), "honest about 30,000");
+            Assert.That(pays.Value, Does.StartWith("Not in coins"), "honest: not in coins at this team size");
             WhyWorks(ctx, vm);
             Assert.That(sim.Execute(new PostJob(sim.State.Clock.SimTime, HiringRules.SupervisorPlace, false)).Accepted, Is.True);
             for (int i = 0; i < 24 * 8 && sim.State.People.ApplicantsFor(HiringRules.SupervisorPlace).Count == 0; i++) sim.AdvanceTo(sim.State.Clock.SimTime + 3600);

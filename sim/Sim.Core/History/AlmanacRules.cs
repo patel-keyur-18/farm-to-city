@@ -102,6 +102,12 @@ namespace Sim.Core.History
             if (EndsYear(sim, x.Period)) Write(sim, a, x);
         }
 
+        /// <summary>A close's net worth in the coins of the first year (spec 029 §3.4), so a year of rising prices is not a year of growth.</summary>
+        private static long YearZero(Simulation sim, long amount, long period)
+        {
+            return Finance.Hub.InTodaysCoins(amount, Finance.Hub.IndexAtClose(sim, period), sim.Config.Game.Market.Economy.StartIndex);
+        }
+
         private static BusinessReport LastReport(Business.Business b, long period)
         {
             return b.Reports.Count > 0 && b.Reports[b.Reports.Count - 1].Period == period ? b.Reports[b.Reports.Count - 1] : null;
@@ -115,10 +121,10 @@ namespace Sim.Core.History
             var e = new AlmanacEntry
             {
                 Year = year, At = x.SimTime, Households = Progress.EraRules.Households(sim), People = sim.State.Citizens?.Population ?? 0, Village = Town.CohortRules.People(sim),
-                NetWorth = x.Report.NetWorth.Total, Loss = a.WorstLoss, LossAmount = a.WorstAmount, LossId = a.WorstId,
+                NetWorth = YearZero(sim, x.Report.NetWorth.Total, x.Period), Loss = a.WorstLoss, LossAmount = a.WorstAmount, LossId = a.WorstId,
             };
             SeasonReport before = sim.State.Finance.Reports.Find(r => r.Period == x.Period - ClockDef.SeasonsPerYear);
-            if (before != null) { e.HadBefore = true; e.Before = before.NetWorth.Total; }
+            if (before != null) { e.HadBefore = true; e.Before = YearZero(sim, before.NetWorth.Total, before.Period); }
             Best(sim, a, e, x.Period, d.MinProfit);
             Spot(sim, a, e, x.Period);
             a.Entries.Add(e);

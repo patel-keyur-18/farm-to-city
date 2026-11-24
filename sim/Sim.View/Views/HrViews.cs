@@ -63,7 +63,7 @@ namespace Sim.View.Views
                     if (ctx.Sim.State.People.Reputation < d.AssocReputation) why.Add(s.Get("hr.Association.whyName"));
                     return s.Get("hr.Association.text", "n", ctx.Fmt.Integer(list.Count), "why", why.Count == 0 ? s.Get("hr.Association.whyNone") : string.Join(" ", why),
                         "raise", ctx.Fmt.Percent(d.AssocRaise), "half", ctx.Fmt.Percent(d.AssocNegotiateRaise), "agree", ctx.Fmt.Percent(d.AssocAgrees),
-                        "output", ctx.Fmt.Percent(d.RefuseOutput), "stop", ctx.Fmt.Duration((d.StoppageHours) * 3600L));
+                        "output", ctx.Fmt.Percent(d.RefuseOutput), "stop", ctx.Fmt.Duration((d.StoppageHours) * 3600L), "closes", ctx.Fmt.Integer(d.AssocQuietCloses));
             }
         }
 

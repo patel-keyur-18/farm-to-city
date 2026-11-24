@@ -392,7 +392,7 @@ Motivation comes from wage fairness, manager quality, working conditions, recogn
 
 **Training.** Skills grow by on-the-job experience, by paid courses (cost plus time away from work), or by sponsoring a citizen's education in return for a work bond. A trained worker is worth more, and is worth more to competitors, too.
 
-**Structure and span of control.** Roles run worker → senior → supervisor → manager. One supervisor manages 5–8 people well. Beyond that, productivity and quality decay, which teaches why organisations need structure.
+**Structure and span of control.** Roles run worker → senior → supervisor → manager. One supervisor looks after up to 5 people well (spec 028 §3.9). Beyond that, productivity and quality decay, which teaches why organisations need structure.
 
 **Benefits.** Meals, health cover, housing, bonuses and paid leave. Each has a cost and a morale effect.
 

@@ -80,7 +80,7 @@ namespace Sim.View.Views
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
             if (HiringRules.BusinessPlace(sim, HiringRules.SupervisorPlace) != RejectReason.TooFewWorkers) return;
-            var line = new LineVm(s.Get("people.postMarket"), s.Get("supervisor.postWhy"), "post") { Icon = "person_hand_m" };
+            var line = new LineVm(s.Get("people.postMarket"), s.Get("supervisor.postWhy", "min", ctx.Fmt.Integer(Defs(ctx).SupervisorMinWorkers)), "post") { Icon = "person_hand_m" };
             line.Action = ActionVm.Checked(ctx, "postSupervisor", s.Get("action.post"), ctx.Fmt.Coins(MarketRules.Indexed(sim, sim.Config.Game.People.JobPost.Cost)), ActionKind.Secondary,
                 t => new PostJob(t, HiringRules.SupervisorPlace, false));
             vm.Lines.Add(line);
@@ -127,7 +127,7 @@ namespace Sim.View.Views
             {
                 string value = !farm ? s.Get("workplace.needsN", "min", ctx.Fmt.Integer(d.SupervisorMinWorkers), "n", ctx.Fmt.Integer(n))
                     : n >= d.SupervisorMinWorkers ? s.Get("workplace.noneHire") : s.Get("workplace.needsN", "min", ctx.Fmt.Integer(d.SupervisorMinWorkers), "n", ctx.Fmt.Integer(n));
-                var row = new LineVm(s.Get("workplace.supervisor"), value, "supervisor", 0) { Icon = "person_hand_m", Note = s.Get(farm ? "workplace.supervisorNote" : "workplace.supervisorFarm") };
+                var row = new LineVm(s.Get("workplace.supervisor"), value, "supervisor", 0) { Icon = "person_hand_m", Note = s.Get(farm ? "workplace.supervisorNote" : "workplace.supervisorFarm", "span", ctx.Fmt.Integer(d.SupervisorSpan), "pct", ctx.Fmt.Decimal1(d.OutputPerStar * Fixed.FromInt(100)) + "%") };
                 if (farm && n >= d.SupervisorMinWorkers) row.Action = ActionVm.Open("supervisorBoard", s.Get("workplace.hireOne"), new SheetRequest("Word", HiringRules.SupervisorPlace));
                 vm.Lines.Add(row);
             }
@@ -140,14 +140,14 @@ namespace Sim.View.Views
             // Conflicts.
             string quarrel = n < d.ConflictMinWorkers ? s.Get("workplace.needsN", "min", ctx.Fmt.Integer(d.ConflictMinWorkers), "n", ctx.Fmt.Integer(n))
                 : farm && sv != null ? s.Get("workplace.settled") : Season(ctx, WorkplaceRules.ConflictChance(sim, place));
-            vm.Lines.Add(new LineVm(s.Get("workplace.conflicts"), quarrel, "conflict", place) { Icon = "coin", Note = s.Get(n < d.ConflictMinWorkers ? "workplace.conflictsNeed" : "workplace.conflictsNote") });
+            vm.Lines.Add(new LineVm(s.Get("workplace.conflicts"), quarrel, "conflict", place) { Icon = "coin", Note = s.Get(n < d.ConflictMinWorkers ? "workplace.conflictsNeed" : "workplace.conflictsNote", "min", ctx.Fmt.Integer(d.ConflictMinWorkers)) });
 
             // The association: the farm's.
             if (n >= d.AssocMinWorkers || (farm && n >= 1))
             {
                 string value = n < d.AssocMinWorkers ? s.Get("workplace.needsN", "min", ctx.Fmt.Integer(d.AssocMinWorkers), "n", ctx.Fmt.Integer(n))
                     : s.Get(AssociationNow(sim, list) ? "workplace.assocLikely" : "workplace.assocNone");
-                vm.Lines.Add(new LineVm(s.Get("workplace.assoc"), value, "association", place) { Icon = "coin", Note = s.Get(n < d.AssocMinWorkers ? "workplace.assocNeed" : "workplace.assocNote") });
+                vm.Lines.Add(new LineVm(s.Get("workplace.assoc"), value, "association", place) { Icon = "coin", Note = s.Get(n < d.AssocMinWorkers ? "workplace.assocNeed" : "workplace.assocNote", "min", ctx.Fmt.Integer(d.AssocMinWorkers)) });
             }
         }
 

@@ -670,6 +670,7 @@ namespace Sim.View.Views
                     case PostUnpaid pu: rows.Add(Row(s.Get("away.town"), s.Get("away.postUnpaid"), "place_" + CivicSheet.Ids[pu.Civic] + "_plot")); break;
                     case PostVacated pv: rows.Add(Row(s.Get("away.town"), s.Get("away.postVacated"), "place_" + CivicSheet.Ids[pv.Civic] + "_plot")); break;
                     case DoctorLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorLeft"), "place_clinic_plot")); break;
+                    case StoryStepped ss: rows.Add(Row(s.Get("away.town"), StoryWords.Line(ctx, ss.CitizenId, Sim.Core.History.StoriesRules.Code((Sim.Core.Definitions.StoryArc)ss.Arc, ss.Step, ss.N), ss.Kind), "scroll")); break; // spec 029 §5: a story step while you were away, a worker who left to start a stall among them
                     case HrEventDefaulted hd: rows.Add(Row(s.Get("away.town"), WorkplaceSheet.Defaulted(ctx, hd), "person_hand_m")); break; // spec 028 §3.9: a card nobody answered
                     case SupervisorLeft sl when sl.Unpaid: rows.Add(Row(s.Get("away.town"), s.Get("away.supervisorUnpaid"), "person_hand_m")); break;
                     case ParcelSold ps: rows.Add(Row(s.Get("away.land"), s.Get("away.landSold", "price", ctx.Fmt.Coins(ps.Price)), "land")); break; // a slow sale's days came (spec 024 §3.4)
@@ -768,7 +769,7 @@ namespace Sim.View.Views
             // Spec 013 §3.4 (ADR 0087).
             { "BenefitChanged", Use.StateOnly }, { "NightShiftChanged", Use.StateOnly }, { "DealOffered", Use.StateOnly }, { "DealAnswered", Use.StateOnly }, { "ShareBoughtBack", Use.StateOnly }, { "BusinessListed", Use.StateOnly }, { "BusinessSaleCancelled", Use.StateOnly }, { "BusinessSold", Use.StateOnly }, { "ManagerHired", Use.StateOnly }, { "ManagerLeft", Use.StateOnly }, { "ManagerReported", Use.StateOnly }, { "InvoiceIssued", Use.StateOnly }, { "InvoicePaid", Use.StateOnly }, { "InvoiceOverdue", Use.StateOnly }, { "SupplyStopped", Use.StateOnly }, { "KhataGranted", Use.StateOnly }, { "KhataWrittenOff", Use.StateOnly }, { "RivalOpened", Use.Alert }, { "RivalClosed", Use.Away }, { "RivalPriceCut", Use.Alert }, { "SchoolStarted", Use.Motion }, { "SchoolOpened", Use.Away }, { "AdultClassStarted", Use.Motion }, { "CitizenLiterate", Use.Away }, { "CodexCardFound", Use.Motion }, { "MilestoneReached", Use.Motion }, { "GodownBought", Use.Motion }, { "WarehouseRented", Use.Motion }, { "ColdStoreRented", Use.Motion }, { "GodownLet", Use.Away }, { "GodownNotLet", Use.Alert },
             // Spec 029 (the Chronicle).
-            { "ChronicleWritten", Use.StateOnly }, { "AlmanacWritten", Use.StateOnly }, { "StoryStepped", Use.StateOnly }, { "LoanCleared", Use.StateOnly }, { "FireRepaired", Use.StateOnly },
+            { "ChronicleWritten", Use.StateOnly }, { "AlmanacWritten", Use.StateOnly }, { "StoryStepped", Use.Away }, { "LoanCleared", Use.StateOnly }, { "FireRepaired", Use.StateOnly },
             // Spec 023 (the Township).
             { "RoadPetitioned", Use.StateOnly }, { "RoadBuilt", Use.Away },
             { "ClinicStarted", Use.Motion }, { "ClinicBuilt", Use.Away }, { "QuartersStarted", Use.Motion }, { "QuartersBuilt", Use.Away }, { "DoctorComing", Use.StateOnly },

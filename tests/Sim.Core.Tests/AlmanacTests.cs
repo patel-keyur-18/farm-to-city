@@ -44,6 +44,8 @@ namespace Sim.Core.Tests
             Assert.That((first.Year, first.Households), Is.EqualTo((1L, Sim.Core.Progress.EraRules.Households(sim))));
             Assert.That(first.NetWorth, Is.GreaterThan(0));
             Assert.That(first.HadBefore, Is.False, "the first year has no year before it");
+            SeasonReport report = sim.State.Finance.Reports.Last(r => r.Period == first.Year * 4 - 1);
+            Assert.That(first.NetWorth, Is.EqualTo(Sim.Core.Finance.Hub.InTodaysCoins(report.NetWorth.Total, Sim.Core.Finance.Hub.IndexAtClose(sim, report.Period), sim.Config.Game.Market.Economy.StartIndex)), "the net worth is in the coins of the first year, so rising prices are not growth (review of Sprint 26)");
 
             SimConfig config = SaveTests.Config();
             LoadResult r = SaveCodec.Read(SaveCodec.Write(sim.State, config, 1_700_000_000), config, 3);

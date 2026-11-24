@@ -175,7 +175,7 @@ namespace Sim.View.Views
                     vm.Rows.Add(new WhyRowVm(s.Get("almanac.why.spotRule"), null));
                     break;
             }
-            vm.Footnote = s.Get("almanac.why.foot");
+            vm.Footnote = s.Get("almanac.why.foot", "keep", ctx.Fmt.Integer(ChronicleRules.Defs(ctx.Sim).AlmanacKeep));
             return vm;
         }
     }

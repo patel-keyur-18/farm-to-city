@@ -11,6 +11,24 @@ namespace Sim.View.Views
     /// <summary>Words for shops (spec 017 §7): a pitch's name, a shop's terms, a rival's name, a share's *Why?* id.</summary>
     public static class ShopWords
     {
+        /// <summary>The staples' shares of a kirana's customers' baskets as a sentence part: "atta 35%, rice 25%, ..." (from `shops.json`).</summary>
+        public static string GroceryShares(ViewContext ctx)
+        {
+            var parts = new System.Collections.Generic.List<string>();
+            foreach (var kv in ShopRules.Defs(ctx.Sim).GroceryShares)
+                parts.Add(ctx.Strings.Get(ctx.Sim.Config.Game.Market.Goods[kv.Key].NameKey).ToLowerInvariant() + " " + ctx.Fmt.Percent(kv.Value));
+            return string.Join(", ", parts);
+        }
+
+        /// <summary>The khata loss tiers as words for a Why? (the low, middle and high rates and the incomes between), in today's coins.</summary>
+        public static string[] KhataLoss(ViewContext ctx)
+        {
+            var tiers = ShopRules.Defs(ctx.Sim).KhataLoss;
+            string Rate(int i) { return i < tiers.Count ? ctx.Fmt.Percent(tiers[i].Value) : ""; }
+            string Income(int i) { return i < tiers.Count && tiers[i].Key > 0 ? ctx.Fmt.Coins(MarketRules.Indexed(ctx.Sim, tiers[i].Key)) : ""; }
+            return new[] { "lossLow", Rate(0), "incLow", Income(0), "lossMid", Rate(1), "incMid", Income(1), "lossHigh", Rate(2) };
+        }
+
         /// <summary>"Pitch I", "Pitch II", "Pitch III".</summary>
         public static string Pitch(ViewContext ctx, int pitch) { return ctx.Strings.Get("shop.pitch", "n", Roman(pitch + 1)); }
 

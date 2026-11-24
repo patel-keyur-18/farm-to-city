@@ -179,7 +179,7 @@ namespace Sim.View.Views
             switch (arc)
             {
                 case StoryArc.Stall:
-                    vm.Rows.Add(new WhyRowVm(s.Get(key, "seasons", ctx.Fmt.Integer(d.StallSeasons), "savings", ctx.Fmt.Coins(d.StallSavings), "chance", ctx.Fmt.Percent(d.StallChance), "after", ctx.Fmt.Integer(d.StallJudgedAfter)), null));
+                    vm.Rows.Add(new WhyRowVm(s.Get(key, "seasons", ctx.Fmt.Integer(d.StallSeasons), "savings", ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(ctx.Sim, d.StallSavings)), "chance", ctx.Fmt.Percent(d.StallChance), "after", ctx.Fmt.Integer(d.StallJudgedAfter)), null));
                     break;
                 case StoryArc.Migrant:
                     vm.Rows.Add(new WhyRowVm(s.Get(key, "first", ctx.Fmt.Integer(d.MigrantFirst), "second", ctx.Fmt.Integer(d.MigrantSecond)), null));
@@ -223,7 +223,7 @@ namespace Sim.View.Views
                 case ChronicleKind.LoanCleared: vm.Value = ctx.Fmt.Coins(e.A); Row("chronicle.why.loan", ctx.Fmt.Coins(e.A)); break;
                 case ChronicleKind.Story: StoryWhy(ctx, vm, e); break;
             }
-            vm.Footnote = s.Get("chronicle.why.foot");
+            vm.Footnote = s.Get("chronicle.why.foot", "keep", ctx.Fmt.Integer(ChronicleRules.Defs(ctx.Sim).Keep));
             return vm;
         }
     }

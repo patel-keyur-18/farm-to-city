@@ -126,7 +126,7 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.shopDemand.each." + kind, t.Kind == ShopKind.Chai ? ShopWords.Cups(ctx, perDay.RoundToLong()) : ctx.Fmt.Kg(perDay.MulRatio(1000, 1).RoundToLong()));
             if (k.AdultShare < Fixed.One) Row(vm, ctx, "why.shopDemand.adults", ctx.Fmt.Percent(k.AdultShare));
             Row(vm, ctx, "why.shopDemand.price", ctx.Fmt.Percent(k.Elasticity.MulRatio(1, 10))); // 10% dearer: about this much less bought
-            Text(vm, ctx, "why.shopDemand.how." + kind);
+            Text(vm, ctx, "why.shopDemand.how." + kind, "shares", ShopWords.GroceryShares(ctx));
             return vm;
         }
 

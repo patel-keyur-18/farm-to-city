@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Sim.Core;
@@ -192,6 +193,24 @@ namespace Sim.View.Tests
             var toast = StoryToastVm.Build(ctx, new Sim.Core.Events.StoryStepped(10, (int)StoryArc.Stall, 1, 7, 0, "veg"));
             Assert.That((toast.Kicker, toast.Text), Is.EqualTo(("A story from your valley · they will leave at the close", name + " has put aside enough for a stall of their own.")));
             Assert.That(toast.Portrait, Does.StartWith("portrait_"));
+        }
+
+        // Review of Sprint 26 (spec 029 §5): a story step taken while you were away, a worker who left to start a stall among them, is a line on the away card.
+        [Test]
+        public void Away_Card_Says_A_Stall_Opened()
+        {
+            Simulation sim = ViewKit.NewGame();
+            ViewContext ctx = ViewKit2.Context(sim);
+            long now = sim.State.Clock.SimTime;
+            long who = 1; // nobody by that id yet: the line says "someone"
+            var events = new List<SimEvent>
+            {
+                new Sim.Core.Events.StoryStepped(now, (int)StoryArc.Stall, 2, who, 0, "veg"),
+                new AwayAdvanceCompleted(now, now - 30 * 3600, now, 30 * 3600, 30 * 3600, false),
+            };
+            AwayCard.Vm vm = AwayCard.Build(ctx, events);
+            Assert.That(vm, Is.Not.Null);
+            Assert.That(vm.Lines.Concat(vm.More).Any(l => l.Value.Contains("stall") && !l.Value.Contains("{")), Is.True, "the away card says someone has gone to start a stall");
         }
     }
 }

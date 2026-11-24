@@ -86,7 +86,7 @@ namespace Sim.View.Tests
             ConfirmCardVm card = ConfirmCards.For(ctx, new SetMarketing(t, shop.Id, 8_000 * 100));
             Assert.That(card, Is.Not.Null);
             Assert.That((card.Title, card.Hold), Is.EqualTo(("Spend on marketing?", false)));
-            Assert.That(card.Rows.Select(r => r.Label), Is.EqualTo(new[] { "Adds to your score", "Paid again at each close, a season", "The shop pays now" }));
+            Assert.That(card.Rows.Select(r => r.Label), Is.EqualTo(new[] { "Adds to your score", "Paid again at each close, a season", "The shop pays now (a rise pays the whole difference for this season, however late)" }));
             Assert.That(card.Rows[2].Total, Is.True);
             Assert.That(ConfirmCards.For(ctx, new SetMarketing(t, shop.Id, 2_000 * 100)), Is.Null, "the budget it already has is paid for this season");
             Assert.That(ConfirmCards.For(ctx, new SetMarketing(t, shop.Id, 0)), Is.Null, "none spends nothing");
