@@ -8488,7 +8488,7 @@
   "workplace.sparedNote": "Accidents his half chance spared, quarrels he settled for you, associations that did not form.",
   "workplace.needsN": "Needs {min} workers: you have {n}",
   "workplace.noneHire": "None: hire one from the board",
-  "workplace.supervisorNote": "One covers up to 5 hands: +0.8% output a star, half the accidents, quarrels settled for you.",
+  "workplace.supervisorNote": "One covers up to 5 hands: +1.2% output a star, half the accidents, quarrels settled for you.",
   "workplace.supervisorFarm": "A supervisor is the farm's: a business has too few workers.",
   "workplace.hireOne": "Hire one",
   "workplace.accidents": "Accidents",

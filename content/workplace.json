@@ -1,8 +1,8 @@
 {
-  "supervisorWage": 30000,
+  "supervisorWage": 15000,
   "supervisorMinWorkers": 3,
   "supervisorSpan": 5,
-  "outputPerStar": 0.008,
+  "outputPerStar": 0.012,
   "riskHalf": 0.5,
   "expiryHours": 24,
 

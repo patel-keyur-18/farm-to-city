@@ -52,7 +52,7 @@ namespace Sim.Core.Tests
     /// <summary>US-259 (spec 028 §3.9, ADR 0166 gaps 3 to 5): the supervisor's post, span, output and halving.</summary>
     public class SupervisorTests
     {
-        // AC-20: a place needs 3 hands for the post; one covers up to 5; each star adds 0.8% to each covered hand's output.
+        // AC-20: a place needs 3 hands for the post; one covers up to 5; each star adds 1.2% to each covered hand's output.
         [Test]
         public void Span_Output()
         {

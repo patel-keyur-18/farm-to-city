@@ -58,7 +58,7 @@ namespace Sim.Core.People
         /// <summary>How many hands he covers, out of how many you have.</summary>
         public static int CoveredCount(Simulation sim) { return Supervisor(sim) == null ? 0 : System.Math.Min(Defs(sim).SupervisorSpan, Workers(sim, 0).Count); }
 
-        /// <summary>The factor on a worker's output: +0.8% a star of his supervisor's, × 0.85 in a season your refusal of an association cut it (1 when neither).</summary>
+        /// <summary>The factor on a worker's output: +1.2% a star of his supervisor's, × 0.85 in a season your refusal of an association cut it (1 when neither).</summary>
         public static Fixed OutputFactor(Simulation sim, IStaff w)
         {
             WorkplaceState ws = sim.State.People?.Workplace;

@@ -289,5 +289,92 @@ namespace Sim.Core.Tests
                     + "; businesses goal never in " + r.Businesses.Count(double.IsNaN) + " (seeds " + string.Join(",", r.Businesses.Select((d, k) => double.IsNaN(d) ? k + 1 : 0).Where(k => k > 0)) + ")" + ", median day " + MidOf(r.Businesses.Where(d => !double.IsNaN(d))).ToString("0.0"));
             }
         }
+
+        /// <summary>The competent farmer who, once there are enough hands, posts the supervisor's place and hires the best migrant who applies.</summary>
+        private sealed class SupervisedBot : FarmerBot
+        {
+            public override string Name { get { return "supervised"; } }
+
+            public override void Play(Simulation sim, long t)
+            {
+                base.Play(sim, t);
+                PeopleState p = sim.State.People;
+                if (p == null || Sim.Core.People.WorkplaceRules.Supervisor(sim) != null || t % 86_400 / 3600 != 9) return;
+                if (HiringRules.BusinessPlace(sim, HiringRules.SupervisorPlace) != RejectReason.None) return;
+                if (p.PostAt(HiringRules.SupervisorPlace) == null) Ok(sim, new PostJob(t, HiringRules.SupervisorPlace, false));
+                Applicant best = null;
+                foreach (Applicant a in p.ApplicantsFor(HiringRules.SupervisorPlace)) if (best == null || a.Skill > best.Skill) best = a;
+                if (best != null) Ok(sim, new OfferContract(t, best.Id));
+            }
+        }
+
+        // Sprint 26's balance pass (spec 028 §3.9, owner 2026-11-24: "keep 30,000 and tune in the balance pass"): what a supervisor adds to the farm. The same farmer on the same seeds with and without one (his wage set to
+        // 100 coins, so the difference is his output and risk alone): the hands he covered, the stars, and the net worth gained over 12 seasons, per covered hand a season. Run with `--filter SupervisorWorth`.
+        [Test, Explicit("measure")]
+        public void SupervisorWorth()
+        {
+            SimConfig free = LiveTownship((f, j) => f == "workplace.json" ? j.Replace("\"supervisorWage\": 15000", "\"supervisorWage\": 100") : j);
+            SimConfig live = LiveTownship();
+            const int Seasons = 24, N = 24;
+            var with = new double[N]; var without = new double[N]; var hands = new int[N]; var stars = new int[N]; var hired = new int[N]; var seasonsWith = new double[N];
+            System.Threading.Tasks.Parallel.For(0, N, i =>
+            {
+                Simulation a = Economy.RunBot(free, new SupervisedBot(), Seasons, (ulong)(i + 1), null).Sim;
+                Simulation b = Economy.RunBot(live, new FarmerBot(), Seasons, (ulong)(i + 1), null).Sim;
+                with[i] = RealWorth(a); without[i] = RealWorth(b);
+                hands[i] = a.State.People.Hands.Count;
+                Supervisor sv = Sim.Core.People.WorkplaceRules.Supervisor(a);
+                hired[i] = sv == null ? 0 : 1;
+                stars[i] = sv == null ? 0 : Sim.Core.People.WorkplaceRules.Stars(sv.Skill);
+            });
+            var gain = with.Select((w, i) => w - without[i]).ToArray();
+            TestContext.Out.WriteLine("SUPERVISOR hands at the end " + string.Join(",", hands) + "; supervisor hired " + hired.Sum() + " of " + N + "; stars " + string.Join(",", stars));
+            TestContext.Out.WriteLine("SUPERVISOR net worth gained over " + Seasons + " seasons (coins, wage 100): median " + MidOf(gain).ToString("0") + ", mean " + gain.Average().ToString("0") + ", 10th " + gain.OrderBy(x => x).ElementAt(N / 10).ToString("0") + ", 90th " + gain.OrderBy(x => x).ElementAt(N * 9 / 10).ToString("0"));
+        }
+
+        // Sprint 26's balance pass: what one hand adds to the farm, to price the supervisor's +1.2% an output star against. The same seeds with the one hand and without (the solo founder), the net worth in
+        // today's coins after 16 seasons, per season. Run with `--filter HandWorth`.
+        [Test, Explicit("measure")]
+        public void HandWorth()
+        {
+            SimConfig live = LiveTownship();
+            const int Seasons = 16, N = 24;
+            var hand = new double[N]; var solo = new double[N]; var wages = new double[N];
+            System.Threading.Tasks.Parallel.For(0, N, i =>
+            {
+                Simulation a = Economy.RunBot(live, new FarmerBot(), Seasons, (ulong)(i + 1), null).Sim;
+                Simulation b = Economy.RunBot(live, new SoloBot(), Seasons, (ulong)(i + 1), null).Sim;
+                hand[i] = RealWorth(a); solo[i] = RealWorth(b);
+                wages[i] = a.State.People.Hands.Count == 0 ? 0 : a.State.People.Hands.Sum(h => (double)h.Wage / 100.0);
+            });
+            var d = hand.Select((w, i) => (w - solo[i]) / Seasons).ToArray();
+            TestContext.Out.WriteLine("HANDWORTH net worth a season with a hand against solo, after net of his wage: median " + MidOf(d).ToString("0") + ", mean " + d.Average().ToString("0") + "; wages a season now " + MidOf(wages).ToString("0"));
+        }
+
+        // Sprint 26's balance pass: what your kirana does to the town (flagged in US-260: the households rose in a bot town after it opened). The competent Township bot with and without a kirana opened after
+        // the gate's three businesses, the same seeds: your households, the town's happiness and the kirana's own profit at season 44. Run with `--filter KiranaTown`.
+        [Test, Explicit("measure")]
+        public void KiranaTown()
+        {
+            SimConfig config = LiveTownship();
+            const int N = 24, Seasons = 44;
+            var hh = new int[2, N]; var happy = new double[2, N]; var profit = new double[N]; var cash = new double[2, N]; var worth = new double[2, N];
+            System.Threading.Tasks.Parallel.For(0, N * 2, k =>
+            {
+                int with = k % 2, i = k / 2;
+                Simulation sim = Economy.RunBot(config, new TownshipBot(false, with == 1), Seasons, (ulong)(i + 1), null).Sim;
+                hh[with, i] = Sim.Core.Progress.EraRules.Households(sim);
+                happy[with, i] = (double)Sim.Core.People.HappinessRules.Town(sim).Raw / 4294967296.0;
+                worth[with, i] = RealWorth(sim);
+                if (with == 1)
+                {
+                    Sim.Core.Business.Business shop = sim.State.Businesses.Businesses.Find(b => Sim.Core.Business.BusinessRules.TypeOf(sim, b).Kind == ShopKind.Grocery && b.Status != Sim.Core.Business.BusinessStatus.Closed);
+                    profit[i] = shop == null || shop.Reports.Count == 0 ? double.NaN : Sim.Core.Business.BusinessBooks.NetProfit(shop.Reports.Last()) / 100.0;
+                }
+            });
+            string Mid(int w, int[,] v) { return MidOf(Enumerable.Range(0, N).Select(i => (double)v[w, i])).ToString("0.0"); }
+            TestContext.Out.WriteLine("KIRANATOWN households median without " + Mid(0, hh) + ", with " + Mid(1, hh) + "; happiness " + MidOf(Enumerable.Range(0, N).Select(i => happy[0, i])).ToString("0.000") + " / " + MidOf(Enumerable.Range(0, N).Select(i => happy[1, i])).ToString("0.000")
+                + "; net worth " + MidOf(Enumerable.Range(0, N).Select(i => worth[0, i])).ToString("0") + " / " + MidOf(Enumerable.Range(0, N).Select(i => worth[1, i])).ToString("0") + "; the kirana's last season profit median " + MidOf(profit.Where(x => !double.IsNaN(x))).ToString("0") + " (" + profit.Count(x => !double.IsNaN(x)) + " open)");
+        }
     }
 }

@@ -52,9 +52,12 @@ namespace Tools.Balancer
 
         private readonly List<int> _houseAcres = new List<int>();
 
-        public TownshipBot(bool saver = false) : base(saver, "HMS", "flour_mill", "tea_stall", "veg_stall") { }
+        /// <summary>With <paramref name="kirana"/> the bot opens your kirana after the three of the gate (US-260's balance pass: what it does to the town's households).</summary>
+        public TownshipBot(bool saver = false, bool kirana = false) : base(saver, "HMS", kirana ? new[] { "flour_mill", "tea_stall", "veg_stall", "kirana" } : new[] { "flour_mill", "tea_stall", "veg_stall" }) { _kirana = kirana; }
 
-        public override string Name { get { return (Saver ? "township-saver" : "township") + (Land == LandUse.None ? "" : "-" + Land.ToString().ToLowerInvariant()) + (Policy == null ? "" : "-" + Policy.Value.ToString().ToLowerInvariant()) + (Risk == RiskUse.None ? "" : "-" + Risk.ToString().ToLowerInvariant()) + (ManagerStyle == null ? "" : "-managed" + ManagerStyle.Value) + (FoundAndSell ? "-sells" : "") + (FairRent ? "-fairrent" : ""); } }
+        private readonly bool _kirana;
+
+        public override string Name { get { return (Saver ? "township-saver" : "township") + (Land == LandUse.None ? "" : "-" + Land.ToString().ToLowerInvariant()) + (Policy == null ? "" : "-" + Policy.Value.ToString().ToLowerInvariant()) + (Risk == RiskUse.None ? "" : "-" + Risk.ToString().ToLowerInvariant()) + (ManagerStyle == null ? "" : "-managed" + ManagerStyle.Value) + (_kirana ? "-kirana" : "") + (FoundAndSell ? "-sells" : "") + (FairRent ? "-fairrent" : ""); } }
 
         /// <summary>A bought acre kept for houses is never sown.</summary>
         protected override bool KeepsClear(Simulation sim, int tile) { return _houseAcres.Contains(tile) || base.KeepsClear(sim, tile); }
