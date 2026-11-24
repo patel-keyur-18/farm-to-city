@@ -20,7 +20,7 @@ ADR 0107 §11 set the Phase 3 gate as Phase 2's: part A on the owner's 4 weeks f
 | A3 a session every day | **Open, parallel** | The same play |
 | A4 no blocker | **No blocker reported so far** | The owner installed the Development build twice and reported it working; the independent review's 18 findings are fixed (ADR 0168); the clock drift the owner found is fixed (ADR 0170) |
 | A5 treasury and budget variance from the screens | **Open, parallel** | `docs/test-checklists/s26-phase-3-playtest.md` |
-| A6 tests | **Pass** | Core 947 (no Balance or Perf), View 436, Balance 66, Perf 6 at the Sprint 26 head; CI was green on `main` at Sprint 25's merge and was still running on Sprint 26's merge when this was written |
+| A6 tests | **Pass** | Core 947 (no Balance or Perf), View 436, Balance 66, Perf 6 at the Sprint 26 head; CI green on `main` at Sprint 26's merge (PR #37) |
 | A6 device checks | **Reported good** | The owner on the iPhone, 2026-11-24, with the second Development build (including the matched game clock); the device-only rows of `s26-chronicle-business-growth-2.md` are the owner's to tick |
 | A6 both frame-time p95s, golden replays on the phone | **Deferred** | Measured when the owner asks for a Development build (ADR 0094's limits: main thread 8.3 ms, GPU 11 ms, about 60 fps, under 1% over 25 ms) |
 | Part B (fresh players explain public versus personal money) | **Open, before Launch** | Needs testers |
