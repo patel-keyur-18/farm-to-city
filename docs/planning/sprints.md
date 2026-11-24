@@ -1211,7 +1211,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-157 | Chronicle | [F16.3](features/F16.3-chronicle-and-almanac.md) | 5 | Must | Built 2026-11-24, Preview 19 approved; awaiting the owner's review |
-| US-158 | Almanac | [F16.3](features/F16.3-chronicle-and-almanac.md) | 3 | Must | To do |
+| US-158 | Almanac | [F16.3](features/F16.3-chronicle-and-almanac.md) | 3 | Must | Built 2026-11-24; awaiting the owner's review |
 | US-159 | Citizen stories | [F16.4](features/F16.4-citizen-stories.md) | 5 | Should | To do |
 | US-260 | Your kirana, marketing and khata | [F12.3](features/F12.3-services-and-customer-choice.md) | 5 | Should | To do |
 | US-259 | Supervisors, worker associations, conflicts and accidents | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | Could | To do |

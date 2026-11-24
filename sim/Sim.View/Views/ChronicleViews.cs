@@ -89,7 +89,7 @@ namespace Sim.View.Views
                 ActionVm.Open("tab:timeline", s.Get("chronicle.tabTimeline"), new SheetRequest(Kind, 0)),
                 ActionVm.Open("tab:almanacs", s.Get("chronicle.tabAlmanacs"), new SheetRequest(Kind, 0, Almanacs)),
             };
-            if (alm) vm.Lines.Add(new LineVm(s.Get("chronicle.almanacsEmpty"), null));
+            if (alm) AlmanacSheet.List(ctx, vm);
             else Timeline(ctx, vm);
             return vm;
         }

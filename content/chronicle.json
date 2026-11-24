@@ -2,6 +2,8 @@
   "keep": 400,
   "recordMinGrams": 1000000,
   "recordRise": 0.05,
+  "almanacKeep": 8,
+  "minProfit": 1000000,
   "kinds": [
     { "id": "founding", "icon": "family_house" },
     { "id": "hamlet", "icon": "family_house" },

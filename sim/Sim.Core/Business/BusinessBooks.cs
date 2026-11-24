@@ -312,6 +312,7 @@ namespace Sim.Core.Business
             if (b.Pitch < 0) Land.LandSystem.SetOccupied(sim, b.TileId, false); // a pitch in the square is the village's
             if (sale == null)
             {
+                History.AlmanacRules.Loss(sim, History.AlmanacLoss.BusinessClosed, lost, t.Id); // the money put in that did not come back (spec 029 §3.4)
                 sim.Emit(new BusinessClosed(now, b.Id, t.Id, toYou, guaranteed));
                 return;
             }

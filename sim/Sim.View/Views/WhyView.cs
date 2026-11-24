@@ -123,7 +123,7 @@ namespace Sim.View.Views
             // The school (spec 018).
             { "road", RoadWhy }, { "clinic", ClinicWhy }, { "civic", CivicWhy }, { "utility", UtilityWhy }, { UpgradeSheet.Why, UpgradeHouseWhy }, { "utilityTown", UtilityTownWhy }, { "lane", LaneWhy }, { "build", BuildWhy }, { "cohort", CohortWhyView },
             { "schoolCost", SchoolCost }, { "schoolUpkeep", SchoolUpkeep }, { "schoolPupils", SchoolPupils },
-            { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "citizen.tuition", CitizenTuition }, { "codex", Codex }, { ChronicleSheet.Why, ChronicleLine },
+            { "adultClass", AdultClass }, { "literacy", Literacy }, { "citizen.school", CitizenSchool }, { "citizen.tuition", CitizenTuition }, { "codex", Codex }, { ChronicleSheet.Why, ChronicleLine }, { AlmanacSheet.Why, AlmanacWhy },
             // The town treasury (spec 021).
             { "treasuryBalance", TreasuryBalance }, { "treasuryUntied", TreasuryUntied }, { "treasuryTied", TreasuryTied }, { "treasuryRents", TreasuryRents },
             { "treasuryGifts", TreasuryGifts }, { "treasuryDept", TreasuryDept }, { "treasuryDue", TreasuryDue }, { "treasuryWindow", TreasuryWindow }, { "policy", PolicyWhy }, { "taxHouse", TaxHouseWhy }, { "taxBusiness", TaxBusinessWhy }, { "taxCollected", TaxCollectedWhy }, { "treasuryAccount", TreasuryAccount },

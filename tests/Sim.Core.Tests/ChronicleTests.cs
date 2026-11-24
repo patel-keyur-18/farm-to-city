@@ -26,6 +26,7 @@ namespace Sim.Core.Tests
             c.Done = 0;
             System.Array.Clear(c.SeasonGrams, 0, c.SeasonGrams.Length);
             System.Array.Clear(c.BestGrams, 0, c.BestGrams.Length);
+            c.Almanac = new AlmanacState(c.SeasonGrams.Length);
         }
 
         private static long Season(Simulation sim) { return sim.State.Clock.SimTime / sim.Clock.SecondsPerSeason; }

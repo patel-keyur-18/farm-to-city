@@ -320,7 +320,7 @@ namespace Game.Presentation
             if (sown) _sounds.Sow();
             if (closed >= 0)
             {
-                if (YearSheet.EndsYear(closed)) _yearAfter = closed; // Your year opens once the season page is put away (ADR 0101 §5)
+                if (YearSheet.EndsYear(closed)) { _yearAfter = closed; _almanacAfter = closed / 4 + 1; } // Your year opens once the season page is put away (ADR 0101 §5), then the Almanac
                 _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Report", closed))); // the season's report (spec 008 §3.8)
             }
             if (coins)
@@ -540,6 +540,9 @@ namespace Game.Presentation
         /// <summary>The Winter close whose season page is open: Your year follows it (spec 019 §3.7).</summary>
         private long? _yearAfter;
 
+        /// <summary>The year whose Almanac opens once <i>Your year</i> is put away (spec 029 §3.4): after it, before Dadi's letters and the Codex toast.</summary>
+        private long? _almanacAfter;
+
         private void OnSheetClosed()
         {
             if (_yearAfter.HasValue && _open.HasValue && _open.Value.Kind == "Report" && _open.Value.Id == _yearAfter.Value)
@@ -547,6 +550,12 @@ namespace Game.Presentation
                 long winter = _yearAfter.Value;
                 _yearAfter = null;
                 _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest("Year", winter))); // before Dadi's letters and the Codex toast, which wait for it
+            }
+            else if (_almanacAfter.HasValue && _open.HasValue && _open.Value.Kind == "Year")
+            {
+                long year = _almanacAfter.Value;
+                _almanacAfter = null;
+                if (AlmanacSheet.Find(_ctx, year) != null) _safeRoot.schedule.Execute(() => OpenSheet(new SheetRequest(AlmanacSheet.Kind, year)));
             }
             _open = null;
             _back.Clear();
@@ -560,6 +569,7 @@ namespace Game.Presentation
         private void OnSheetAction(ActionVm action)
         {
             if (action.Id == Alerts.CollectId) { _sheet.Close(); CollectAll(); return; }
+            if (action.Id == AlmanacSheet.CloseId) { _sheet.Close(); return; }
             if (!action.Opens.HasValue && action.Confirm == null && SettingsAction(action)) return;
             if (action.Opens.HasValue)
             {

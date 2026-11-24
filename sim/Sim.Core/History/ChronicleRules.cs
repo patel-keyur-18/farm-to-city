@@ -113,6 +113,7 @@ namespace Sim.Core.History
         internal static void Observe(Simulation sim, SimEvent e)
         {
             if (!On(sim)) return;
+            AlmanacRules.Observe(sim, e);
             switch (e)
             {
                 case EraUnlocked x:
@@ -171,6 +172,7 @@ namespace Sim.Core.History
                     break;
                 case SeasonClosed x:
                     RecordHarvest(sim, x.SimTime);
+                    AlmanacRules.Closed(sim, x);
                     break;
             }
         }

@@ -49,6 +49,9 @@ namespace Sim.Core.History
         public long[] SeasonGrams { get; internal set; }
         public long[] BestGrams { get; internal set; }
 
+        /// <summary>The Almanacs and the year in progress (spec 029 §3.4).</summary>
+        public AlmanacState Almanac { get; internal set; }
+
         /// <summary>A town loaded from an older save that still has to write "The Chronicle begins" (not saved: set by the loader).</summary>
         internal bool NeedsBegin;
 
@@ -56,13 +59,14 @@ namespace Sim.Core.History
         {
             SeasonGrams = new long[crops];
             BestGrams = new long[crops];
+            Almanac = new AlmanacState(crops);
         }
 
         internal ChronicleState Clone()
         {
             return new ChronicleState(SeasonGrams.Length)
             {
-                Entries = Entries.ConvertAll(x => x.Clone()), Done = Done, SeasonGrams = (long[])SeasonGrams.Clone(), BestGrams = (long[])BestGrams.Clone(), NeedsBegin = NeedsBegin,
+                Entries = Entries.ConvertAll(x => x.Clone()), Done = Done, SeasonGrams = (long[])SeasonGrams.Clone(), BestGrams = (long[])BestGrams.Clone(), Almanac = Almanac.Clone(), NeedsBegin = NeedsBegin,
             };
         }
 
@@ -73,6 +77,7 @@ namespace Sim.Core.History
             foreach (ChronicleEntry e in Entries) e.WriteTo(h);
             h.WriteLong(Done);
             for (int i = 0; i < SeasonGrams.Length; i++) { h.WriteLong(SeasonGrams[i]); h.WriteLong(BestGrams[i]); }
+            Almanac.WriteTo(h);
         }
 
         internal static ChronicleState ReadFrom(SaveReader r, int crops)
@@ -82,6 +87,7 @@ namespace Sim.Core.History
             for (int i = 0; i < n; i++) s.Entries.Add(ChronicleEntry.ReadFrom(r));
             s.Done = r.ReadLong();
             for (int i = 0; i < crops; i++) { s.SeasonGrams[i] = r.ReadLong(); s.BestGrams[i] = r.ReadLong(); }
+            s.Almanac = AlmanacState.ReadFrom(r, crops);
             return s;
         }
     }

@@ -60,6 +60,10 @@ namespace Sim.Core.Definitions
         public long RecordMinGrams { get; internal set; }
         public Fixed RecordRise { get; internal set; }
 
+        /// <summary>The Almanacs kept (§3.4), and the profit a best return must reach (1/100 coin): a smaller one is "a quiet year".</summary>
+        public int AlmanacKeep { get; internal set; }
+        public long MinProfit { get; internal set; }
+
         public IReadOnlyList<ChronicleKindDef> Kinds { get; internal set; }
 
         /// <summary>True for the fourteen kinds written once (§3.2): they are pinned.</summary>

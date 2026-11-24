@@ -35,4 +35,14 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "FireRepaired(" + Target + ")"; }
     }
+
+    /// <summary>The Almanac of a year was written at its Winter close (spec 029 §3.4): the year (1-based).</summary>
+    public sealed class AlmanacWritten : SimEvent
+    {
+        public long Year { get; }
+
+        public AlmanacWritten(long simTime, long year) : base(simTime) { Year = year; }
+
+        protected override string Describe() { return "AlmanacWritten(" + Year + ")"; }
+    }
 }
