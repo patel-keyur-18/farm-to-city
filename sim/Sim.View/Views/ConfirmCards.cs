@@ -37,13 +37,13 @@ namespace Sim.View.Views
             Add(ConfirmKind.Tap, typeof(BuyParcel), typeof(BuildFamilyHouse), typeof(UpgradeHouse), typeof(BuildHandHut), typeof(BuildSchool), typeof(BuildShed), typeof(FoundBusiness),
                 typeof(BuyMachine), typeof(LeaseMachine), typeof(HireMachine), typeof(InstallPump), typeof(DrillBorewell), typeof(BuildChannel), typeof(LayDrip),
                 typeof(BuildSilagePit), typeof(BuyChaffCutter), typeof(FitSolarPanel), typeof(BuyGodown), typeof(RentWarehouse), typeof(RentColdStore), typeof(PlantOrchard), typeof(PlantTree), typeof(BuyAnimal), typeof(TakeLoan), typeof(RestructureLoan),
-                typeof(OfferContract), typeof(OfferTownsperson), typeof(HireManager), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(AnswerEvent), typeof(AcceptContract), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition), typeof(ScheduleFestival), typeof(BuyBackShare), typeof(SetNightShift));
+                typeof(OfferContract), typeof(OfferTownsperson), typeof(HireManager), typeof(RenewContract), typeof(SendOnCourse), typeof(StartAdultClass), typeof(SetSavingsCover), typeof(GiveToTreasury), typeof(ListParcel), typeof(CancelSale), typeof(SetMarketing), typeof(ZoneParcel), typeof(LeaseOutLand), typeof(EndLease), typeof(CommissionWorks), typeof(AnswerEvent), typeof(AcceptContract), typeof(PetitionRoad), typeof(BuildClinic), typeof(BuildDoctorQuarters), typeof(EnactPolicy), typeof(AnswerPetition), typeof(ScheduleFestival), typeof(BuyBackShare), typeof(SetNightShift));
             Add(ConfirmKind.Hold, typeof(SellParcel), typeof(SellMachine), typeof(SellAnimal), typeof(SellOrchardOnTrees), typeof(CloseBusiness), typeof(ClearField),
                 typeof(ClearOrchard), typeof(RemoveTree), typeof(DismissHand), typeof(LetWorkerGo), typeof(DismissManager), typeof(ListBusiness), typeof(RepealPolicy), typeof(AcceptBuyOut));
             Add(ConfirmKind.Everyday, typeof(Sow), typeof(Harvest), typeof(Spray), typeof(PickFruit), typeof(PickGarden), typeof(SowGarden), typeof(PickOrchard),
                 typeof(SellToTrader), typeof(DeliverOrder), typeof(GoToMandi), typeof(Buy), typeof(BuyMedicine), typeof(HireLabourers), typeof(Offer), typeof(Withdraw),
                 typeof(SetBorewellAcres), typeof(SetBusiness), typeof(SetBuyGreenFodder), typeof(SetKeepHeifers), typeof(SetHireOut), typeof(SetDietPlan), typeof(SetEatFromStore), typeof(SetLabourSplit),
-                typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetTerms), typeof(SetManagerTarget), typeof(CancelBusinessSale), typeof(AcceptDeal), typeof(DeclineDeal), typeof(SetBenefit), typeof(SetTuitionFee), typeof(SetDish), typeof(SetStandingOrder), typeof(SetMarketing), typeof(SetKhata), typeof(SetKhataLimit), typeof(CutOffHousehold),
+                typeof(SetLongDays), typeof(SetMaintenance), typeof(SetMix), typeof(SetPumpAcres), typeof(SetShop), typeof(SetStallGoods), typeof(SetTerms), typeof(SetManagerTarget), typeof(CancelBusinessSale), typeof(AcceptDeal), typeof(DeclineDeal), typeof(SetBenefit), typeof(SetTuitionFee), typeof(SetDish), typeof(SetStandingOrder), typeof(SetKhata), typeof(SetKhataLimit), typeof(CutOffHousehold),
                 typeof(SetWorkHours), typeof(ClearStandingOrder), typeof(UnzoneParcel), typeof(PutCash), typeof(TakeCash), typeof(CheckReference), typeof(Interview), typeof(PostJob),
                 typeof(RepayLoan), typeof(DepositSavings), typeof(WithdrawSavings), typeof(CoverFromSavings), typeof(TakeBackSavingsCover), typeof(LetGodown), typeof(RunBusinessYourself), typeof(AnswerHrEvent), typeof(AnswerFamilyRequest), typeof(RenewLease), typeof(PostCivicJob), typeof(DismissStaff), typeof(SetBudget), typeof(AcceptBudget), typeof(SetTaxRate), typeof(UndoTaxRate), typeof(SeeTaxTour), typeof(SeePolicyTour), typeof(SeeChapter),
                 typeof(CompleteStep), typeof(SkipFirstSession), typeof(FindCodexCards), typeof(ReadCodexCard), typeof(HearAdvisors), typeof(SetCropInsurance), typeof(SetPropertyInsurance), typeof(SetBusinessInsurance));
@@ -123,6 +123,7 @@ namespace Sim.View.Views
             if (c is AnswerEvent && cash == 0) return null; // a choice that costs nothing is just answered (spec 027 §3.1)
             if ((c is RentWarehouse || c is RentColdStore) && cash == 0) return null; // stopping or cutting the rent spends nothing: no card (ADR 0103)
             if (c is SetNightShift stop && !stop.On) return null; // stopping it spends nothing: no card
+            if (c is SetMarketing spend0 && (ctx.Sim.State.Businesses?.Find(spend0.BusinessId) is Sim.Core.Business.Business shop0) && Sim.Core.Market.MarketRules.Indexed(ctx.Sim, spend0.Budget) <= shop0.SpendSeason) return null; // a budget already paid for this season, or none: nothing to spend
             if (c is SetSavingsCover cover && !cover.Always) return null; // back to Ask me: nothing can move, so nothing to ask
             long owedBefore = Owed(sim), owedAfter = Owed(after);
             long taken = NewLoans(sim, after, out Loan newest);
@@ -147,6 +148,7 @@ namespace Sim.View.Views
             else if (c is ListParcel || c is CancelSale) Listing(ctx, vm, c);
             else if (c is ListBusiness sellIt) ListingBusiness(ctx, vm, sellIt);
             else if (c is SetNightShift night) NightCard(ctx, vm, night);
+            else if (c is SetMarketing marketing) MarketingCard(ctx, vm, marketing);
             else if (c is ZoneParcel zp) Zoning(ctx, vm, zp);
             else if (c is LeaseOutLand || c is EndLease) Leasing(ctx, vm, c);
             else if (kind == ConfirmKind.Hold) Receive(ctx, vm, c, cash, repaid); else Spend(ctx, vm, cash, taken, after, newest);
@@ -261,6 +263,17 @@ namespace Sim.View.Views
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetNightShift.wage"), ctx.Fmt.Coins(wage)));
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetNightShift.hours"), s.Get("night.hours", "from", ctx.Fmt.Integer(d.NightStart), "to", ctx.Fmt.Integer(d.NightEnd))));
             vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetNightShift.now"), ctx.Fmt.Coins(Sim.Core.People.PeopleRules.RestOfSeason(ctx.Sim, wage)), total: true));
+        }
+
+        /// <summary>Marketing (spec 028 §3.10): what the shop pays now from its own cash, what it adds to the score, and that it is paid again at each close.</summary>
+        private static void MarketingCard(ViewContext ctx, ConfirmCardVm vm, SetMarketing c)
+        {
+            var s = ctx.Strings;
+            Sim.Core.Business.Business b = ctx.Sim.State.Businesses.Find(c.BusinessId);
+            long pay = Sim.Core.Market.MarketRules.Indexed(ctx.Sim, c.Budget) - b.SpendSeason;
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetMarketing.adds"), GrowthSheet.Points(ctx, Sim.Core.Business.KhataRules.Lift(ctx.Sim, c.Budget))));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetMarketing.again"), ctx.Fmt.Coins(Sim.Core.Market.MarketRules.Indexed(ctx.Sim, c.Budget))));
+            vm.Rows.Add(new ConfirmRowVm(s.Get("confirm.SetMarketing.now"), ctx.Fmt.Coins(pay), total: true));
         }
 
         private static void Listing(ViewContext ctx, ConfirmCardVm vm, Command c)

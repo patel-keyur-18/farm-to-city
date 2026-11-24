@@ -145,6 +145,19 @@ namespace Sim.Core.Tests
             Assert.That(shop.KhataLimit, Is.EqualTo(1_000 * Coin));
         }
 
+        // A sheet's refresh of the khata lift touches only the derived, never-saved figures: the hash does not move.
+        [Test]
+        public void Refresh_Leaves_The_Hash()
+        {
+            Simulation sim = Town(3, 15_000, out Business.Business shop);
+            sim.AdvanceTo(sim.State.Clock.SimTime + 3600 * 3);
+            ulong before = sim.State.ComputeHash();
+            shop.KhataLiftNow = Fixed.Zero;
+            KhataRules.Refresh(sim, shop);
+            Assert.That(shop.KhataLiftNow, Is.GreaterThan(Fixed.Zero), "found again from the homes");
+            Assert.That(sim.State.ComputeHash(), Is.EqualTo(before));
+        }
+
         // The state is saved and the books reconcile after a save and a load.
         [Test]
         public void Saves_Round_Trip()

@@ -138,6 +138,16 @@ namespace Sim.Core.Business
             return tiers[tiers.Count - 1].Value;
         }
 
+        /// <summary>
+        /// Works out a shop's khata lift now for a sheet (the hour's pass does it each hour, and a loaded town has not had one yet): the derived,
+        /// never-saved figures only, so nothing the sim decides changes.
+        /// </summary>
+        public static void Refresh(Simulation sim, Business b)
+        {
+            if (!b.Khata || sim.State.Shops == null) return;
+            Prepare(sim, ShopRules.OutletsOf(sim, BusinessRules.TypeOf(sim, b).Kind));
+        }
+
         // ---- the hour ----
 
         /// <summary>

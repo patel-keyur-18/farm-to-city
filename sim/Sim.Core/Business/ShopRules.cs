@@ -403,6 +403,16 @@ namespace Sim.Core.Business
             }
         }
 
+        /// <summary>The shops of a kind a customer could choose between, whatever the hour: yours open, then the rivals (a view's khata standing, §3.10).</summary>
+        internal static List<Outlet> OutletsOf(Simulation sim, ShopKind kind)
+        {
+            var list = new List<Outlet>();
+            foreach (Business b in sim.State.Businesses.Businesses)
+                if (b.Status == BusinessStatus.Open && BusinessRules.TypeOf(sim, b).Kind == kind) list.Add(new Outlet { B = b });
+            foreach (Rival r in sim.State.Shops.All()) if (r.Kind == kind) list.Add(new Outlet { R = r });
+            return list;
+        }
+
         /// <summary>A kirana of yours is open (the village grocer's staples compete with it, and with nothing before).</summary>
         public static bool Kirana(Simulation sim)
         {

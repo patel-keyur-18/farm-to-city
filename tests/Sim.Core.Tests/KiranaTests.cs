@@ -39,7 +39,7 @@ namespace Sim.Core.Tests
         {
             long give = 3_000_000 * Coin - sim.State.Ledger.Cash;
             if (give > 0) sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.Cash, give), new Posting(Account.Sales, -give));
-            Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "kirana", pitch >= 0 ? 0 : RestaurantTests.NearSquare(sim), 200_000 * Coin, false, null, pitch));
+            Ok(sim, new FoundBusiness(sim.State.Clock.SimTime, "kirana", pitch >= 0 ? 0 : InvoiceTests.FreeTile(sim), 200_000 * Coin, false, null, pitch));
             Business.Business b = sim.State.Businesses.Businesses.Last();
             if (staff) BusinessTests.Staff(sim, b);
             sim.AdvanceTo(b.ReadyAt + 60);
@@ -112,16 +112,48 @@ namespace Sim.Core.Tests
             Assert.That(sim.State.Shops.Newcomers.Any(x => x.Kind == ShopKind.Grocery), Is.False, "no newcomer kirana");
         }
 
-        // Measures a season's takings at the usual setting (ADR 0027, gap 8): run with --filter Takings.
+        // Writes the Editor tour's town (a Township bot's town with a kirana, marketing and khata) to FTC_TOWN_OUT: run with --filter EditorTown.
+        [Test, Explicit("makes the Editor tour's town")]
+        public void EditorTown()
+        {
+            string path = System.Environment.GetEnvironmentVariable("FTC_TOWN_OUT");
+            if (string.IsNullOrEmpty(path)) { Assert.Ignore("FTC_TOWN_OUT names the file"); return; }
+            TestContent.WithCohort = true;
+            SimConfig config;
+            try { config = new SimConfig(TestContent.Clock(), TestContent.Weather(), game: TestContent.Game(null)); }
+            finally { TestContent.WithCohort = false; }
+            Tools.Balancer.Economy.Run run = Tools.Balancer.Economy.RunBot(config, new Tools.Balancer.TownshipBot(false), 28, 1, null);
+            Simulation sim = run.Sim;
+            int pitch = Enumerable.Range(0, ShopRules.Defs(sim).Pitches).Where(p => sim.State.Businesses.OnPitch(p) == null && sim.State.Shops.OnPitch(p) == null).DefaultIfEmpty(-1).First(); // else on an acre
+            bool without = System.Environment.GetEnvironmentVariable("FTC_NO_KIRANA") == "1"; // the same town without the kirana: the render statistics' other half
+            Business.Business b = without ? null : Open(sim, true, pitch);
+            if (b != null) Ok(sim, new SetKhata(sim.State.Clock.SimTime, b.Id, true));
+            if (b != null) Ok(sim, new SetMarketing(sim.State.Clock.SimTime, b.Id, 2_000 * Coin));
+            for (int d = 0; d < 10; d++) sim.AdvanceTo(sim.State.Clock.SimTime + 86400 / 2);
+            long now = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            sim.State.Clock.Reanchor(now);
+            System.IO.File.WriteAllBytes(path, Saves.SaveCodec.Write(sim.State, config, now));
+            TestContext.Out.WriteLine("EDITORTOWN households " + sim.State.Citizens.Households.Count + " people " + sim.State.Citizens.Population + " businesses " + sim.State.Businesses.Businesses.Count + " credit " + (b == null ? 0 : b.Credit.Count) + " owed " + (b == null ? 0 : KhataRules.Owed(b) / 100) + " cash " + sim.State.Ledger.Cash / 100);
+        }
+
+        // Measures a season's takings at the usual setting (ADR 0027, gap 8): the kilos a person a day against hired and run-by-you profit. Run with --filter Takings.
         [Test, Explicit("measure")]
         public void Takings()
         {
-            foreach (int families in new[] { 10, 20, 40 })
-            {
-                Simulation sim = Town(families, out Business.Business b);
-                for (int d = 0; d < 12; d++) sim.AdvanceTo(sim.State.Clock.SimTime + 86400);
-                foreach (BusinessReport r in b.Reports) TestContext.Out.WriteLine("TAKINGS families " + families + " people " + sim.State.Citizens.Population + ": sales " + -r.Balance(Account.Sales) / 100 + " cogs " + r.Balance(Account.CostOfGoodsSold) / 100 + " hired profit " + BusinessBooks.NetProfit(r) / 100 + " run by you " + (BusinessBooks.NetProfit(r) + r.Balance(Account.HiredLabour)) / 100 + " stars " + b.Stars);
-            }
+            foreach (string kg in new[] { "0.13" })
+                foreach (int families in new[] { 12, 24, 40 })
+                {
+                    Simulation sim = TownshipTests.Start(cohort: true, (f, j) => f == "shops.json" ? j.Replace("\"grocery\": { \"kgPerPerson\": 0.13", "\"grocery\": { \"kgPerPerson\": " + kg) : j);
+                    TownshipTests.Families(sim, 2);
+                    TreasuryTests.Township(sim);
+                    for (int i = 0; i < families; i++) { Household x = AddFamily(sim, 0, 30, 28, 6); x.Income = 20_000 * Coin; }
+                    Business.Business b = Open(sim, true, 0);
+                    for (int d = 0; d < 44; d++) sim.AdvanceTo(sim.State.Clock.SimTime + 86400);
+                    var full = b.Reports.Skip(1).ToList(); // the first season is a part
+                    long hired = (long)full.Average(r => BusinessBooks.NetProfit(r)) / 100, wage = (long)full.Average(r => r.Balance(Account.HiredLabour)) / 100;
+                    long sales = (long)full.Average(r => -r.Balance(Account.Sales)) / 100;
+                    TestContext.Out.WriteLine("TAKINGS kg " + kg + " families " + families + " people " + sim.State.Citizens.Population + ": sales " + sales + " hired profit " + hired + " run by you " + (hired + wage) + " (seasons " + full.Count + ")");
+                }
         }
     }
 }

@@ -75,6 +75,23 @@ namespace Sim.View.Tests
             AssertWhys(sim, books);
         }
 
+        // A rise in marketing spends the shop's money now: a tap card says what it adds and what is paid; the budget you already have, or none, asks nothing.
+        [Test]
+        public void Marketing_Card()
+        {
+            Simulation sim = Situations.Kirana();
+            Business shop = Shop(sim);
+            ViewContext ctx = ViewKit2.Context(sim);
+            long t = sim.State.Clock.SimTime;
+            ConfirmCardVm card = ConfirmCards.For(ctx, new SetMarketing(t, shop.Id, 8_000 * 100));
+            Assert.That(card, Is.Not.Null);
+            Assert.That((card.Title, card.Hold), Is.EqualTo(("Spend on marketing?", false)));
+            Assert.That(card.Rows.Select(r => r.Label), Is.EqualTo(new[] { "Adds to your score", "Paid again at each close, a season", "The shop pays now" }));
+            Assert.That(card.Rows[2].Total, Is.True);
+            Assert.That(ConfirmCards.For(ctx, new SetMarketing(t, shop.Id, 2_000 * 100)), Is.Null, "the budget it already has is paid for this season");
+            Assert.That(ConfirmCards.For(ctx, new SetMarketing(t, shop.Id, 0)), Is.Null, "none spends nothing");
+        }
+
         // A household cut off says so and offers Allow again.
         [Test]
         public void Cut_Off_Row()

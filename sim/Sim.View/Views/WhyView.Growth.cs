@@ -20,7 +20,7 @@ namespace Sim.View.Views
             Business b = BusinessOf(ctx, id);
             ShopDefs d = ShopRules.Defs(sim);
             WhyVm vm = New(ctx, "why.growthMarketing.title", Pts(ctx, b.MarketLift));
-            Row(vm, ctx, "why.growthMarketing.per", Pts(ctx, d.MarketPer1000));
+            Row(vm, ctx, "why.growthMarketing.per", Pts(ctx, d.MarketPer1000), "unit", Money(ctx, MarketRules.Indexed(sim, 1000 * 100)));
             Row(vm, ctx, "why.growthMarketing.budget", b.Marketing == 0 ? ctx.Strings.Get("growth.none") : GrowthSheet.Budget(ctx, b.Marketing));
             Row(vm, ctx, "why.growthMarketing.cap", Pts(ctx, d.MarketCap));
             Text(vm, ctx, "why.growthMarketing.size");
@@ -72,6 +72,7 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             Business b = BusinessOf(ctx, id);
+            KhataRules.Refresh(sim, b);
             ShopDefs d = ShopRules.Defs(sim);
             WhyVm vm = New(ctx, "why.growthKhata.title", ctx.Strings.Get(b.Khata ? "growth.on" : "growth.off"));
             Text(vm, ctx, "why.growthKhata.regular");

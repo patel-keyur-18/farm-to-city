@@ -16,7 +16,7 @@
     "chai":   { "cupsPerPerson": 0.4, "adultShare": 0.7, "elasticity": 0.8, "reference": 12, "snackShare": 0.5 },
     "sweets": { "kgPerPerson": 0.015, "adultShare": 1.0, "elasticity": 1.2, "references": { "rasgulla": 300, "atta_laddoo": 360 } },
     "meals":  { "elasticity": 0.8 },
-    "grocery": { "kgPerPerson": 0.25, "adultShare": 1.0, "elasticity": 0.5 }
+    "grocery": { "kgPerPerson": 0.13, "adultShare": 1.0, "elasticity": 0.5 }
   },
   "groceryShares": { "atta": 0.35, "rice": 0.25, "lentils": 0.10, "ghee": 0.05, "rusk": 0.05, "pav": 0.10, "paneer": 0.05, "curd": 0.05 },
   "marketing": { "budgets": [0, 2000, 4000, 8000], "scorePer1000": 0.019, "cap": 0.15, "fade": 0.2 },

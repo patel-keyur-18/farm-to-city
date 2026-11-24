@@ -61,6 +61,7 @@ namespace Sim.View.Views
             {
                 Business b = BusinessOf(ctx, id);
                 BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+                KhataRules.Refresh(sim, b);
                 vm = New(ctx, "why.shopShare.title", ctx.Fmt.Percent(ShopSheet.Share(b.CustomersToday, ShopSheet.Everyone(sim, t.Kind))), "name", BusinessWords.Name(ctx, t));
                 foreach (ShopGroup g in new[] { ShopGroup.Village, ShopGroup.Town }) Parts(vm, ctx, ShopRules.Attract(sim, b, g), g, t.Kind, b.PriceFactor, b.Stars, b.Quality);
             }

@@ -62,6 +62,7 @@ namespace Sim.View.Views
         internal static void AddCustomers(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
         {
             var s = ctx.Strings;
+            KhataRules.Refresh(ctx.Sim, b); // a loaded town has had no hour yet
             Attraction a = ShopRules.Attract(ctx.Sim, b, ShopGroup.Town);
             if (Marketing(ctx, t) && b.MarketLift > Fixed.Zero)
                 vm.Lines.Add(new LineVm(s.Get("growth.ofMarketing"), Points(ctx, b.MarketLift), MarketingWhy, b.Id) { Icon = "megaphone" });
@@ -106,7 +107,7 @@ namespace Sim.View.Views
                 }
                 vm.Lines.Add(new LineVm(null, null) { Buttons = buttons });
                 if (b.LastSpend > 0 || b.MarketLift > Fixed.Zero)
-                    vm.Lines.Add(new LineVm(s.Get("growth.marketGain"), b.LastSpend > 0 ? s.Get("growth.marketGainValue", "spent", ctx.Fmt.Coins(b.LastSpend), "n", ctx.Fmt.Integer(b.LastDrew)) : s.Get("growth.marketFading"),
+                    vm.Lines.Add(new LineVm(s.Get("growth.marketGain"), b.LastSpend > 0 ? s.Get("growth.marketGainValue", "spent", ctx.Fmt.Coins(b.LastSpend), "n", ShopWords.Amount(ctx, t.Kind, b.LastDrew)) : s.Get("growth.marketFading"),
                         MarketValueWhy, id) { Icon = "coin", Note = b.LastSpend > 0 ? s.Get(b.LastDrew > 0 ? "growth.marketGainNote" : "growth.marketNoGain") : null, NoteTone = b.LastSpend > 0 && b.LastDrew == 0 ? Tone.Warn : Tone.Plain });
             }
             if (!Khata(ctx, t)) return;
