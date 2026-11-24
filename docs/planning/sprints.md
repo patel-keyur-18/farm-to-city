@@ -1216,7 +1216,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-260 | Your kirana, marketing and khata | [F12.3](features/F12.3-services-and-customer-choice.md) | 5 | Should | Done 2026-11-24 (Preview 21 and the story approved) |
 | US-259 | Supervisors, worker associations, conflicts and accidents | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | Could | Done 2026-11-24 (Preview 20 and the story approved) |
 | US-248 | Phase 3 exploit checks | [F20.1](features/F20.1-balancer-and-health-checks.md) | 5 | Must | Done 2026-11-24 (approved) |
-| US-249 | The playtest town and the Release build | [F10.3](features/F10.3-phase-3-playtest-and-gate.md) | 3 | Must | To do |
+| US-249 | The playtest town and the Release build | [F10.3](features/F10.3-phase-3-playtest-and-gate.md) | 3 | Must | Done 2026-11-24 (gap 14 and the town approved, ADR 0169; Release build from the final commit; checklist `s26-phase-3-playtest.md`) |
 
 **Order of work** (one stop for the owner's review after each story; every sheet previewed as an artifact that looks exactly like the game before its UI code; each preview made at the start of its story's slot):
 
@@ -1236,17 +1236,17 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] Every story checked against its spec and the code at `main` (`097c19fe`); fourteen gaps listed with recommendations (ADR 0166)
 - [x] Spec 029 approved by the owner (gap 1, 2026-11-23)
 - [x] This section approved by the owner (2026-11-23)
-- [x] Each story's gaps closed before its code (gaps 10 and 12 before US-157 and US-158, 11 before US-159, 6 to 9 before US-260, 3 to 5 before US-259, 13 before US-248; 14 before US-249, still to come)
+- [x] Each story's gaps closed before its code (gaps 10 and 12 before US-157 and US-158, 11 before US-159, 6 to 9 before US-260, 3 to 5 before US-259, 13 before US-248; 14 before US-249)
 
 **Sprint end checklist**
 
-- [ ] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
+- [x] All Must stories meet the Definition of Done (ADR 0025), Editor-tested with touch; only device-only checks left for the phone
 - [x] Save schema 24: migration, the fixture `schema24-people.ftc` (`MigrationTests.Schema24_People`), every older schema loads, goldens unmoved
 - [x] Previews 19, 20 and 21 approved before their screens
 - [x] Balance (2026-11-24, ADR 0168): the 20% rule (`Archetypes_WithinTwentyPercent`), the pace (competent median day 102, 90th percentile 144 on 48 seeds; 200 seeds hands-off solvent), the kirana's targets (hired 10,700 a season at the Township in today's coins, no effect on households), the hand's stall rate (2 stalls in 60 seasons, now from the Township), the exploit bots, the supervisor's price (15,000 and +1.2% a star), the Chronicle's size (about 6 entries a game year in a bot town, 86 at season 60, under 2 KB), the 200-seed Township; the full Balance category 66 of 66, Perf 6 of 6, Core 936, View 435
-- [ ] Render statistics read for each visible story, growth over 10% reported
+- [x] Render statistics read for each visible story, growth over 10% reported
 - [x] Test checklist with device-only rows marked (`docs/test-checklists/s26-chronicle-business-growth-2.md`)
-- [ ] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
-- [ ] The playtest town shown to the owner; the Release build made from the final commit
-- [ ] `STATUS.md`, feature files and this file updated
+- [x] Independent Opus 5.5 high-effort review: what was reviewed, found and fixed, in the pull request and an ADR
+- [x] The playtest town shown to the owner; the Release build made from the final commit
+- [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it
