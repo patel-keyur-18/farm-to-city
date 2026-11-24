@@ -143,8 +143,15 @@ namespace Game.Presentation
                     // Spec 015 §3.7: a worker needs a word (a raise, an offer, sick leave, an emergency, a bad batch); the alert keeps it if put off.
                     CardVm card = HrEventSheet.Card(_ctx, hr.EventId);
                     long id = hr.EventId;
-                    if (card != null) ShowCard(card, b => Run(new Command[] { new AnswerHrEvent(Sim.State.Clock.SimTime, id, b == SettingsIds.Yes ? 0 : 1) }));
+                    if (card != null)
+                        ShowCard(card, b =>
+                        {
+                            if (b == SettingsIds.Decide) OpenSheet(new SheetRequest("HrEvent", id)); // an accident, a quarrel or an association: three answers, a sheet; its default answers after a day (spec 028 §3.9)
+                            else if (b == SettingsIds.Yes) Run(new Command[] { new AnswerHrEvent(Sim.State.Clock.SimTime, id, 0) });
+                            else if (Sim.State.People?.HrEvents.Find(x => x.Id == id)?.Timed != true) Run(new Command[] { new AnswerHrEvent(Sim.State.Clock.SimTime, id, 1) });
+                        });
                 }
+                if (e is HrOutcome oc) ShowCard(HrEventSheet.Outcome(_ctx, oc), _ => { }); // what a talk or a negotiation came to (spec 028 §3.9)
                 if (e is LeasesOffered lo) ShowLeaseCards(lo.HouseholdIds, 0); // leases in their last season: a card each (US-240)
                 if (e is FamilyRequest f)
                 {

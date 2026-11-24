@@ -100,7 +100,8 @@ namespace Sim.View.Views
             {
                 bool am = above;
                 long at = place;
-                var line = new LineVm(s.Get(am ? "people.postAbove" : "people.postMarket"), s.Get(am ? "board.postAboveWhy" : place == 0 ? "people.postMarketWhy" : "board.postMarketWhy"), "post")
+                bool sup = place == HiringRules.SupervisorPlace; // a supervisor comes from outside the town: no one of yours applies
+                var line = new LineVm(s.Get(am ? "people.postAbove" : "people.postMarket"), s.Get(sup ? (am ? "supervisor.postAboveWhy" : "supervisor.postMarketWhy") : am ? "board.postAboveWhy" : place == 0 ? "people.postMarketWhy" : "board.postMarketWhy"), "post")
                     { Icon = am ? "person_hand_f" : "person_hand_m" };
                 line.Action = ActionVm.Checked(ctx, (am ? "postAbove:" : "postMarket:") + place, s.Get("action.post"), ctx.Fmt.Coins(cost), ActionKind.Secondary, t => new PostJob(t, at, am));
                 vm.Lines.Add(line);

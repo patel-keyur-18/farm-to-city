@@ -481,5 +481,6 @@
   {"label":"balance-manager","view":"farm","date":"2026-11-23","drawCalls":338,"batches":338,"setPassCalls":9,"triangles":7474,"visibleSprites":375,"sprites":2211},
   {"label":"US-260 kirana, marketing, khata (Township bot town with a kirana)","view":"all","date":"2026-11-24","drawCalls":1136,"batches":1136,"setPassCalls":12,"triangles":23457,"visibleSprites":1381,"sprites":2280},
   {"label":"US-260 kirana, marketing, khata (Township bot town with a kirana)","view":"village","date":"2026-11-24","drawCalls":532,"batches":532,"setPassCalls":10,"triangles":9997,"visibleSprites":619,"sprites":2280},
-  {"label":"US-260 kirana, marketing, khata (Township bot town with a kirana)","view":"farm","date":"2026-11-24","drawCalls":400,"batches":400,"setPassCalls":9,"triangles":7211,"visibleSprites":436,"sprites":2280}
+  {"label":"US-260 kirana, marketing, khata (Township bot town with a kirana)","view":"farm","date":"2026-11-24","drawCalls":400,"batches":400,"setPassCalls":9,"triangles":7211,"visibleSprites":436,"sprites":2280},
+  {"label":"US-259","view":"all","date":"2026-11-24","drawCalls":1254,"batches":1254,"setPassCalls":12,"triangles":32056,"visibleSprites":1509,"sprites":2402}
 ]

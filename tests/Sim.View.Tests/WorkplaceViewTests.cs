@@ -163,5 +163,23 @@ namespace Sim.View.Tests
             d = new HrEventDefaulted(now, 1, HrEventKind.Accident, 0, 0, sim.State.People.Hands[0].Id);
             Assert.That(WorkplaceSheet.Defaulted(ViewKit2.Context(sim), d), Does.Contain("hurt"));
         }
+
+        // A talk or a negotiation says what it came to, on a card with one button.
+        [Test]
+        public void Outcome_Card()
+        {
+            Simulation sim = Farm(4);
+            ViewContext ctx = ViewKit2.Context(sim);
+            foreach (HrEventKind kind in new[] { HrEventKind.Conflict, HrEventKind.Association })
+                foreach (bool yes in new[] { true, false })
+                {
+                    CardVm card = HrEventSheet.Outcome(ctx, new HrOutcome(sim.State.Clock.SimTime, kind, kind == HrEventKind.Conflict ? 0 : 1, yes));
+                    Assert.That(card.Title + card.Text, Does.Not.Contain("{").And.Not.Contain("hr.outcome"));
+                    Assert.That(card.Buttons.Select(b => b.Id), Is.EqualTo(new[] { SettingsIds.Ok }));
+                }
+            HrEvent con = Card(sim, HrEventKind.Conflict, sim.State.People.Hands[0].Id, sim.State.People.Hands[1].Id);
+            Assert.That(sim.Execute(new AnswerHrEvent(sim.State.Clock.SimTime, con.Id, 0)).Accepted, Is.True);
+            Assert.That(sim.PendingEvents.OfType<HrOutcome>().Any(o => o.Kind == HrEventKind.Conflict), Is.True, "talking says how it went");
+        }
     }
 }

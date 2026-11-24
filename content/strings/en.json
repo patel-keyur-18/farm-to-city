@@ -8594,5 +8594,16 @@
   "event.HrEventDefaulted": "A card nobody answered was answered for you.",
   "confirm.DismissSupervisor.title": "Let your supervisor go?",
   "confirm.DismissSupervisor.verb": "Let go",
-  "confirm.DismissSupervisor.keep": "Keep him"
+  "confirm.DismissSupervisor.keep": "Keep him",
+  "supervisor.postMarketWhy": "Supervisors come from outside the town, for 4 days",
+  "supervisor.postAboveWhy": "Better, surer people from outside the town; they ask 10% more",
+  "event.HrOutcome": "A talk or a negotiation came to something.",
+  "hr.outcome.talkYes.title": "You talked to both",
+  "hr.outcome.talkYes.text": "They shook hands and went back to work.",
+  "hr.outcome.talkNo.title": "The talk did not settle it",
+  "hr.outcome.talkNo.text": "They would not hear each other. Both are down a little, and it goes on.",
+  "hr.outcome.negYes.title": "They agreed",
+  "hr.outcome.negYes.text": "Wages are up and a benefit is added. They will not ask again for a while.",
+  "hr.outcome.negNo.title": "They did not agree",
+  "hr.outcome.negNo.text": "It counts as a refusal: their mood drops and their work is cut this season."
 }

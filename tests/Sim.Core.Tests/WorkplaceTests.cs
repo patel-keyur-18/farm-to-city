@@ -4,6 +4,7 @@ using Sim.Core.Business;
 using Sim.Core.Commands;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
+using Sim.Core.Saves;
 using Sim.Core.Finance;
 using Sim.Core.Maths;
 using Sim.Core.People;
@@ -361,6 +362,45 @@ namespace Sim.Core.Tests
             Assert.That(HrRules.Mood(sim, baker), Is.EqualTo(Fixed.Zero));
             sim.AdvanceTo(now + 3 * 3600);
             Assert.That(P(sim).Hands.All(h => h.Hr.SickUntil == 0), Is.True, "back after 2 hours");
+        }
+    }
+
+    /// <summary>The Editor tour's town for US-259.</summary>
+    public class WorkplaceEditorTown
+    {
+        // Writes a Township bot's town with 4 hands and an accident, a quarrel and an association waiting to FTC_TOWN_OUT: run with --filter EditorTown.
+        [Test, Explicit("makes the Editor tour's town")]
+        public void EditorTown()
+        {
+            string path = System.Environment.GetEnvironmentVariable("FTC_TOWN_OUT");
+            if (string.IsNullOrEmpty(path)) { Assert.Ignore("FTC_TOWN_OUT names the file"); return; }
+            TestContent.WithCohort = true;
+            SimConfig config;
+            try { config = new SimConfig(TestContent.Clock(), TestContent.Weather(), game: TestContent.Game(null)); }
+            finally { TestContent.WithCohort = false; }
+            Tools.Balancer.Economy.Run run = Tools.Balancer.Economy.RunBot(config, new Tools.Balancer.TownshipBot(false), 28, 1, null);
+            Simulation sim = run.Sim;
+            long give = 6_000_000L * 100 - sim.State.Ledger.Cash; // a balanced entry, not a command: the file must stay saveable
+            if (give > 0) sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.Cash, give), new Posting(Account.Sales, -give));
+            Assert.That(P(sim).Hands.Count, Is.GreaterThan(0), "the bot has a hand to copy");
+            Hand first = P(sim).Hands[0];
+            while (P(sim).Hands.Count < 4)
+            {
+                Hand h = first.Clone();
+                h.Id = P(sim).NextHandId++;
+                h.PrepaymentId = 0;
+                h.Name = (h.Name + P(sim).Hands.Count * 7) % sim.Config.Game.People.Names.Count;
+                P(sim).Hands.Add(h);
+            }
+            long now = sim.State.Clock.SimTime;
+            P(sim).Hands[0].Hr.SickUntil = now + 6 * 3600;
+            HrEvent a = WorkplaceKit.Card(sim, HrEventKind.Accident, 0, P(sim).Hands[0].Id, amount: 166_700); a.Hours = 8; a.Cost = 200_000;
+            WorkplaceKit.Card(sim, HrEventKind.Conflict, 0, P(sim).Hands[1].Id, P(sim).Hands[2].Id);
+            WorkplaceKit.Card(sim, HrEventKind.Association, 0, P(sim).Hands[3].Id);
+            long wall = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            sim.State.Clock.Reanchor(wall);
+            System.IO.File.WriteAllBytes(path, Saves.SaveCodec.Write(sim.State, config, wall));
+            TestContext.Out.WriteLine("EDITORTOWN hands " + P(sim).Hands.Count + " cash " + sim.State.Ledger.Cash / 100 + " era " + sim.State.Era.Current);
         }
     }
 }

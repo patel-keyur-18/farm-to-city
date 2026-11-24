@@ -83,4 +83,21 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "HrEventDefaulted(" + EventId + ", " + Kind + ", choice=" + Choice + ", place=" + Place + ", worker=" + WorkerId + ")"; }
     }
+
+    /// <summary>What a chancy answer came to (spec 028 §3.9): the talk that settled a quarrel or not, the negotiation an association agreed to or not.</summary>
+    public sealed class HrOutcome : SimEvent
+    {
+        public People.HrEventKind Kind { get; }
+        public int Choice { get; }
+        public bool Yes { get; }
+
+        public HrOutcome(long simTime, People.HrEventKind kind, int choice, bool yes) : base(simTime)
+        {
+            Kind = kind;
+            Choice = choice;
+            Yes = yes;
+        }
+
+        protected override string Describe() { return "HrOutcome(" + Kind + ", choice=" + Choice + ", yes=" + Yes + ")"; }
+    }
 }

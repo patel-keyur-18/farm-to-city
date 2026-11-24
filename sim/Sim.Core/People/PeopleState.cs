@@ -610,6 +610,7 @@ namespace Sim.Core.People
                 h.WriteLong(OtherId);
                 h.WriteInt(Hours);
                 h.WriteBool(Severe);
+                h.WriteLong(Cost); // an accident's bill paid
             }
             h.WriteBool(Good >= 0);
             if (Good < 0) return;
@@ -624,7 +625,7 @@ namespace Sim.Core.People
             {
                 Id = r.ReadLong(), Kind = (HrEventKind)r.ReadInt(), Place = r.ReadLong(), WorkerId = r.ReadLong(), At = r.ReadLong(), Amount = r.ReadLong(),
             };
-            if (e.Timed) { e.ExpiresAt = r.ReadLong(); e.OtherId = r.ReadLong(); e.Hours = r.ReadInt(); e.Severe = r.ReadBool(); }
+            if (e.Timed) { e.ExpiresAt = r.ReadLong(); e.OtherId = r.ReadLong(); e.Hours = r.ReadInt(); e.Severe = r.ReadBool(); e.Cost = r.ReadLong(); }
             if (!r.ReadBool()) return e;
             e.Good = r.ReadRef(ContentTable.Good);
             e.Grams = r.ReadLong();

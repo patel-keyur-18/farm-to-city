@@ -53,8 +53,8 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.accident.overtime", Pct(ctx, d.OvertimeFactor - Fixed.One) + " more");
             Row(vm, ctx, "why.accident.skipped", Pct(ctx, d.SkippedFactor - Fixed.One) + " more");
             Row(vm, ctx, "why.accident.half", ctx.Fmt.Percent(d.RiskHalf));
-            Row(vm, ctx, "why.accident.severe", ctx.Fmt.Percent(d.SevereShare), "hours", ctx.Fmt.Integer(d.SevereHours), "bill", Money(ctx, d.SevereBill));
-            Text(vm, ctx, "why.accident.out", "hours", ctx.Fmt.Integer(d.OutHours), "clinic", ctx.Fmt.Integer(d.ClinicOutHours), "bill", Money(ctx, d.Bill));
+            Row(vm, ctx, "why.accident.severe", ctx.Fmt.Percent(d.SevereShare), "hours", ctx.Fmt.Integer(d.SevereHours), "bill", Money(ctx, Sim.Core.Market.MarketRules.Indexed(sim, d.SevereBill)));
+            Text(vm, ctx, "why.accident.out", "hours", ctx.Fmt.Integer(d.OutHours), "clinic", ctx.Fmt.Integer(d.ClinicOutHours), "bill", Money(ctx, Sim.Core.Market.MarketRules.Indexed(sim, d.Bill)));
             vm.Footnote = ctx.Strings.Get("why.accident.foot");
             return vm;
         }

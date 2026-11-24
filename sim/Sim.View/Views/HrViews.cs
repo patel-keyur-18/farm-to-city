@@ -145,6 +145,17 @@ namespace Sim.View.Views
             return vm;
         }
 
+        /// <summary>What a talk or a negotiation came to, as a card with one button.</summary>
+        public static CardVm Outcome(ViewContext ctx, Sim.Core.Events.HrOutcome o)
+        {
+            var st = ctx.Strings;
+            var c = o.Kind == HrEventKind.Conflict
+                ? (o.Yes ? new CardVm { Title = st.Get("hr.outcome.talkYes.title"), Text = st.Get("hr.outcome.talkYes.text") } : new CardVm { Title = st.Get("hr.outcome.talkNo.title"), Text = st.Get("hr.outcome.talkNo.text") })
+                : (o.Yes ? new CardVm { Title = st.Get("hr.outcome.negYes.title"), Text = st.Get("hr.outcome.negYes.text") } : new CardVm { Title = st.Get("hr.outcome.negNo.title"), Text = st.Get("hr.outcome.negNo.text") });
+            c.Buttons.Add(new CardButton(SettingsIds.Ok, ctx.Strings.Get("action.ok"), ActionKind.Primary));
+            return c;
+        }
+
         /// <summary>The card when it happens: the same words, the first choice as Yes and the second as Not now.</summary>
         public static CardVm Card(ViewContext ctx, long eventId)
         {

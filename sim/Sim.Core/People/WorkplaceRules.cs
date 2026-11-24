@@ -382,7 +382,9 @@ namespace Sim.Core.People
                 FarmSystem.Accrue(sim);
                 sim.State.People.Workplace.TalkUntil = now + d.TalkWindowHours * Hour;
                 FarmSystem.Refresh(sim);
-                if (Rng.Chance(roll, d.TalkResolves)) return;
+                bool settled = Rng.Chance(roll, d.TalkResolves);
+                sim.Emit(new HrOutcome(now, HrEventKind.Conflict, 0, settled));
+                if (settled) return;
                 HrRules.SetMood(sim, a, d.LetMood);
                 HrRules.SetMood(sim, b, d.LetMood);
                 return;
@@ -404,6 +406,7 @@ namespace Sim.Core.People
             long season = Season(sim);
             PlaceRelations r = s.Workplace.RelationsFor(e.Place);
             bool agrees = choice == 1 && Rng.Chance(Rng.Next(sim.State.Seed, RngStream.HrEvents, AssocKey + (ulong)e.Id, 1), d.AssocAgrees);
+            if (choice == 1) sim.Emit(new HrOutcome(sim.State.Clock.SimTime, HrEventKind.Association, 1, agrees));
             if (choice == 0 || agrees)
             {
                 long cost = CostNow(sim, e, choice);
