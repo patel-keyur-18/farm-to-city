@@ -67,9 +67,19 @@ namespace Sim.Core.Tests
             a.CropCost[0] = 2_000 * Coin; a.CropIncome[0] = 14_000 * Coin; // 12,000 earned on 2,000: 600 for every 100
             a.CropCost[1] = 20_000 * Coin; a.CropIncome[1] = 50_000 * Coin; // 30,000 earned on 20,000: more money, a smaller share
             a.CropCost[2] = 100 * Coin; a.CropIncome[2] = 9_000 * Coin; // a huge share but under the 10,000 floor
+            a.CropSowings[0] = a.CropSowings[1] = a.CropSowings[2] = 1;
             AlmanacEntry e = ToWinter(sim);
             Assert.That((e.Best, e.BestId, e.BestProfit, e.BestPut), Is.EqualTo((AlmanacBest.Crop, crops[0].Id, 12_000 * Coin, 2_000 * Coin)));
-            Assert.That(A(sim).CropIncome.Concat(A(sim).CropCost).All(v => v == 0), Is.True, "the next year starts empty");
+            Assert.That(A(sim).CropIncome.Concat(A(sim).CropCost).Concat(A(sim).CropSowings).All(v => v == 0) && A(sim).YearLabour == 0, Is.True, "the next year starts empty");
+
+            // Hired labour is shared by the sowings and counts as money put in: the cheap crop no longer wins on seed alone.
+            sim = Start();
+            a = A(sim);
+            a.CropCost[0] = 2_000 * Coin; a.CropIncome[0] = 14_000 * Coin; a.CropSowings[0] = 1;
+            a.CropCost[1] = 20_000 * Coin; a.CropIncome[1] = 50_000 * Coin; a.CropSowings[1] = 1;
+            a.YearLabour = 12_000 * Coin; // 6,000 each: crop 0 put 8,000 earned 6,000; crop 1 put 26,000 earned 24,000
+            e = ToWinter(sim);
+            Assert.That((e.BestId, e.BestProfit, e.BestPut), Is.EqualTo((crops[1].Id, 24_000 * Coin, 26_000 * Coin)), "92 for every 100 beats 75");
 
             sim = Start();
             ToWinter(sim);

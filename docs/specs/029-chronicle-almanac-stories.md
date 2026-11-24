@@ -88,11 +88,11 @@ At each **Winter close**, after *Your year* and before Dadi's letters and the Co
 | --- | --- |
 | Population | Your households, and the old village's as its head-count, at the close. |
 | Net worth | At the close, in year-0 coins, and the change from last year. |
-| Best return | Of your **businesses** (the year's four season profits ÷ the capital you put in) and your **crops** (the year's income from the crop ÷ the year's seed and planting cost for it), the one with the biggest share, provided its profit is **at least 10,000 coins**; else **"a quiet year"**. Shown as "{name}: it earned {n} coins for every 100 you put in", with the profit and the money put in. |
+| Best return | Of your **businesses** (the year's four season profits ÷ the capital you put in) and your **crops** (the year's income from the crop ÷ what you put into it: the seed and fertiliser of its sowings plus its share of the year's hired labour, shared among the crops by their sowings), the one with the biggest share, provided its profit is **at least 10,000 coins**; else **"a quiet year"**. Shown as "{name}: it earned {n} coins for every 100 you put in", with the profit and the money put in. |
 | Costliest loss | The biggest single line from a **closed list of one-off losses**: a repair after a fire, a loss on selling or closing a business or a machine, spoiled goods, something seized or defaulted, a business's losing season (its loss). **Ordinary costs (wages, seed, rent, fuel) never count.** Shown with its cause. None, and the line says so, when the year had no such loss. |
 | Citizen spotlight | §3.5. |
 
-Each shows a **?** with its working (§7). Crops need a small accumulator (this year's income and seed and planting cost per crop), added at each sowing and season close.
+Each shows a **?** with its working (§7). Crops need a small accumulator (this year's income, sowing cost and number of sowings per crop, and the year's hired labour), added at each sowing and season close.
 
 ### 3.5 The citizen spotlight (US-158, G5)
 
@@ -216,6 +216,7 @@ All closed (owner, 2026-11-23, my recommendations; ADR 0165):
 - **G6 The arcs.** Four arcs over real events; the only new rule is the hand's stall (a seeded 20% chance, a season's notice, the next newcomer stall).
 - **G7 The screens.** A Menu sheet with two tabs, the Almanac card at the Winter close, a toast for a step; no animation or music.
 - **G8 Events that lack a line's facts. Closed (owner, 2026-11-23, my recommendation, ADR 0166 gap 10):** add the fields to the events (`EpidemicEnded` the sick, a loan cleared event with the lender, the fire's repair payment), one `ChronicleSystem` reading the day's events with their own times.
+- **G10 A crop's money put in. Closed (owner, 2026-11-24, my recommendation, found at US-158's review):** seed alone made a crop return 600 for every 100 and a business never the best; a crop's money put in is its seed, fertiliser and its share of the year's hired labour (by sowings).
 - **G9 The costliest loss. Closed (owner, 2026-11-23, my recommendation, ADR 0166 gap 12):** the Almanac keeps a running worst one-off loss for the year, updated at the moment it happens; no ledger scan; `lossLines` in §4 is a list of kinds, not accounts.
 
 ## 11. Cut first

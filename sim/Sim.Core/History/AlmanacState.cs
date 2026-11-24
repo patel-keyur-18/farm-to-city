@@ -88,6 +88,10 @@ namespace Sim.Core.History
         public long[] CropIncome { get; internal set; }
         public long[] CropCost { get; internal set; }
 
+        /// <summary>How many sowings of each crop this year, and the hired labour the year's four closes have charged so far (1/100 coin): the labour is shared among the crops by their sowings.</summary>
+        public long[] CropSowings { get; internal set; }
+        public long YearLabour { get; internal set; }
+
         /// <summary>The worst one-off loss so far this year.</summary>
         public AlmanacLoss WorstLoss { get; internal set; }
         public long WorstAmount { get; internal set; }
@@ -104,6 +108,7 @@ namespace Sim.Core.History
         {
             CropIncome = new long[crops];
             CropCost = new long[crops];
+            CropSowings = new long[crops];
         }
 
         /// <summary>Nothing written and nothing in progress: a town that never sowed, lost or taught anything this year.</summary>
@@ -111,8 +116,8 @@ namespace Sim.Core.History
         {
             get
             {
-                if (Entries.Count != 0 || WorstAmount != 0 || SpoilDay != 0 || SpoilValue != 0 || Reader != 0) return false;
-                for (int i = 0; i < CropIncome.Length; i++) if (CropIncome[i] != 0 || CropCost[i] != 0) return false;
+                if (Entries.Count != 0 || YearLabour != 0 || WorstAmount != 0 || SpoilDay != 0 || SpoilValue != 0 || Reader != 0) return false;
+                for (int i = 0; i < CropIncome.Length; i++) if (CropIncome[i] != 0 || CropCost[i] != 0 || CropSowings[i] != 0) return false;
                 return true;
             }
         }
@@ -121,7 +126,7 @@ namespace Sim.Core.History
         {
             return new AlmanacState(CropIncome.Length)
             {
-                Entries = Entries.ConvertAll(x => x.Clone()), CropIncome = (long[])CropIncome.Clone(), CropCost = (long[])CropCost.Clone(),
+                Entries = Entries.ConvertAll(x => x.Clone()), CropIncome = (long[])CropIncome.Clone(), CropCost = (long[])CropCost.Clone(), CropSowings = (long[])CropSowings.Clone(), YearLabour = YearLabour,
                 WorstLoss = WorstLoss, WorstAmount = WorstAmount, WorstId = WorstId, SpoilDay = SpoilDay, SpoilValue = SpoilValue, Reader = Reader,
             };
         }
@@ -131,7 +136,8 @@ namespace Sim.Core.History
             if (h.Hashing && Unused) return; // hashed only once used
             h.WriteInt(Entries.Count);
             foreach (AlmanacEntry e in Entries) e.WriteTo(h);
-            for (int i = 0; i < CropIncome.Length; i++) { h.WriteLong(CropIncome[i]); h.WriteLong(CropCost[i]); }
+            for (int i = 0; i < CropIncome.Length; i++) { h.WriteLong(CropIncome[i]); h.WriteLong(CropCost[i]); h.WriteLong(CropSowings[i]); }
+            h.WriteLong(YearLabour);
             h.WriteInt((int)WorstLoss); h.WriteLong(WorstAmount); h.WriteString(WorstId);
             h.WriteLong(SpoilDay); h.WriteLong(SpoilValue); h.WriteLong(Reader);
         }
@@ -141,7 +147,8 @@ namespace Sim.Core.History
             var s = new AlmanacState(crops);
             int n = r.ReadCount();
             for (int i = 0; i < n; i++) s.Entries.Add(AlmanacEntry.ReadFrom(r));
-            for (int i = 0; i < crops; i++) { s.CropIncome[i] = r.ReadLong(); s.CropCost[i] = r.ReadLong(); }
+            for (int i = 0; i < crops; i++) { s.CropIncome[i] = r.ReadLong(); s.CropCost[i] = r.ReadLong(); s.CropSowings[i] = r.ReadLong(); }
+            s.YearLabour = r.ReadLong();
             s.WorstLoss = (AlmanacLoss)r.ReadInt(); s.WorstAmount = r.ReadLong(); s.WorstId = r.ReadString();
             s.SpoilDay = r.ReadLong(); s.SpoilValue = r.ReadLong(); s.Reader = r.ReadLong();
             return s;

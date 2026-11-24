@@ -30,7 +30,7 @@ namespace Sim.Core.History
             {
                 case CropSown x:
                     for (int i = 0; i < sim.Config.Game.Farm.Crops.Count && i < a.CropCost.Length; i++)
-                        if (sim.Config.Game.Farm.Crops[i].Id == x.CropId) { a.CropCost[i] += x.Cost; break; }
+                        if (sim.Config.Game.Farm.Crops[i].Id == x.CropId) { a.CropCost[i] += x.Cost; a.CropSowings[i]++; break; }
                     break;
                 case CitizenLiterate x:
                     if (x.How == LiterateHow.School && a.Reader == 0) a.Reader = x.CitizenId; // the first child of the year
@@ -90,6 +90,9 @@ namespace Sim.Core.History
             foreach (Sale s in sim.State.Finance.Sales.Last) // rolled just before this event: the season that closed
                 for (int i = 0; i < crops.Count && i < a.CropIncome.Length; i++)
                     if ((uint)crops[i].OutputGood < (uint)goods.Count && goods[crops[i].OutputGood].Id == s.Good) { a.CropIncome[i] += s.Amount; break; }
+            if (x.Report != null)
+                foreach (KeyValuePair<Account, long> kv in x.Report.ByAccount)
+                    if (kv.Key == Account.HiredLabour) a.YearLabour += kv.Value; // an expense: positive on the books
             if (sim.State.Businesses != null)
                 foreach (Business.Business b in sim.State.Businesses.Businesses)
                 {
@@ -123,6 +126,8 @@ namespace Sim.Core.History
             // The next year starts empty.
             System.Array.Clear(a.CropIncome, 0, a.CropIncome.Length);
             System.Array.Clear(a.CropCost, 0, a.CropCost.Length);
+            System.Array.Clear(a.CropSowings, 0, a.CropSowings.Length);
+            a.YearLabour = 0;
             a.WorstLoss = AlmanacLoss.None; a.WorstAmount = 0; a.WorstId = ""; a.Reader = 0;
             sim.Emit(new AlmanacWritten(x.SimTime, year));
         }
@@ -132,7 +137,7 @@ namespace Sim.Core.History
         /// <summary>
         /// The business or crop with the biggest share of profit to money put in, provided its profit is at least <paramref name="minProfit"/>.
         /// A business's profit is its closed seasons of this year and its money put in is its capital still in it (a business that has taken its
-        /// capital out has nothing at risk and isn't ranked); a crop's is its sales less its sowings. Shares are compared by cross-multiplying
+        /// capital out has nothing at risk and isn't ranked); a crop's money put in is the seed and fertiliser of its sowings plus its share of the year's hired labour (shared among the crops by their sowings), and its profit is its sales less that. Shares are compared by cross-multiplying
         /// (no division); a tie goes to a business, then the lowest id.
         /// </summary>
         private static void Best(Simulation sim, AlmanacState a, AlmanacEntry e, long winter, long minProfit)
@@ -151,9 +156,12 @@ namespace Sim.Core.History
                     }
                 }
             IReadOnlyList<CropDef> crops = sim.Config.Game.Farm.Crops;
+            long sowings = 0;
+            for (int i = 0; i < a.CropSowings.Length; i++) sowings += a.CropSowings[i];
             for (int i = 0; i < crops.Count && i < a.CropCost.Length; i++)
             {
-                long put = a.CropCost[i], profit = a.CropIncome[i] - put;
+                long labour = sowings == 0 ? 0 : a.YearLabour * a.CropSowings[i] / sowings; // hired labour shared by the acres sown
+                long put = a.CropCost[i] + labour, profit = a.CropIncome[i] - put;
                 if (put <= 0 || profit < minProfit) continue;
                 if (e.Best == AlmanacBest.None || (System.Numerics.BigInteger)profit * bestPut > (System.Numerics.BigInteger)bestProfit * put)
                 {
