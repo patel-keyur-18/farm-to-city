@@ -670,6 +670,8 @@ namespace Sim.View.Views
                     case PostUnpaid pu: rows.Add(Row(s.Get("away.town"), s.Get("away.postUnpaid"), "place_" + CivicSheet.Ids[pu.Civic] + "_plot")); break;
                     case PostVacated pv: rows.Add(Row(s.Get("away.town"), s.Get("away.postVacated"), "place_" + CivicSheet.Ids[pv.Civic] + "_plot")); break;
                     case DoctorLeft _: rows.Add(Row(s.Get("away.town"), s.Get("away.doctorLeft"), "place_clinic_plot")); break;
+                    case HrEventDefaulted hd: rows.Add(Row(s.Get("away.town"), WorkplaceSheet.Defaulted(ctx, hd), "person_hand_m")); break; // spec 028 §3.9: a card nobody answered
+                    case SupervisorLeft sl when sl.Unpaid: rows.Add(Row(s.Get("away.town"), s.Get("away.supervisorUnpaid"), "person_hand_m")); break;
                     case ParcelSold ps: rows.Add(Row(s.Get("away.land"), s.Get("away.landSold", "price", ctx.Fmt.Coins(ps.Price)), "land")); break; // a slow sale's days came (spec 024 §3.4)
                     case AcreSoldToBuilder ab: rows.Add(Row(s.Get("away.land"), ab.Yours ? s.Get("away.builderYours", "price", ctx.Fmt.Coins(ab.Price)) : s.Get("away.builderTheirs"), "family_house")); break; // spec 024 §3.3
                     case SaleFailed _: rows.Add(Row(s.Get("away.land"), s.Get("away.saleFailed"), "land")); break;
@@ -754,7 +756,7 @@ namespace Sim.View.Views
             { "ApplicantLeft", Use.StateOnly }, { "ApplicantInterviewed", Use.StateOnly }, { "OfferDeclined", Use.StateOnly }, { "HandHired", Use.Motion },
             { "ReferenceChecked", Use.Motion }, { "CounterOffer", Use.StateOnly }, { "WorkerHired", Use.Motion }, { "WorkerLeft", Use.StateOnly },
             { "CourseFinished", Use.Away }, { "LongDaysStopped", Use.Away },
-            { "HrEventRaised", Use.Alert }, { "HrEventAnswered", Use.StateOnly }, { "ReputationChanged", Use.StateOnly },
+            { "HrEventRaised", Use.Alert }, { "HrEventAnswered", Use.StateOnly }, { "HrEventDefaulted", Use.Away }, { "SupervisorHired", Use.Motion }, { "SupervisorLeft", Use.Away }, { "AccidentHappened", Use.StateOnly }, { "ConflictRaised", Use.StateOnly }, { "AssociationFormed", Use.StateOnly }, { "ReputationChanged", Use.StateOnly },
             { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyRequest", Use.Alert }, { "LeasesOffered", Use.Alert }, { "LeaseRenewed", Use.Away }, { "FamilyMovedIn", Use.Away },
             { "BusinessFounded", Use.Motion }, { "BusinessOpened", Use.Away }, { "WagesMissed", Use.Alert }, { "BusinessClosed", Use.Motion }, { "BusinessWorked", Use.StateOnly }, { "ShopSales", Use.StateOnly }, { "FamilyHouseStarted", Use.Motion }, { "FamilyHouseBuilt", Use.Away }, { "RentPaid", Use.Away }, { "RentMissed", Use.Away }, { "HouseholdLeft", Use.Away }, { "HandDismissed", Use.StateOnly },
             { "HandSkillGrew", Use.StateOnly }, { "StandingOrderSet", Use.StateOnly }, { "StandingOrderCleared", Use.StateOnly }, { "OrderExecuted", Use.Away },

@@ -547,6 +547,9 @@ namespace Sim.Core.Definitions
         /// <summary>Benefits and the night shift (spec 028 §3.8, <c>content/benefits.json</c>), from the Township's content, or null.</summary>
         public BenefitsDef Benefits { get; internal set; }
 
+        /// <summary>Supervisors, accidents, conflicts and associations (spec 028 §3.9, <c>content/workplace.json</c>), with the benefits, or null.</summary>
+        public WorkplaceDef Workplace { get; internal set; }
+
         public GameDefs(IReadOnlyList<SoilDef> soils, IReadOnlyList<DrainageDef> drainages, LandDef land, MapDef map,
             IReadOnlyList<BuildingDef> buildings, StartDef start, LedgerDef ledger, MarketDefs market, FarmDefs farm, CreditDefs credit = null,
             PeopleDefs people = null, OnboardingDefs onboarding = null, LivestockDefs livestock = null, PopulationDefs population = null)

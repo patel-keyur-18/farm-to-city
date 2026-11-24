@@ -93,7 +93,7 @@ namespace Sim.Core.People
         }
 
         /// <summary>Motivation × (1 − fatigue): exactly 1 for a fair hire in a content home who isn't tired.</summary>
-        public static Fixed Condition(Simulation sim, IStaff w) { return Motivation(sim, w) * (Fixed.One - w.Fatigue) * BenefitRules.LeaveOutput(sim, w); }
+        public static Fixed Condition(Simulation sim, IStaff w) { return Motivation(sim, w) * (Fixed.One - w.Fatigue) * BenefitRules.LeaveOutput(sim, w) * WorkplaceRules.OutputFactor(sim, w); }
 
         /// <summary>Output = skill factor × motivation × (1 − fatigue) (spec 015 §3.4); 0 while away on a course.</summary>
         public static Fixed Output(Simulation sim, IStaff w)

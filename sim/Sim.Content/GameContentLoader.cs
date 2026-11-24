@@ -70,6 +70,7 @@ namespace Sim.Content
                 if (game.Invoices != null && game.People != null) game.Managers = LoadManagers(read("managers.json")); // and managers for them to run (spec 028 §3.2)
                 if (game.Managers != null) game.Exit = LoadExit(read("exit.json")); // and a worth to sell them at (spec 028 §3.3)
                 if (game.Managers != null) game.Benefits = LoadBenefits(read("benefits.json")); // and benefits to keep their people (spec 028 §3.8)
+                if (game.Benefits != null) game.Workplace = LoadWorkplace(read("workplace.json")); // and supervisors, accidents, conflicts and associations (spec 028 §3.9)
             }
             return game;
         }

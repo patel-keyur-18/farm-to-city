@@ -69,6 +69,7 @@ namespace Sim.Core.Saves
             SetBenefit, SetNightShift,
             SetTuitionFee, SetDish,
             SetMarketing, SetKhata, SetKhataLimit, CutOffHousehold,
+            DismissSupervisor,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -212,6 +213,7 @@ namespace Sim.Core.Saves
                 case SetBenefit c: At(c, Tag.SetBenefit); w.WriteLong(c.Employer); w.WriteInt((int)c.Benefit); w.WriteBool(c.On); break;
                 case SetNightShift c: At(c, Tag.SetNightShift); w.WriteLong(c.BusinessId); w.WriteBool(c.On); break;
                 case SetTuitionFee c: At(c, Tag.SetTuitionFee); w.WriteLong(c.BusinessId); w.WriteInt(c.Preset); break;
+                case DismissSupervisor c: At(c, Tag.DismissSupervisor); break;
                 case SetMarketing c: At(c, Tag.SetMarketing); w.WriteLong(c.BusinessId); w.WriteLong(c.Budget); break;
                 case SetKhata c: At(c, Tag.SetKhata); w.WriteLong(c.BusinessId); w.WriteBool(c.On); break;
                 case SetKhataLimit c: At(c, Tag.SetKhataLimit); w.WriteLong(c.BusinessId); w.WriteLong(c.Limit); break;
@@ -411,6 +413,7 @@ namespace Sim.Core.Saves
                 case Tag.SetBenefit: return new SetBenefit(at, r.ReadLong(), (People.Benefit)r.ReadInt(), r.ReadBool());
                 case Tag.SetNightShift: return new SetNightShift(at, r.ReadLong(), r.ReadBool());
                 case Tag.SetTuitionFee: return new SetTuitionFee(at, r.ReadLong(), r.ReadInt());
+                case Tag.DismissSupervisor: return new DismissSupervisor(at);
                 case Tag.SetMarketing: return new SetMarketing(at, r.ReadLong(), r.ReadLong());
                 case Tag.SetKhata: return new SetKhata(at, r.ReadLong(), r.ReadBool());
                 case Tag.SetKhataLimit: return new SetKhataLimit(at, r.ReadLong(), r.ReadLong());

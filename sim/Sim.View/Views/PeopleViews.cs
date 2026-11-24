@@ -242,6 +242,7 @@ namespace Sim.View.Views
             }
 
             if (p.Hands.Count > 0) BenefitSheet.AddSection(ctx, vm, 0); // spec 028 §3.8: what your farm gives its hands
+            if (p.Hands.Count > 0) WorkplaceSheet.AddSection(ctx, vm, 0); // spec 028 §3.9: the supervisor, accidents, quarrels and an association
 
             // Who's asking for work: chosen on the hiring board (spec 015 §7).
             if (p.Applicants.Count > 0)

@@ -18,6 +18,7 @@ namespace Sim.View.Views
         public static string Role(ViewContext ctx, long place)
         {
             if (place == HiringRules.ManagerPlace) return ctx.Strings.Get("board.manager");
+            if (place == HiringRules.SupervisorPlace) return ctx.Strings.Get("board.supervisor");
             if (place < 0) return ctx.Strings.Get("board.masons");
             if (place == 0) return ctx.Strings.Get("board.hand");
             Business b = ctx.Sim.State.Businesses.Find(place);
@@ -32,6 +33,7 @@ namespace Sim.View.Views
             if (sim.State.Businesses == null) { if (Sim.Core.Town.ConstructionRules.On(sim)) list.Add(-1); return list; }
             foreach (Business b in sim.State.Businesses.Businesses) if (b.Status != BusinessStatus.Closed) list.Add(b.Id);
             if (ManagerRules.On(sim) && sim.State.Businesses.Businesses.Exists(b => b.Status != BusinessStatus.Closed)) list.Add(HiringRules.ManagerPlace); // spec 028 §3.2: one post for the town's managers
+            if (WorkplaceRules.On(sim)) list.Add(HiringRules.SupervisorPlace); // spec 028 §3.9: the farm's supervisor
             if (Sim.Core.Town.ConstructionRules.On(sim)) list.Add(-1); // the town's masons (spec 025 §3.2)
             return list;
         }
@@ -50,6 +52,7 @@ namespace Sim.View.Views
                 foreach (long x in places) vm.Tabs.Add(ActionVm.Open("tab:" + x, Role(ctx, x), new SheetRequest("Word", x)));
             }
             if (place == HiringRules.ManagerPlace) ManagerSheet.AddJob(ctx, vm);
+            else if (place == HiringRules.SupervisorPlace) { WorkplaceSheet.AddJob(ctx, vm); WorkplaceSheet.AddGreyPost(ctx, vm); }
             else if (place < 0) { BuildingSheet.MasonList(ctx, vm); return vm; }
             else AddJob(ctx, vm, place);
             AddPost(ctx, vm, place);
@@ -200,7 +203,7 @@ namespace Sim.View.Views
             };
             if (a.Countered)
                 vm.Lines.Add(new LineVm(s.Get("board.counterLine"), ctx.Fmt.Coins(HiringRules.OfferWage(sim, a, OfferLevel.Asked)), "jobWage", a.Id) { Note = s.Get("board.counterNote"), NoteTone = Tone.Warn });
-            bool business = a.Place != 0;
+            bool business = a.Place > 0;
             foreach (OfferLevel level in new[] { OfferLevel.Asked, OfferLevel.Low, OfferLevel.High })
             {
                 OfferLevel l = level;

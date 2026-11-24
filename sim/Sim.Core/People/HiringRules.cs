@@ -33,6 +33,9 @@ namespace Sim.Core.People
         /// <summary>The place of the manager's post on the board (spec 028 §3.2; -1 is the masons' tab in the views): one post for the town, the business chosen when you offer.</summary>
         public const long ManagerPlace = -2;
 
+        /// <summary>The place of the supervisor's post (spec 028 §3.9): one post for the farm; -1 is the masons' tab and -2 the manager's.</summary>
+        public const long SupervisorPlace = -3;
+
         /// <summary>What a worker's role asks at skill 50: a manager's is the post's, any other the business's.</summary>
         public static long MarketWageOf(Simulation sim, Worker w) { return w.Mgr != null ? Business.ManagerRules.MarketWage(sim, w.Place) : MarketWage(sim, w.Place); }
 
@@ -42,7 +45,7 @@ namespace Sim.Core.People
         /// <summary>A business's role reads farming (the dairyman) or crafting (the miller, the baker); the farm hand farming.</summary>
         public static bool Farms(Simulation sim, long place)
         {
-            return place == 0 || (place > 0 && BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).WorkerFarms);
+            return place == 0 || place == SupervisorPlace || (place > 0 && BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).WorkerFarms);
         }
 
         /// <summary>A citizen's skill in the place's role, rounded.</summary>
@@ -55,6 +58,7 @@ namespace Sim.Core.People
         public static long MarketWage(Simulation sim, long place)
         {
             if (place == ManagerPlace) return Business.ManagerRules.MarketWage(sim, 0);
+            if (place == SupervisorPlace) return sim.Config.Game.Workplace.SupervisorWage;
             return place == 0 ? sim.Config.Game.People.Hand.MarketWage : BusinessRules.TypeOf(sim, sim.State.Businesses.Find(place)).Wage;
         }
 
@@ -112,6 +116,12 @@ namespace Sim.Core.People
         public static RejectReason BusinessPlace(Simulation sim, long place)
         {
             if (place == ManagerPlace) return Business.ManagerRules.On(sim) ? RejectReason.None : RejectReason.NoTownship;
+            if (place == SupervisorPlace)
+            {
+                if (!WorkplaceRules.On(sim)) return RejectReason.NoTownship;
+                if (WorkplaceRules.Supervisor(sim) != null) return RejectReason.HasSupervisor;
+                return WorkplaceRules.Workers(sim, 0).Count < sim.Config.Game.Workplace.SupervisorMinWorkers ? RejectReason.TooFewWorkers : RejectReason.None;
+            }
             Business.Business b = sim.State.Businesses?.Find(place);
             if (b == null || b.Status == BusinessStatus.Closed) return RejectReason.UnknownBusiness;
             if (b.Worker == WorkerKind.Citizen || b.Worker == WorkerKind.Neighbour) return RejectReason.AlreadyStaffed;
@@ -122,7 +132,7 @@ namespace Sim.Core.People
         public static List<Citizen> TownCandidates(Simulation sim, long place)
         {
             var list = new List<Citizen>();
-            if (sim.State.Citizens == null) return list;
+            if (sim.State.Citizens == null || place == SupervisorPlace) return list; // a supervisor comes from outside the town
             PeopleState s = sim.State.People;
             foreach (Citizen c in sim.State.Citizens.Citizens)
                 if (HouseholdRules.WorksOutside(sim, c) && s.Applicants.Find(a => a.CitizenId == c.Id && a.Place == place) == null) list.Add(c);
@@ -250,6 +260,11 @@ namespace Sim.Core.People
             if (manages != null)
             {
                 Business.ManagerRules.Hire(sim, a, wage, fairness, manages);
+                return;
+            }
+            if (a.Place == SupervisorPlace)
+            {
+                WorkplaceRules.Hire(sim, a, wage);
                 return;
             }
             if (a.Place == 0)

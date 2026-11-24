@@ -552,6 +552,15 @@ namespace Sim.Core.People
         SickLeave = 2,
         FamilyEmergency = 3,
         BadBatch = 4,
+
+        /// <summary>Spec 028 §3.9 (schema 24): choices 0 pay the days' wage, 1 don't; a default after <see cref="HrEvent.ExpiresAt"/>.</summary>
+        Accident = 5,
+
+        /// <summary>Choices 0 talk to both, 1 move one, 2 let it be (the default).</summary>
+        Conflict = 6,
+
+        /// <summary>Choices 0 accept, 1 negotiate, 2 refuse (the default).</summary>
+        Association = 7,
     }
 
     /// <summary>
@@ -576,6 +585,15 @@ namespace Sim.Core.People
         public long Grams { get; internal set; }
         public long Cost { get; internal set; }
 
+        /// <summary>Spec 028 §3.9 (the three new kinds only): when the default answers it, the second worker of a quarrel, the hours an accident keeps them out, and whether it was severe.</summary>
+        public long ExpiresAt { get; internal set; }
+        public long OtherId { get; internal set; }
+        public int Hours { get; internal set; }
+        public bool Severe { get; internal set; }
+
+        /// <summary>One of the cards with a deadline and a default (accident, conflict, association).</summary>
+        public bool Timed { get { return Kind >= HrEventKind.Accident; } }
+
         internal HrEvent Clone() { return (HrEvent)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -586,6 +604,13 @@ namespace Sim.Core.People
             h.WriteLong(WorkerId);
             h.WriteLong(At);
             h.WriteLong(Amount);
+            if (Timed) // the new kinds' own fields: old saves have none, so their bytes are unchanged
+            {
+                h.WriteLong(ExpiresAt);
+                h.WriteLong(OtherId);
+                h.WriteInt(Hours);
+                h.WriteBool(Severe);
+            }
             h.WriteBool(Good >= 0);
             if (Good < 0) return;
             h.WriteRef(ContentTable.Good, Good);
@@ -599,6 +624,7 @@ namespace Sim.Core.People
             {
                 Id = r.ReadLong(), Kind = (HrEventKind)r.ReadInt(), Place = r.ReadLong(), WorkerId = r.ReadLong(), At = r.ReadLong(), Amount = r.ReadLong(),
             };
+            if (e.Timed) { e.ExpiresAt = r.ReadLong(); e.OtherId = r.ReadLong(); e.Hours = r.ReadInt(); e.Severe = r.ReadBool(); }
             if (!r.ReadBool()) return e;
             e.Good = r.ReadRef(ContentTable.Good);
             e.Grams = r.ReadLong();
@@ -629,6 +655,9 @@ namespace Sim.Core.People
         /// <summary>HR events waiting for the player, in id order (spec 015 §3.7).</summary>
         public List<HrEvent> HrEvents { get; } = new List<HrEvent>();
         public long NextHrEventId { get; internal set; } = 1;
+
+        /// <summary>The supervisor, each place's relations and your talking (spec 028 §3.9, schema 24).</summary>
+        public WorkplaceState Workplace { get; internal set; } = new WorkplaceState();
 
         /// <summary>The farm hand's post, or null.</summary>
         public JobPost Post { get { return PostAt(0); } }
@@ -676,7 +705,7 @@ namespace Sim.Core.People
             var c = new PeopleState
             {
                 NextApplicantAt = NextApplicantAt, NextApplicantId = NextApplicantId, NextHandId = NextHandId,
-                NextConstructionId = NextConstructionId, NextWorkerId = NextWorkerId, Reputation = Reputation, NextHrEventId = NextHrEventId,
+                NextConstructionId = NextConstructionId, NextWorkerId = NextWorkerId, Reputation = Reputation, NextHrEventId = NextHrEventId, Workplace = Workplace.Clone(),
             };
             foreach (HrEvent e in HrEvents) c.HrEvents.Add(e.Clone());
             foreach (JobPost x in Posts) c.Posts.Add(x.Clone());
@@ -730,7 +759,7 @@ namespace Sim.Core.People
             h.WriteLong(NextApplicantId);
             h.WriteLong(NextHandId);
             h.WriteLong(NextConstructionId);
-            if (!v11 || (h.Hashing && Workers.Count == 0 && NextWorkerId == 1 && Reputation == 50 && NextHrEventId == 1)) return; // hashed only once used
+            if (!v11 || (h.Hashing && Workers.Count == 0 && NextWorkerId == 1 && Reputation == 50 && NextHrEventId == 1 && !Workplace.Used)) return; // hashed only once used
             h.WriteInt(Workers.Count);
             foreach (Worker w in Workers) w.WriteTo(h);
             h.WriteLong(NextWorkerId);
@@ -738,6 +767,7 @@ namespace Sim.Core.People
             h.WriteInt(HrEvents.Count);
             foreach (HrEvent e in HrEvents) e.WriteTo(h);
             h.WriteLong(NextHrEventId);
+            if (h.Hashing ? Workplace.Used : !(h is SaveWriter w24 && w24.Schema < Town.TownshipState.WorkplaceSchema)) Workplace.WriteTo(h); // schema 24; hashed once a supervisor stands or a place has a record
         }
 
         internal static PeopleState ReadFrom(SaveReader r, long now)
@@ -775,6 +805,7 @@ namespace Sim.Core.People
             n = r.ReadCount();
             for (int i = 0; i < n; i++) s.HrEvents.Add(HrEvent.ReadFrom(r));
             s.NextHrEventId = r.ReadLong();
+            if (r.Schema >= Town.TownshipState.WorkplaceSchema) s.Workplace = WorkplaceState.ReadFrom(r);
             return s;
         }
     }

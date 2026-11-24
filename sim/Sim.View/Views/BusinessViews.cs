@@ -495,6 +495,7 @@ namespace Sim.View.Views
             ExitSheet.AddSettings(ctx, vm, b); // spec 028 §3.3: what it is worth, and selling it
             AddSettingsCore(ctx, vm, b, t);
             BenefitSheet.AddSection(ctx, vm, b.Id); // spec 028 §3.8: what it gives its workers
+            WorkplaceSheet.AddSection(ctx, vm, b.Id); // spec 028 §3.9: what each rule needs here
             BenefitSheet.AddNight(ctx, vm, b); // and a night shift when the day shift can't keep up
             ManagerSheet.MarkSet(ctx, vm, b); // what he sets each morning is no longer yours to change
         }
