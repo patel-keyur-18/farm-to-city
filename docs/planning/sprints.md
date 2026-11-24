@@ -1215,7 +1215,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-159 | Citizen stories | [F16.4](features/F16.4-citizen-stories.md) | 5 | Should | Built 2026-11-24; awaiting the owner's review |
 | US-260 | Your kirana, marketing and khata | [F12.3](features/F12.3-services-and-customer-choice.md) | 5 | Should | Built 2026-11-24, Preview 21 approved; awaiting the owner's review |
 | US-259 | Supervisors, worker associations, conflicts and accidents | [F11.4](features/F11.4-full-hiring-and-hr.md) | 5 | Could | Built 2026-11-24, Preview 20 approved; awaiting the owner's review |
-| US-248 | Phase 3 exploit checks | [F20.1](features/F20.1-balancer-and-health-checks.md) | 5 | Must | To do |
+| US-248 | Phase 3 exploit checks | [F20.1](features/F20.1-balancer-and-health-checks.md) | 5 | Must | Built 2026-11-24; awaiting the owner's review |
 | US-249 | The playtest town and the Release build | [F10.3](features/F10.3-phase-3-playtest-and-gate.md) | 3 | Must | To do |
 
 **Order of work** (one stop for the owner's review after each story; every sheet previewed as an artifact that looks exactly like the game before its UI code; each preview made at the start of its story's slot):
