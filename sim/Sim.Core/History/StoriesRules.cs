@@ -83,10 +83,22 @@ namespace Sim.Core.History
         public static bool Eligible(Simulation sim, Citizen c)
         {
             StoriesDefs d = Defs(sim);
+            if (!Town.TownshipRules.Reached(sim)) return false; // spec 029 §3.6 (ADR 0167): not before the Township, or a free rival could stand in the way of the gate's three businesses
             if (!c.Living || InArc(sim, c.Id) || Find(State(sim), c.Id, StoryArc.Stall, false) != null) return false;
             if (!Staff(sim, c, out int seasons, out Fixed motivation, out ShopKind trade)) return false;
             Household x = sim.State.Citizens.Household(c.HouseholdId);
-            return x != null && seasons >= d.StallSeasons && x.Savings >= MarketRules.Indexed(sim, d.StallSavings) && motivation >= d.StallMotivation && ShopRules.CanFound(sim, trade);
+            return x != null && seasons >= d.StallSeasons && x.Savings >= MarketRules.Indexed(sim, d.StallSavings) && motivation >= d.StallMotivation && ShopRules.CanFound(sim, trade) && !WaitsForFirstProfit(sim, trade);
+        }
+
+        /// <summary>
+        /// A shop of yours of the trade that has not yet had a profitable season (spec 029 §3.6, ADR 0167): a citizen's stall never opens against it, so the Township gate's "3 businesses each with a profitable
+        /// season" is never lost to a rival that came before your shop had its chance (measured: 3 of 48 competent towns never reached the Township, 24 of 200).
+        /// </summary>
+        public static bool WaitsForFirstProfit(Simulation sim, ShopKind trade)
+        {
+            foreach (Business.Business b in sim.State.Businesses.Businesses)
+                if (b.Status != BusinessStatus.Closed && b.ProfitableSeasons == 0 && BusinessRules.TypeOf(sim, b).Kind == trade) return true;
+            return false;
         }
 
         // ---- the close ----
@@ -108,6 +120,7 @@ namespace Sim.Core.History
                 Hand h = c == null ? null : HandOf(sim, c);
                 Worker w = c == null || h != null ? null : WorkerOf(sim, c, out _);
                 if (c == null || !c.Living || (h == null && w == null) || !ShopRules.CanFound(sim, kind)) { a.Done = true; continue; } // their post changed: the notice lapses
+                if (WaitsForFirstProfit(sim, kind)) continue; // a shop of yours of his trade opened since the notice and has had no profitable season: he stays on another season
                 if (h != null) { PeopleSystem.Leave(sim, h); sim.Emit(new HandLeft(now, h.Id)); }
                 else
                 {

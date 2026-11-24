@@ -248,5 +248,46 @@ namespace Sim.Core.Tests
             Assert.That(worth.Count(w => w <= 0), Is.Zero, "nobody ends year 8 with no net worth");
             Assert.That(rail, Is.LessThan(0.001), "the 0.5 to 2 rail clamps under 0.1% of good-hours");
         }
+
+        // Sprint 26's balance pass (spec 029 §9, spec 028 §9): measures, prints, asserts nothing. The Township's day on 200 seeds (competent bot), then at season 60 the Chronicle's entries and the save's
+        // size, how many stalls the stories opened, and the citizens' households. Run with `--filter Sprint26Measure`.
+        [Test, Explicit("measure")]
+        public void Sprint26Measure()
+        {
+            SimConfig config = LiveTownship();
+            int seeds = P3Seeds;
+            Gate.TownshipResult r = Gate.Township(config, () => new TownshipBot(false), seeds, 80);
+            var days = r.Township.Where(d => !double.IsNaN(d)).OrderBy(d => d).ToList();
+            TestContext.Out.WriteLine("S26 pace: Township reached in " + days.Count + " of " + seeds + ", day 10th/median/90th " + days[days.Count / 10].ToString("0.0") + " / " + days[days.Count / 2].ToString("0.0") + " / " + days[days.Count * 9 / 10].ToString("0.0")
+                + "; businesses goal day median " + MidOf(r.Businesses.Where(d => !double.IsNaN(d))).ToString("0.0") + ", never " + r.Businesses.Count(double.IsNaN));
+            var entries = new int[seeds]; var bytes = new int[seeds]; var stalls = new int[seeds]; var gone = new int[seeds]; var arcs = new int[seeds];
+            System.Threading.Tasks.Parallel.For(0, seeds, i =>
+            {
+                Simulation sim = Economy.RunBot(config, new TownshipBot(false), 60, (ulong)(i + 1), null).Sim;
+                entries[i] = sim.State.Chronicle?.Entries.Count ?? 0;
+                bytes[i] = Sim.Core.Saves.SaveCodec.Write(sim.State, config, TestSim.Wall0).Length;
+                var st = sim.State.Chronicle?.Stories;
+                stalls[i] = st == null ? 0 : st.Arcs.Count(a => a.Arc == StoryArc.Stall && a.Step >= 2);
+                gone[i] = st == null ? 0 : st.Arcs.Count(a => a.Arc == StoryArc.Stall && a.Step == 1);
+                arcs[i] = st == null ? 0 : st.Arcs.Count;
+            });
+            string P(int[] v) { var l = v.OrderBy(x => x).ToList(); return l[l.Count / 10] + " / " + l[l.Count / 2] + " / " + l[l.Count * 9 / 10] + " (max " + l[l.Count - 1] + ")"; }
+            TestContext.Out.WriteLine("S26 at season 60, 10th/median/90th: chronicle entries " + P(entries) + "; save bytes " + P(bytes) + "; story arcs " + P(arcs) + "; stalls opened " + P(stalls) + "; notices given " + P(gone));
+        }
+
+        // Sprint 26's balance pass: what citizens' own stalls (spec 029 §3.6) do to the Township's gate. The competent bot on the same seeds with the stall story on and off (chance 0): how many
+        // never meet the businesses goal or the Township, and the median day. Run with `--filter StallEffect`; `FTC_SEEDS` sets the seeds.
+        [Test, Explicit("measure")]
+        public void StallEffect()
+        {
+            foreach (string chance in new[] { "0.2", "0" })
+            {
+                SimConfig config = LiveTownship((f, j) => f == "stories.json" ? j.Replace("\"chance\": 0.2", "\"chance\": " + chance) : j);
+                Gate.TownshipResult r = Gate.Township(config, () => new TownshipBot(false), P3Seeds, 80);
+                var days = r.Township.Where(d => !double.IsNaN(d)).OrderBy(d => d).ToList();
+                TestContext.Out.WriteLine("STALL chance " + chance + ": Township reached in " + days.Count + " of " + P3Seeds + ", median day " + days[days.Count / 2].ToString("0.0") + ", 90th " + days[days.Count * 9 / 10].ToString("0.0")
+                    + "; businesses goal never in " + r.Businesses.Count(double.IsNaN) + " (seeds " + string.Join(",", r.Businesses.Select((d, k) => double.IsNaN(d) ? k + 1 : 0).Where(k => k > 0)) + ")" + ", median day " + MidOf(r.Businesses.Where(d => !double.IsNaN(d))).ToString("0.0"));
+            }
+        }
     }
 }

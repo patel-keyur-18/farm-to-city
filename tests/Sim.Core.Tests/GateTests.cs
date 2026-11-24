@@ -337,11 +337,7 @@ namespace Sim.Core.Tests
                     + "; road " + Days(r.Road) + "; businesses " + Days(r.Businesses) + "; literacy " + Days(r.Literacy) + "; households at unlock " + string.Join(" ", r.HouseholdsAtUnlock)
                     + "; treasury at unlock " + string.Join(" ", r.TreasuryAtUnlock.Select(c => c / Sim.Core.Finance.Money.Coin)) + "; broken " + r.Broken);
                 for (int k = 0; k < Gate.HouseholdSteps.Length; k++) TestContext.Out.WriteLine(r.Bot + ": " + Gate.HouseholdSteps[k] + " households on day " + Days(r.DaysAt[k]));
-                // US-248 (ADR 0167): one run of 16 may stay foreclosed. Since citizens' own stalls (US-159) took a pitch, the competent bot's shops earn a little less in one seed (13), its close is thin by
-                // a few thousand coins, two of its house loans default and the bank forecloses its land and its three businesses at day 117; the bot has no recovery of its own (the Phase 1
-                // RecoveringBot does) and never rebuilds. Keeping back the next close's instalments fixed that seed but slowed the median to day 133 (out of 85 to 125) and left another seed stuck,
-                // so the bot stays as ADR 0120 measured it. A player who is foreclosed recovers (`RecoverableBankruptcy`).
-                Assert.That(r.Township.Count(double.IsNaN), Is.LessThanOrEqualTo(1), r.Bot + ": all but one run gets there (the 15 households are the last goal)");
+                Assert.That(r.Township.Count(double.IsNaN), Is.Zero, r.Bot + ": every run gets there (the 15 households are the last goal)");
                 double median = r.Township.OrderBy(d => d).ElementAt(r.Township.Count / 2);
                 Assert.That(median, saver ? Is.InRange(115.0, 160.0) : Is.InRange(85.0, 125.0), r.Bot + ": the Township's day (owner-approved 2026-11-18: ADR 0107's day 63–77 and 100–110 were out of reach: 20 households cost about 1.8 million)");
                 // Counted after the unlock's own close. A bot that borrowed for every house (seed 3 of 16 after US-147 moved the draws: 24 loans, 8 lakh owed, in arrears for weeks) can be

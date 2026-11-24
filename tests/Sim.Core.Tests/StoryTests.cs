@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Sim.Core.Business;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
+using Sim.Core.Finance;
 using Sim.Core.History;
 using Sim.Core.Maths;
 using Sim.Core.People;
@@ -16,10 +17,12 @@ namespace Sim.Core.Tests
     {
         private const long Coin = 100;
 
-        /// <summary>A Township-start town where every hand who qualifies gives notice (the chance is 1 instead of one in five).</summary>
+        /// <summary>A town at the Township where every hand who qualifies gives notice (the chance is 1 instead of one in five).</summary>
         private static Simulation Start(bool sure = true)
         {
-            return TownshipTests.Start(false, sure ? (f, j) => f == "stories.json" ? j.Replace("\"chance\": 0.2", "\"chance\": 1.0") : j : null);
+            Simulation sim = TownshipTests.Start(false, sure ? (f, j) => f == "stories.json" ? j.Replace("\"chance\": 0.2", "\"chance\": 1.0") : j : null);
+            if (!Sim.Core.Town.TownshipRules.Reached(sim)) TreasuryTests.Township(sim); // the stall story waits for the Township
+            return sim;
         }
 
         private static StoriesState St(Simulation sim) { return sim.State.Chronicle.Stories; }
@@ -91,13 +94,26 @@ namespace Sim.Core.Tests
             Simulation sim = Start();
             Citizen few = Person(sim, 30); TownHand(sim, few, seasons: 1);
             Citizen poor = Person(sim, 31, savings: 1_000); TownHand(sim, poor);
+            Assert.That(Sim.Core.Town.TownshipRules.Reached(sim), Is.True, "the town is a Township");
             Assert.That(StoriesRules.Eligible(sim, few), Is.False, "under three seasons");
             Assert.That(StoriesRules.Eligible(sim, poor), Is.False, "savings under 10,000 coins");
             Citizen rich = Person(sim, 32); TownHand(sim, rich);
+            int era = sim.State.Era.Current;
+            sim.State.Era.Current = 1;
+            Assert.That((Sim.Core.Town.TownshipRules.Reached(sim), StoriesRules.Eligible(sim, rich)), Is.EqualTo((false, false)), "before the Township nobody gives notice: a free rival must never stand in the way of the gate's three businesses");
+            sim.State.Era.Current = era;
             sim.State.Shops.Newcomers.Add(new Rival { Def = -1, Id = "newcomer_veg", Kind = ShopKind.Veg, Pitch = -1, PriceFactor = Fixed.One, Stars = Fixed.One });
             Assert.That(StoriesRules.Eligible(sim, rich), Is.False, "a vegetable newcomer already stands: nobody is stranded, so nobody gives notice");
             sim.State.Shops.Newcomers.Clear();
             Assert.That(StoriesRules.Eligible(sim, rich), Is.True);
+            // A shop of yours of his trade with no profitable season yet: nobody opens against it (the Township gate asks 3 businesses each with a profitable season).
+            sim.State.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.Cash, 1_000_000 * Coin), new Posting(Account.Sales, -1_000_000 * Coin));
+            PeopleKit.Ok(sim, new Sim.Core.Commands.FoundBusiness(sim.State.Clock.SimTime, "veg_stall", 0, 200_000 * Coin, false, null, 0));
+            Business.Business mine = sim.State.Businesses.Businesses.Last();
+            Assert.That((mine.ProfitableSeasons, StoriesRules.WaitsForFirstProfit(sim, ShopKind.Veg)), Is.EqualTo((0, true)));
+            Assert.That(StoriesRules.Eligible(sim, rich), Is.False, "your vegetable stall has not had a profitable season: he waits");
+            mine.ProfitableSeasons = 1;
+            Assert.That(StoriesRules.Eligible(sim, rich), Is.True, "once it has, he may give notice");
             sim.State.Clock.IsAway = true;
             Close(sim);
             sim.State.Clock.IsAway = false;
