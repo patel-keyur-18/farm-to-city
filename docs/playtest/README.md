@@ -1,5 +1,7 @@
 # Phase 2 playtest (Sprint 19, US-238)
 
+*Phase 3's findings are in `phase-3-findings.md` (ADR 0171); its checklist is `docs/test-checklists/s26-phase-3-playtest.md`.*
+
 What goes here, and who puts it here:
 
 | File | What | Who |
