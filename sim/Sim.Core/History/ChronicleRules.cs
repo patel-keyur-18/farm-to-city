@@ -158,7 +158,7 @@ namespace Sim.Core.History
                     Add(sim, ChronicleKind.FireSurvived, x.SimTime, x.Cost);
                     break;
                 case EpidemicEnded x:
-                    Add(sim, ChronicleKind.EpidemicSurvived, x.SimTime, Progress.EraRules.Households(sim) * x.FactorPercent / 100);
+                    Add(sim, ChronicleKind.EpidemicSurvived, x.SimTime, (Progress.EraRules.Households(sim) * x.FactorPercent + 99) / 100); // rounded up: a town with a household and an epidemic had at least one family ill
                     break;
                 case LoanCleared x:
                     Add(sim, ChronicleKind.LoanCleared, x.SimTime, x.Amount, x.LoanId, x.LenderId);

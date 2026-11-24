@@ -23,6 +23,7 @@ namespace Sim.View.Tests
             foreach (TreeSlot s in sim.State.Land.Slots) yield return Named("slot " + s.Id, FieldSheets.ForSlot(ctx, s.Id));
             foreach (GardenBed b in sim.State.Farm.Beds) yield return Named("bed " + b.Id, FieldSheets.ForBed(ctx, b.Id));
             yield return Named("store", StoreSheet.Build(ctx));
+            if (sim.State.Chronicle != null) yield return Named("chronicle", ChronicleSheet.Build(ctx));
             yield return Named("people", PeopleSheet.Build(ctx));
             yield return Named("hire", PeopleSheet.Hire(ctx));
             foreach (long place in HiringBoard.Places(sim)) yield return Named("board " + place, HiringBoard.Build(ctx, place));

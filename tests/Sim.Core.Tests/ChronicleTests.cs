@@ -77,7 +77,7 @@ namespace Sim.Core.Tests
             sim.Emit(new LoanCleared(t, 5, "coop_bank", 40_000));
             sim.Emit(new EpidemicEnded(t, 30));
             Assert.That(Of(sim, ChronicleKind.LoanCleared).Single().Id, Is.EqualTo("coop_bank"));
-            Assert.That(Of(sim, ChronicleKind.EpidemicSurvived).Single().A, Is.EqualTo(Sim.Core.Progress.EraRules.Households(sim) * 30 / 100), "the families it made ill");
+            Assert.That(Of(sim, ChronicleKind.EpidemicSurvived).Single().A, Is.EqualTo((Sim.Core.Progress.EraRules.Households(sim) * 30 + 99) / 100), "the families it made ill, rounded up");
         }
 
         // AC-3: a record harvest needs 1,000 kg and 5% over the best earlier season; the first season past the floor sets the mark; one line a season.
