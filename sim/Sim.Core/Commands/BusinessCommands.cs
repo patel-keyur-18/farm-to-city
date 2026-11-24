@@ -475,4 +475,64 @@ namespace Sim.Core.Commands
 
         protected override CommandResult ApplyAt(Simulation sim) { return MealsRules.SetDish(sim, BusinessId, Dish, On); }
     }
+
+    /// <summary>A shop's marketing budget for each season (spec 028 §3.10): one of the content's budgets; it is paid at the close and adds to the score while it is spent.</summary>
+    public sealed class SetMarketing : TimedCommand
+    {
+        public long BusinessId { get; }
+        public long Budget { get; }
+
+        public SetMarketing(long at, long businessId, long budget) : base(at)
+        {
+            BusinessId = businessId;
+            Budget = budget;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return KhataRules.SetMarketing(sim, BusinessId, Budget); }
+    }
+
+    /// <summary>Switches khata on a kirana, vegetable stall or tea stall on or off (spec 028 §3.10); off, nothing new is sold on credit but what is owed is still collected.</summary>
+    public sealed class SetKhata : TimedCommand
+    {
+        public long BusinessId { get; }
+        public bool On { get; }
+
+        public SetKhata(long at, long businessId, bool on) : base(at)
+        {
+            BusinessId = businessId;
+            On = on;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return KhataRules.SetKhata(sim, BusinessId, On); }
+    }
+
+    /// <summary>What a household may owe a shop on khata (spec 028 §3.10): one of the content's limits.</summary>
+    public sealed class SetKhataLimit : TimedCommand
+    {
+        public long BusinessId { get; }
+        public long Limit { get; }
+
+        public SetKhataLimit(long at, long businessId, long limit) : base(at)
+        {
+            BusinessId = businessId;
+            Limit = limit;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return KhataRules.SetLimit(sim, BusinessId, Limit); }
+    }
+
+    /// <summary>Stops one household's khata at a shop until the close has collected what it owes (spec 028 §3.10).</summary>
+    public sealed class CutOffHousehold : TimedCommand
+    {
+        public long BusinessId { get; }
+        public long HouseholdId { get; }
+
+        public CutOffHousehold(long at, long businessId, long householdId) : base(at)
+        {
+            BusinessId = businessId;
+            HouseholdId = householdId;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim) { return KhataRules.CutOff(sim, BusinessId, HouseholdId); }
+    }
 }

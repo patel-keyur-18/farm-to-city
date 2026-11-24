@@ -122,6 +122,16 @@
         ]
       },
       "good": { "recipeCost": 0.10 }
+    },
+    {
+      "id": "kirana", "nameKey": "business.kirana", "era": "township", "kind": "grocery",
+      "building": { "value": 20000, "lifeSeasons": 40 },
+      "equipment": { "value": 8000, "lifeSeasons": 20 },
+      "buildHours": 24, "worker": "shopkeeper", "workerSkill": "crafting", "wage": 12000,
+      "capacityPerHour": 400, "repairsShare": 0.02,
+      "openHour": 7, "closeHour": 21,
+      "goods": ["atta", "rice", "lentils", "ghee", "rusk", "pav", "paneer", "curd"],
+      "good": { }
     }
   ]
 }

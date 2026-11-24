@@ -69,4 +69,38 @@ namespace Sim.Core.Events
 
         protected override string Describe() { return "RivalPriceCut(" + RivalId + ", " + PriceFactor + (Raised ? ", back up" : "") + ")"; }
     }
+
+    /// <summary>A household took its first goods on khata this season (spec 028 §3.10): the amount is what it took in that hour.</summary>
+    public sealed class KhataGranted : SimEvent
+    {
+        public long BusinessId { get; }
+        public long HouseholdId { get; }
+        public long Amount { get; }
+
+        public KhataGranted(long simTime, long businessId, long householdId, long amount) : base(simTime)
+        {
+            BusinessId = businessId;
+            HouseholdId = householdId;
+            Amount = amount;
+        }
+
+        protected override string Describe() { return "KhataGranted(id=" + BusinessId + ", household=" + HouseholdId + ", amount=" + Amount + ")"; }
+    }
+
+    /// <summary>What a household never paid on khata, written off as bad debt at the close (spec 028 §3.10).</summary>
+    public sealed class KhataWrittenOff : SimEvent
+    {
+        public long BusinessId { get; }
+        public long HouseholdId { get; }
+        public long Amount { get; }
+
+        public KhataWrittenOff(long simTime, long businessId, long householdId, long amount) : base(simTime)
+        {
+            BusinessId = businessId;
+            HouseholdId = householdId;
+            Amount = amount;
+        }
+
+        protected override string Describe() { return "KhataWrittenOff(id=" + BusinessId + ", household=" + HouseholdId + ", amount=" + Amount + ")"; }
+    }
 }

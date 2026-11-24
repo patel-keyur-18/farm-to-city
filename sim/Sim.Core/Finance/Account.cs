@@ -127,6 +127,12 @@ namespace Sim.Core.Finance
         Power = 5810,
         Repairs = 5820,
 
+        /// <summary>A shop's marketing budget for the season ahead (spec 028 §3.10, schema 24), on its own books.</summary>
+        Marketing = 5840,
+
+        /// <summary>What khata customers never paid, written off at the close (spec 028 §3.10, ADR 0167, schema 24), on the shop's own books.</summary>
+        BadDebt = 5845,
+
         /// <summary>A business's tax on its season profit (spec 022 §3.2), on its own books.</summary>
         BusinessTax = 5830,
 
@@ -188,6 +194,7 @@ namespace Sim.Core.Finance
             Account.RegionalGrants, Account.DisasterLoss, Account.EventCosts, // spec 027 (save schema 22)
             Account.InsuranceClaims, Account.InsuranceClaimsReceived, Account.CropInsurancePremiums, Account.InsurancePremiums, Account.ContractSettlement,
             Account.TradePayable, Account.OutsideEquity, Account.OutsideDrawings, // spec 028 (save schema 23)
+            Account.Marketing, Account.BadDebt, // spec 028 §3.10 (save schema 24)
         };
 
         /// <summary>
@@ -215,6 +222,7 @@ namespace Sim.Core.Finance
                 case Account.Festivals: case Account.RegionalGrants: case Account.DisasterLoss: case Account.EventCosts:
                 case Account.InsuranceClaims: case Account.InsuranceClaimsReceived: case Account.CropInsurancePremiums: case Account.InsurancePremiums: case Account.ContractSettlement: return 22;
                 case Account.TradePayable: case Account.OutsideEquity: case Account.OutsideDrawings: return 23;
+                case Account.Marketing: case Account.BadDebt: return 24;
                 default: return 0;
             }
         }

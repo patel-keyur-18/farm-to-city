@@ -260,6 +260,33 @@ namespace Sim.Core.Business
         /// <summary>A restaurant's dishes switched off (US-246, schema 23): bit k is the k-th dish; a dish off hands its diners to the other.</summary>
         public int DishesOff { get; internal set; }
 
+        // A shop's marketing and khata (spec 028 §3.10; save schema 24). Zero until used.
+
+        /// <summary>The marketing budget a season, year-0 coins (one of the content's budgets), and the score it adds now (rises to its budget's at the close, fades a fifth each close once stopped).</summary>
+        public long Marketing { get; internal set; }
+        public Fixed MarketLift { get; internal set; }
+
+        /// <summary>Whether it sells on khata, and what a household may owe it (year-0 coins).</summary>
+        public bool Khata { get; internal set; }
+        public long KhataLimit { get; internal set; }
+
+        /// <summary>The households that owe it, in household order (a household with nothing owed and nothing cut off is not kept).</summary>
+        public List<KhataAccount> Credit { get; internal set; } = new List<KhataAccount>();
+
+        /// <summary>This season's sales on credit, and the last close's honest value: credit sold, the sales khata brought, the bad debt written off, the marketing paid and the customers it drew.</summary>
+        public long CreditSeason { get; internal set; }
+        public long LastCredit { get; internal set; }
+        public long LastGain { get; internal set; }
+        public long LastLost { get; internal set; }
+        public long LastSpend { get; internal set; }
+        public long LastDrew { get; internal set; }
+
+        // Worked out each hour from the households' homes (derived, never saved or hashed): the score khata adds to the town's households and the share of the town's people it covers.
+        internal Fixed KhataLiftNow;
+        internal Fixed KhataCover;
+
+        internal bool GrowthUsed { get { return Marketing != 0 || MarketLift != Fixed.Zero || Khata || Credit.Count > 0 || CreditSeason != 0 || LastCredit != 0 || LastGain != 0 || LastLost != 0 || LastSpend != 0 || LastDrew != 0; } }
+
         private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0 || Stakes.Count > 0 || BoughtOutOfferedAt != 0 || Benefits != 0 || FestivalPaid != 0 || ShortDays != 0 || ShortDay != 0; } }
 
         private bool TuitionUsed { get { return Pupils.Count > 0 || CohortPupils != 0 || TuitionFees != 0; } }
@@ -279,6 +306,7 @@ namespace Sim.Core.Business
             c.Reports = new List<BusinessReport>(Reports); // reports are immutable
             c.Stakes = Stakes.ConvertAll(x => x.Clone());
             c.Pupils = new List<long>(Pupils);
+            c.Credit = Credit.ConvertAll(x => x.Clone());
             return c;
         }
 
@@ -349,6 +377,13 @@ namespace Sim.Core.Business
                 h.WriteInt(CohortPupils); h.WriteLong(TuitionFees);
             }
             if (h.Hashing ? DishesOff != 0 : !(h is SaveWriter m23 && m23.Schema < Town.TownshipState.GrowthSchema)) h.WriteInt(DishesOff); // schema 23; hashed once a dish has been switched off
+            if (h.Hashing ? GrowthUsed : !(h is SaveWriter g24 && g24.Schema < 24)) // schema 24; hashed once marketing or khata is used
+            {
+                h.WriteLong(Marketing); h.WriteFixed(MarketLift); h.WriteBool(Khata); h.WriteLong(KhataLimit);
+                h.WriteInt(Credit.Count);
+                foreach (KhataAccount a in Credit) a.WriteTo(h);
+                foreach (long v in new[] { CreditSeason, LastCredit, LastGain, LastLost, LastSpend, LastDrew }) h.WriteLong(v);
+            }
         }
 
         internal static Business ReadFrom(SaveReader r)
@@ -428,7 +463,39 @@ namespace Sim.Core.Business
                 b.CohortPupils = r.ReadInt(); b.TuitionFees = r.ReadLong();
                 b.DishesOff = r.ReadInt();
             }
+            if (r.Schema >= 24)
+            {
+                b.Marketing = r.ReadLong(); b.MarketLift = r.ReadFixed(); b.Khata = r.ReadBool(); b.KhataLimit = r.ReadLong();
+                int credit = r.ReadCount();
+                for (int i = 0; i < credit; i++) b.Credit.Add(KhataAccount.ReadFrom(r));
+                b.CreditSeason = r.ReadLong(); b.LastCredit = r.ReadLong(); b.LastGain = r.ReadLong(); b.LastLost = r.ReadLong(); b.LastSpend = r.ReadLong(); b.LastDrew = r.ReadLong();
+            }
             return b;
+        }
+    }
+
+    /// <summary>
+    /// What one household owes a shop on khata (spec 028 §3.10, schema 24): this season's balance, the part of last season's paid a season late
+    /// (overdue: no new credit while it stands), whether you cut it off, and what the shop has written off from it over the years.
+    /// </summary>
+    public sealed class KhataAccount
+    {
+        public long Household { get; internal set; }
+        public long Balance { get; internal set; }
+        public long Late { get; internal set; }
+        public bool CutOff { get; internal set; }
+        public long WrittenOff { get; internal set; }
+
+        internal KhataAccount Clone() { return (KhataAccount)MemberwiseClone(); }
+
+        internal void WriteTo(IStateWriter h)
+        {
+            h.WriteLong(Household); h.WriteLong(Balance); h.WriteLong(Late); h.WriteBool(CutOff); h.WriteLong(WrittenOff);
+        }
+
+        internal static KhataAccount ReadFrom(SaveReader r)
+        {
+            return new KhataAccount { Household = r.ReadLong(), Balance = r.ReadLong(), Late = r.ReadLong(), CutOff = r.ReadBool(), WrittenOff = r.ReadLong() };
         }
     }
 
