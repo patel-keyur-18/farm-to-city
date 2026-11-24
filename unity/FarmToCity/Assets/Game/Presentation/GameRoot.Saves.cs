@@ -9,6 +9,7 @@ using Sim.Core.Commands;
 using Sim.Core.Definitions;
 using Sim.Core.Events;
 using Sim.Core.Saves;
+using Sim.Core.Time;
 using Sim.View.Views;
 using UnityEngine;
 
@@ -97,6 +98,7 @@ namespace Game.Presentation
             _guide = new Guide(); // what happened since launch belongs to the old town
             _logCount = Sim.State.CommandLog.Entries.Count;
             StartSession(_lastSyncWall);
+            _alignPending = true;
             if (o.State == null) SaveNow(); // the first save of a new town
             if (o.MigratedMap) { PlayerPrefs.DeleteKey("camera.x"); PlayerPrefs.DeleteKey("camera.y"); PlayerPrefs.DeleteKey("camera.h"); } // spec 010 §3.4
             if (o.RoadTake != null) return Cards.LandTaken(_ctx, o.RoadTake);
@@ -213,7 +215,40 @@ namespace Game.Presentation
             PlayerPrefs.Save();
         }
 
-        private void Returning() { StartSession(WallNow()); }
+        private void Returning()
+        {
+            StartSession(WallNow());
+            if (_holdUntil > 0) _alignPending = true; // the hold counts from the saved anchor, so what passed while away is counted
+        }
+
+        /// <summary>
+        /// Makes the game's time of day the phone's (a town made elsewhere, such as a bot's playtest save, can start at another time of day), counted at the sim's last anchor so the time
+        /// away is then synced as usual. Behind: the sim moves forward like an away advance. Ahead: time never goes backwards, so it waits. Nothing is lost either way.
+        /// </summary>
+        private void AlignClock()
+        {
+            long anchor = Sim.State.Clock.LastWallUtc;
+            long local = ((anchor + UtcOffsetMinutes() * 60L) % 86400 + 86400) % 86400;
+            long off = ClockAlign.Offset(Sim.State.Clock.SimTime, local);
+            if (off > 0)
+            {
+                SaveNow(); // a point to come back to, before the clock moves
+                Sim.Execute(new AdvanceTo(Sim.State.Clock.SimTime + off, AdvanceMode.Away));
+                AfterCommands();
+                Toast(_strings.Get("toast.clockBehind", "time", Gap(off)));
+            }
+            else if (off < 0)
+            {
+                _holdUntil = anchor - off;
+                Toast(_strings.Get("toast.clockAhead", "time", Gap(-off)));
+            }
+        }
+
+        private string Gap(long seconds)
+        {
+            long minutes = (seconds + 30) / 60;
+            return minutes >= 60 ? _strings.Get("clock.span.hm", "h", (minutes / 60).ToString(), "m", (minutes % 60).ToString()) : _strings.Get("clock.span.m", "m", minutes.ToString());
+        }
 
         /// <summary>A session starts: the play log's line once we know whether a notification tap opened the app, then clear them.</summary>
         private void StartSession(long wall)
@@ -344,6 +379,8 @@ namespace Game.Presentation
             if (!r.Ok) { Toast(_strings.Get("import.problem." + r.Error)); return; }
             _saves.DeleteTown();
             Sim = Simulation.FromState(_config, r.State); // the next Sync is the away time since it was exported
+            _holdUntil = 0;
+            _alignPending = true;
             _playLog.NewGame(WallNow(), Sim.State.Clock.SimTime);
             ResetTown(focus: true);
         }

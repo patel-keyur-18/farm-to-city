@@ -280,6 +280,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0167 | Sprint 26 as built: the Chronicle (22 kinds, 400 kept), the Almanac in first-year coins, four citizen arcs, the kirana with marketing and khata (Bad debt, settled at a close or sale), the supervisor with three timed cards that default after 24 h |
 | 0168 | Sprint 26 balance and the review: five new exploit tests at 200 seeds and no loop, the stall story starts at the Township and waits for your shop's first profit, the supervisor 15,000 and +1.2% a star, eighteen review findings fixed or flagged |
 | 0169 | US-249 the Phase 3 playtest town: the Village bot to the close after the Village unlock (`playtest-save … village`), shown to the owner before the Release build |
+| 0170 | The game's time of day matches the device's: at a load or import the sim moves forward when behind (an away advance) and waits when ahead, nothing lost; the playtest tool matches the machine; the build starts from a delayed call |
 
 ## Current status
 

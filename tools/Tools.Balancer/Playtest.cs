@@ -43,6 +43,10 @@ namespace Tools.Balancer
             }
             if (reportsAtThird < 0 || sim.State.Finance.Reports.Count <= reportsAtThird) { Console.Error.WriteLine("The bot never reached its " + (stage == "village" ? "Village unlock" : "third household") + " and the close after it."); return 1; }
 
+            // The bot played on its own clock: the town's time of day is made the machine's, so the game's clock matches the phone's when it is imported (the farm idles up to a day).
+            long forward = Sim.Core.Time.ClockAlign.Forward(sim.State.Clock.SimTime, (long)DateTime.Now.TimeOfDay.TotalSeconds);
+            if (forward > 0) sim.AdvanceTo(sim.State.Clock.SimTime + forward);
+            sim.DrainEvents();
             long now = Now();
             sim.State.Clock.Reanchor(now); // the town is as it was at this moment: nothing has passed since
             byte[] bytes = SaveCodec.Write(sim.State, config, now);

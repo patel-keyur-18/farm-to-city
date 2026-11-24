@@ -53,6 +53,8 @@ namespace Game.Presentation
         private Label _toastText;
 
         private long _lastSyncWall;
+        private bool _alignPending; // match the game's time of day to the phone's before the next Sync
+        private long _holdUntil;    // wall time until which the sim waits for the phone's clock to reach it
         private MapVm _mapVm;
         private Hit _selected = Hit.None;
         private SheetRequest? _open;
@@ -162,6 +164,8 @@ namespace Game.Presentation
             Sim = Simulation.FromState(_config, _snapshot.Clone());
             _lastSyncWall = WallNow(); // the time between is not an away advance: the clock re-anchors
             Sim.State.Clock.Reanchor(_lastSyncWall);
+            _holdUntil = 0;
+            _alignPending = true;
             _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
             _sheet.Close();
             Refresh(false);
@@ -195,6 +199,7 @@ namespace Game.Presentation
 
         private void Update()
         {
+            if (Sim == null) return; // a domain reload in the Editor nulls the fields until the scene is rebuilt
             ApplySafeArea();
             CodexCovered();
             StoryCovered();
@@ -204,6 +209,13 @@ namespace Game.Presentation
 #endif
             // Sync once per wall-clock second: the sim's time unit is a whole second (spec 001 §3.4).
             long now = WallNow();
+            if (_alignPending) { _alignPending = false; AlignClock(); }
+            if (_holdUntil > 0)
+            {
+                if (now < _holdUntil) return; // the game clock is ahead of the phone's: the sim waits, its saved anchor unchanged
+                Sim.State.Clock.Reanchor(_holdUntil);
+                _holdUntil = 0;
+            }
             if (now == _lastSyncWall) return;
             _lastSyncWall = now;
             Sim.Execute(new Sync(now));

@@ -20,6 +20,7 @@
 - **Your kirana, marketing and khata (US-260).** A grocery shop from the Township on a pitch or an acre, competing with the village grocer's staples. **Marketing** is paid at once and again at each close; **khata** lets your regular households take goods on credit up to a limit, with the losses by income shown. Its **Books** carry *Bad debt* and *Marketing*.
 - **Supervisors, accidents, quarrels and associations (US-259).** A sixth post on the hiring board for a place with 3 or more hands; **15,000 a season** (tuned at the balance pass: a hand's output measured 48,000 a season), +1.2% output a star on up to 5 hands, half the accidents, quarrels settled for you. Three cards with a 24 hour deadline and a free default (accident: pay the hours; quarrel: let it be; association: refuse). A Workplace section on the farm's People sheet and on each business.
 - **The exploit checks (US-248).** Nothing to see on screen: five new tests found no money loop (zero-time loops over 29 Township commands, a found-and-sell bot, a landlord at the rent cap, late invoices, the Township's health at 200 seeds). They found a rule problem, now fixed: a citizen's stall could stand in the way of the gate's three businesses.
+- **The game's clock matches your phone's (ADR 0170).** A town whose game time was behind the phone (yours was 65 minutes behind) is moved forward when it loads, like time away, nothing lost; one that was ahead waits until the phone catches up. A toast says which.
 - **Without any of it** a Hamlet or Village town is as before.
 
 ## Checks
@@ -57,6 +58,7 @@
 | 29 | Tap targets on the new cards (the three HR cards, the marketing card, the toast) | Every button easy to hit with a thumb | **Device only** | |
 | 30 | Pan and zoom a Township with a kirana, 4 or more hands and the Chronicle open and shut | Smooth; frame time under the limits of ADR 0094 | **Device only** | |
 | 31 | The Story toast on the phone's small screen | Readable, not under the notch, gone after 6 seconds | **Device only** | |
+| 32 | Open the app and read the game's time (the HUD clock) against the phone's | They match within a minute. A town that was behind says *Your game clock was N min behind your phone. It has caught up; nothing was lost.* once | **Device only** | |
 
 ## What to report
 

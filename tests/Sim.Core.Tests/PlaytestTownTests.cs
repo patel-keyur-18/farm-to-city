@@ -21,6 +21,7 @@ namespace Sim.Core.Tests
                 Assert.That(r.Error, Is.EqualTo(SaveError.None), r.Detail);
                 Assert.That(Sim.Core.Progress.EraRules.Households(Simulation.FromState(config, r.State)), Is.GreaterThanOrEqualTo(Playtest.ThirdHousehold));
                 Assert.That(r.State.Finance.Reports.Count, Is.GreaterThanOrEqualTo(1), "a close has happened");
+                Assert.That(Sim.Core.Time.ClockAlign.Offset(r.State.Clock.SimTime, (long)System.DateTime.Now.TimeOfDay.TotalSeconds), Is.EqualTo(0), "the game's time of day is the machine's");
                 Assert.That(r.State.Businesses.Businesses, Is.Empty, "no business yet");
                 Simulation sim = Simulation.FromState(config, r.State);
                 ulong before = sim.State.ComputeHash();
