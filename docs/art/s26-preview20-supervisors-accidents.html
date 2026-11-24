@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 20 Supervisors, accidents, conflicts and associations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen, scaled to fit, with a tab bar for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink);cursor:pointer}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.sheet.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:700px}
+.card.amber{border-color:var(--warn);box-shadow:0 0 0 6px rgba(194,65,12,.35)}
+.card h3{margin:0;font:700 32px var(--display);text-align:center}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.cost.hi{background:var(--cream2);border-radius:10px;border:0;margin-top:6px}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.btnrow .btn{flex:1}
+.pic{width:170px;height:128px;border-radius:14px;border:3px solid var(--wood);overflow:hidden;flex:none}
+.tag{display:inline-block;font:700 14px var(--body);padding:2px 9px;border-radius:9px;background:#e9d9a8;border:2px solid var(--wood);color:var(--wood);vertical-align:middle;margin-left:8px}
+.tag.major{background:var(--saffron,#E8892A);border-color:#9b5412;color:#fff}
+.tag.warn{background:#fde2cf;border-color:var(--warn);color:var(--warn)}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice.def{background:#efe2bd;border-color:#d8c68e}
+.choice .tx{flex:1;font-size:21px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px;font-weight:400}
+.choice .btn{min-width:190px}
+.note{font-size:17px;color:var(--wood);margin:10px 4px 0;line-height:1.4}
+.note.warn{color:var(--warn);font-weight:600}
+.timer{font:600 19px var(--body);color:var(--warn)}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:760px;text-align:center}
+.banner{position:absolute;left:50%;top:18px;transform:translateX(-50%);background:#fde2cf;border:4px solid var(--warn);border-radius:16px;padding:9px 20px;font:600 21px var(--body);color:var(--warn);cursor:pointer}
+@keyframes flick{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.12) translateY(-2px)}}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flick .5s infinite}
+@media (prefers-reduced-motion:reduce){.flame{animation:none}}
+.body{overflow-y:auto}
+.tabrow{display:flex;gap:10px;padding:0 20px 6px}
+.tabrow .btn{flex:1;min-width:0;padding:8px 6px 10px;font-size:20px}
+.pill{display:inline-block;font:700 15px var(--body);padding:2px 10px;border-radius:10px;border:2px solid;margin-left:8px;vertical-align:middle}
+.pill.cur{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.pill.late{background:#fde9c4;border-color:#b9770e;color:#8a5200}
+.pill.over{background:#fbd9d2;border-color:var(--warn);color:var(--warn)}
+.pill.met{background:#e4f2d4;border-color:var(--green2);color:var(--green2)}
+.dd{font:700 18px var(--body);background:var(--sand);border:3px solid var(--sand2);border-radius:12px;padding:6px 12px;color:var(--ink);cursor:pointer;min-width:168px;text-align:center}
+.dd:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.alert{display:flex;gap:12px;align-items:center;background:#fde2cf;border:3px solid var(--warn);border-radius:14px;padding:10px 14px;margin:10px 0 2px;font-size:19px;color:#7a2d08;font-weight:600}
+.stars{color:#e8a31c;letter-spacing:1px;font-size:20px}.stars i{color:#cfc19a;font-style:normal}
+.seg{display:flex;gap:8px}.seg .btn{min-width:120px;padding:6px 12px 8px;font-size:19px}
+.holdbtn::after{content:"";}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center;color:#d9c9a8;font-size:14px}
+.ctl button{font:600 14px var(--body);padding:6px 12px;border-radius:9px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.ctl button[aria-pressed=true]{background:var(--sand);border-color:var(--sand2);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 20: supervisors, accidents, conflicts and associations</h1>
+  <p class="lead">Sprint 26, US-259 (spec 028 §3.9, §7; gaps 3 to 5, ADR 0166). Every screen is drawn at the game's own 1280 × 720 size with its palette and type, in the layout of the hiring board, the People sheet and the HR cards you already have. Use the <b>Show</b> buttons to change the team or the case. Numbers are the spec's placeholders on the 4-day season; the balance pass tunes them.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="ctl" id="ctl"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const fmt=n=>{n=Math.round(n);const s=String(Math.abs(n));let r=s.length>3?s.slice(0,-3).replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+s.slice(-3):s;return (n<0?'−':'')+r};
+const I={
+ person:'<svg viewBox="0 0 30 30"><circle cx="15" cy="9" r="5" fill="#8a5a2b"/><path d="M5 27c0-8 4-11 10-11s10 3 10 11z" fill="#c2410c"/></svg>',
+ boss:'<svg viewBox="0 0 30 30"><circle cx="15" cy="9" r="5" fill="#8a5a2b"/><path d="M5 27c0-8 4-11 10-11s10 3 10 11z" fill="#3f7d20"/><path d="M9 5h12l-2 3H11z" fill="#ffd968" stroke="#9a6a2a" stroke-width="1.6"/></svg>',
+ env:'<svg viewBox="0 0 30 30"><rect x="3" y="7" width="24" height="17" rx="2" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.5"/><path d="M4 9l11 8 11-8" fill="none" stroke="#8a5a2b" stroke-width="2.5"/><circle cx="15" cy="17" r="3" fill="#c2410c"/></svg>',
+ coin:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/><path d="M15 8v14M11 12h8M11 18h8" stroke="#9a6a2a" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ bell:'<svg viewBox="0 0 30 30"><path d="M15 4a8 8 0 0 0-8 8v6l-3 4h22l-3-4v-6a8 8 0 0 0-8-8z" fill="#8a5a2b"/><circle cx="15" cy="26" r="3" fill="#8a5a2b"/></svg>',
+ bandage:'<svg viewBox="0 0 30 30"><rect x="3" y="11" width="24" height="9" rx="4.5" transform="rotate(-35 15 15)" fill="#f3e1b0" stroke="#8a5a2b" stroke-width="2.4"/><circle cx="15" cy="15" r="1.4" fill="#8a5a2b"/><circle cx="12" cy="18" r="1.1" fill="#8a5a2b"/><circle cx="18" cy="12" r="1.1" fill="#8a5a2b"/></svg>',
+ talk:'<svg viewBox="0 0 30 30"><path d="M3 5h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-5 4v-4H3a0 0 0 0 1 0 0z" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2.2" stroke-linejoin="round"/><path d="M13 19h8l5 4v-4h1a2 2 0 0 0 2-2v-6" fill="none" stroke="#8a5a2b" stroke-width="2.2" stroke-linejoin="round"/></svg>',
+ union:'<svg viewBox="0 0 30 30"><path d="M5 25V9l5-3 5 3 5-3 5 3v16z" fill="#f3c777" stroke="#8a5a2b" stroke-width="2.2" stroke-linejoin="round"/><path d="M10 25V14M15 25V14M20 25V14" stroke="#8a5a2b" stroke-width="2.2"/></svg>',
+ shield:'<svg viewBox="0 0 30 30"><path d="M15 3l10 4v8c0 6-4 10-10 12C9 25 5 21 5 15V7z" fill="#79c84a" stroke="#3f7d20" stroke-width="2.4" stroke-linejoin="round"/><path d="M10 15l4 4 7-8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ farm:'<svg viewBox="0 0 30 30"><path d="M3 26h24" stroke="#8a5a2b" stroke-width="3" stroke-linecap="round"/><path d="M7 26V13M13 26V9M19 26V13M25 26V9" stroke="#79c84a" stroke-width="3" stroke-linecap="round"/></svg>',
+ bakery:'<svg viewBox="0 0 30 30"><rect x="4" y="13" width="22" height="12" rx="2" fill="#d9a05b" stroke="#8a5a2b" stroke-width="2"/><path d="M3 14c1-7 7-9 12-9s11 2 12 9z" fill="#c2410c" stroke="#8a5a2b" stroke-width="2"/><rect x="12" y="17" width="6" height="8" fill="#6b4423"/></svg>'
+};
+const WHY={
+ span:{t:'What a supervisor does',h:'a place with 3 or more workers',rows:[['A supervisor covers up to 5 workers at one place; the farm is one place','up to 5'],['Each worker he covers works better by 0.8% for each of his stars','+0.8% a star'],['At 5 stars that is','+4%'],['Accident chance on each covered worker is halved','× 0.5'],['A conflict at his place is settled for you, a card never reaches you','settled'],['An association is half as likely to form','× 0.5']],foot:'A supervisor is paid whatever he asks, about 30,000 a season. He does not add hands: he makes the ones you have a little better and a little safer.'},
+ pays:{t:'Does a supervisor pay?',h:'not in coins, at 4 hands',rows:[['What he costs a season','30,000'],['Output gained: 4 hands at 30,000 of work each, +2.4% for a 3-star supervisor','+2,880'],['Accidents avoided: 4 hands × 1.8% a season × half, at about 3,700 each','+130 on average'],['A conflict settled for you: 4.2% a season × half the time a worker lost, about 12,000 of work','+250 on average'],['Left over, on average','−26,740']],foot:'In coins a supervisor pays only on a large team: at 5 hands and 5 stars the output gain is +4% of about 150,000. Below that he buys peace: fewer accidents, no conflicts for you to settle, fewer associations. The sheet shows what he has avoided as a count.'},
+ acc:{t:'The chance of an accident',h:'1.8% a season for each worker',rows:[['A daily roll for each worker at work','0.45% a day'],['Over a season of 4 days that is about','1.8%'],['A night shift','× 2'],['Overtime (long days)','× 1.5'],['Machine maintenance skipped (the farm)','× 2'],['A supervisor on that worker','× 0.5'],['Your chance for this worker today','0.45%'],['Of these, severe (out 32 hours, a bill of 8,000)','5%']],foot:'Nobody dies. An accident is a bump: the worker is out for 8 hours (3 with the clinic), the bill is 2,000 and free with health cover.'},
+ conf:{t:'The chance of a conflict',h:'3% a season × fatigue',rows:[['A place with 2 or more workers rolls once a season','3%'],['Raised by tiredness: × (1 + 2 × the team\'s average fatigue)','× 1.4'],['The farm\'s team fatigue today','0.20'],['With a supervisor, he settles it and no card reaches you','0'],['Your chance this season','4.2%']],foot:'A tired team quarrels more. Rest, a lighter order or a benefit lowers fatigue; so does a night shift taking the late hours.'},
+ assoc:{t:'When workers form an association',h:'one of three triggers',rows:[['A place with 4 or more workers can form one at a close if any of these is true',''],['Pay is more than 5% under the reference for their skill','your pay is 3% under'],['The team\'s average fatigue is above 0.3 for 2 closes in a row','0.20: no'],['Your employer reputation is under 50','you are at 62: no'],['With a supervisor it is half as likely','× 0.5']],foot:'None of the three is true today, so none forms. A fair wage, rest and a good name keep workers from organising.'}
+};
+let tab='board',state={hands:4,stars:3,sup:false,kind:'accident',severe:false,health:false,clinic:true,assoc:'ask',res:null,why:null,toast:null,place:'farm'};
+const qb=k=>`<button class="q" data-why="${k}" aria-label="Why?">?</button>`;
+const row=(ic,t,sub,right,k)=>`<div class="row">${ic?`<div class="ico">${ic}</div>`:''}<div class="grow">${t}<small>${sub||''}</small></div>${right||''}${k?qb(k):''}</div>`;
+const sec=t=>`<div class="sec">${t}</div>`;
+const val=v=>`<div class="val">${v}</div>`;
+const star=n=>`<span class="stars">${'★'.repeat(n)}<i>${'★'.repeat(5-n)}</i></span>`;
+const pill=(c,t)=>`<span class="pill ${c}">${t}</span>`;
+function mapSvg(){
+ let t='';
+ for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+520,y=140+(c+r)*46;const col=(c*7+r*3)%5;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][col];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f6a2a" stroke-width="2" opacity=".95"/>`}
+ return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}</svg>`;
+}
+function base(bell){
+ return `<div class="map">${mapSvg()}</div>
+ <div class="hud l"><div class="s">Monsoon · 3 days left</div><div class="big">11:40</div><div class="s">Clear until 22:00</div></div>
+ <div class="hud r"><div class="big" style="font-size:40px">1.12 L</div></div><div class="hud r2">Store 48%</div><div class="hud r3">184 people &nbsp;78</div>
+ <div class="roundbtn" style="left:20px;bottom:20px;width:110px;border-radius:22px;height:70px;background:#c9c2b0;border-color:#8a8372;color:#6e6858;align-items:center;padding:0">Collect all</div>
+ <div class="roundbtn" style="right:112px;bottom:128px;width:84px;height:84px">${I.bell.replace('<svg','<svg style="width:40px;height:40px;margin-top:-10px"')}<span class="badge">${bell||1}</span></div>
+ <div class="roundbtn" style="right:20px;bottom:20px"><span style="color:#fff;background:#b02a1e;position:absolute;top:18px;left:28px;width:42px;height:34px;border-radius:6px"></span>Menu</div>`;
+}
+function sheet(title,sub,icon,body,tabs){return `<div class="scrim"></div><div class="sheet"><div class="head"><div class="cbtn">←</div><div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div>${tabs||''}<div class="body">${body}</div></div>`}
+const tabsFor=(names,a)=>`<div class="tabrow">${names.map(t=>`<button class="btn ${t===a?'':'sand'}"><span>${t}</span></button>`).join('')}</div>`;
+const sup=()=>state.sup&&state.hands>=3;
+const covered=()=>Math.min(5,state.hands);
+const hands=()=>['Ramesh','Sita','Mohan','Lata','Gopal','Devi'].slice(0,state.hands);
+const handsRows=()=>hands().map((n,i)=>{const s=[3,4,2,3,2,4][i];return row(I.person,n,`Farm hand · ${star(s)} · mood ${['good','fair','good','fair','good','good'][i]}`+(sup()&&i<5?` ${pill('met','supervised +'+(0.8*state.stars).toFixed(1)+'%')}`:''),val('30,000 a season'),null)}).join('');
+const views={
+ board:{label:'1 · Hiring board: Supervisor',ctl:[['hands','2','2 hands'],['hands','4','4 hands'],['hands','5','5 hands']],notes:[
+  ['What to check',['Supervisor is a sixth post on the board, after Manager. It is for a place with 3 or more workers: today that is the farm. With fewer, the post says what it needs ("needs 3 hands: you have 2") and the button is greyed with the reason.','Applicants show stars and a wage asked (about 30,000 a season). One covers up to 5 workers; a sixth hand beyond that is not covered.','A one-line honest value sits above the applicants: what a supervisor adds in output, accidents avoided and a conflict settled, against the 30,000.']],
+  ['Teaches',['That a supervisor is a fixed cost that spreads across a team. It pays when the team is big, and the reason shows in your own numbers.']]],
+  render(){
+   const n=state.hands,ok=n>=3;
+   let h=`<div class="tabrow" style="padding:0 0 8px">`+['Farm hand','Miller','Baker','Dairyman','Manager','Supervisor'].map(t=>`<button class="btn ${t==='Supervisor'?'':'sand'}" style="min-width:0;padding:8px 4px 10px;font-size:18px"><span>${t}</span></button>`).join('')+`</div>`;
+   h+=row(I.boss,'Supervisor',ok?`Covers up to 5 workers at the farm · you have ${n}`:`<span style="color:var(--warn);font-weight:600">Needs 3 hands at the farm: you have ${n}</span>`,val('about 30,000 a season'),'span');
+   if(ok){
+    h+=sec('Does it pay?');
+    h+=row(I.coin,`At ${n} hands and a 3-star supervisor`,`Output +2.4% of the work of ${n} hands, ${n} hands × 1.8% accidents halved, a conflict settled for you`,val(fmt(Math.round(0.024*n*30000+n*0.009*3667+250-30000))+' a season'),'pays');
+    h+=`<div class="note">In coins it pays only on a large team. It buys fewer accidents, fewer quarrels and fewer associations.</div>`;
+    h+=sec('Applicants');
+    [['Anita','from the town',4,34000],['Bhola','a regular',3,30000],['Chandra','from a nearby village',2,26500]].forEach(a=>{
+     h+=`<div class="row" style="min-height:84px"><div class="ico">${I.person}</div><div class="grow"><b>${a[0]}</b> ${star(a[2])}<small>${a[1]} · asks ${fmt(a[3])} a season</small></div>${qb('span')}<button class="btn"><span>Offer</span><small>${fmt(a[3])} a season</small></button></div>`});
+   }else{
+    h+=`<div class="alert">${I.bandage.replace('<svg','<svg style="width:30px;height:30px"')} A supervisor is for 3 or more hands. Hire one more hand and the post opens.</div>`;
+    h+=`<div class="btnrow"><button class="btn grey" style="flex:1"><span>Post the job</span><small>needs 3 hands at the farm</small></button></div>`;
+   }
+   return base()+sheet('Hiring board','Send word for a job, then choose who to hire.',I.env,h)}},
+ farm:{label:'2 · The farm: workplace',ctl:[['hands','2','2 hands'],['hands','4','4 hands'],['hands','6','6 hands'],['sup','false','No supervisor'],['sup','true','Supervisor'],['place','farm','The farm'],['place','bakery','A bakery']],notes:[
+  ['What to check',['A new <b>Workplace</b> section at the foot of a place\'s People sheet (the farm, and each business\'s worker list). It says what each rule needs and where you stand: supervisor (needs 3 hands), conflicts (needs 2), an association (needs 4), accidents (everywhere).','Each line has a ? with the exact chance and its multipliers. Nothing here is hidden: you can see why an accident is likelier on a night shift or with maintenance skipped.','The supervised tag shows on each hand he covers. A sixth hand beyond the five is plainly not covered.']],
+  ['Teaches',['That a safe, fairly paid, rested team has fewer accidents and no association: the cheapest way to avoid the bill is to look after the people.']]],
+  render(){
+   const farm=state.place==='farm';const n=farm?state.hands:1;const s=farm&&sup();
+   let h=farm?handsRows():row(I.person,'Baker Laxmi',`Baker · ${star(3)} · mood good`,val('20,000 a season'),null);
+   if(farm&&state.hands>5)h+=`<div class="note warn">Devi is not covered: a supervisor covers up to 5.</div>`;
+   h+=sec('Workplace');
+   h+=row(I.boss,'Supervisor',farm?(s?`Anita · ${star(state.stars)} · covers ${covered()} of ${state.hands}`:(n>=3?'None. You can hire one from the board.':`Needs 3 hands: you have ${n}`)):`Needs 3 hands: you have 1`,val(s?'30,000 a season':'—'),'span');
+   h+=row(I.bandage,'Accidents',`${farm?(s?'Halved for the 5 covered':'Each worker, about 1.8% a season'):'Each worker, about 1.8% a season'} · so far this year: 0`,val(s?'0.9%':'1.8%'),'acc');
+   h+=row(I.talk,'Conflicts',n>=2?(s?'A supervisor settles them for you':'Each season, 3% × tiredness (4.2% now)'):`Needs 2 workers: you have ${n}`,val(n>=2?(s?'settled':'4.2%'):'—'),'conf');
+   h+=row(I.union,'Association',n>=4?'Possible at a close if pay, tiredness or your name are poor: none of the three is true now':`Needs 4 workers: you have ${n}`,val(n>=4?'not now':'—'),'assoc');
+   if(s)h+=row(I.shield,'What your supervisor has avoided this year','Accidents he halved, conflicts he settled',val('1 accident · 2 conflicts'),'pays');
+   return base()+sheet(farm?'The farm\'s people':'Bakery','Workplace',farm?I.farm:I.bakery,h)}},
+ accident:{label:'3 · An accident (card)',ctl:[['severe','false','Ordinary'],['severe','true','Severe'],['health','false','No health cover'],['health','true','Health cover'],['clinic','true','Clinic built'],['clinic','false','No clinic']],notes:[
+  ['What to check',['The card comes in amber like the other events. It says who, what happened (a fall, a cut, a kick from the bullock), how long they are out, what the bill is, and what each answer costs and brings. It shows how long is left before the default.','<b>Pay the days\' wage</b> (the default after 24 h): reputation +1, motivation +0.05. <b>Don\'t pay</b>: motivation −0.10, reputation −1. The bill is yours either way, free with health cover.','The worker is out the moment it happens (8 hours; 3 with the clinic; a severe one 32 hours). They come back on their own.']],
+  ['Teaches',['That an injury costs more than a bill: pay or not, the team notices.']]],
+  render(){
+   const out=state.severe?32:(state.clinic?3:8);const bill=state.health?0:(state.severe?8000:2000);const wage=Math.round(20000*out/96);
+   const body=`<div style="display:flex;gap:18px;align-items:center"><div class="ico" style="width:78px;height:78px">${I.bandage.replace('<svg','<svg style="width:50px;height:50px"')}</div><div style="font-size:21px;line-height:1.45">${state.severe?'<b>Ramesh was badly hurt</b> when the bullock cart tipped.':'<b>Ramesh was hurt</b> lifting the sacks.'} He is out for <b>${out} hours</b>${state.clinic?' (the clinic gets him back sooner)':''}. The ${state.severe?'doctor\'s':'bandage and'} bill is <b>${bill?fmt(bill)+' coins':'nothing: your health cover pays it'}</b>.</div></div>
+   <div class="cost" style="margin-top:12px"><span>The bill ${state.health?'(health cover)':''}</span><b>${bill?'−'+fmt(bill):'0'}</b></div>
+   <div class="cost"><span>His wage for the ${out} hours out</span><b>${fmt(wage)}</b></div>
+   <div class="choice"><div class="tx">Pay the days' wage<small>${fmt(wage)} now · your name +1 · his motivation +0.05</small></div><button class="btn"><span>Pay</span><small>the default in 23 h</small></button></div>
+   <div class="choice def"><div class="tx">Don't pay<small>Nothing now · his motivation −0.10 · your name −1</small></div><button class="btn sand"><span>Not paid</span></button></div>
+   <div class="note">If you do nothing for a day, ${fmt(wage)} is paid for him. If your cash cannot cover it, it is not paid. ${qb('acc').replace('class="q"','class="q" style="display:inline-flex;vertical-align:middle;margin-left:6px"')}</div>`;
+   return base(2)+`<div class="scrim"></div><div class="card amber" style="width:760px"><h3>${state.severe?'A bad accident':'An accident'}</h3><div style="font:600 19px var(--body);text-align:center;color:var(--warn);margin:2px 0 10px" class="timer">23 h left to answer</div>${body}</div>`}},
+ conflict:{label:'4 · A conflict (card)',ctl:[['res','null','Open'],['res','talk','Talked'],['res','let','Let it be']],notes:[
+  ['What to check',['Two named workers quarrel. Three answers: <b>Talk to both</b> (2 hours of yours, settled 70% of the time), <b>Move one</b> to another place (only offered when there is another), <b>Let it be</b> (both motivation −0.05, one resigns at the next close half the time). The default after 24 h is Let it be.','The card says honestly that talking can fail (30%). With a supervisor you never see this card.']],
+  ['Teaches',['That small quarrels cost output and sometimes a worker, and that your time is a price.']]],
+  render(){
+   let body=`<div style="font-size:21px;line-height:1.45"><b>Ramesh and Mohan are not talking.</b> Both are tired and each blames the other for the late field. If it goes on, one of them may leave.</div>
+   <div class="choice"><div class="tx">Talk to both<small>2 hours of yours · settled 7 times in 10</small></div><button class="btn"><span>Talk</span><small>2 hours</small></button></div>
+   <div class="choice"><div class="tx">Move one<small>Send Mohan to another place · no more quarrel there</small></div><button class="btn sand"><span>Move</span><small>needs another place</small></button></div>
+   <div class="choice def"><div class="tx">Let it be<small>Both motivation −0.05 · one resigns at the next close half the time</small></div><button class="btn sand"><span>Let it be</span><small>the default in 23 h</small></button></div>`;
+   if(state.res==='talk')body=`<div style="font-size:21px;line-height:1.45"><b>You talked to both.</b> They shook hands and went back to work. (30% of the time they would not.)</div>`;
+   if(state.res==='let')body=`<div style="font-size:21px;line-height:1.45"><b>You let it be.</b> Both are down 0.05 in mood. One may resign at the close.</div>`;
+   return base(2)+`<div class="scrim"></div><div class="card amber" style="width:760px"><h3>A quarrel at the farm</h3><div class="timer" style="text-align:center;margin:2px 0 10px">23 h left to answer</div>${body}<div class="note">${qb('conf').replace('class="q"','class="q" style="display:inline-flex;vertical-align:middle"')} Why a quarrel now: the team is tired (0.20) and it rolled 4.2%.</div></div>`}},
+ assoc:{label:'5 · An association (card)',ctl:[['assoc','ask','The ask'],['assoc','accept','Accepted'],['assoc','nego','Negotiated: yes'],['assoc','nego_no','Negotiated: no'],['assoc','refuse','Refused']],notes:[
+  ['What to check',['Only the farm (4 or more workers) can form one, at a close, and only when pay, tiredness or your name is poor: the card says which. It asks for a 10% raise and one condition.','<b>Accept</b>: every wage +10%, and none again for 4 closes. <b>Negotiate</b>: +5% and one benefit, accepted 60% of the time, otherwise it counts as a refusal. <b>Refuse</b>: motivation −0.10 and output × 0.85 that season; a second refusal is a 2-hour stoppage at the farm only.','The default after 24 h is Refuse. Each choice shows its cost a season in coins.']],
+  ['Teaches',['That workers organise when pay, rest or trust fall short, and that the answer is cheaper before the card than after.']]],
+  render(){
+   const a=state.assoc;let body;
+   if(a==='ask')body=`<div style="font-size:21px;line-height:1.45">The farm's 5 workers have formed an association. They say <b>pay is 8% under the reference</b> for their skill. They ask for <b>a 10% raise</b> and a rest day each season.</div>
+   <div class="cost" style="margin-top:10px"><span>A 10% raise on 5 wages of 30,000</span><b>+15,000 a season</b></div>
+   <div class="choice"><div class="tx">Accept<small>All wages +10% · no new demand for 4 closes</small></div><button class="btn"><span>Accept</span><small>+15,000 a season</small></button></div>
+   <div class="choice"><div class="tx">Negotiate<small>+5% and one benefit · they agree 6 times in 10; if not, it counts as a refusal</small></div><button class="btn sand"><span>Negotiate</span><small>+7,500 and a benefit</small></button></div>
+   <div class="choice def"><div class="tx">Refuse<small>Motivation −0.10 · output ×0.85 this season · a second refusal stops work for 2 hours</small></div><button class="btn sand"><span>Refuse</span><small>the default in 23 h</small></button></div>`;
+   else body=`<div style="font-size:21px;line-height:1.5">${{accept:'<b>You accepted.</b> Every wage is up 10% from the next day. They will not ask again for 4 closes.',nego:'<b>They agreed.</b> Wages are up 5% and a rest day is added to their benefits.',nego_no:'<b>They did not agree.</b> It counts as a refusal: motivation −0.10 and their output is × 0.85 this season.',refuse:'<b>You refused.</b> Motivation −0.10 and output × 0.85 this season. A second refusal would stop work for 2 hours.'}[a]}</div>`;
+   return base(2)+`<div class="scrim"></div><div class="card amber" style="width:780px"><h3>The farm's workers ask for more</h3><div class="timer" style="text-align:center;margin:2px 0 10px">${a==='ask'?'23 h left to answer':'Answered'}</div>${body}<div class="note">${qb('assoc').replace('class="q"','class="q" style="display:inline-flex;vertical-align:middle"')} Why they organised: pay under the reference, tiredness and your name.</div></div>`}},
+ away:{label:'6 · While you were away',notes:[
+  ['What to check',['A card nobody answers is answered by its default in the hourly pass, live or away; the away card names what happened and what it cost. Nothing is silent.','The three new cards never take one of spec 027\'s two waiting event slots, and a "pay the wage" the cash cannot cover is not paid, said so on the line.']]],
+  render(){
+   let h=row(I.bandage,'Ramesh was hurt','Out for 8 hours. You were away, so his wage for the hours (1,667) was paid.',val('−3,667'),'acc');
+   h+=row(I.talk,'Ramesh and Mohan quarrelled','You did not answer, so it was let be. Both are down 0.05; Mohan resigned at the close.',val('−0.05 mood'),'conf');
+   h+=row(I.union,'The farm\'s workers asked for 10% more','You did not answer, so it was refused. Motivation −0.10 and output × 0.85 this season.',val('refused'),'assoc');
+   h+=row(I.bandage,'Sita was hurt','Her wage was not paid: your cash could not cover it. Her motivation −0.10, your name −1.',val('not paid'),'acc');
+   return base()+sheet('While you were away','2 days, 3 hours',I.bell,h)}}
+};
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:780px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 26px var(--display);color:var(--green2)">${w.h}</div></div><div style="margin-top:8px">${w.rows.map(r=>`<div class="cost"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}</div><div class="note">${w.foot}</div><div class="btnrow"><button class="btn sand" data-close="1" style="flex:1"><span>Close</span></button></div></div>`}
+function render(){
+ const v=views[tab];let html=v.render();
+ if(state.toast)html+=`<div class="toast">${state.toast}</div>`;
+ if(state.why)html+=whyCard(state.why);
+ $('#stage').innerHTML=html;
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ $('#ctl').innerHTML=(v.ctl&&v.ctl.length?'<span>Show:</span>':'')+(v.ctl||[]).map(c=>`<button data-set="${c[0]}:${c[1]}" aria-pressed="${String(state[c[0]])===c[1]}">${c[2]}</button>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;Object.assign(state,{why:null,toast:null,res:null});render()});
+$('#ctl').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b)return;const [g,v]=b.dataset.set.split(':');state[g]=(v==='true'?true:v==='false'?false:v==='null'?null:isNaN(+v)?v:+v);render()});
+$('#stage').addEventListener('click',e=>{
+ const t=e.target.closest('[data-why],[data-close]');
+ if(!t)return;const d=t.dataset;
+ if(d.why)state.why=d.why;else if(d.close)state.why=null;
+ render();
+});
+addEventListener('resize',fit);
+render();
+</script>
+</body>
+</html>
