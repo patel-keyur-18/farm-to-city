@@ -281,6 +281,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0168 | Sprint 26 balance and the review: five new exploit tests at 200 seeds and no loop, the stall story starts at the Township and waits for your shop's first profit, the supervisor 15,000 and +1.2% a star, eighteen review findings fixed or flagged |
 | 0169 | US-249 the Phase 3 playtest town: the Village bot to the close after the Village unlock (`playtest-save … village`), shown to the owner before the Release build |
 | 0170 | The game's time of day matches the device's: at a load or import the sim moves forward when behind (an away advance) and waits when ahead, nothing lost; the playtest tool matches the machine; the build starts from a delayed call |
+| 0171 | Phase 3 is closed (owner, 2026-11-24): A1 and A7 passed, A2–A5 run in parallel as the owner's play (findings ad hoc in `docs/playtest/phase-3-findings.md`), the frame-time p95s and the phone's golden replays deferred, part B before Launch |
 
 ## Current status
 

@@ -36,7 +36,7 @@
 | S24 | 26 Jul – 8 Aug 2027 (2 weeks, ADR 0144) | 3 | Festivals, petitions, reputation, crime and inequality (US-149, F15.7); events, insurance and forward contracts (F16.1, F16.2); the mill's atta at the local market (US-264); hill parcels and apples (US-147). | 35 | 028 | Yes |
 | S25 | 9–22 Aug 2027 (2 weeks) | 3 | Invoices, managers, sell or expand, investors and buy-outs (F12.5, F12.6); the tuition centre, tempo and restaurant (F12.7); benefits and night shifts (US-258). | 39 | 029 | Yes |
 | S26 | 23 Aug – 5 Sep 2027 (2 weeks) | 3 | The Chronicle, the Almanac and citizen stories (F16.3, F16.4); the Phase 3 exploit checks (US-248); the playtest town and the Release build (US-249); your kirana, marketing and khata (US-260); supervisors, associations, conflicts and accidents (US-259, Could). | 31 | — | Yes: Development, then Release |
-| S27 | 6 Sep – 3 Oct 2027 (4 weeks, ADR 0107 §11) | 3 | The Phase 3 playtest from a town just past the Village, tuning and the gate decision (F10.3). | 6 + fixes | Phase 4's, if the owner says | Fixes only |
+| S27 | 6 Sep – 3 Oct 2027 (4 weeks, ADR 0107 §11) | 3 | The Phase 3 playtest from a town just past the Village, tuning and the gate decision (F10.3). **Closed 2026-11-24 (ADR 0171): the owner's parallel play, findings ad hoc.** | 6 + fixes | Phase 4's, if the owner says | Fixes only |
 
 ## Sprint 0 · 19–25 Oct 2026 · Phase 0
 
