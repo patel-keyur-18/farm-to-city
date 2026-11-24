@@ -281,11 +281,14 @@ namespace Sim.Core.Business
         public long LastSpend { get; internal set; }
         public long LastDrew { get; internal set; }
 
+        /// <summary>The marketing already paid for this season (its budget at today's prices): a rise in the budget pays only the difference.</summary>
+        public long SpendSeason { get; internal set; }
+
         // Worked out each hour from the households' homes (derived, never saved or hashed): the score khata adds to the town's households and the share of the town's people it covers.
         internal Fixed KhataLiftNow;
         internal Fixed KhataCover;
 
-        internal bool GrowthUsed { get { return Marketing != 0 || MarketLift != Fixed.Zero || Khata || Credit.Count > 0 || CreditSeason != 0 || LastCredit != 0 || LastGain != 0 || LastLost != 0 || LastSpend != 0 || LastDrew != 0; } }
+        internal bool GrowthUsed { get { return Marketing != 0 || MarketLift != Fixed.Zero || Khata || Credit.Count > 0 || CreditSeason != 0 || LastCredit != 0 || LastGain != 0 || LastLost != 0 || LastSpend != 0 || LastDrew != 0 || SpendSeason != 0; } }
 
         private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0 || Stakes.Count > 0 || BoughtOutOfferedAt != 0 || Benefits != 0 || FestivalPaid != 0 || ShortDays != 0 || ShortDay != 0; } }
 
@@ -382,7 +385,7 @@ namespace Sim.Core.Business
                 h.WriteLong(Marketing); h.WriteFixed(MarketLift); h.WriteBool(Khata); h.WriteLong(KhataLimit);
                 h.WriteInt(Credit.Count);
                 foreach (KhataAccount a in Credit) a.WriteTo(h);
-                foreach (long v in new[] { CreditSeason, LastCredit, LastGain, LastLost, LastSpend, LastDrew }) h.WriteLong(v);
+                foreach (long v in new[] { CreditSeason, LastCredit, LastGain, LastLost, LastSpend, LastDrew, SpendSeason }) h.WriteLong(v);
             }
         }
 
@@ -468,7 +471,7 @@ namespace Sim.Core.Business
                 b.Marketing = r.ReadLong(); b.MarketLift = r.ReadFixed(); b.Khata = r.ReadBool(); b.KhataLimit = r.ReadLong();
                 int credit = r.ReadCount();
                 for (int i = 0; i < credit; i++) b.Credit.Add(KhataAccount.ReadFrom(r));
-                b.CreditSeason = r.ReadLong(); b.LastCredit = r.ReadLong(); b.LastGain = r.ReadLong(); b.LastLost = r.ReadLong(); b.LastSpend = r.ReadLong(); b.LastDrew = r.ReadLong();
+                b.CreditSeason = r.ReadLong(); b.LastCredit = r.ReadLong(); b.LastGain = r.ReadLong(); b.LastLost = r.ReadLong(); b.LastSpend = r.ReadLong(); b.LastDrew = r.ReadLong(); b.SpendSeason = r.ReadLong();
             }
             return b;
         }

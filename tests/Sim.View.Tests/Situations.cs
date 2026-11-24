@@ -321,6 +321,40 @@ namespace Sim.View.Tests
             return sim;
         }
 
+        /// <summary>A Township with a kirana on a pitch, marketing and khata on, and two households at its door owing it something, after a season closed (spec 028 §3.10, US-260).</summary>
+        public static Simulation Kirana()
+        {
+            Simulation sim = Township();
+            SetCash(sim, 3_000_000_00);
+            Ok(sim, new FoundBusiness(T(sim), "kirana", 0, 200_000_00, false, null, 0));
+            Hire(sim);
+            Sim.Core.Business.Business shop = sim.State.Businesses.Businesses.Last();
+            sim.AdvanceTo(shop.ReadyAt + 60);
+            foreach (long income in new[] { 8_000L, 15_000L })
+            {
+                var house = new Sim.Core.Land.Building { Id = sim.State.Land.NextBuildingId++, Def = sim.Config.Game.Population.House, TileId = sim.Config.Game.Shops.SquareTile };
+                sim.State.Land.Buildings.Add(house);
+                var cs = sim.State.Citizens;
+                var family = new Sim.Core.People.Household { Id = cs.NextHouseholdId++, HomeId = house.Id, Savings = 5_000 * 100, Income = income * 100 };
+                foreach (int age in new[] { 32, 30, 6 })
+                {
+                    var c = new Sim.Core.People.Citizen { Id = cs.NextCitizenId++, Name = 0, BornSeason = Sim.Core.People.CitizenRules.BornFor(sim, age), HouseholdId = family.Id, Health = Sim.Core.Maths.Fixed.One };
+                    cs.Citizens.Add(c);
+                    family.Members.Add(c.Id);
+                }
+                cs.Households.Add(family);
+            }
+            Ok(sim, new SetKhata(T(sim), shop.Id, true));
+            Ok(sim, new SetMarketing(T(sim), shop.Id, 2_000 * 100));
+            sim.AdvanceTo((T(sim) / 86_400 + 1) * 86_400 + 18 * 3600); // a day of trade: the households take goods on credit
+            Assert.That(shop.Credit.Count, Is.GreaterThan(0), "households on credit");
+            long next = (T(sim) / sim.Clock.SecondsPerSeason + 1) * sim.Clock.SecondsPerSeason;
+            sim.AdvanceTo(next + 2 * Hour); // a close: its books, the late part, the honest lines
+            sim.AdvanceTo(T(sim) + 18 * 3600); // and a day more of credit under the new season
+            sim.DrainEvents();
+            return sim;
+        }
+
         /// <summary>A Township with a flour mill and a bakery trading on terms (spec 028 §3.1, US-123): invoices standing between them and to the village shops, one gone overdue.</summary>
         public static Simulation Invoicing()
         {
@@ -562,6 +596,7 @@ namespace Sim.View.Tests
             yield return Equipped();
             yield return Township();
             yield return Invoicing();
+            yield return Kirana();
             yield return Managed();
             yield return Owned();
             yield return TownshipBuilt();

@@ -215,7 +215,7 @@ namespace Sim.Core.Saves
                 case SetMarketing c: At(c, Tag.SetMarketing); w.WriteLong(c.BusinessId); w.WriteLong(c.Budget); break;
                 case SetKhata c: At(c, Tag.SetKhata); w.WriteLong(c.BusinessId); w.WriteBool(c.On); break;
                 case SetKhataLimit c: At(c, Tag.SetKhataLimit); w.WriteLong(c.BusinessId); w.WriteLong(c.Limit); break;
-                case CutOffHousehold c: At(c, Tag.CutOffHousehold); w.WriteLong(c.BusinessId); w.WriteLong(c.HouseholdId); break;
+                case CutOffHousehold c: At(c, Tag.CutOffHousehold); w.WriteLong(c.BusinessId); w.WriteLong(c.HouseholdId); w.WriteBool(c.Cut); break;
                 case SetDish c: At(c, Tag.SetDish); w.WriteLong(c.BusinessId); w.WriteInt(c.Dish); w.WriteBool(c.On); break;
                 case AcceptDeal c: At(c, Tag.AcceptDeal); w.WriteLong(c.OfferId); break;
                 case DeclineDeal c: At(c, Tag.DeclineDeal); w.WriteLong(c.OfferId); break;
@@ -414,7 +414,7 @@ namespace Sim.Core.Saves
                 case Tag.SetMarketing: return new SetMarketing(at, r.ReadLong(), r.ReadLong());
                 case Tag.SetKhata: return new SetKhata(at, r.ReadLong(), r.ReadBool());
                 case Tag.SetKhataLimit: return new SetKhataLimit(at, r.ReadLong(), r.ReadLong());
-                case Tag.CutOffHousehold: return new CutOffHousehold(at, r.ReadLong(), r.ReadLong());
+                case Tag.CutOffHousehold: return new CutOffHousehold(at, r.ReadLong(), r.ReadLong(), r.ReadBool());
                 case Tag.SetDish: return new SetDish(at, r.ReadLong(), r.ReadInt(), r.ReadBool());
                 case Tag.AcceptDeal: return new AcceptDeal(at, r.ReadLong());
                 case Tag.DeclineDeal: return new DeclineDeal(at, r.ReadLong());

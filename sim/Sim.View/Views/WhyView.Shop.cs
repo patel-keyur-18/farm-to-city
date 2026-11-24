@@ -35,6 +35,8 @@ namespace Sim.View.Views
             Row(vm, ctx, "why.shopShare.stars", Part(ctx, a.Stars), "stars", ShopWords.Stars(ctx, stars));
             Row(vm, ctx, "why.shopShare.distance", Part(ctx, a.Distance), "m", ctx.Fmt.Integer(a.Metres));
             Row(vm, ctx, "why.shopShare.wait", Part(ctx, a.Wait), "min", ctx.Fmt.Integer(a.WaitMinutes.RoundToLong()));
+            if (a.Marketing != Fixed.Zero) Row(vm, ctx, "why.shopShare.marketing", Part(ctx, a.Marketing)); // spec 028 §3.10
+            if (a.Khata != Fixed.Zero) Row(vm, ctx, "why.shopShare.khata", Part(ctx, a.Khata));
             Row(vm, ctx, "why.shopShare.total", Pull(ctx, a.Total));
         }
 

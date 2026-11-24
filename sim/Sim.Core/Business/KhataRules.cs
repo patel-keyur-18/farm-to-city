@@ -64,7 +64,14 @@ namespace Sim.Core.Business
             CommandResult c = Check(sim, businessId, false, out Business b);
             if (!c.Accepted) return c;
             if (!System.Linq.Enumerable.Contains(Defs(sim).MarketBudgets, budget)) return CommandResult.Reject(RejectReason.InvalidArgument);
-            b.Marketing = budget; // paid at the next close, for the season after it
+            if (b.Status != BusinessStatus.Open) return CommandResult.Reject(RejectReason.NotOpen);
+            long was = b.Marketing;
+            b.Marketing = budget;
+            if (!Fund(sim, b, sim.Period)) // paid at once, for the rest of this season and the next closes after it
+            {
+                b.Marketing = was;
+                return CommandResult.Reject(RejectReason.InsufficientFunds);
+            }
             return CommandResult.Ok;
         }
 
@@ -86,13 +93,13 @@ namespace Sim.Core.Business
             return CommandResult.Ok;
         }
 
-        internal static CommandResult CutOff(Simulation sim, long businessId, long householdId)
+        internal static CommandResult CutOff(Simulation sim, long businessId, long householdId, bool cut)
         {
             CommandResult c = Check(sim, businessId, true, out Business b);
             if (!c.Accepted) return c;
             KhataAccount a = AccountOf(b, householdId);
             if (a == null) return CommandResult.Reject(RejectReason.InvalidArgument);
-            a.CutOff = true; // until the close has collected what it owes
+            a.CutOff = cut; // until you allow it again
             return CommandResult.Ok;
         }
 
@@ -243,8 +250,7 @@ namespace Sim.Core.Business
                 }
                 a.Balance = 0;
                 a.Late = late;
-                a.CutOff = false;
-                if (late > 0 && h != null) kept.Add(a);
+                if (h != null && (late > 0 || a.CutOff)) kept.Add(a); // a household you cut off stays cut off until you allow it again
             }
             b.Credit = kept;
             BusinessBooks.Sweep(sim, b);
@@ -254,6 +260,7 @@ namespace Sim.Core.Business
         private static void ShopsAtClose(Simulation sim, Business b, long lost)
         {
             ShopDefs d = Defs(sim);
+            b.LastSpend = b.SpendSeason;
             b.LastCredit = b.CreditSeason;
             b.LastGain = (d.KhataKilos / (Fixed.One + d.KhataKilos)).MulRatio(b.CreditSeason, 1).RoundToLong();
             b.LastLost = lost;
@@ -269,20 +276,34 @@ namespace Sim.Core.Business
         {
             ShopDefs d = Defs(sim);
             if (d == null || !BusinessRules.TypeOf(sim, b).IsShop) return;
-            long budget = b.Marketing, spend = MarketRules.Indexed(sim, budget);
-            b.LastSpend = 0;
-            if (spend > 0 && BusinessBooks.CanSpend(sim, b) >= spend && b.Status == BusinessStatus.Open)
-            {
-                BusinessBooks.Draw(sim, b, spend, period);
-                b.Ledger.Post(sim.State.Clock.SimTime, period, "ledger.marketing", "business:" + b.Id, new Posting(Account.Marketing, spend), new Posting(Account.Cash, -spend));
-                Fixed lift = d.MarketPer1000.MulRatio(budget, 100000); // budget is in 1/100 coin: per 1,000 coins
-                b.MarketLift = lift > d.MarketCap ? d.MarketCap : lift;
-                b.LastSpend = spend;
-                return;
-            }
+            b.SpendSeason = 0; // a new season: the budget is paid again
+            long spend = MarketRules.Indexed(sim, b.Marketing);
+            if (spend > 0 && b.Status == BusinessStatus.Open && Fund(sim, b, period)) { b.MarketLift = Lift(sim, b.Marketing); return; }
             if (spend > 0) sim.Emit(new ObligationUnpaid(sim.State.Clock.SimTime, "Marketing", "business:" + b.Id, spend));
             Fixed faded = b.MarketLift * (Fixed.One - d.MarketFade);
             b.MarketLift = faded < Fixed.FromRatio(1, 1000) ? Fixed.Zero : faded;
+        }
+
+        /// <summary>The score a budget adds: 0.019 for each 1,000, never over the cap.</summary>
+        public static Fixed Lift(Simulation sim, long budget)
+        {
+            Fixed lift = Defs(sim).MarketPer1000.MulRatio(budget, 100000); // budget is in 1/100 coin: per 1,000 coins
+            return lift > Defs(sim).MarketCap ? Defs(sim).MarketCap : lift;
+        }
+
+        /// <summary>Pays what the budget still needs this season (all of it at a close; the rise, when you raise it midseason) and lifts the score now. False when its cash cannot pay.</summary>
+        private static bool Fund(Simulation sim, Business b, long period)
+        {
+            long spend = MarketRules.Indexed(sim, b.Marketing), extra = spend - b.SpendSeason;
+            if (extra > 0)
+            {
+                if (BusinessBooks.CanSpend(sim, b) < extra) return false;
+                BusinessBooks.Draw(sim, b, extra, period);
+                b.Ledger.Post(sim.State.Clock.SimTime, period, "ledger.marketing", "business:" + b.Id, new Posting(Account.Marketing, extra), new Posting(Account.Cash, -extra));
+                b.SpendSeason = spend;
+            }
+            if (spend > 0 && Lift(sim, b.Marketing) > b.MarketLift) b.MarketLift = Lift(sim, b.Marketing);
+            return true;
         }
     }
 }

@@ -25,12 +25,12 @@ namespace Sim.Core.Tests
                 Simulation sim = KiranaTests.Town(10, out Business.Business b);
                 Fixed before = ShopRules.Attract(sim, b, ShopGroup.Village).Total;
                 Ok(sim, new SetMarketing(sim.State.Clock.SimTime, b.Id, budget * Coin));
-                Assert.That(b.MarketLift, Is.EqualTo(Fixed.Zero), "paid at the close, not now");
+                long spend = Sim.Core.Market.MarketRules.Indexed(sim, budget * Coin);
+                Assert.That(b.Ledger.Entries.Count(e => e.DescriptionKey == "ledger.marketing" && e.Postings.Any(p => p.Account == Account.Marketing && p.Amount == spend)), Is.EqualTo(1), "paid at once, a cost on its books");
                 Close(sim);
+                Assert.That(b.Ledger.Entries.Count(e => e.DescriptionKey == "ledger.marketing" && e.Postings.Any(p => p.Account == Account.Marketing && p.Amount == spend)), Is.EqualTo(2), "and again at the close, for the season ahead");
                 Fixed want = lift == "0.038" ? Fixed.FromRatio(38, 1000) : lift == "0.076" ? Fixed.FromRatio(76, 1000) : Fixed.FromRatio(15, 100);
                 Assert.That(Near(b.MarketLift, want), Is.True, budget + ": " + b.MarketLift);
-                long spend = Sim.Core.Market.MarketRules.Indexed(sim, budget * Coin);
-                Assert.That(b.Ledger.Entries.Any(e => e.DescriptionKey == "ledger.marketing" && e.Postings.Any(p => p.Account == Account.Marketing && p.Amount == spend)), Is.True, "the budget is a cost on its books");
                 Attraction a = ShopRules.Attract(sim, b, ShopGroup.Village);
                 Assert.That(a.Marketing, Is.EqualTo(b.MarketLift), "the parts show it");
                 Assert.That(a.Total - Fixed.Zero, Is.GreaterThan(before - Fixed.One), "attraction counts it");
@@ -65,19 +65,25 @@ namespace Sim.Core.Tests
             Assert.That(Served(8_000), Is.GreaterThan(Served(0)), "a better score draws more customers (a stall's stock caps what it serves)");
         }
 
-        // Cash short: the budget is not paid, the lift does not rise, and the owner is told (the rent's rule).
+        // Cash short: a budget you cannot pay is refused; one that cannot be paid at the close is not bought, the lift fades and the owner is told (the rent's rule).
         [Test]
         public void Unpaid_When_Cash_Is_Short()
         {
             Simulation sim = KiranaTests.Town(10, out Business.Business b);
-            Ok(sim, new SetMarketing(sim.State.Clock.SimTime, b.Id, 8_000 * Coin));
+            Ok(sim, new SetMarketing(sim.State.Clock.SimTime, b.Id, 4_000 * Coin));
+            Fixed lift = b.MarketLift;
+            Assert.That(lift, Is.GreaterThan(Fixed.Zero));
             BusinessBooks.Draw(sim, b, b.Ledger.Cash + BusinessBooks.OverdraftLimit(sim, b)); // the whole overdraft used
             long drain = b.Ledger.Cash;
             if (drain > 0) b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "test", "test", new Posting(Account.OwnersCapital, drain), new Posting(Account.Cash, -drain));
             sim.DrainEvents();
+            Assert.That(sim.Execute(new SetMarketing(sim.State.Clock.SimTime, b.Id, 8_000 * Coin)).Reason, Is.EqualTo(RejectReason.InsufficientFunds), "a rise it cannot pay is refused");
+            Assert.That(b.Marketing, Is.EqualTo(4_000 * Coin), "and the budget stays");
+            int posted = b.Ledger.Entries.Count(e => e.DescriptionKey == "ledger.marketing");
             Close(sim);
-            Assert.That(b.MarketLift, Is.EqualTo(Fixed.Zero), "nothing was bought");
-            Assert.That(b.Ledger.Entries.Any(e => e.DescriptionKey == "ledger.marketing"), Is.False);
+            Assert.That(b.Ledger.Entries.Count(e => e.DescriptionKey == "ledger.marketing"), Is.EqualTo(posted), "nothing bought at the close");
+            Assert.That(b.MarketLift, Is.LessThan(lift), "so the lift fades");
+            Assert.That(sim.DrainEvents().OfType<Sim.Core.Events.ObligationUnpaid>().Any(e => e.Kind == "Marketing"), Is.True, "and you are told");
         }
 
         // The command: only a shop, only a content budget, only after the Township, never on a closed business.
@@ -90,6 +96,7 @@ namespace Sim.Core.Tests
             Assert.That(sim.Execute(new SetMarketing(t, 999, 0)).Reason, Is.EqualTo(RejectReason.UnknownBusiness));
             Ok(sim, new SetMarketing(t, b.Id, 4_000 * Coin));
             Assert.That(b.Marketing, Is.EqualTo(4_000 * Coin));
+            Assert.That(b.MarketLift, Is.EqualTo(KhataRules.Lift(sim, 4_000 * Coin)), "paid and working now");
         }
     }
 }

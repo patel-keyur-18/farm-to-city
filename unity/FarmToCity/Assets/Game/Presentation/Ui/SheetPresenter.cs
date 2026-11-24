@@ -127,7 +127,7 @@ namespace Game.Presentation.Ui
                 case "person_hand_m": case "person_hand_f": case "person_labourer_m": case "person_labourer_f": return SpriteBank.Rendered(icon + "_front");
                 case "hand_hut": case "hand_hut_building": case "granary": case "cold_store": case "silage_pit": case "chaff_cutter": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut;
                 case "solar_panel": return SpriteBank.Rendered("icon_solar_panel") ?? SpriteBank.Rendered(icon); // granary: your godown in town (ADR 0087)
-                case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": case "brick_kiln": case "brick_kiln_building": case "tuition": case "tuition_building": case "restaurant": case "restaurant_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
+                case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": case "brick_kiln": case "brick_kiln_building": case "tuition": case "tuition_building": case "restaurant": case "restaurant_building": case "kirana": case "kirana_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
                 case "veg_stall": case "tea_stall": case "sweet_shop": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut; // shops (spec 017)
                 case "school": case "school_building": return IconBank.Good(icon); // spec 018
                 case "watchman_post": case "community_hall": case "playground": return IconBank.Good(icon); // spec 023 §3.7
@@ -145,6 +145,7 @@ namespace Game.Presentation.Ui
                 case "coin": return IconBank.Coin;
                 case "savings": return SpriteBank.Rendered("icon_savings") ?? IconBank.Coin; // the savings deposit (spec 019 §3.5)
                 case "menu": return IconBank.Ledger;
+                case "megaphone": return SpriteBank.Rendered("icon_megaphone") ?? IconBank.Coin; // a shop's marketing (spec 028 §3.10)
                 case "scroll": return SpriteBank.Rendered("icon_scroll"); // the Chronicle (spec 029) and a contract
                 case "alert": return IconBank.Bell;
                 case "cart": return IconBank.Cart;
@@ -1118,9 +1119,9 @@ namespace Game.Presentation.Ui
                 b.style.marginLeft = 0; b.style.marginRight = 16;
                 b.style.flexDirection = FlexDirection.Row;
                 b.style.alignItems = Align.Center;
-                b.style.backgroundColor = UiKit.CreamDark;
+                b.style.backgroundColor = a.Chosen ? UiKit.Gold : UiKit.CreamDark; // the setting you have, among a row of choices
                 UiKit.Radius(b, 26);
-                UiKit.Border(b, 4, UiKit.Sand);
+                UiKit.Border(b, 4, a.Chosen ? UiKit.SandDark : UiKit.Sand);
                 UiKit.Padding(b, 14, 18);
                 Sprite pic = Thumbnail(a.Icon);
                 if (pic != null)
@@ -1413,7 +1414,7 @@ namespace Game.Presentation.Ui
                 if (l.Tree != null) foreach (var g in l.Tree.Generations) foreach (TreePersonVm p in g) key.Append('|').Append(p.Text);
                 key.Append('|').Append(l.Label).Append('=').Append(l.Value).Append(l.Note).Append(l.Badge).Append(l.Tag).Append(l.WhyKey).Append(l.Stars.HasValue ? l.Stars.Value.Solid * 10 + l.Stars.Value.Faded : -1);
                 if (l.Tabs != null) foreach (ActionVm t in l.Tabs) key.Append('|').Append(t.Label).Append(l.TabOn);
-                if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count).Append(b.Enabled);
+                if (l.Buttons != null) foreach (ActionVm b in l.Buttons) key.Append('|').Append(b.Label).Append(b.Detail).Append(b.Count).Append(b.Enabled).Append(b.Chosen);
                 if (l.Action != null) key.Append('|').Append(l.Action.Label).Append(l.Action.Detail).Append(l.Action.Enabled).Append(l.Action.DisabledReason);
                 if (l.Amount != null) key.Append('|').Append(l.Amount.Id).Append(l.Amount.Min).Append(',').Append(l.Amount.Max).Append(',').Append(l.Amount.Mark).Append(',').Append(l.Amount.Span).Append(',').Append(l.Amount.Start);
                 key.Append(l.Meter);

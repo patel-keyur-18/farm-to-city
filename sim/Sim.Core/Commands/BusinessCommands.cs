@@ -521,18 +521,22 @@ namespace Sim.Core.Commands
         protected override CommandResult ApplyAt(Simulation sim) { return KhataRules.SetLimit(sim, BusinessId, Limit); }
     }
 
-    /// <summary>Stops one household's khata at a shop until the close has collected what it owes (spec 028 §3.10).</summary>
+    /// <summary>Stops one household's khata at a shop, or allows it again (spec 028 §3.10, Preview 21).</summary>
     public sealed class CutOffHousehold : TimedCommand
     {
         public long BusinessId { get; }
         public long HouseholdId { get; }
 
-        public CutOffHousehold(long at, long businessId, long householdId) : base(at)
+        /// <summary>True cuts it off; false allows it again.</summary>
+        public bool Cut { get; }
+
+        public CutOffHousehold(long at, long businessId, long householdId, bool cut = true) : base(at)
         {
             BusinessId = businessId;
             HouseholdId = householdId;
+            Cut = cut;
         }
 
-        protected override CommandResult ApplyAt(Simulation sim) { return KhataRules.CutOff(sim, BusinessId, HouseholdId); }
+        protected override CommandResult ApplyAt(Simulation sim) { return KhataRules.CutOff(sim, BusinessId, HouseholdId, Cut); }
     }
 }

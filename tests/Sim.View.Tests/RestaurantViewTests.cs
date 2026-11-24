@@ -88,7 +88,7 @@ namespace Sim.View.Tests
             Business b = Diner(sim);
             SheetVm vm = BusinessSheet.Build(ViewKit2.Context(sim), b.Id, BusinessSheet.Settings);
             Assert.That(vm.Lines.Any(l => l.Label == "Open hours"), Is.False, "the sittings are fixed");
-            Assert.That(vm.Lines.Any(l => l.Label.StartsWith("Buy")), Is.False, "the kitchen buys by its own order: store, businesses, market");
+            Assert.That(vm.Lines.Any(l => l.Label != null && l.Label.StartsWith("Buy")), Is.False, "the kitchen buys by its own order: store, businesses, market");
             LineVm thali = vm.Lines.First(l => l.Label == "Thali");
             Assert.That(thali.Action.Create(sim.State.Clock.SimTime), Is.TypeOf<SetDish>());
             Assert.That(sim.Execute(thali.Action.Create(sim.State.Clock.SimTime)).Accepted, Is.True);

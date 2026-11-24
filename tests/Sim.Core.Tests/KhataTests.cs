@@ -127,7 +127,10 @@ namespace Sim.Core.Tests
             Assert.That(shop.Credit.Single(a => a.Household != first.Household).Balance, Is.GreaterThan(0));
             Assert.That(sim.Execute(new CutOffHousehold(sim.State.Clock.SimTime, shop.Id, 99_999)).Reason, Is.EqualTo(RejectReason.InvalidArgument), "a household that owes nothing has nothing to cut");
             Close(sim);
-            Assert.That(shop.Credit.All(a => !a.CutOff), Is.True, "the close collected it");
+            Assert.That(shop.Credit.Single(a => a.Household == first.Household).CutOff, Is.True, "a household you cut off stays cut off through the close");
+            Assert.That(shop.Credit.Single(a => a.Household == first.Household).Balance, Is.Zero, "what it owed is collected");
+            Ok(sim, new CutOffHousehold(sim.State.Clock.SimTime, shop.Id, first.Household, false));
+            Assert.That(KhataRules.Room(sim, shop, first), Is.GreaterThan(0), "allowed again");
             Reconciles(sim);
         }
 

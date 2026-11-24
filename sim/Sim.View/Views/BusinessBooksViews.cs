@@ -19,13 +19,14 @@ namespace Sim.View.Views
             Rent = 21, // a shop's pitch (spec 017 §3.4)
             Tax = 22, Before = 23, Owed = 24, // spec 022 §3.2: the business tax, profit before it, tax owed to the town
             Receivable = 25, Payable = 26, // spec 028 §3.1: what customers owe it, what it owes suppliers on terms
-            BridgeProfit = 27, BridgeWear = 28, BridgeCustomers = 29, BridgeSuppliers = 30, BridgeStock = 31, BridgeTax = 32, BridgeRunning = 33, BridgeOther = 34; // why cash moved, from profit
+            BridgeProfit = 27, BridgeWear = 28, BridgeCustomers = 29, BridgeSuppliers = 30, BridgeStock = 31, BridgeTax = 32, BridgeRunning = 33, BridgeOther = 34, // why cash moved, from profit
+            Marketing = 35, BadDebt = 36; // spec 028 §3.10: a shop's marketing and what khata never paid
 
         internal static readonly string[] Names =
         {
             "fees", "sales", "goods", "margin", "wages", "power", "repairs", "depreciation", "interest", "profit",
             "cashStart", "cashIn", "cashOut", "cashEnd", "cash", "stock", "fixed", "debts", "capital", "kept", "worth", "rent", "tax", "before", "owed",
-            "receivable", "payable", "bridgeProfit", "bridgeWear", "bridgeCustomers", "bridgeSuppliers", "bridgeStock", "bridgeTax", "bridgeRunning", "bridgeOther",
+            "receivable", "payable", "bridgeProfit", "bridgeWear", "bridgeCustomers", "bridgeSuppliers", "bridgeStock", "bridgeTax", "bridgeRunning", "bridgeOther", "marketing", "badDebt",
         };
 
         private static readonly int[] PlanLines = { Fees, Sales, Goods, Wages, Power, Repairs, Depreciation, Interest, Profit };
@@ -77,6 +78,8 @@ namespace Sim.View.Views
                 case Owed: return -r.Balance(Account.TaxOwed);
                 case Receivable: return r.Balance(Account.OwedByBuyers);
                 case Payable: return -r.Balance(Account.TradePayable);
+                case Marketing: return r.Balance(Account.Marketing);
+                case BadDebt: return r.Balance(Account.BadDebt);
                 default: return Total(r, AccountGroup.Assets) - Total(r, AccountGroup.Liabilities);
             }
         }
@@ -128,7 +131,7 @@ namespace Sim.View.Views
             return ctx.Strings.Get(BusinessWords.Key(ctx, "books." + Names[line], t), "good", t.ByRecipe || t.IsKiln || t.IsTuition || t.Input < 0 ? "" : BusinessWords.Good(ctx, t.Input));
         }
 
-        private static bool IsCost(int line) { return line == Goods || line == Tax || (line >= Wages && line <= Interest) || line == CashOut || line == Debts || line == Payable; }
+        private static bool IsCost(int line) { return line == Goods || line == Tax || (line >= Wages && line <= Interest) || line == CashOut || line == Debts || line == Payable || line == Marketing || line == BadDebt; }
 
         private static string Value(ViewContext ctx, int line, long amount) { return (IsCost(line) && amount != 0 ? "−" : line >= BridgeWear && line <= BridgeTax && amount > 0 ? "+" : "") + ctx.Fmt.Coins(amount); }
 
@@ -151,6 +154,8 @@ namespace Sim.View.Views
                 if (line != Fees || !recipe) Add(ctx, vm, b, r, back, line);
             if (Amount(r, Wages) != 0 || b.Worker != WorkerKind.Founder) Add(ctx, vm, b, r, back, Wages);
             if (Amount(r, Rent) != 0) Add(ctx, vm, b, r, back, Rent);
+            if (Amount(r, Marketing) != 0) Add(ctx, vm, b, r, back, Marketing);
+            if (Amount(r, BadDebt) != 0) Add(ctx, vm, b, r, back, BadDebt);
             foreach (int line in new[] { Power, Repairs, Depreciation })
                 Add(ctx, vm, b, r, back, line);
             if (Amount(r, Interest) != 0) Add(ctx, vm, b, r, back, Interest);
@@ -183,6 +188,7 @@ namespace Sim.View.Views
         internal static void AddBooks(ViewContext ctx, SheetVm vm, Business b)
         {
             var s = ctx.Strings;
+            GrowthSheet.AddBooks(ctx, vm, b, BusinessRules.TypeOf(ctx.Sim, b)); // spec 028 §3.10: who owes the shop what
             AddStatements(ctx, vm, b, ReportOf(ctx, b, 0), 0);
             if (b.Reports.Count > 0)
             {

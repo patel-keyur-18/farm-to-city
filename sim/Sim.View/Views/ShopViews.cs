@@ -106,8 +106,8 @@ namespace Sim.View.Views
                 if (t.Kind != ShopKind.Veg || t.Sells(g))
                     foreach (ShopGroup grp in new[] { ShopGroup.Town, ShopGroup.Village }) demand += ShopRules.DemandPerDay(sim, t.Kind, g, grp);
             vm.Lines.Add(new LineVm(s.Get("research.shopDemand." + t.Kind.ToString().ToLowerInvariant()), ShopWords.Amount(ctx, t.Kind, demand), "shopDemand", type) { Icon = t.Id });
-            if (t.Kind == ShopKind.Veg)
-                vm.Lines.Add(new LineVm(s.Get("research.shopReference.veg"), s.Get("research.shopMarkup", "pct", ctx.Fmt.Percent(d.RetailMarkup - Fixed.One)), "shopReference", type) { Icon = "coin" });
+            if (t.Kind == ShopKind.Veg || t.Kind == ShopKind.Grocery)
+                vm.Lines.Add(new LineVm(s.Get("research.shopReference." + t.Kind.ToString().ToLowerInvariant()), s.Get("research.shopMarkup", "pct", ctx.Fmt.Percent(d.RetailMarkup - Fixed.One)), "shopReference", type) { Icon = "coin" });
             else
                 foreach (int g in ShopRules.KindGoods(sim, t.Kind))
                     vm.Lines.Add(new LineVm(s.Get("research.shopReference", "good", g < 0 ? s.Get("shop.chai") : s.Get(sim.Config.Game.Market.Goods[g].NameKey)),
@@ -221,7 +221,7 @@ namespace Sim.View.Views
                     vm.Lines.Add(new LineVm(s.Get("business.stock", "good", s.Get(sim.Config.Game.Market.Goods[g].NameKey)), ctx.Fmt.Kg(b.Stock[g]), "shopPutOut", BusinessWords.GoodId(b.Id, g))
                         { Icon = sim.Config.Game.Market.Goods[g].Id });
             }
-            else if (t.Kind == ShopKind.Veg)
+            else if (t.Kind == ShopKind.Veg || t.Kind == ShopKind.Grocery)
             {
                 foreach (int g in t.Goods)
                 {
@@ -230,6 +230,7 @@ namespace Sim.View.Views
                         BusinessWords.GoodId(b.Id, g)) { Icon = sim.Config.Game.Market.Goods[g].Id });
                 }
             }
+            GrowthSheet.AddToday(ctx, vm, b, t); // spec 028 §3.10: marketing and khata, a line each
         }
 
         /// <summary>Its stars (§3.5): the card's Today for a shop and the mill.</summary>
@@ -256,6 +257,7 @@ namespace Sim.View.Views
                 string name = x == b ? s.Get("shop.you") : s.Get("shop.yourOther", "name", x.Pitch >= 0 ? ShopWords.Pitch(ctx, x.Pitch) : s.Get("shop.yourAcre"));
                 vm.Lines.Add(new LineVm(name, ctx.Fmt.Percent(Share(x.CustomersToday, all + lost)), "shopShare", ShopWords.ShareId(x))
                     { Icon = t.Id, Note = ShopWords.Terms(ctx, t.Kind, x.PriceFactor, x.Quality, x.Stars, ShopRules.WaitMinutes(x.LastArrivals, x.LastCapacity)) });
+                if (x == b) GrowthSheet.AddCustomers(ctx, vm, b, t); // its own parts of the score: marketing, khata
             }
             List<Rival> rivals = st.All();
             for (int i = 0; i < rivals.Count; i++)
@@ -266,6 +268,7 @@ namespace Sim.View.Views
                     { Icon = ShopWords.RivalIcon(ctx, r), Note = ShopWords.Terms(ctx, t.Kind, r.PriceFactor, ShopRules.RivalQuality(sim, r), r.Stars, ShopRules.WaitMinutes(r.LastArrivals, ShopRules.RivalCapacity(sim, r))) });
             }
             vm.Lines.Add(new LineVm(s.Get("shop.lost"), ShopWords.Amount(ctx, t.Kind, lost), "shopLost", b.Id) { Icon = "population" });
+            GrowthSheet.AddReaction(ctx, vm, b, t); // what the village shop does about your share, in words
         }
 
         /// <summary>Today's customers of a kind: every shop's, and those no shop could serve.</summary>
@@ -305,7 +308,7 @@ namespace Sim.View.Views
             int pi = 0;
             for (int i = 0; i < presets.Count; i++) if (presets[i] == b.PriceFactor) pi = i;
             Fixed nextPrice = presets[(pi + 1) % presets.Count];
-            var price = new LineVm(s.Get("shop.price"), ShopWords.Price(ctx, t.Kind, b.PriceFactor), "shopPrice", id) { Icon = "coin", Note = t.Kind == ShopKind.Veg ? null : ShopWords.PriceSetting(ctx, b.PriceFactor) };
+            var price = new LineVm(s.Get("shop.price"), ShopWords.Price(ctx, t.Kind, b.PriceFactor), "shopPrice", id) { Icon = "coin", Note = t.Kind == ShopKind.Veg || t.Kind == ShopKind.Grocery ? null : ShopWords.PriceSetting(ctx, b.PriceFactor) };
             int quality = b.Quality, nextQuality = 3 - b.Quality;
             price.Action = new ActionVm("price", s.Get("business.change"), ShopWords.Price(ctx, t.Kind, nextPrice), ActionKind.Secondary, true, null, at => new SetShop(at, id, nextPrice, quality));
             vm.Lines.Add(price);
@@ -315,7 +318,7 @@ namespace Sim.View.Views
             var q = new LineVm(s.Get("shop.quality"), ShopWords.Quality(ctx, quality, true), "shopQuality", id)
                 { Icon = "star", Note = s.Get("shop.qualityNote." + t.Kind.ToString().ToLowerInvariant()) };
             q.Action = new ActionVm("quality", s.Get("business.change"), ShopWords.Quality(ctx, nextQuality, true), ActionKind.Secondary, true, null, at => new SetShop(at, id, factor, nextQuality));
-            vm.Lines.Add(q);
+            if (t.Kind != ShopKind.Grocery) vm.Lines.Add(q); // a kirana sells one grade: staples
 
             if (t.Kind == ShopKind.Sweets) BusinessSheet.AddMixFor(ctx, vm, b, t);
             if (t.Kind == ShopKind.Chai)
@@ -343,10 +346,11 @@ namespace Sim.View.Views
                     vm.Lines.Add(line);
                 }
             }
-            if (t.IsMeals) return; // the kitchen buys from your store, your businesses, then the market: no switch
+            if (t.IsMeals) { GrowthSheet.AddSettings(ctx, vm, b, t); return; } // the kitchen buys from your store, your businesses, then the market: no switch
             var buy = new LineVm(s.Get(BusinessWords.Key(ctx, "business.market", t)), s.Get(market ? "business.yes" : "business.no"), "businessMarket", id);
             buy.Action = new ActionVm("market", s.Get(market ? "business.stopMarket" : "business.startMarket"), null, ActionKind.Secondary, true, null, at => new SetBusiness(at, id, open, close, fee, own, !market));
             vm.Lines.Add(buy);
+            GrowthSheet.AddSettings(ctx, vm, b, t); // spec 028 §3.10: marketing and khata
         }
     }
 
