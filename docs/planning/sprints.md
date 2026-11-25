@@ -1250,3 +1250,23 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - [x] The playtest town shown to the owner; the Release build made from the final commit
 - [x] `STATUS.md`, feature files and this file updated
 - [ ] Pull request with labels, milestone `Phase 3 · Township` and the project `FarmToCity`; the owner merges it
+
+## Sprint 28 · Phase 3.5 · Ad hoc (UI fixes, one business run by you, the Businesses hub, supply between your businesses; specs 030 and 031; ADR 0172)
+
+- **Status:** Started 2026-11-25. **Plan approved by the owner 2026-11-25** (ADR 0172, every gap closed one per message).
+- **Branch:** `sprint/28-business-hub`, from `main` after PR #38 (`5e5a4301`)
+- **Goal:** Every business at a glance from one button, with its money and its supply; only one business run by you; what you send your businesses from your farm is yours to set, and a hand grows for the vegetable stall; the HUD and sheets never cut or wrap. Save schema 25 ships once, with a fixture. Goldens don't move.
+- **Points:** 21 = US-265 3, US-266 3, US-267 5, US-268 5, US-269 5
+- **Specs to write and review:** spec 030 (this sprint's stories, first), spec 031 (two towns, for Sprint 29)
+- **Device build:** Yes: a Development build at the sprint's end
+- **Milestone and labels:** `Phase 3.5 · Ad hoc`; `type:feature`, `type:spec`, `type:adr`; `area:sim`, `area:content`, `area:ui`, `area:tooling`; `documentation`
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-265 | UI fixes: Collect all, tabs, badges, overflow check | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 3 | Must | Backlog |
+| US-266 | One business run by you | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 3 | Must | Backlog |
+| US-267 | The Businesses hub | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 5 | Must | Backlog |
+| US-268 | Today's supply, Automatic or Manual | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Must | Backlog |
+| US-269 | Grow for the vegetable stall | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Should | Backlog |
+
+**Next sprints (ADR 0172):** Sprint 29 `sprint/29-two-towns` (US-270 two towns, US-271 the art inventory and samples, spec 032); Sprint 30 onward the art redesign.
