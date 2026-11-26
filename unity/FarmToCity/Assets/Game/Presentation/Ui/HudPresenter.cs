@@ -27,11 +27,11 @@ namespace Game.Presentation.Ui
         private bool _urgentShown, _held;
         private readonly VisualElement _weatherIcon, _storeFill, _timeCard, _cashPill, _storePill, _collectHolder;
         private Button _collect;
-        private readonly VisualElement _people, _badge, _orders, _ordersBadge, _townPill, _overlays;
+        private readonly VisualElement _people, _badge, _orders, _ordersBadge, _businesses, _businessesBadge, _townPill, _overlays;
         private readonly Label _overlaysWord;
         private readonly Label _population, _happiness;
-        private readonly Label _badgeText, _ordersBadgeText;
-        private int _badgeShown = -1, _ordersShown = -1;
+        private readonly Label _badgeText, _ordersBadgeText, _businessesBadgeText;
+        private int _badgeShown = -1, _ordersShown = -1, _businessesShown = -1;
         private string _weatherId;
         private long _shownCash = long.MinValue, _targetCash;
         private int _readyShown = -1;
@@ -48,6 +48,7 @@ namespace Game.Presentation.Ui
         public Action OnMenu { get; set; }
         public Action OnAlerts { get; set; }
         public Action OnOrders { get; set; }
+        public Action OnBusinesses { get; set; }
 
         /// <summary>The Overlays button (US-153): opens the chooser, or ends the overlay that is up.</summary>
         public Action OnOverlays { get; set; }
@@ -277,6 +278,34 @@ namespace Game.Presentation.Ui
             _orders.style.display = DisplayStyle.None;
             _layer.Add(_orders);
 
+            // Beside Orders: the Businesses hub (spec 030 §3.3), the flour mill's picture, a badge for businesses that need you.
+            _businesses = RoundButton(150, IconBank.Good("flour_mill"), 96);
+            _businesses.name = "Businesses";
+            _businesses.style.position = Position.Absolute;
+            _businesses.style.right = 538; _businesses.style.bottom = 28;
+            _businesses[0].style.marginTop = -18;
+            Label businessesWord = UiKit.Text(strings.Get("hud.businesses"), 20, UiKit.Ink, UiKit.Heading);
+            businessesWord.style.position = Position.Absolute;
+            businessesWord.style.bottom = -4;
+            _businesses.Add(businessesWord);
+            _businessesBadge = new VisualElement { pickingMode = PickingMode.Ignore };
+            _businessesBadge.style.position = Position.Absolute;
+            _businessesBadge.style.right = -6; _businessesBadge.style.top = -6;
+            _businessesBadge.style.width = 54; _businessesBadge.style.height = 54;
+            _businessesBadge.style.backgroundColor = UiKit.Red;
+            UiKit.Radius(_businessesBadge, 27);
+            UiKit.Border(_businessesBadge, 4, UiKit.RedDark);
+            _businessesBadge.style.alignItems = Align.Center;
+            _businessesBadge.style.justifyContent = Justify.Center;
+            _businessesBadgeText = UiKit.Text("", 32, Color.white, UiKit.Heading);
+            _businessesBadge.Add(_businessesBadgeText);
+            UiKit.FitBadge(_businessesBadge, _businessesBadgeText, 54);
+            _businessesBadge.style.display = DisplayStyle.None;
+            _businesses.Add(_businessesBadge);
+            _businesses.RegisterCallback<ClickEvent>(_ => { if (OnBusinesses != null) OnBusinesses(); });
+            _businesses.style.display = DisplayStyle.None;
+            _layer.Add(_businesses);
+
             // A festival's day (spec 026 §3.1): a green strip at the top centre, "Mango Mela today · the banyan square".
             _festival = new VisualElement { pickingMode = PickingMode.Ignore };
             _festival.style.position = Position.Absolute;
@@ -447,6 +476,16 @@ namespace Game.Presentation.Ui
                 _ordersBadgeText.text = HudVm.BadgeText(hud.OrdersBadge);
                 _ordersBadge.style.display = hud.OrdersBadge > 0 ? DisplayStyle.Flex : DisplayStyle.None;
                 if (popped) Bounce(_orders);
+            }
+
+            _businesses.style.display = hud.HasBusinesses ? DisplayStyle.Flex : DisplayStyle.None;
+            if (_businessesShown != hud.BusinessesBadge)
+            {
+                bool popped = hud.BusinessesBadge > _businessesShown && _businessesShown >= 0 && animate;
+                _businessesShown = hud.BusinessesBadge;
+                _businessesBadgeText.text = HudVm.BadgeText(hud.BusinessesBadge);
+                _businessesBadge.style.display = hud.BusinessesBadge > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+                if (popped) Bounce(_businesses);
             }
 
             bool enabled = hud.ShowCollect;

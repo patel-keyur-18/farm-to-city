@@ -1264,8 +1264,8 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
 | US-265 | UI fixes: Collect all, tabs, badges, overflow check | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 3 | Must | Done 2026-11-26, approved |
-| US-266 | One business run by you | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 3 | Must | Built 2026-11-26, awaiting review |
-| US-267 | The Businesses hub | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 5 | Must | Backlog |
+| US-266 | One business run by you | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 3 | Must | Done 2026-11-26, approved (ADR 0173) |
+| US-267 | The Businesses hub | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 5 | Must | Built (ADR 0174), awaiting the owner's review |
 | US-268 | Today's supply, Automatic or Manual | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Must | Backlog |
 | US-269 | Grow for the vegetable stall | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Should | Backlog |
 

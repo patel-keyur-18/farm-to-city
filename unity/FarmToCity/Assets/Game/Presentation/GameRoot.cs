@@ -502,6 +502,7 @@ namespace Game.Presentation
                 case ShopPlaceSheet.Kind: _sheet.Show(ShopPlaceSheet.Build(_ctx, (int)r.Id, r.Arg), refreshOnly); break; // a pitch in the square or your acre (spec 017 §3.4)
                 case "ShedPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Shed); break;
                 case "Businesses": _sheet.Show(BusinessesSheet.Build(_ctx), refreshOnly); break;
+                case BusinessHub.Kind: _sheet.Show(BusinessHub.Build(_ctx), refreshOnly); break;
                 case "BusinessResearch": _sheet.Show(BusinessResearchSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "BusinessPlan": _sheet.Show(BusinessPlanSheet.Build(_ctx, (int)r.Id, BusinessWords.Self(r.Arg), BusinessWords.Loan(r.Arg)), refreshOnly); break;
                 case "BusinessClose": _sheet.Show(BusinessCloseSheet.Build(_ctx, r.Id), refreshOnly); break;

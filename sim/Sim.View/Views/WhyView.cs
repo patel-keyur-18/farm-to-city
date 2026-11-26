@@ -102,7 +102,7 @@ namespace Sim.View.Views
             // Businesses (spec 016 §7).
             { "businessArea", BusinessArea }, { "businessFee", BusinessFee }, { "businessTrader", BusinessTrader }, { "businessWage", BusinessWage },
             { "businessOwn", BusinessOwn }, { "businessWorker", BusinessWorker }, { "businessHours", BusinessHours }, { "businessMarket", BusinessMarket },
-            { "businessCash", BusinessCash }, { "booksLine", BooksLine }, { "booksPlan", BooksPlan },
+            { "businessCash", BusinessCash }, { "hubProfit", HubProfit }, { "hubCash", HubCash }, { "booksLine", BooksLine }, { "booksPlan", BooksPlan },
             { "businessWorth", BusinessWorthWhy }, { "businessHolds", BusinessHoldsWhy }, { "businessSale", BusinessSaleWhy }, { "businessBranch", BusinessBranchWhy }, // spec 028 §3.3
             { "supervisor", SupervisorWhy }, { "supervisorPays", SupervisorPaysWhy }, { "accident", AccidentWhy }, { "conflict", ConflictWhy }, { "association", AssociationWhy }, // spec 028 §3.9
             { "benefit", BenefitWhy }, { "loyalty", LoyaltyWhy }, { "night", NightWhy }, { "investorOffer", InvestorOfferWhy }, { "partnerOffer", PartnerOfferWhy }, { "dealBuyout", DealBuyoutWhy }, { "ownerRow", OwnerRowWhy }, { "ownerPaid", OwnerPaidWhy }, { "outsideLimit", OutsideLimitWhy }, { "shareBack", ShareBackWhy }, { "dealOffer", DealOfferWhy }, // spec 028 §3.4

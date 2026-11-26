@@ -491,5 +491,8 @@
   {"label":"US-265 UI fixes","view":"farm","date":"2026-11-26","drawCalls":339,"batches":339,"setPassCalls":9,"triangles":6600,"visibleSprites":378,"sprites":2241},
   {"label":"US-266 one business run by you","view":"all","date":"2026-11-26","drawCalls":1223,"batches":1223,"setPassCalls":12,"triangles":24628,"visibleSprites":1585,"sprites":2241},
   {"label":"US-266 one business run by you","view":"village","date":"2026-11-26","drawCalls":538,"batches":538,"setPassCalls":10,"triangles":11054,"visibleSprites":638,"sprites":2241},
-  {"label":"US-266 one business run by you","view":"farm","date":"2026-11-26","drawCalls":331,"batches":331,"setPassCalls":9,"triangles":6539,"visibleSprites":370,"sprites":2241}
+  {"label":"US-266 one business run by you","view":"farm","date":"2026-11-26","drawCalls":331,"batches":331,"setPassCalls":9,"triangles":6539,"visibleSprites":370,"sprites":2241},
+  {"label":"US-267","view":"all","date":"2026-11-26","drawCalls":1297,"batches":1288,"setPassCalls":13,"triangles":25683,"visibleSprites":1642,"sprites":2299},
+  {"label":"US-267","view":"village","date":"2026-11-26","drawCalls":572,"batches":563,"setPassCalls":10,"triangles":11651,"visibleSprites":673,"sprites":2299},
+  {"label":"US-267","view":"farm","date":"2026-11-26","drawCalls":362,"batches":353,"setPassCalls":9,"triangles":7364,"visibleSprites":398,"sprites":2299}
 ]

@@ -44,7 +44,7 @@ namespace Game.Editor
             _open = typeof(GameRoot).GetMethod("OpenSheet", bf);
             Queue.Clear(); Seen.Clear(); Kinds.Clear(); Problems.Clear(); ProblemKeys.Clear();
             _opened = 0; _current = null;
-            foreach (string kind in new[] { "Menu", "Store", "People", "Orders", "Money", "Businesses", "Settings", "Equipment", "Land", "Hire" }) Enqueue(new SheetRequest(kind, 0));
+            foreach (string kind in new[] { "Menu", "Store", "People", "Orders", "Money", "Businesses", BusinessHub.Kind, "Settings", "Equipment", "Land", "Hire" }) Enqueue(new SheetRequest(kind, 0));
             _running = true;
             _at = EditorApplication.timeSinceStartup + 0.5;
             EditorApplication.update += Step;
