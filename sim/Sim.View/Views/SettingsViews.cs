@@ -63,6 +63,31 @@ namespace Sim.View.Views
         public string Title { get; internal set; }
         public string Text { get; internal set; }
         public List<CardButton> Buttons { get; } = new List<CardButton>();
+
+        /// <summary>Rows to choose from, between the sentence and the buttons (the one-business card, spec 030 §7.3): a picture, a name, a detail and a button each.</summary>
+        public List<CardChoice> Choices { get; } = new List<CardChoice>();
+
+        /// <summary>A smaller line under the choices, or null.</summary>
+        public string Hint { get; internal set; }
+    }
+
+    /// <summary>One row of a card's choices: pressing its button answers the card with <see cref="Id"/>.</summary>
+    public sealed class CardChoice
+    {
+        public string Id { get; }
+        public string Icon { get; }
+        public string Title { get; }
+        public string Detail { get; }
+        public string ButtonLabel { get; }
+
+        public CardChoice(string id, string icon, string title, string detail, string buttonLabel)
+        {
+            Id = id;
+            Icon = icon;
+            Title = title;
+            Detail = detail;
+            ButtonLabel = buttonLabel;
+        }
     }
 
     /// <summary>The ids of the Settings actions: the platform runs them, they are not sim commands.</summary>

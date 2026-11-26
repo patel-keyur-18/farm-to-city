@@ -283,6 +283,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0170 | The game's time of day matches the device's: at a load or import the sim moves forward when behind (an away advance) and waits when ahead, nothing lost; the playtest tool matches the machine; the build starts from a delayed call |
 | 0171 | Phase 3 is closed (owner, 2026-11-24): A1 and A7 passed, A2–A5 run in parallel as the owner's play (findings ad hoc in `docs/playtest/phase-3-findings.md`), the frame-time p95s and the phone's golden replays deferred, part B before Launch |
 | 0172 | The ad hoc phase before Phase 4 (Phase 3.5): UI fixes, one business run by you, a Businesses hub, supply caps (Automatic or Manual) and a hand growing for the vegetable stall (spec 030, Sprint 28); two towns from Settings, superseding ADR 0023's one town (spec 031, Sprint 29); a graphics redesign from three samples (spec 032); in-game time travel dropped for now; save schema 25 |
+| 0173 | US-266 as built: one business run by you (`AlreadyRunOne`), a card at load for an older town that runs several (time waits for the answer), no save change |
 
 ## Current status
 

@@ -1,5 +1,7 @@
 using Sim.Core.Business;
 
+using System.Collections.Generic;
+
 namespace Sim.Core.Commands
 {
     /// <summary>
@@ -240,6 +242,36 @@ namespace Sim.Core.Commands
         }
     }
 
+    /// <summary>
+    /// A town saved before the one-business rule runs two or more businesses itself (spec 030 §3.1, §7.3): you keep running this one and
+    /// every other you run goes to nobody, waiting for a hire. Rejected unless this is one you run and you run at least two.
+    /// </summary>
+    public sealed class KeepRunningYourself : TimedCommand
+    {
+        public long BusinessId { get; }
+
+        public KeepRunningYourself(long at, long businessId) : base(at) { BusinessId = businessId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            List<Business.Business> run = BusinessRules.RunByYou(sim);
+            if (run.Count < 2 || b.Worker != WorkerKind.Founder) return CommandResult.Reject(RejectReason.InvalidArgument);
+            Farm.FarmSystem.Accrue(sim);
+            var stopped = new List<long>();
+            foreach (Business.Business other in run)
+            {
+                if (other == b) continue;
+                other.Worker = WorkerKind.None; // it waits for a hire, as when a worker is let go; its cash and stock stay
+                stopped.Add(other.Id);
+            }
+            Farm.FarmSystem.Refresh(sim); // your hours come off the one you keep
+            sim.Emit(new Events.RunYourselfChosen(sim.State.Clock.SimTime, b.Id, stopped.ToArray()));
+            return CommandResult.Ok;
+        }
+    }
+
     /// <summary>You run a business with nobody hired yourself (spec 016 §3.6): no wage, its hours come off your farm work.</summary>
     public sealed class RunBusinessYourself : TimedCommand
     {
@@ -253,6 +285,7 @@ namespace Sim.Core.Commands
             if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
             if (b.Worker != WorkerKind.None) return CommandResult.Reject(RejectReason.AlreadyStaffed);
             if (sim.State.People?.ManagerAt(b.Id) != null) return CommandResult.Reject(RejectReason.HasManager); // his to run: let him go first
+            if (BusinessRules.RunByYouNow(sim) != null) return CommandResult.Reject(RejectReason.AlreadyRunOne); // your day has room for one (spec 030 §3.1)
             Farm.FarmSystem.Accrue(sim);
             b.Worker = WorkerKind.Founder;
             Farm.FarmSystem.Refresh(sim);

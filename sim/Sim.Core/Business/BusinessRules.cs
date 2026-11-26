@@ -365,6 +365,25 @@ namespace Sim.Core.Business
             return batch.MulRatio(1000, r.OutputGrams);
         }
 
+        // ---- one business run by you (spec 030 §3.1) ----
+
+        /// <summary>Your businesses you run yourself (not closed), in id order: at most one for a new town, more only in a town saved before the rule.</summary>
+        public static List<Business> RunByYou(Simulation sim)
+        {
+            var list = new List<Business>();
+            if (sim.State.Businesses == null) return list;
+            foreach (Business b in sim.State.Businesses.Businesses)
+                if (b.Worker == WorkerKind.Founder && b.Status != BusinessStatus.Closed) list.Add(b);
+            return list;
+        }
+
+        /// <summary>The business you run yourself, or null: the first, when an older town runs more than one.</summary>
+        public static Business RunByYouNow(Simulation sim)
+        {
+            List<Business> list = RunByYou(sim);
+            return list.Count == 0 ? null : list[0];
+        }
+
         // ---- founding (§3.3) ----
 
         internal static CommandResult Found(Simulation sim, string typeId, int tileId, long capital, bool runYourself, Financing financing = null, int pitch = -1)
@@ -374,6 +393,7 @@ namespace Sim.Core.Business
             if (type < 0) return CommandResult.Reject(RejectReason.UnknownBusiness);
             BusinessTypeDef t = d.Types[type];
             if (!Unlocked(sim, t)) return CommandResult.Reject(RejectReason.EraLocked);
+            if (runYourself && RunByYouNow(sim) != null) return CommandResult.Reject(RejectReason.AlreadyRunOne); // your day has room for one (spec 030 §3.1)
             RejectReason tooMany = ExitRules.Branch(sim, type, out Business first); // spec 028 §3.3: a second of a kind is a branch of the first, up to the most
             if (tooMany != RejectReason.None) return CommandResult.Reject(tooMany);
             if (pitch >= 0)

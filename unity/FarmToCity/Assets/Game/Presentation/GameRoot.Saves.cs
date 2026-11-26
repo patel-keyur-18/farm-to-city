@@ -99,12 +99,36 @@ namespace Game.Presentation
             _logCount = Sim.State.CommandLog.Entries.Count;
             StartSession(_lastSyncWall);
             _alignPending = true;
+            _choosing = RunOne.MustChoose(Sim); // held until the player chooses (AskWhichToRun)
             if (o.State == null) SaveNow(); // the first save of a new town
             if (o.MigratedMap) { PlayerPrefs.DeleteKey("camera.x"); PlayerPrefs.DeleteKey("camera.y"); PlayerPrefs.DeleteKey("camera.h"); } // spec 010 §3.4
             if (o.RoadTake != null) return Cards.LandTaken(_ctx, o.RoadTake);
             if (o.Restored) return Cards.Restored(_ctx, o.SavedAtWallUtc, Info());
             if (o.Error != SaveError.None) return Cards.Unreadable(_ctx, o.Error, o.KeptAs);
             return null; // the first Sync is the away advance, with its card
+        }
+
+        // ---- one business run by you (spec 030 §3.1, §7.3) ----
+
+        /// <summary>True from loading a town that runs several businesses itself until the player has kept one: no time passes meanwhile, so the away hours count with the answer.</summary>
+        private bool _choosing;
+
+        /// <summary>A town saved before the one-business rule asks which business to keep running (a card with no way round it), then goes on.</summary>
+        private void AskWhichToRun()
+        {
+            if (!RunOne.MustChoose(Sim)) { _choosing = false; return; }
+            _choosing = true;
+            ShowCard(RunOne.Card(_ctx), id =>
+            {
+                Command answer = RunOne.Answer(Sim, id);
+                if (!(answer is KeepRunningYourself keep)) { AskWhichToRun(); return; }
+                var stopped = new List<long>();
+                foreach (global::Sim.Core.Business.Business b in global::Sim.Core.Business.BusinessRules.RunByYou(Sim)) if (b.Id != keep.BusinessId) stopped.Add(b.Id);
+                Run(new Command[] { answer });
+                if (RunOne.MustChoose(Sim)) { AskWhichToRun(); return; }
+                _choosing = false;
+                Toast(RunOne.Kept(_ctx, keep.BusinessId, stopped));
+            });
         }
 
         private Simulation NewTownSim()
@@ -383,6 +407,8 @@ namespace Game.Presentation
             _alignPending = true;
             _playLog.NewGame(WallNow(), Sim.State.Clock.SimTime);
             ResetTown(focus: true);
+            _choosing = RunOne.MustChoose(Sim);
+            AskWhichToRun(); // an imported older town may run several
         }
 
         private void ResetTown(bool focus)

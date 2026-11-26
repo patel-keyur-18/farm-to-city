@@ -390,6 +390,10 @@ namespace Sim.Core.Commands
 
         /// <summary>It already runs a night shift, or has none to stop.</summary>
         NightState,
+
+        // Spec 030 §3.1 (one business run by you, US-266)
+        /// <summary>You already run a business yourself: your day has room for one.</summary>
+        AlreadyRunOne,
     }
 
     /// <summary>The outcome of <c>Simulation.Execute</c>.</summary>

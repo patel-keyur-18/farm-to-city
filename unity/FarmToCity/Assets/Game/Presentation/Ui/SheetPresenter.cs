@@ -362,6 +362,48 @@ namespace Game.Presentation.Ui
             text.style.unityTextAlign = TextAnchor.MiddleCenter;
             text.style.marginTop = 10;
             card.Add(text);
+            // Rows to choose from (the one-business card, spec 030 §7.3): a picture, a name and its detail, and the button that answers.
+            foreach (CardChoice choice in vm.Choices)
+            {
+                string id = choice.Id;
+                var row = new VisualElement { pickingMode = PickingMode.Ignore };
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.alignItems = Align.Center;
+                row.style.backgroundColor = Painter.Hex(0xF8E6B6);
+                UiKit.Border(row, 3, Painter.Hex(0xE3C677));
+                UiKit.Radius(row, 22);
+                UiKit.Padding(row, 14, 18);
+                row.style.marginTop = 14;
+                Sprite sprite = IconBank.Good(choice.Icon);
+                if (sprite != null)
+                {
+                    VisualElement pic = UiKit.Icon(sprite, 96);
+                    pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                    pic.style.marginRight = 18;
+                    row.Add(pic);
+                }
+                var words = new VisualElement { pickingMode = PickingMode.Ignore };
+                words.style.flexGrow = 1; words.style.flexShrink = 1;
+                words.Add(UiKit.Heading1(choice.Title, 40));
+                Label detail = UiKit.Text(choice.Detail, 30, UiKit.Wood, UiKit.Body);
+                detail.style.whiteSpace = WhiteSpace.Normal;
+                words.Add(detail);
+                row.Add(words);
+                Button pick = UiKit.MakeButton(choice.ButtonLabel, ActionLook.Primary, () => { veil.RemoveFromHierarchy(); onButton(id); });
+                pick.name = "card:" + id;
+                pick.style.marginTop = 0; pick.style.marginLeft = 18;
+                pick.style.flexShrink = 0;
+                row.Add(pick);
+                card.Add(row);
+            }
+            if (vm.Hint != null)
+            {
+                Label hint = UiKit.Text(vm.Hint, 28, UiKit.Wood, UiKit.Body);
+                hint.style.whiteSpace = WhiteSpace.Normal;
+                hint.style.unityTextAlign = TextAnchor.MiddleCenter;
+                hint.style.marginTop = 14;
+                card.Add(hint);
+            }
             var buttons = new VisualElement { pickingMode = PickingMode.Ignore };
             buttons.style.flexDirection = FlexDirection.Row;
             buttons.style.justifyContent = Justify.Center;
@@ -375,7 +417,7 @@ namespace Game.Presentation.Ui
                 button.name = "card:" + id;
                 buttons.Add(button);
             }
-            card.Add(buttons);
+            if (vm.Buttons.Count > 0) card.Add(buttons);
             veil.Add(card);
             _holder.parent.Add(veil);
             card.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));

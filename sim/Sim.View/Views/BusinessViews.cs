@@ -194,13 +194,17 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
+            string runBlocked = RunOne.Blocked(ctx, "runone.plan"); // you already run one: a hire here (spec 030 §3.1)
+            if (runBlocked != null) self = false;
             BusinessTypeDef t = BusinessRules.Defs(sim).Types[type];
             long borrow = BusinessWords.LoanFor(sim, t, loan);
             BusinessRules.Projection p = BusinessRules.Projected(sim, t, self, BusinessRules.DefaultOwnPerDay(sim, t), t.Fee, borrow);
             long id = BusinessWords.PlanId(type, self, loan);
             var vm = new SheetVm { Icon = t.Id, Title = s.Get("plan.title", "name", BusinessWords.InSentence(ctx, t)), Subtitle = s.Get("plan.subtitle") };
             var who = new LineVm(s.Get("plan.who"), s.Get(self ? "plan.whoYou" : "plan.whoHire", "role", s.Get("business.role." + t.Worker)));
-            who.Action = ActionVm.Open("who", s.Get("plan.change"), new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(!self, loan)));
+            who.Action = runBlocked != null
+                ? new ActionVm("who", s.Get("plan.change"), null, ActionKind.Open, false, runBlocked, null, new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(true, loan)))
+                : ActionVm.Open("who", s.Get("plan.change"), new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(!self, loan)));
             vm.Lines.Add(who);
             // How it's paid for (§3.8): your cash, or a co-op bank business loan for 60% of the building and equipment.
             var funding = new LineVm(s.Get("plan.funding"), loan ? s.Get("plan.fundingLoan", "amount", ctx.Fmt.Coins(borrow)) : s.Get("plan.fundingCash"), "planLoan", id);
@@ -425,8 +429,12 @@ namespace Sim.View.Views
             if (b.Worker == WorkerKind.None)
             {
                 long id = b.Id;
-                vm.Lines.Add(new LineVm(s.Get("business.runYourself"), s.Get("business.runYourselfWhy"), "businessWorker", b.Id)
-                    { Icon = "person_founder", Action = ActionVm.Checked(ctx, "runYourself", s.Get("business.runIt"), null, ActionKind.Secondary, at => new RunBusinessYourself(at, id)) });
+                string runBlocked = RunOne.Blocked(ctx, "runone.card"); // you already run another business (spec 030 §3.1)
+                var runRow = new LineVm(s.Get("business.runYourself"), s.Get("business.runYourselfWhy"), "businessWorker", b.Id) { Icon = "person_founder" };
+                runRow.Action = runBlocked != null
+                    ? new ActionVm("runYourself", s.Get("business.runIt"), null, ActionKind.Secondary, false, runBlocked, null)
+                    : ActionVm.Checked(ctx, "runYourself", s.Get("business.runIt"), null, ActionKind.Secondary, at => new RunBusinessYourself(at, id));
+                vm.Lines.Add(runRow);
             }
             var cash = new LineVm(s.Get(BusinessWords.Key(ctx, "business.cash", t)), ctx.Fmt.Coins(b.Ledger.Cash), "businessCash", b.Id) { Icon = "coin" };
             if (BusinessBooks.Short(sim, b) && b.Worker != WorkerKind.None) // with nobody working, the worker's row says so
@@ -467,7 +475,7 @@ namespace Sim.View.Views
             }
             if (w == null)
             {
-                if (b.Worker == WorkerKind.None) { line.Note = s.Get("business.needsWorker"); line.NoteTone = Tone.Warn; }
+                if (b.Worker == WorkerKind.None) { line.Note = s.Get(BusinessRules.RunByYouNow(sim) != null ? "business.needsWorkerHire" : "business.needsWorker"); line.NoteTone = Tone.Warn; }
                 line.Action = ActionVm.Open("hireWorker", s.Get("business.workerHire"), new SheetRequest("Word", b.Id));
                 return line;
             }
