@@ -99,15 +99,18 @@ namespace Sim.Core.Business
         /// <summary>
         /// The crop he sows for the stall: of the in-season vegetables it sells that he may sow on this field and can pay the seed for, the one with the
         /// biggest preorder, then the most bought at the market lately, then the biggest day's amount, then the earlier crop. −1 when none fits
-        /// (he then sows his best pick, as Let him choose).
+        /// (he then sows his best pick, as Let him choose). <paramref name="needless"/> is true when some vegetable fits but none has a preorder: the stall
+        /// needs nothing more, so he waits (and never grows what it takes none of: a good capped at none has no preorder).
         /// </summary>
-        public static int Pick(Simulation sim, int tile, int fertiliser, Business b)
+        public static int Pick(Simulation sim, int tile, int fertiliser, Business b, out bool needless)
         {
+            needless = false;
             FarmDefs farm = sim.Config.Game.Farm;
             BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
             FertiliserDef fert = farm.Fertilisers[fertiliser];
             int season = (int)Calendar.SeasonAt(sim.State.Clock.SimTime, sim.Clock);
             int best = -1;
+            bool fits = false;
             long bestPre = -1, bestBought = -1, bestDay = -1;
             for (int i = 0; i < farm.Crops.Count; i++)
             {
@@ -117,10 +120,12 @@ namespace Sim.Core.Business
                 if (OrchardRules.MaySow(sim, tile, i) != Commands.RejectReason.None) continue;
                 if (!sim.State.Ledger.CanAfford(FarmRules.SowingCost(sim, c, SeedSource.Certified, fert))) continue;
                 long pre = Preorder(sim, b, g), bought = SupplyRules.BoughtOver(sim, b, g), day = b.PutOut[g];
+                if (pre <= 0) { fits = true; continue; }
                 bool better = best < 0 || pre > bestPre || (pre == bestPre && (bought > bestBought || (bought == bestBought && day > bestDay)));
                 if (!better) continue;
                 best = i; bestPre = pre; bestBought = bought; bestDay = day;
             }
+            needless = best < 0 && fits;
             return best;
         }
     }

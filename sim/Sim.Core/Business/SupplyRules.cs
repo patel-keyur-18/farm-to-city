@@ -73,9 +73,10 @@ namespace Sim.Core.Business
         /// <summary>Grams of a good bought over today and the days before it that the history keeps (<c>supplyLookbackDays</c> in all).</summary>
         public static long BoughtOver(Simulation sim, Business b, int good)
         {
-            long sum = BoughtTodayOf(sim, b, good);
-            int keep = BusinessRules.Defs(sim).SupplyLookbackDays - 1;
-            for (int i = 0; i < b.BoughtDays.Count && i < keep; i++) sum += b.BoughtDays[i][good];
+            if (b.BoughtToday == null) return 0;
+            long today = DayIndex(sim), oldest = today - BusinessRules.Defs(sim).SupplyLookbackDays; // days after this one count
+            long sum = b.SupplyDay > oldest ? b.BoughtToday[good] : 0; // the counters belong to SupplyDay, which may be an earlier day after a quiet morning
+            for (int i = 0; i < b.BoughtDays.Count; i++) if (b.SupplyDay - 1 - i > oldest) sum += b.BoughtDays[i][good];
             return sum;
         }
 

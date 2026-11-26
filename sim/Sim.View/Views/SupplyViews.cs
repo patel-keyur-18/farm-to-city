@@ -109,7 +109,7 @@ namespace Sim.View.Views
                 Row(s.Get("supply.choice.quarter"), s.Get("supply.detail.share", "kg", ctx.Fmt.Kg(day * 25 / 100)), 25, 0);
             }
             foreach (long step in BusinessRules.Defs(sim).SupplySteps)
-                if (meals || step < day) Row(s.Get("supply.choice.grams", "kg", ctx.Fmt.Kg(step)), s.Get("supply.detail.grams", "kg", ctx.Fmt.Kg(step)), 100, step);
+                if (meals || step < day || b.CapGrams[g] == step) Row(s.Get("supply.choice.grams", "kg", ctx.Fmt.Kg(step)), s.Get("supply.detail.grams", "kg", ctx.Fmt.Kg(step)), 100, step);
             Row(s.Get("supply.choice.none"), s.Get("supply.detail.none"), 0, 0);
             return vm;
         }

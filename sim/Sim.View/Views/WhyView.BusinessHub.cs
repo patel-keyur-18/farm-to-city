@@ -25,8 +25,12 @@ namespace Sim.View.Views
             var type = BusinessRules.TypeOf(sim, one);
             Row(vm, ctx, BusinessWords.Key(ctx, "why.books.rowIncome", type), Money(ctx, Line(BusinessBooksSheet.Fees) + Line(BusinessBooksSheet.Sales)));
             Row(vm, ctx, BusinessWords.Key(ctx, "why.books.rowGoods", type), "−" + Money(ctx, Line(BusinessBooksSheet.Goods)));
-            Row(vm, ctx, "why.books.rowRunning", "−" + Money(ctx, Line(BusinessBooksSheet.Wages) + Line(BusinessBooksSheet.Power) + Line(BusinessBooksSheet.Repairs)
-                + Line(BusinessBooksSheet.Depreciation) + Line(BusinessBooksSheet.Interest) + Line(BusinessBooksSheet.Rent)));
+            long running = Line(BusinessBooksSheet.Wages) + Line(BusinessBooksSheet.Power) + Line(BusinessBooksSheet.Repairs)
+                + Line(BusinessBooksSheet.Depreciation) + Line(BusinessBooksSheet.Interest) + Line(BusinessBooksSheet.Rent);
+            Row(vm, ctx, "why.books.rowRunning", "−" + Money(ctx, running));
+            // Marketing, bad debt, tax and losses on sales are in the profit too: one more row so the rows add up to the headline (review, 2026-11-26).
+            long other = Line(BusinessBooksSheet.Fees) + Line(BusinessBooksSheet.Sales) - Line(BusinessBooksSheet.Goods) - running - BusinessHub.Profit(sim, one);
+            if (other != 0) Row(vm, ctx, "why.hubProfit.rowOther", (other > 0 ? "−" : "") + Money(ctx, System.Math.Abs(other)));
             Text(vm, ctx, "why.hubProfit.row");
             vm.Footnote = ctx.Strings.Get("why.hubProfit.lesson");
             return vm;

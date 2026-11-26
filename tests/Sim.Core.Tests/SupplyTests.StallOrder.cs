@@ -92,11 +92,11 @@ namespace Sim.Core.Tests
             SupplyRules.Touch(sim, stall);
             Assert.That(StallOrderRules.Preorder(sim, stall, a.OutputGood), Is.EqualTo(StallOrderRules.Preorder(sim, stall, b.OutputGood)));
             var order = new StandingOrder { HandId = h.Id, Kind = OrderTargetKind.Field, Target = field, Crop = -1, ForBusiness = stall.Id, Fertiliser = 0 };
-            Assert.That(StallOrderRules.Pick(sim, field, 0, stall), Is.EqualTo(sim.Config.Game.Farm.IndexOfCrop(b.Id)), "the one bought most at the market");
+            Assert.That(StallOrderRules.Pick(sim, field, 0, stall, out _), Is.EqualTo(sim.Config.Game.Farm.IndexOfCrop(b.Id)), "the one bought most at the market");
 
             foreach (CropDef c in sim.Config.Game.Farm.Crops) sim.State.Market.Stock[c.SeedGood] = 0;
             CashTo(sim, 0);
-            Assert.That(StallOrderRules.Pick(sim, field, 0, stall), Is.EqualTo(-1), "no seed money: nothing fits");
+            Assert.That(StallOrderRules.Pick(sim, field, 0, stall, out _), Is.EqualTo(-1), "no seed money: nothing fits");
             Assert.That(Orders.CropToSow(sim, order), Is.EqualTo(FarmRules.BestCrop(sim, sim.State.Land.Tiles[field], sim.Config.Game.Farm.Fertilisers[0])), "he picks as Let him choose");
         }
 
@@ -117,7 +117,7 @@ namespace Sim.Core.Tests
             Assert.That(Orders.CropToSow(sim, o), Is.EqualTo(FarmRules.BestCrop(sim, sim.State.Land.Tiles[field], sim.Config.Game.Farm.Fertilisers[0])), "his own choice");
             sim.State.Businesses.Businesses.Remove(stall);
             Assert.That(StallOrderRules.Stall(sim, o), Is.Null, "sold");
-            Assert.That(Orders.CropToSow(sim, o), Is.GreaterThanOrEqualTo(-1));
+            Assert.That(Orders.CropToSow(sim, o), Is.EqualTo(FarmRules.BestCrop(sim, sim.State.Land.Tiles[field], sim.Config.Game.Farm.Fertilisers[0])), "and still his own choice once the stall is sold");
         }
 
         // The command: an open stall of yours and Keep in store only.
@@ -162,6 +162,35 @@ namespace Sim.Core.Tests
             Assert.That(r.State.People.OrderFor(OrderTargetKind.Field, field).ForBusiness, Is.EqualTo(stall.Id));
             Assert.That(r.State.ComputeHash(), Is.EqualTo(sim.State.ComputeHash()), "round-trips");
             Assert.That(before, Is.Not.EqualTo(sim.State.ComputeHash()));
+        }
+
+        // Owner, 2026-11-26 (review finding): when no vegetable the stall sells has a preorder, the hand waits instead of filling your store; a good capped at none is never grown for.
+        [Test]
+        public void StallOrderWaitsWhenNothingNeeded()
+        {
+            Simulation sim = Start();
+            CashTo(sim, 2_000_000_00);
+            Business.Business stall = TwoVegStall(sim, 10_000, 30_000, out CropDef small, out CropDef big);
+            Hand h = StallHand(sim);
+            List<int> fields = FreeFields(sim);
+            long t = sim.State.Clock.SimTime;
+            Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.ForStall(fields[0], stall.Id, "none")));
+            Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.ForStall(fields[1], stall.Id, "none")));
+            Assert.That(StallOrderRules.Wanted(sim, stall), Is.Empty, "a field of each vegetable covers the whole day");
+            Ok(sim, new SetStandingOrder(t, h.Id, OrderSpec.ForStall(fields[2], stall.Id, "none")));
+            Assert.That(sim.State.Farm.CropOn(fields[2]), Is.Null, "no third field is sown");
+            Assert.That(P(sim).OrderFor(OrderTargetKind.Field, fields[2]).Waiting, Is.EqualTo(OrderWait.NothingNeeded));
+            Assert.That(Orders.CropToSow(sim, P(sim).OrderFor(OrderTargetKind.Field, fields[2])), Is.EqualTo(Orders.NothingNeeded));
+
+            // A good capped at none has no preorder, so it is not grown for however much the stall buys of it.
+            Simulation sim2 = Start();
+            CashTo(sim2, 2_000_000_00);
+            Business.Business st2 = TwoVegStall(sim2, 10_000, 30_000, out CropDef a2, out CropDef b2);
+            Ok(sim2, new SetSupplyMode(sim2.State.Clock.SimTime, st2.Id, true));
+            Ok(sim2, new SetSupplyCap(sim2.State.Clock.SimTime, st2.Id, sim2.Config.Game.Market.Goods[b2.OutputGood].Id, 0, 0));
+            st2.BoughtToday[b2.OutputGood] = 99_000;
+            Assert.That(StallOrderRules.Preorder(sim2, st2, b2.OutputGood), Is.Zero);
+            Assert.That(StallOrderRules.Pick(sim2, FreeFields(sim2)[0], 0, st2, out _), Is.EqualTo(sim2.Config.Game.Farm.IndexOfCrop(a2.Id)), "the other vegetable, not the capped one");
         }
     }
 }

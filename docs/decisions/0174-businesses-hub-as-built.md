@@ -1,6 +1,6 @@
 # 0174. US-267 the Businesses hub, as built
 
-- Status: Accepted (Preview 23 approved by the owner, 2026-11-26; the story awaits the owner's review)
+- Status: Accepted (Preview 23 approved by the owner, 2026-11-26; the story approved by the owner, 2026-11-26)
 - Date: 2026-11-26
 - Deciders: Keyur Patel
 - Related ADRs: 0172, 0173, 0068, 0092

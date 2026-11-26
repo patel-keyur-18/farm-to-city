@@ -91,6 +91,7 @@ namespace Sim.Core.Tests
                 LoadResult r = SaveCodec.Read(File.ReadAllBytes(file), config, MinSchema);
                 Assert.That(r.Error, Is.EqualTo(SaveError.None), file + ": " + r.Detail);
                 Assert.That(r.State.Businesses.Businesses.All(b => !b.SupplyManual && !b.SupplyUsed), Is.True, file + ": Automatic");
+                Assert.That(r.State.People == null || r.State.People.Orders.All(o => o.ForBusiness == 0), Is.True, file + ": no stall orders");
                 Simulation sim = Simulation.FromState(config, r.State);
                 sim.AdvanceTo(sim.State.Clock.SimTime + 2 * 86_400);
                 Assert.That(sim.State.Ledger.Reconcile(), Is.Null, file);

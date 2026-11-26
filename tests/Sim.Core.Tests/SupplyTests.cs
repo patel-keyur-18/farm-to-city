@@ -44,7 +44,12 @@ namespace Sim.Core.Tests
             sim.AdvanceTo(NextDayAt(sim, 6) + 1);
             Assert.That(SupplyRules.BoughtTodayOf(sim, b, potato), Is.EqualTo(3_000));
             Assert.That(b.BoughtDays[0][potato], Is.EqualTo(3_000), "yesterday's buying is kept for the stall order");
-            Assert.That(SupplyRules.BoughtOver(sim, b, potato), Is.EqualTo(6_000).Or.EqualTo(3_000), "today and the days the lookback keeps");
+            Assert.That(SupplyRules.BoughtOver(sim, b, potato), Is.EqualTo(6_000), "today and yesterday: the two days the lookback keeps");
+            // A quiet morning (nothing counted yet today): yesterday's counters are still the last day's buying.
+            b.BoughtToday[potato] = 3_000; b.BoughtDays.Clear(); b.SupplyDay = SupplyRules.DayIndex(sim) - 1;
+            Assert.That(SupplyRules.BoughtOver(sim, b, potato), Is.EqualTo(3_000), "counters of the day before are still inside the lookback");
+            b.SupplyDay = SupplyRules.DayIndex(sim) - 2;
+            Assert.That(SupplyRules.BoughtOver(sim, b, potato), Is.Zero, "but not two days before");
         }
 
         // AC-10: Automatic is today's rule: a business never set to Manual takes all it needs from you.
@@ -182,6 +187,34 @@ namespace Sim.Core.Tests
             Assert.That(SupplyRules.FromYouTodayOf(sim, bakery, atta), Is.Zero, "none from your mill");
             Assert.That(bakery.Ledger.Reconcile(), Is.Null);
             Assert.That(mill.Ledger.Reconcile(), Is.Null);
+        }
+
+        // Manual's cap also covers what a stall takes from your other businesses' products (pav from your bakery): none under Manual, all under Automatic.
+        [Test]
+        public void StallPavFromYourBakeryCap()
+        {
+            int pavAt = -1;
+            long taken = -1;
+            for (int manual = 0; manual < 2; manual++)
+            {
+                Simulation sim = Start();
+                Business.Business bakery = RecipeTests.Found(sim, "bakery", HomeTile + 1);
+                sim.AdvanceTo(bakery.ReadyAt + 1);
+                Business.Business stall = ShopTests.Shop(sim, "veg_stall", 0, HomeTile);
+                int pav = pavAt = sim.Config.Game.Market.IndexOf("pav");
+                foreach (int g in BusinessRules.TypeOf(sim, stall).Goods) Ok(sim, new SetStallGoods(sim.State.Clock.SimTime, stall.Id, sim.Config.Game.Market.Goods[g].Id, 0));
+                Ok(sim, new SetStallGoods(sim.State.Clock.SimTime, stall.Id, "pav", 5_000));
+                bakery.Stock[pav] = 50_000;
+                if (manual == 1)
+                {
+                    Ok(sim, new SetSupplyMode(sim.State.Clock.SimTime, stall.Id, true));
+                    Ok(sim, new SetSupplyCap(sim.State.Clock.SimTime, stall.Id, "pav", 0, 0));
+                }
+                sim.AdvanceTo(NextDayAt(sim, 6) + 1);
+                long fromYou = SupplyRules.FromYouTodayOf(sim, stall, pav);
+                if (manual == 0) taken = fromYou; else Assert.That(fromYou, Is.Zero, "capped at none: nothing from your bakery");
+            }
+            Assert.That(taken, Is.GreaterThan(0), "Automatic takes pav from your bakery (" + pavAt + ")");
         }
 
         // Schema 25: the supply state round-trips through a save with its hash, and a business never set to Manual leaves the state's hash as it was.

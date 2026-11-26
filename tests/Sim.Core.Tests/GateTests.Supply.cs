@@ -108,8 +108,7 @@ namespace Sim.Core.Tests
                         sim.AdvanceTo((sim.State.Clock.SimTime / 86_400 + 1) * 86_400 + 12 * 3600);
                         Business.Business st = sim.State.Businesses.Find(stalls[0].Id);
                         if (st == null) continue;
-                        you += st.FromYouToday.Sum();
-                        bought += st.BoughtToday.Sum();
+                        for (int g = 0; g < st.Stock.Length; g++) { you += SupplyRules.FromYouTodayOf(sim, st, g); bought += SupplyRules.BoughtTodayOf(sim, st, g); }
                     }
                     long worth = Reporting.NetWorth(sim).Total;
                     if (arm == 1) { fromYouWith += you; boughtWith += bought; worthWith += worth; }

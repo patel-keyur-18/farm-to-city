@@ -14,10 +14,12 @@ namespace Sim.View.Views
         private static void SupplyPrices(ViewContext ctx, Business b, BusinessTypeDef t, int g, out Fixed yours, out Fixed bought)
         {
             var sim = ctx.Sim;
-            yours = MarketRules.Floor(sim, g); // your store's and your businesses' goods are taken at the trader's price
-            if (t.TakesMilk) { bought = BusinessRules.NeighbourMilkPrice(sim, t); return; }
-            if (ShopRules.Stocked(t) && !t.TakesMilk && t.Kind != ShopKind.Grocery && ShopRules.VegShare(sim, g) > Fixed.Zero) bought = sim.State.Market.Price[g]; // the mandi's
-            else if (t.Kind == ShopKind.Grocery) bought = MarketRules.Floor(sim, g);
+            int kind = BusinessRules.MilkKind(sim, g);
+            yours = kind >= 0 ? Sim.Core.Livestock.LivestockRules.MilkPrice(sim, kind) : MarketRules.Floor(sim, g); // your herd's milk goes in at the co-op's price, the rest at the trader's
+            if (t.TakesMilk) bought = BusinessRules.NeighbourMilkPrice(sim, t);
+            else if (t.IsMeals) bought = MealsRules.MarketPrice(sim, g); // the kitchen pays the retail price
+            else if (ShopRules.Stocked(t) && t.Kind == ShopKind.Grocery) bought = MarketRules.Floor(sim, g);
+            else if (ShopRules.Stocked(t)) bought = ShopRules.VegShare(sim, g) > Fixed.Zero ? sim.State.Market.Price[g] : MarketRules.Ceiling(sim, g); // the mandi's produce, else the import price
             else bought = BusinessRules.ImportPrice(sim, b, g);
         }
 
@@ -106,12 +108,12 @@ namespace Sim.View.Views
             string field = PeopleWords.Field(ctx, tile);
             StandingOrder o = sim.State.People?.OrderFor(OrderTargetKind.Field, tile);
             int fert = o == null ? 0 : o.Fertiliser;
-            int pick = StallOrderRules.Pick(sim, tile, fert, b);
+            int pick = StallOrderRules.Pick(sim, tile, fert, b, out bool needless);
             WhyVm vm;
             if (pick < 0)
             {
-                vm = New(ctx, "why.stallPick.noneTitle", null, "field", field);
-                Text(vm, ctx, "why.stallPick.none");
+                vm = New(ctx, needless ? "why.stallPick.needlessTitle" : "why.stallPick.noneTitle", null, "field", field);
+                Text(vm, ctx, needless ? "why.stallPick.needless" : "why.stallPick.none");
             }
             else
             {

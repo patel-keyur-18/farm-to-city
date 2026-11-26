@@ -86,6 +86,9 @@ namespace Sim.Core.Tests
             Assert.That(e.StoppedIds, Is.EqualTo(new[] { tea.Id }));
 
             Assert.That(sim.Execute(new KeepRunningYourself(sim.State.Clock.SimTime, veg.Id)).Reason, Is.EqualTo(RejectReason.InvalidArgument), "only when you run two or more");
+            long served = tea.SeasonServed;
+            sim.AdvanceTo(sim.State.Clock.SimTime + 2 * 86_400);
+            Assert.That(tea.SeasonServed, Is.EqualTo(served), "with nobody to work it, it serves no one");
             BusinessTests.Staff(sim, tea);
             Assert.That(tea.Worker, Is.Not.EqualTo(WorkerKind.None), "a hire gets it going again");
         }

@@ -1,6 +1,6 @@
 # 0176. US-269 grow for the vegetable stall, as built
 
-- Status: Accepted (Preview 25 approved by the owner, 2026-11-26; the story awaits the owner's review)
+- Status: Accepted (Preview 25 approved by the owner, 2026-11-26; the story approved by the owner, 2026-11-26)
 - Date: 2026-11-26
 - Deciders: Keyur Patel
 - Related ADRs: 0172, 0175, 0048, 0050, 0111, 0091
@@ -13,7 +13,7 @@ Spec 030 §3.6 and Preview 25: a hand told to grow for your vegetable stall. Two
 
 1. **The order** (`StallOrderRules`, `OrderSpec.ForStall`). A field order whose crop id is `stall:<businessId>`; `SetStandingOrder` accepts it for an open vegetable stall of yours and only with the sell rule Keep in store (`InvalidArgument` otherwise). The order's `Crop` stays −1, the hand's choice, and `StandingOrder.ForBusiness` holds the stall's id (spec 030 had a crop index −2; this needs no second path where the code reads `Crop < 0`, and the command log needs no new tag, since the id rides in the crop string). Save schema 25 writes it after the order's other fields and hashes it only once non-zero, so no golden or fixture moved (`saves/schema25.ftc` was rewritten for the extra field; its pinned hash is unchanged).
 2. **The preorder** (`StallOrderRules.Preorder`): `max(0, PutOut − the stall's Stock − your store's free stock − what is growing for it)`, never over what its Manual cap lets it take from you. *Growing for it* is the expected harvest (`FarmRules.Estimate`; a ready crop its harvest) of the crops on fields whose stall order is this stall's. Nothing is saved. `Wanted` lists what a hand can sow now (in season, not fodder, a good the stall sells), biggest first.
-3. **The pick** (`StallOrderRules.Pick`, called from `Orders.CropToSow`): the in-season vegetable the stall sells, that `MaySow` on the field and whose seed the cash can pay, with the biggest preorder, then the most bought at the market over `supplyLookbackDays` (US-268's `BoughtOver`), then the biggest day's amount, then the earlier crop. A crop already growing counts against the preorder, so the fields spread across the vegetables by themselves. None fits: he sows his best pick (ADR 0050), as *Let him choose*.
+3. **The pick** (`StallOrderRules.Pick`, called from `Orders.CropToSow`): the in-season vegetable the stall sells, that `MaySow` on the field and whose seed the cash can pay, with the biggest preorder, then the most bought at the market over `supplyLookbackDays` (US-268's `BoughtOver`), then the biggest day's amount, then the earlier crop. A crop already growing counts against the preorder, so the fields spread across the vegetables by themselves. None fits (out of season, seed unaffordable): he sows his best pick (ADR 0050), as *Let him choose*. **Added after the independent review (ADR 0177, owner's choice):** when some vegetable fits but none has a preorder he waits (`OrderWait.NothingNeeded`) instead of filling your store.
 4. **The stall gone.** `StallOrderRules.Stall` is null once the stall is closed or sold, so the order behaves as *Let him choose* from the next sowing, with no event and no state change; the hand's sheet and the field's sheet say "Your vegetable stall is gone, so Geeta chooses the crop now."
 5. **The screens.** The crop list's row *For your vegetable stall* (with its *?*) under *Let him choose*; the sell step offers one row, *Keep in store*; the hand's and the field's order lines read "For your vegetable stall with compost (Radish now) · Keep in store · Every season" and "Stall preorder: okra 61.4 kg, amaranth 30.7 kg" (the three it lacks most); the *?* opens `stallPick` (id = stall id × 1000 + acre): the stall's day, its own stock, your store, what is growing, and what it still needs of each vegetable, then the rule in words.
 
@@ -29,4 +29,4 @@ Core `SupplyTests` (`StallOrderPick` AC-13, `StallOrderTieAndFallback`, `StallGo
 ## Consequences
 
 - Two stalls on the same vegetable both count the whole of your store's free stock; the fields spread anyway through what is growing for each.
-- A preorder reads *Manual* caps: a good capped at none is never grown for.
+- A preorder reads *Manual* caps: a good capped at none is never grown for (and with a field growing for each vegetable the hand waits).

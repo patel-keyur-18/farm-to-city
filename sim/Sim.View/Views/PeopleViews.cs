@@ -652,9 +652,9 @@ namespace Sim.View.Views
             // For your vegetable stall (spec 030 §3.6, US-269): a row for each open stall, with the vegetable he would sow for it now.
             foreach (Sim.Core.Business.Business stall in Sim.Core.Business.StallOrderRules.OpenStalls(sim))
             {
-                int forStall = Sim.Core.Business.StallOrderRules.Pick(sim, (int)target, defs.Farm.IndexOfFertiliser(fert), stall);
+                int forStall = Sim.Core.Business.StallOrderRules.Pick(sim, (int)target, defs.Farm.IndexOfFertiliser(fert), stall, out bool needless);
                 var row = new LineVm(PeopleWords.ForStall(ctx, stall),
-                    forStall < 0 ? s.Get("order.forStallNone", "name", name) : s.Get("order.forStallNow", "crop", s.Get(defs.Farm.Crops[forStall].NameKey)), "stallPick", stall.Id * 1000 + target);
+                    needless ? s.Get("order.forStallNeedless", "name", name) : forStall < 0 ? s.Get("order.forStallNone", "name", name) : s.Get("order.forStallNow", "crop", s.Get(defs.Farm.Crops[forStall].NameKey)), "stallPick", stall.Id * 1000 + target);
                 row.Action = ActionVm.Open("crop:" + OrderSpec.StallPrefix + stall.Id, s.Get("action.choose"), Req(sim, h, target, OrderSpec.StallPrefix + stall.Id + "+" + fert));
                 vm.Lines.Add(row);
             }

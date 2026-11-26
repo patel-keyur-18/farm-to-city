@@ -1,6 +1,6 @@
 # 0173. US-266 one business run by you, as built
 
-- Status: Accepted (Preview 22 approved by the owner, 2026-11-26; the story awaits the owner's review)
+- Status: Accepted (Preview 22 approved by the owner, 2026-11-26; the story approved by the owner, 2026-11-26)
 - Date: 2026-11-26
 - Deciders: Keyur Patel
 - Related ADRs: 0172, 0170, 0023

@@ -198,12 +198,18 @@ namespace Game.Presentation.Ui
                     newScroll.schedule.Execute(() => newScroll.scrollOffset = offset); // after layout, so the offset isn't clamped to 0
                 }
                 // A tab row the player scrolled stays where it was through a refresh; a freshly opened sheet shows its tab (TabStrip).
-                ScrollView oldTabs = _sheet.Q<ScrollView>(TabScroll), newTabs = sheet.Q<ScrollView>(TabScroll);
-                if (refresh && oldTabs != null && newTabs != null)
+                // A sheet can have more than one tab row (the tabs and a switch strip): each keeps its own offset, in order.
+                if (refresh)
                 {
-                    Vector2 tabOffset = oldTabs.scrollOffset;
-                    newTabs.userData = "kept";
-                    newTabs.schedule.Execute(() => newTabs.scrollOffset = tabOffset);
+                    var oldTabs = _sheet.Query<ScrollView>(TabScroll).ToList();
+                    var newTabs = sheet.Query<ScrollView>(TabScroll).ToList();
+                    for (int i = 0; i < oldTabs.Count && i < newTabs.Count; i++)
+                    {
+                        Vector2 tabOffset = oldTabs[i].scrollOffset;
+                        ScrollView kept = newTabs[i];
+                        kept.userData = "kept";
+                        kept.schedule.Execute(() => kept.scrollOffset = tabOffset);
+                    }
                 }
                 _holder.Remove(_sheet);
             }

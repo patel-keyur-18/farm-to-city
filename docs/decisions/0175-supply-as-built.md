@@ -1,6 +1,6 @@
 # 0175. US-268 today's supply, Automatic or Manual, as built (save schema 25)
 
-- Status: Accepted (Preview 24 approved by the owner, 2026-11-26; the story awaits the owner's review)
+- Status: Accepted (Preview 24 approved by the owner, 2026-11-26; the story approved by the owner, 2026-11-26)
 - Date: 2026-11-26
 - Deciders: Keyur Patel
 - Related ADRs: 0172, 0174, 0091, 0093, 0140

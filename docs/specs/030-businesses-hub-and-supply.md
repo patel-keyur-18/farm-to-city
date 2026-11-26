@@ -53,7 +53,7 @@ From one sheet, the player sees every business at a glance (how it's doing, its 
 | Rule | Formula or behaviour |
 | --- | --- |
 | The button | Shown once the town has a business with `Status ≠ Closed`, left of Orders (right 538, bottom 28, 150 round). |
-| Needs you (!) | A business needs you when it is in trouble as `BusinessBooks.Short` says (open with nobody working it, or its overdraft used to the limit so its inputs stop), or when the town runs more than one business itself (§3.1). The badge counts businesses that need you. |
+| Needs you (!) | A business needs you when it is in trouble as `BusinessBooks.Short` says (open with nobody working it, or its overdraft used to the limit so its inputs stop). (As built, ADR 0174: the one-business card at load covers a town that runs several, so this is not a hub reason.) The badge counts businesses that need you. |
 | Profit this season | `BusinessBooks.NetProfit(BusinessBooks.Report(b, sim.Period))`: the season so far, as its Books tab shows. The top line adds them up. |
 | Cash | `b.Ledger.Cash`; the top line adds them up. |
 | Stars | Shown for businesses that earn stars (the shops and the mill, ADR 0092); others show none. |
@@ -66,7 +66,7 @@ From one sheet, the player sees every business at a glance (how it's doing, its 
 | --- | --- | --- |
 | From you | Grams a business took today from your store, your herd or your other businesses (`FromStore`, `FromYours`, `MilkIn`, the mill's own wheat, the mill's atta to the bakery) | g a good |
 | Bought | Grams it bought today at the market, from neighbours or at the import price (`FromMarket`, `Neighbours`, the mill's and a recipe's market buys) | g a good |
-| Day | Counted from 6:00 (the morning round) to the next 6:00; shown as today's; yesterday's kept for the *Why?* | – |
+| Day | Counted from 6:00 (the morning round) to the next 6:00; shown as today's; yesterday's buying kept only as `BoughtDays` for US-269's tie-break (as built, ADR 0175) | – |
 | Value | Both at the price actually paid (the books' own entries); the *Why?* names the price | coins |
 
 ### 3.5 Automatic or Manual (US-268)
@@ -89,6 +89,7 @@ From one sheet, the player sees every business at a glance (how it's doing, its 
 | The stall's preorder | What the stall needs tomorrow of each vegetable it sells, worked out when asked and never saved: `max(0, PutOut − its own Stock − your store's free stock − what is growing or standing ready for it)`. *Growing for it* is the expected harvest of the crops on fields whose stall order is this stall's. It shows on the hand's sheet ("Stall preorder: okra 12 kg, spinach 8 kg") | grams, ≥ 0 |
 | The pick, at each sowing | The in-season crops whose good the stall sells (`VegShare > 0`), that `MaySow` on the field and whose seed the cash can pay. Ranked: (1) the biggest unmet preorder; (2) most grams the stall bought at the market over the last `supplyLookbackDays` days; (3) the stall's day's amount (`PutOut`); (4) crop index. The first is sown. Growing crops already count against the preorder, so the fields spread across the vegetables by themselves | – |
 | Nothing fits | No such crop in season or none affordable: he sows his best pick, as *Let him choose* (ADR 0050) | – |
+| Nothing needed | Some vegetable fits but the stall has no preorder for any of them (its own stock, your store or what is growing covers it, or its cap takes none from you): he **waits** ("Waiting: the stall needs nothing more") and sows again when it lacks something (owner, 2026-11-26, review ADR 0177). A good capped at none is never grown for | – |
 | Sown in turn | Each field is resown when its crop is in, so fields sown on different days keep harvests apart; nothing holds a field back | – |
 | The harvest | Goes to your store as any harvest; the stall takes it at the morning round by its Supply (Automatic: all it needs) | – |
 | The stall gone | If the stall is sold or closed, the order becomes *Let him choose* and the hand's sheet says so | – |
@@ -109,7 +110,7 @@ Optional keys: no key, the frozen golden content stays as it is.
 | Entity | Field | Type | Notes |
 | --- | --- | --- | --- |
 | `Business` | `SupplyManual` | bool | false (Automatic) |
-| `Business` | `SupplyCap` | `SupplyCap[]` by good | `Share` (0, 25, 50, 100 %) or `Grams` (> 0 wins); only in Manual |
+| `Business` | `CapShare`, `CapGrams` | int[] and long[] by good | share (0, 25, 50, 100 %) or grams (> 0 wins); only in Manual (as built, ADR 0175) |
 | `Business` | `FromYouToday`, `BoughtToday` | long[] by good | g; they turn at 6:00 (a lazy roll: the first count or read of a new supply day starts it, so no pass order matters). "Yesterday" is kept only as `BoughtDays` (as built, ADR 0175) |
 | `Business` | `BoughtDays` | list of long[good], newest first, up to `supplyLookbackDays` | g bought on each day before today (the order's ranking, US-269) |
 | `Business` | `SupplyUsed`, `SupplyDay` | bool, long | the state is hashed only once Manual or a cap has been set, so no town that never uses it moves its hash |
@@ -199,7 +200,7 @@ The amount buttons show only in Manual. The mill, dairy and tea stall show their
 
 ### 7.5 The hand's order
 
-The crop list of a field order gets *For your vegetable stall* under *Let him choose* (shown only with an open stall). The hand's sheet: "Grows for your vegetable stall: okra this season".
+The crop list of a field order gets *For your vegetable stall* under *Let him choose* (shown only with an open stall). The hand's sheet (as built, ADR 0176): the order reads "For your vegetable stall (Okra now) · Keep in store · …" and a line "Stall preorder: okra 61.4 kg, amaranth 30.7 kg".
 
 Previews (exact-looking artifacts) of 7.2, 7.3, 7.4 and 7.5 come before their UI code.
 
@@ -210,11 +211,11 @@ Previews (exact-looking artifacts) of 7.2, 7.3, 7.4 and 7.5 come before their UI
 | AC-1 | Given nothing ready, the HUD has no Collect all; given 3 ready, it shows "Collect all · 3" | `HudViewTests.CollectHidden` |
 | AC-2 | Given a 7-tab sheet, its tab row is wider than the sheet and scrolls; every tab is reachable | Editor overflow check, `SheetLayoutCheck` |
 | AC-3 | Given 11 people waiting, the People badge reads "11" on one line inside its pill | Editor capture, `HudViewTests.BadgeText` |
-| AC-4 | Given you run the mill, founding a tea stall run by you is refused with `AlreadyRunOne` | `BusinessTests.OnlyOneRunByYou` |
-| AC-5 | Given you run the mill, `RunBusinessYourself` on the bakery is refused | `BusinessTests.OnlyOneRunByYou` |
-| AC-6 | Given a saved town running two, the card shows both; keeping one leaves the other with nobody, and it makes nothing until hired | `BusinessTests.KeepRunningYourself`, `BusinessViewTests.RunTwoCard` |
-| AC-7 | The hub's totals equal the sum of its rows; each row's profit equals its Books' season so far | `BusinessViewTests.Hub` |
-| AC-8 | The hub's ! and the badge count follow §3.3's reasons | `BusinessViewTests.HubNeedsYou` |
+| AC-4 | Given you run the mill, founding a tea stall run by you is refused with `AlreadyRunOne` | `RunOneTests.OnlyOneRunByYou` |
+| AC-5 | Given you run the mill, `RunBusinessYourself` on the bakery is refused | `RunOneTests.OnlyOneRunByYou` |
+| AC-6 | Given a saved town running two, the card shows both; keeping one leaves the other with nobody, and it makes nothing until hired | `RunOneTests.KeepRunningYourself`, `RunOneViewTests.RunTwoCard` |
+| AC-7 | The hub's totals equal the sum of its rows; each row's profit equals its Books' season so far | `BusinessHubViewTests.Hub` |
+| AC-8 | The hub's ! and the badge count follow §3.3's reasons | `BusinessHubViewTests.HubNeedsYou` |
 | AC-9 | Today's supply counts every gram from you and bought, and rolls at 6:00 | `SupplyTests.Counts` |
 | AC-10 | Automatic leaves every existing test and golden replay unchanged | `GoldenTests`, the full suite |
 | AC-11 | Manual at half a stall's tomato: it takes at most half its day's amount from your store; the rest at the market if allowed, none if not | `SupplyTests.ManualCap` |
@@ -223,7 +224,7 @@ Previews (exact-looking artifacts) of 7.2, 7.3, 7.4 and 7.5 come before their UI
 | AC-14 | A stall sold: its orders become *Let him choose* | `SupplyTests.StallGone` |
 | AC-15 | Schema 24 saves load as Automatic with no stall orders; the schema 25 fixture round-trips | `MigrationTests.EverySchemaLoads` |
 | AC-16 | No money loop: Manual and the stall order across 200 seeds keep `ExactLedger` and the money-loop checks | `GateTests.SupplyExploits` |
-| AC-17 | Every number on the hub, the card and the Supply section has a *Why?* | `WhyCoverageTests` |
+| AC-17 | Every number on the hub, the card and the Supply section has a *Why?* | `WhyTests.EveryNumberHasWhy` (its sheet list has the hub, each business's Supply tab and amounts list, and the crop list) |
 
 ## 9. Balancing hooks
 

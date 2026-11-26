@@ -47,6 +47,7 @@
 | 19 | Set it; open the hand's sheet (People → the hand) | The order reads "For your vegetable stall … · Keep in store · Every season" and a line "Stall preorder: okra 61.4 kg, amaranth 30.7 kg" | | Editor ✓ (`s28-269-hand-sheet-preorder.png`) |
 | 20 | Tap that line's **?** | A *Why?*: the stall's day of the vegetable, its own stock, what your store holds, what is already growing, and what it still needs of each | | Editor ✓ (`s28-269-why-pick.png`) |
 | 21 | Let the field be harvested and sown again | He sows the vegetable the stall lacks most; a second field takes another one (what is growing counts against the need) | | Editor ✓; Core tests (`SupplyTests.StallOrderPick`) |
+| 21b | Once a field of each vegetable the stall sells is growing, look at the next field's order | The hand waits: "Waiting: the stall needs nothing more"; the crop-list row says so too. He sows again when the stall lacks something | | Editor ✓ (`s28-269-stall-waits.png`); Core test (`StallOrderWaitsWhenNothingNeeded`) |
 | 22 | Close or sell the stall | The order acts as *Let him choose*, and the hand's sheet says "Your vegetable stall is gone, so … chooses the crop now." | | Editor ✓ (`s28-269-stall-gone.png`) |
 | 23 | Every sheet the town can reach | Nothing spills out of its sheet, no text wider than its box | | Editor ✓ (`SheetLayoutCheck`: 76 sheets, 0 problems) |
 | 24 | Text size 125% on the Businesses hub, a Supply tab and the crop list | Nothing cut off | | Editor ✓ (`s28-end-125-*.png`; the hub, a Supply tab and the crop list at 125%) |
@@ -60,10 +61,10 @@
 
 | Project | Result |
 | --- | --- |
-| `Sim.Core.Tests` (not Balance, not Perf) | 968 passed |
+| `Sim.Core.Tests` (not Balance, not Perf) | 970 passed (after the review's fixes) |
 | `Sim.Core.Tests` Perf | 6 passed |
 | `Sim.View.Tests` | 454 passed |
-| Balance | US-268's run: 68 passed; US-269's is running |
+| Balance | US-268's run: 68 passed; the run for the review's fixes is in progress |
 | `GateTests.SupplyExploits` | 200 towns: 3,526 supply commands in zero time moved no coin; 2,082 morning flips and 508 stall orders kept every ledger exact |
 | `GateTests.StallOrderMeasured` (report) | 20 towns, 20 days, two fields ordered for the stall against none: from you 35.3 t against 23.7 t, bought at the mandi 237.9 t against 249.2 t, net worth the same within 0.04% |
 

@@ -290,6 +290,9 @@ namespace Sim.Core.People
 
         /// <summary>The store is full and the trader's truck is away (spec 011 §3.6b).</summary>
         TraderAway = 6,
+
+        /// <summary>A stall order, and no vegetable the stall sells has a preorder: nothing to grow for it (spec 030 §3.6, owner 2026-11-26).</summary>
+        NothingNeeded = 7,
     }
 
     /// <summary>A standing order: one hand, one target (spec 006 §3.8). Target: a tile id or a tree slot id.</summary>

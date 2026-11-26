@@ -79,6 +79,11 @@ namespace Sim.Core.People
             if (c != null) return false; // growing: nothing to do
             if (orchard != null && orchard.State != TreeState.Growing) return false; // bearing trees: nothing to sow between them
             int pick = CropToSow(sim, o);
+            if (pick == NothingNeeded)
+            {
+                Wait(sim, o, OrderWait.NothingNeeded);
+                return false;
+            }
             if (pick < 0)
             {
                 // Nothing he can sow: out of season, or no crop whose seed he can pay for (orders never borrow, ADR 0009).
@@ -108,6 +113,9 @@ namespace Sim.Core.People
         /// otherwise, or when the choice is his (crop −1), the in-season crop he can pay for with the best expected profit per
         /// season on this field. Never idle while any crop can be sown.
         /// </summary>
+        /// <summary>What <see cref="CropToSow"/> returns when a stall order has nothing to grow for (spec 030 §3.6).</summary>
+        internal const int NothingNeeded = -2;
+
         internal static int CropToSow(Simulation sim, StandingOrder o)
         {
             FarmDefs farm = sim.Config.Game.Farm;
@@ -115,8 +123,9 @@ namespace Sim.Core.People
             Sim.Core.Business.Business stall = StallOrderRules.Stall(sim, o);
             if (stall != null) // for your vegetable stall (spec 030 §3.6): the biggest preorder; nothing fits, or the stall is gone: his best pick below
             {
-                int forStall = StallOrderRules.Pick(sim, (int)o.Target, o.Fertiliser, stall);
+                int forStall = StallOrderRules.Pick(sim, (int)o.Target, o.Fertiliser, stall, out bool needless);
                 if (forStall >= 0) return forStall;
+                if (needless) return NothingNeeded; // nothing the stall lacks: he waits rather than fill your store
             }
             if (o.Crop >= 0)
             {
