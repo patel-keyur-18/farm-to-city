@@ -13,7 +13,7 @@ namespace Sim.Content
         {
             const string root = "businesses";
             JObject o = Object(Parse(json, root), root);
-            OnlyFields(o, root, "area", "funding", "types");
+            OnlyFields(o, root, "area", "funding", "types", "supplySteps", "supplyLookbackDays");
             var d = new BusinessDefs();
 
             string ap = root + ".area";
@@ -38,6 +38,18 @@ namespace Sim.Content
             d.ClosingSaleShare = Bounded(f, fp, "closingSaleShare", "0", "1");
             d.LenderId = String(Required(f, fp, "lender"), fp + ".lender");
             d.GuaranteeTermSeasons = BoundedInt(f, fp, "guaranteeTermSeasons", 1, 40);
+
+            if (o["supplySteps"] != null) // optional (spec 030 §4): kg a day, ascending, each above the one before
+            {
+                d.SupplySteps = new List<long>();
+                foreach (JToken v in NonEmptyArray(o, root, "supplySteps"))
+                {
+                    long grams = Int(v, root + ".supplySteps") * 1000L; // a whole number of kg, kept in grams
+                    if (grams <= 0 || (d.SupplySteps.Count > 0 && grams <= d.SupplySteps[d.SupplySteps.Count - 1])) throw new ContentException(root + ".supplySteps", "must be above 0 and ascending");
+                    d.SupplySteps.Add(grams);
+                }
+            }
+            if (o["supplyLookbackDays"] != null) d.SupplyLookbackDays = BoundedInt(o, root, "supplyLookbackDays", 1, 8);
 
             List<JToken> tokens = NonEmptyArray(o, root, "types");
             var types = new List<BusinessTypeDef>();

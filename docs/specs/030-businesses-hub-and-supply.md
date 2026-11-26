@@ -109,8 +109,9 @@ Optional keys: no key, the frozen golden content stays as it is.
 | --- | --- | --- | --- |
 | `Business` | `SupplyManual` | bool | false (Automatic) |
 | `Business` | `SupplyCap` | `SupplyCap[]` by good | `Share` (0, 25, 50, 100 %) or `Grams` (> 0 wins); only in Manual |
-| `Business` | `FromYouToday`, `BoughtToday`, `FromYouYesterday`, `BoughtYesterday` | long[] by good | g; rolled at 6:00 |
-| `Business` | `BoughtDays` | long[`supplyLookbackDays`][good] | g bought at the market each of the last days (the order's ranking) |
+| `Business` | `FromYouToday`, `BoughtToday` | long[] by good | g; they turn at 6:00 (a lazy roll: the first count or read of a new supply day starts it, so no pass order matters). "Yesterday" is kept only as `BoughtDays` (as built, ADR 0175) |
+| `Business` | `BoughtDays` | list of long[good], newest first, up to `supplyLookbackDays` | g bought on each day before today (the order's ranking, US-269) |
+| `Business` | `SupplyUsed`, `SupplyDay` | bool, long | the state is hashed only once Manual or a cap has been set, so no town that never uses it moves its hash |
 | `StandingOrder` | `ForBusiness` | long | the stall's id for crop `−2`, else 0 |
 
 Older saves load with Automatic, zero counters and no stall orders.

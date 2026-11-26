@@ -87,11 +87,28 @@ namespace Sim.View.Views
             if (NeedsYou(sim, b))
                 vm.Lines.Add(new LineVm(s.Get(b.Worker == WorkerKind.None ? "business.needsWorkerHire" : "bhub.overdraft"), null) { Banner = true, NoteTone = Tone.Warn });
             vm.Lines.Add(new LineVm(s.Get("bhub.rowProfit"), ctx.Fmt.Coins(Profit(sim, b)), "hubProfit", b.Id));
+            if (!building && SupplySheet.Applies(ctx, b)) AddSupply(ctx, vm, b);
             long drawable = BusinessBooks.Drawable(b);
             var take = drawable > 0
                 ? ActionVm.Open("take:" + b.Id, s.Get("business.takeCash"), new SheetRequest("BusinessCash", b.Id, BusinessCashSheet.Take))
                 : new ActionVm("take:" + b.Id, s.Get("business.takeCash"), null, ActionKind.Open, false, s.Get("bhub.nothingOut"), null, new SheetRequest("BusinessCash", b.Id, BusinessCashSheet.Take));
             vm.Lines.Add(new LineVm(s.Get("bhub.rowCash", "name", BusinessWords.InSentence(ctx, t)), ctx.Fmt.Coins(b.Ledger.Cash), "businessCash", b.Id) { Action = take });
+        }
+
+        /// <summary>Today's supply in one line (spec 030 §3.3, §3.4): what it took from you and bought, all its goods together (milk in litres when that is all it takes).</summary>
+        private static void AddSupply(ViewContext ctx, SheetVm vm, Business b)
+        {
+            Simulation sim = ctx.Sim;
+            long you = 0, bought = 0, milkYou = 0, milkBought = 0;
+            foreach (int g in SupplyRules.Counted(sim, b))
+            {
+                bool milk = sim.Config.Game.Market.Goods[g].Id.StartsWith("milk_", System.StringComparison.Ordinal);
+                if (milk) { milkYou += SupplyRules.FromYouTodayOf(sim, b, g); milkBought += SupplyRules.BoughtTodayOf(sim, b, g); }
+                else { you += SupplyRules.FromYouTodayOf(sim, b, g); bought += SupplyRules.BoughtTodayOf(sim, b, g); }
+            }
+            bool milkOnly = you + bought == 0 && milkYou + milkBought > 0;
+            string text = ctx.Strings.Get("bhub.supply", "you", milkOnly ? ctx.Fmt.Litres(milkYou) : ctx.Fmt.Kg(you), "bought", milkOnly ? ctx.Fmt.Litres(milkBought) : ctx.Fmt.Kg(bought));
+            vm.Lines.Add(new LineVm(text, null, "supplyBusiness", b.Id));
         }
 
         private static LineVm WithStars(ViewContext ctx, LineVm head, Business b)

@@ -300,7 +300,26 @@ namespace Sim.View.Views
 
         internal static Fixed Share(long part, long all) { return all <= 0 ? Fixed.Zero : Fixed.FromRatio(part, all); }
 
-        /// <summary>Settings: hours, price, what a stall puts out (the tea stall's milk and snacks), buying at the market.</summary>
+        /// <summary>The tea stall's milk a day, Change cycling the presets (on its Supply tab).</summary>
+        internal static void AddMilkADay(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            long id = b.Id, own = b.OwnPerDay;
+            Fixed fee = b.Fee;
+            bool market = b.BuyFromMarket;
+            int open = b.OpenHour, close = b.CloseHour;
+            long need = ShopRules.DefaultMilk(sim, t, b.TileId) * t.CupMl(b.Quality) / t.CupMilkMl; // good cups take more
+            var milkPresets = new List<long>();
+            foreach (long v in new[] { need, need * 3 / 2, need / 2 }) if (v > 0 && !milkPresets.Contains(v)) milkPresets.Add(v);
+            if (milkPresets.Count == 0) milkPresets.Add(0);
+            long nextMilk = milkPresets[(milkPresets.IndexOf(own) + 1) % milkPresets.Count];
+            var milk = new LineVm(s.Get("business.milkADay"), ctx.Fmt.Litres(own), "shopMilk", id) { Icon = "milk" };
+            milk.Action = new ActionVm("milkADay", s.Get("business.change"), ctx.Fmt.Litres(nextMilk), ActionKind.Secondary, true, null, at => new SetBusiness(at, id, open, close, fee, nextMilk, market));
+            vm.Lines.Add(milk);
+        }
+
+        /// <summary>Settings: hours, price, what a stall puts out (the tea stall's snacks); its milk and buying at the market are on its Supply tab.</summary>
         internal static void AddSettings(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
         {
             Simulation sim = ctx.Sim;
@@ -339,17 +358,7 @@ namespace Sim.View.Views
             if (t.Kind != ShopKind.Grocery) vm.Lines.Add(q); // a kirana sells one grade: staples
 
             if (t.Kind == ShopKind.Sweets) BusinessSheet.AddMixFor(ctx, vm, b, t);
-            if (t.Kind == ShopKind.Chai)
-            {
-                long need = ShopRules.DefaultMilk(sim, t, b.TileId) * t.CupMl(b.Quality) / t.CupMilkMl; // good cups take more
-                var milkPresets = new List<long>();
-                foreach (long v in new[] { need, need * 3 / 2, need / 2 }) if (v > 0 && !milkPresets.Contains(v)) milkPresets.Add(v);
-                if (milkPresets.Count == 0) milkPresets.Add(0);
-                long nextMilk = milkPresets[(milkPresets.IndexOf(own) + 1) % milkPresets.Count];
-                var milk = new LineVm(s.Get("business.milkADay"), ctx.Fmt.Litres(own), "shopMilk", id) { Icon = "milk" };
-                milk.Action = new ActionVm("milkADay", s.Get("business.change"), ctx.Fmt.Litres(nextMilk), ActionKind.Secondary, true, null, at => new SetBusiness(at, id, open, close, fee, nextMilk, market));
-                vm.Lines.Add(milk);
-            }
+            // The tea stall's milk a day and every shop's buying at the market are on its Supply tab (spec 030 §3.5, US-268).
             if (ShopRules.Stocked(t))
             {
                 long[] usual = ShopRules.DefaultPutOut(sim, t, b.TileId);
@@ -364,10 +373,7 @@ namespace Sim.View.Views
                     vm.Lines.Add(line);
                 }
             }
-            if (t.IsMeals) { GrowthSheet.AddSettings(ctx, vm, b, t); return; } // the kitchen buys from your store, your businesses, then the market: no switch
-            var buy = new LineVm(s.Get(BusinessWords.Key(ctx, "business.market", t)), s.Get(market ? "business.yes" : "business.no"), "businessMarket", id);
-            buy.Action = new ActionVm("market", s.Get(market ? "business.stopMarket" : "business.startMarket"), null, ActionKind.Secondary, true, null, at => new SetBusiness(at, id, open, close, fee, own, !market));
-            vm.Lines.Add(buy);
+            if (t.IsMeals) { GrowthSheet.AddSettings(ctx, vm, b, t); return; } // the kitchen buys from your store, your businesses, then the market
             GrowthSheet.AddSettings(ctx, vm, b, t); // spec 028 §3.10: marketing and khata
         }
     }

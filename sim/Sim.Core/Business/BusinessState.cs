@@ -292,6 +292,27 @@ namespace Sim.Core.Business
 
         private bool ExitUsed { get { return ListedAt != 0 || CompletesAt != 0 || BranchOf != 0 || Stakes.Count > 0 || BoughtOutOfferedAt != 0 || Benefits != 0 || FestivalPaid != 0 || ShortDays != 0 || ShortDay != 0; } }
 
+        // Supply (spec 030 §3.4, §3.5; save schema 25). The per-good arrays are made when first used (SupplyRules.Ensure).
+        /// <summary>Manual: a cap on what it takes from you a day, for each good it can (false: Automatic, today's rule).</summary>
+        public bool SupplyManual { get; internal set; }
+
+        /// <summary>Hashed only once Manual or a cap has ever been set, so every town that never uses it keeps its hash.</summary>
+        public bool SupplyUsed { get; internal set; }
+
+        /// <summary>The supply day the counters belong to (from 6:00 to 6:00), see <see cref="SupplyRules.DayIndex"/>.</summary>
+        public long SupplyDay { get; internal set; }
+
+        /// <summary>Grams a good came from you (your store, your herd, your other businesses) and was bought, this supply day.</summary>
+        public long[] FromYouToday { get; internal set; }
+        public long[] BoughtToday { get; internal set; }
+
+        /// <summary>Manual's cap a day for each good: grams (above 0 wins) or a share of its day's amount (0, 25, 50 or 100 percent).</summary>
+        public long[] CapGrams { get; internal set; }
+        public int[] CapShare { get; internal set; }
+
+        /// <summary>Grams bought at the market on each of the days before this one, newest first, up to <c>supplyLookbackDays</c> (US-269 ranks by it).</summary>
+        public List<long[]> BoughtDays { get; internal set; } = new List<long[]>();
+
         private bool TuitionUsed { get { return Pupils.Count > 0 || CohortPupils != 0 || TuitionFees != 0; } }
 
         private bool KilnUsed { get { return Yard != 0 || YardCost != 0 || KilnMade != 0 || KilnToBuilds != 0 || KilnSold != 0 || KilnSeason != 0; } }
@@ -305,6 +326,8 @@ namespace Sim.Core.Business
             c.Mix = (long[])Mix.Clone();
             c.MadeToday = (long[])MadeToday.Clone();
             c.PutOut = (long[])PutOut.Clone();
+            if (FromYouToday != null) { c.FromYouToday = (long[])FromYouToday.Clone(); c.BoughtToday = (long[])BoughtToday.Clone(); c.CapGrams = (long[])CapGrams.Clone(); c.CapShare = (int[])CapShare.Clone(); }
+            c.BoughtDays = BoughtDays.ConvertAll(x => (long[])x.Clone());
             c.Plan = Plan.Clone();
             c.Reports = new List<BusinessReport>(Reports); // reports are immutable
             c.Stakes = Stakes.ConvertAll(x => x.Clone());
@@ -386,6 +409,19 @@ namespace Sim.Core.Business
                 h.WriteInt(Credit.Count);
                 foreach (KhataAccount a in Credit) a.WriteTo(h);
                 foreach (long v in new[] { CreditSeason, LastCredit, LastGain, LastLost, LastSpend, LastDrew, SpendSeason }) h.WriteLong(v);
+            }
+            if (h.Hashing ? SupplyUsed : !(h is SaveWriter s25 && s25.Schema < SupplyRules.Schema)) // schema 25; hashed once Manual or a cap has been set
+            {
+                h.WriteBool(SupplyManual); h.WriteBool(SupplyUsed); h.WriteLong(SupplyDay);
+                for (int i = 0; i < Stock.Length; i++)
+                {
+                    h.WriteLong(FromYouToday == null ? 0 : FromYouToday[i]);
+                    h.WriteLong(BoughtToday == null ? 0 : BoughtToday[i]);
+                    h.WriteLong(CapGrams == null ? 0 : CapGrams[i]);
+                    h.WriteInt(CapShare == null ? 100 : CapShare[i]);
+                }
+                h.WriteInt(BoughtDays.Count);
+                foreach (long[] day in BoughtDays) for (int i = 0; i < Stock.Length; i++) h.WriteLong(day[i]);
             }
         }
 
@@ -472,6 +508,24 @@ namespace Sim.Core.Business
                 int credit = r.ReadCount();
                 for (int i = 0; i < credit; i++) b.Credit.Add(KhataAccount.ReadFrom(r));
                 b.CreditSeason = r.ReadLong(); b.LastCredit = r.ReadLong(); b.LastGain = r.ReadLong(); b.LastLost = r.ReadLong(); b.LastSpend = r.ReadLong(); b.LastDrew = r.ReadLong(); b.SpendSeason = r.ReadLong();
+            }
+            if (r.Schema >= SupplyRules.Schema)
+            {
+                b.SupplyManual = r.ReadBool(); b.SupplyUsed = r.ReadBool(); b.SupplyDay = r.ReadLong();
+                b.FromYouToday = new long[goods]; b.BoughtToday = new long[goods]; b.CapGrams = new long[goods]; b.CapShare = new int[goods];
+                for (int i = 0; i < goods; i++) b.CapShare[i] = 100;
+                for (int i = 0; i < n; i++)
+                {
+                    int at = r.Slot(ContentTable.Good, i);
+                    b.FromYouToday[at] = r.ReadLong(); b.BoughtToday[at] = r.ReadLong(); b.CapGrams[at] = r.ReadLong(); b.CapShare[at] = r.ReadInt();
+                }
+                int days = r.ReadCount();
+                for (int d = 0; d < days; d++)
+                {
+                    var day = new long[goods];
+                    for (int i = 0; i < n; i++) day[r.Slot(ContentTable.Good, i)] = r.ReadLong();
+                    b.BoughtDays.Add(day);
+                }
             }
             return b;
         }

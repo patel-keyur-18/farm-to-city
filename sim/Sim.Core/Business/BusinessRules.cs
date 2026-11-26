@@ -697,6 +697,7 @@ namespace Sim.Core.Business
                     b.Ledger.Post(now, sim.Period, "ledger.boughtFromFarm", reference, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                 }
                 Grind(sim, b, own, value);
+                SupplyRules.FromYou(sim, b, t.Input, own);
                 b.OwnToday += own;
                 b.OwnSeason += own;
                 left -= own;
@@ -713,6 +714,7 @@ namespace Sim.Core.Business
                     BusinessBooks.Draw(sim, b, value + PowerCost(sim, b, bought));
                     b.Ledger.Post(now, sim.Period, "ledger.boughtAtMarket", reference, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                     Grind(sim, b, bought, value);
+                    SupplyRules.Bought(sim, b, t.Input, bought);
                     b.OwnSeason += bought;
                 }
             }
@@ -892,6 +894,7 @@ namespace Sim.Core.Business
                     if (value > 0) b.Ledger.Post(now, sim.Period, "ledger.boughtAtMarket", reference, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                     b.Stock[g] += buy;
                     b.StockCost[g] += value;
+                    SupplyRules.Bought(sim, b, g, buy);
                 }
                 long part = (long)((System.Numerics.BigInteger)b.StockCost[g] * need / b.Stock[g]);
                 b.Stock[g] -= need;
@@ -1021,13 +1024,14 @@ namespace Sim.Core.Business
             foreach (Business to in sim.State.Businesses.Businesses)
             {
                 if (to == from || to.Status != BusinessStatus.Open || from.Stock[good] <= 0 || InvoiceRules.Blocked(sim, from, to)) continue;
-                long need = NeedOf(sim, to, good);
+                long need = SupplyRules.Allowed(sim, to, good, NeedOf(sim, to, good)); // Manual: no more than its cap a day
                 long q = System.Math.Min(from.Stock[good], need);
                 if (q <= 0) continue;
                 long value = MarketRules.Value(sim, good, q, MarketRules.Floor(sim, good));
                 q = System.Math.Min(q, BusinessBooks.CanSpend(sim, to) >= value ? q : 0);
                 if (q <= 0) continue;
                 InvoiceRules.Sale(sim, from, to, good, q, value);
+                SupplyRules.FromYou(sim, to, good, q);
             }
         }
 
@@ -1062,6 +1066,7 @@ namespace Sim.Core.Business
                     b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.boughtFromFarm", "business:" + b.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                     b.Stock[good] += q;
                     b.StockCost[good] += value;
+                    SupplyRules.FromYou(sim, b, good, q);
                     taken[k] += q;
                     room -= q;
                 }
@@ -1085,6 +1090,7 @@ namespace Sim.Core.Business
             b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.boughtFromNeighbours", "business:" + b.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
             b.Stock[good] += ml;
             b.StockCost[good] += value;
+            SupplyRules.Bought(sim, b, good, ml);
         }
 
         /// <summary>A business sells grams of a good: its stock leaves at cost, the sale is booked against <paramref name="paidTo"/> (cash, or Owed by buyers for a sale on terms).</summary>

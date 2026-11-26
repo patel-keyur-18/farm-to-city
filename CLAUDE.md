@@ -285,6 +285,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0172 | The ad hoc phase before Phase 4 (Phase 3.5): UI fixes, one business run by you, a Businesses hub, supply caps (Automatic or Manual) and a hand growing for the vegetable stall (spec 030, Sprint 28); two towns from Settings, superseding ADR 0023's one town (spec 031, Sprint 29); a graphics redesign from three samples (spec 032); in-game time travel dropped for now; save schema 25 |
 | 0173 | US-266 as built: one business run by you (`AlreadyRunOne`), a card at load for an older town that runs several (time waits for the answer), no save change |
 | 0174 | US-267 as built: the Businesses hub (totals, a row each with profit, cash, stars and *Needs you*, Take out back to the hub, *See*), the HUD's fourth round button with a badge, no sim or save change |
+| 0175 | US-268 as built: today's supply counted at every path (from you, bought; 6:00 to 6:00), Automatic untouched, Manual caps per good (none, quarter, half, all, fixed kg; the restaurant fixed kg only), a Supply tab, save schema 25 hashed only once used |
 
 ## Current status
 

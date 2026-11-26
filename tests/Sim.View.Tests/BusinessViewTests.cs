@@ -94,7 +94,7 @@ namespace Sim.View.Tests
             Ok(sim, new OfferContract(sim.State.Clock.SimTime, sim.State.People.ApplicantsFor(b.Id)[0].Id));
             card = BusinessSheet.Build(ViewKit2.Context(sim), b.Id);
             Assert.That(card.Subtitle, Is.EqualTo("Open now · until 18:00"));
-            Assert.That(card.Tabs.Select(t => t.Label), Is.EqualTo(new[] { "Today", "Books", "Settings" }));
+            Assert.That(card.Tabs.Select(t => t.Label), Is.EqualTo(new[] { "Today", "Books", "Supply", "Settings" }));
             Assert.That(card.Lines.Single(l => l.Label == "Ground for the area today").Value, Does.Contain("in fees"));
             Assert.That(card.Lines.Single(l => l.Label == "Who works here").Action.Id, Is.EqualTo("letGo"));
             Assert.That(card.Lines.Single(l => l.Label == "Who works here").Value, Is.EqualTo("Manoj (miller)").Or.EqualTo("Usha (miller)"), "the most skilled townsperson, hired from the board");

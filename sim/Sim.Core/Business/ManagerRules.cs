@@ -219,6 +219,7 @@ namespace Sim.Core.Business
                 b.Ledger.Post(now, sim.Period, "ledger.boughtAtMarket", "business:" + b.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                 b.Stock[g] += want;
                 b.StockCost[g] += value;
+                SupplyRules.Bought(sim, b, g, want);
             }
         }
 
