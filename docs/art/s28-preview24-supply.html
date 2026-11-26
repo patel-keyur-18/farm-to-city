@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 24 Supply: Automatic or Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen scaled to fit, one tab for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible,.ctl button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center;color:#d9c9a8;font-size:14px;min-height:34px}
+.ctl button{font:600 14px var(--body);padding:6px 12px;border-radius:9px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.ctl button[aria-pressed=true]{background:var(--sand);border-color:var(--sand2);color:var(--ink)}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink)}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.scrim.dark{background:rgba(30,20,12,.72)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.row small.warn{color:var(--warn);font-weight:700}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.act{display:flex;flex-direction:column;align-items:flex-end;gap:4px;max-width:360px}
+.act .why{font-size:15px;color:var(--warn);text-align:right;line-height:1.25;font-weight:600}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:760px}
+.card h3{margin:0 0 6px;font:700 32px var(--display);text-align:center}
+.card p.b{margin:0 0 8px;font-size:21px;line-height:1.4;text-align:center;color:var(--ink)}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:800px;text-align:center}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice .tx{flex:1;font-size:22px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px}
+.choice .ico{width:56px;height:56px}
+.choice .ico svg{width:34px;height:34px}
+.hint{font-size:17px;color:var(--wood);margin:12px 4px 0;line-height:1.4;text-align:center}
+
+.tabrow{display:flex;gap:10px;padding:0 20px 8px}
+.tabrow .btn{flex:1;min-width:0;padding:8px 6px 10px;font-size:21px}
+.tabrow .btn.sand{background:var(--sand);border-color:var(--sand2)}
+.rich{display:flex;align-items:center;gap:14px;padding:9px 4px;border-bottom:1px solid #eadfba;min-height:78px}
+.rich .tx{flex:1}
+.rich .tx b{display:block;font:700 28px var(--display);line-height:1.15}
+.rich .tx .v{font-size:21px;color:var(--wood);margin-top:1px}
+.rich .tx .n{font:700 20px var(--display);color:var(--ink);margin-top:1px}
+.rich .tx .n.warn{color:var(--warn)}
+.rich .ico{width:52px;height:52px}
+.seg{display:flex;gap:0;border:3px solid var(--sand2);border-radius:14px;overflow:hidden;flex:none}
+.seg span{padding:8px 18px;font:700 21px var(--body);background:#f8e6b6;color:var(--wood)}
+.seg span.on{background:var(--green);color:#fff;text-shadow:-1px -1px 0 var(--ink),1px -1px 0 var(--ink),-1px 1px 0 var(--ink),1px 1px 0 var(--ink)}
+.hint2{font-size:18px;color:var(--wood);margin:8px 4px;line-height:1.35}
+.plain{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid #eadfba;font-size:22px;min-height:58px}
+.plain .grow{flex:1}
+.plain .val{font:700 24px var(--display);text-align:right}
+.hdr{font:600 24px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:12px 0 2px;padding-bottom:2px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 24: Supply, Automatic or Manual</h1>
+  <p class="lead">Sprint 28, US-268 (spec 030 §3.4, §3.5, §7.4). A new <b>Supply</b> tab on a business's card shows what it took today, from you and bought, and lets you choose how much of your own produce it may take. Automatic is today's rule and stays the default. Manual caps each good a day. What you do not send stays in your store. Pick the situation in "Show" on each tab.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="ctl" id="ctl"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const I={
+ veg:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#79c84a" stroke="#3f7d20" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><circle cx="12" cy="19" r="3" fill="#c2410c"/><circle cx="18" cy="19" r="3" fill="#79c84a"/><rect x="3" y="24" width="24" height="3" fill="#8a5a2b"/></svg>',
+ mill:'<svg viewBox="0 0 30 30"><rect x="6" y="12" width="18" height="14" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><path d="M4 13l11-9 11 9z" fill="#a8743c" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="19" r="4" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ bakery:'<svg viewBox="0 0 30 30"><rect x="4" y="13" width="22" height="12" rx="2" fill="#d9a05b" stroke="#8a5a2b" stroke-width="2"/><path d="M3 14c1-7 7-9 12-9s11 2 12 9z" fill="#c2410c" stroke="#8a5a2b" stroke-width="2"/><rect x="12" y="17" width="6" height="8" fill="#6b4423"/></svg>',
+ rest:'<svg viewBox="0 0 30 30"><rect x="5" y="13" width="20" height="12" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><path d="M3 14l12-9 12 9z" fill="#b02a1e" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="20" r="3.5" fill="#fff3d1" stroke="#8a5a2b" stroke-width="1.8"/></svg>',
+ tomato:'<svg viewBox="0 0 30 30"><circle cx="15" cy="17" r="9" fill="#d63a2a" stroke="#8a2a1c" stroke-width="2"/><path d="M10 9c3 2 7 2 10 0-1 4-9 4-10 0z" fill="#3f7d20"/></svg>',
+ potato:'<svg viewBox="0 0 30 30"><ellipse cx="15" cy="17" rx="10" ry="8" fill="#c9a064" stroke="#8a5a2b" stroke-width="2"/><circle cx="11" cy="15" r="1.3" fill="#8a5a2b"/><circle cx="18" cy="19" r="1.3" fill="#8a5a2b"/></svg>',
+ okra:'<svg viewBox="0 0 30 30"><path d="M8 24c-2-8 2-16 12-18-1 9-5 16-12 18z" fill="#79c84a" stroke="#3f7d20" stroke-width="2"/></svg>',
+ pav:'<svg viewBox="0 0 30 30"><rect x="5" y="12" width="20" height="11" rx="5" fill="#e0a867" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ sack:'<svg viewBox="0 0 30 30"><path d="M9 8h12l3 16H6z" fill="#d9c08a" stroke="#8a5a2b" stroke-width="2"/><path d="M9 8c1-3 11-3 12 0" fill="none" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ milk:'<svg viewBox="0 0 30 30"><rect x="9" y="8" width="12" height="16" rx="3" fill="#f4f4f0" stroke="#8a8372" stroke-width="2"/><rect x="11" y="4" width="8" height="5" fill="#cfd8dc" stroke="#8a8372" stroke-width="1.6"/></svg>',
+ wheat:'<svg viewBox="0 0 30 30"><path d="M15 26V8M15 12c-4 0-5-3-5-5 4 0 5 2 5 5zM15 12c4 0 5-3 5-5-4 0-5 2-5 5zM15 18c-4 0-5-3-5-5 4 0 5 2 5 5zM15 18c4 0 5-3 5-5-4 0-5 2-5 5z" fill="#d9a53a" stroke="#9a6a2a" stroke-width="1.4"/></svg>',
+ coin:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/><path d="M15 8v14M11 12h8M11 18h8" stroke="#9a6a2a" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ onion:'<svg viewBox="0 0 30 30"><ellipse cx="15" cy="18" rx="9" ry="8" fill="#b66a9a" stroke="#7a3f66" stroke-width="2"/><path d="M15 10c0-3 2-5 3-5" stroke="#3f7d20" stroke-width="2" fill="none"/></svg>'
+};
+let tab='manual',state={manual:'mixed',picker:'tomato',hub:'two',why:'from',other:'bakery'};
+const qb=k=>`<div class="q" ${k?`data-why="${k}"`:''}>?</div>`;
+function btn(label,look,detail){return `<button class="btn ${look||'sand'}" style="min-width:190px"><span>${label}${detail?`<small>${detail}</small>`:''}</span></button>`}
+function mapSvg(){let t='';for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+520,y=140+(c+r)*46;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][(c*7+r*3)%5];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f6a2a" stroke-width="2" opacity=".95"/>`}return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}</svg>`}
+function base(){return `<div class="map">${mapSvg()}</div><div class="hud l"><div class="s">Monsoon · 3 days left</div><div class="big">16:10</div><div class="s">Clear until 22:00</div></div><div class="hud r"><div class="big" style="font-size:40px">1.12 L</div></div>`}
+function sheet(title,sub,icon,body,o){o=o||{};return `<div class="scrim"></div><div class="sheet"><div class="head">${o.back===false?'':'<div class="cbtn">←</div>'}<div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div>${o.tabs?tabrow(o.tabs,o.on):''}<div class="body">${body}</div></div>`}
+function tabrow(tabs,on){return `<div class="tabrow">${tabs.map(t=>`<button class="btn ${t===on?'':'sand'}"><span>${t}</span></button>`).join('')}</div>`}
+function modeRow(manual,desc){return `<div class="rich" style="min-height:84px"><div class="ico">${I.coin}</div><div class="tx"><b>How it is supplied</b><div class="v">${manual?'Manual':'Automatic'}</div><div class="n">${desc}</div></div>${qb('')}${btn(manual?'Use Automatic':'Use Manual','sand')}</div>`}
+const shopTabs=['Today','Customers','Books','Supply','Settings'];
+function rich(ic,name,v,n,warn,right,why){return `<div class="rich"><div class="ico">${ic}</div><div class="tx"><b>${name}</b><div class="v">${v}</div>${n?`<div class="n ${warn?'warn':''}">${n}</div>`:''}</div>${why?qb(why):''}${right||''}</div>`}
+function plain(l,v,why){return `<div class="plain"><div class="grow">${l}</div><div class="val">${v}</div>${why?qb(why):''}</div>`}
+const CAPS={all:'All it needs',half:'Half of a day',quarter:'A quarter of a day',none:'None',k5:'5 kg a day',k10:'10 kg a day',k20:'20 kg a day'};
+function capText(c,need){return c}
+const WHY={
+ from:{t:'Tomato: what the stall took today',h:'16 kg',rows:[['From your store, at 6:00 and when it ran low','12 kg'],['Bought at the mandi','4 kg'],['Its price today for your tomato (the trader\'s)','22 a kg'],['The mandi\'s price today','25 a kg']],foot:'The day runs from 6:00 to 6:00. The stall puts out 16 kg of tomato a day. It takes yours first, then buys the rest if Buy the rest at the market is on. The prices are today\'s, so a figure paid earlier in the day may differ a little.'},
+ cap:{t:'Tomato: how much the stall may take from you',h:'Half of a day',rows:[['The stall\'s day of tomato','16 kg'],['Half of it','8 kg'],['In your store now','140 kg']],foot:'Manual caps what the stall takes from your store a day. It never takes more than it needs or more than the store holds. What is not sent stays in your store, for the trader or your orders.'}
+};
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:780px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 28px var(--display)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}${w.foot?`<div class="note" style="font-size:18px;margin-top:10px;color:var(--wood)">${w.foot}</div>`:''}<div class="btnrow"><button class="btn" style="max-width:220px;margin:0 auto"><span>OK</span></button></div></div>`}
+
+const views={
+ auto:{label:'1 · Supply tab: Automatic',ctl:[],
+  notes:[['What to check',['A new <b>Supply</b> tab on a shop\'s card (and on the mill, bakery, dairy and the restaurant). Today it is <b>Automatic</b>: the stall takes all it needs from you first and buys the rest, exactly as it does now.','Each good shows what it took <b>today</b>: from you and bought, with a ? giving the prices. The day runs 6:00 to 6:00.','<b>Buy the rest at the market</b> is the switch that was on the Settings tab. It moves here for these businesses, so the two choices sit together.']],
+   ['What changes for the player',['Nothing, until you press <b>Manual</b>. Every business you have starts Automatic.']]],
+  render(){
+   let h=`${modeRow(false,'Automatic takes all it needs from you first, then buys the rest')}`;
+   h+=`<div class="hdr">Today · from 6:00</div>`;
+   h+=rich(I.tomato,'Tomato','From you 12 kg · bought 4 kg','Takes all it needs',false,'','from');
+   h+=rich(I.potato,'Potato','From you 20 kg · bought 0 kg','Takes all it needs',false,'','from');
+   h+=rich(I.okra,'Okra','From you 0 kg · bought 9 kg','Takes all it needs',false,'','from');
+   h+=rich(I.pav,'Pav','From your bakery 6 kg · bought 0 kg','Takes all it needs',false,'','from');
+   h+=plain('Buy the rest at the market','Yes','');
+   h=h.replace(/<div class="plain"><div class="grow">Buy the rest[^]*$/,`<div class="rich" style="min-height:70px"><div class="ico">${I.coin}</div><div class="tx"><b>Buy the rest at the market</b><div class="v">Yes: what you don't send is bought at the mandi</div></div>${qb('')}${btn('Stop buying','sand')}</div>`);
+   return base()+sheet('Vegetable stall','Open now · until 19:00',I.veg,h,{tabs:shopTabs,on:'Supply'})}},
+ manual:{label:'2 · Supply tab: Manual',ctl:[['manual','mixed','Some goods limited'],['manual','allnone','Tomato none, market off']],
+  notes:[['What to check',['<b>Manual</b> adds a cap for each good: <b>what it takes from you a day</b>. <b>Change</b> opens a list of amounts (screen 3). Switching Automatic → Manual starts every good at "All it needs", so nothing changes until you lower one.','Under Manual the stall takes at most the cap from your store; the rest is bought if <b>Buy the rest at the market</b> is on. With the switch off, it simply sells less, and its line says so in orange.','What you do not send stays in your store, for the trader and your orders.']],
+   ['The rules in one line',['Never more than it needs, never more than your store holds. The cap does not touch what it takes from your other businesses\' products unless you set that good\'s cap (Pav here).']]],
+  render(){
+   const m=state.manual;
+   let h=`${modeRow(true,'Manual: you choose how much of each good it may take from you a day')}`;
+   h+=`<div class="hdr">Today · from 6:00</div>`;
+   const none=m==='allnone';
+   h+=rich(I.tomato,'Tomato',none?'From you 0 kg · bought 0 kg':'From you 8 kg · bought 8 kg',none?'Takes none from you: it has nothing to sell':'Takes up to half of a day (8 kg)',none,btn('Change','sand'),'from');
+   h+=rich(I.potato,'Potato','From you 20 kg · bought 0 kg','Takes all it needs',false,btn('Change','sand'),'from');
+   h+=rich(I.okra,'Okra','From you 4 kg · bought 5 kg','Takes up to 5 kg a day',false,btn('Change','sand'),'from');
+   h+=rich(I.pav,'Pav','From your bakery 6 kg · bought 0 kg','Takes all it needs',false,btn('Change','sand'),'from');
+   h+=`<div class="rich" style="min-height:70px"><div class="ico">${I.coin}</div><div class="tx"><b>Buy the rest at the market</b><div class="v">${none?'No: the stall sells less':'Yes: what you don\'t send is bought at the mandi'}</div></div>${qb('')}${btn(none?'Start buying':'Stop buying','sand')}</div>`;
+   return base()+sheet('Vegetable stall','Open now · until 19:00',I.veg,h,{tabs:shopTabs,on:'Supply'})}},
+ picker:{label:'3 · Change: the amounts',ctl:[['picker','tomato','A stall\'s tomato (a day of 16 kg)'],['picker','rest','A restaurant\'s onion (no fixed day)']],
+  notes:[['What to check',['<b>Change</b> opens a list like the Take out amounts: a row for each choice with what it means in kg today, a green <b>Choose</b> button, the one in force marked. Back returns to the Supply tab.','A stall or a bakery offers <b>None, a quarter, half, all it needs</b> (of its day\'s amount) and the fixed kg steps up to that amount. The restaurant has no fixed day, so it offers <b>None, All it needs and the kg steps</b> only.','The steps (5, 10, 20, 50 kg) come from <code>businesses.json</code>; steps above what the business could use are not shown.']]],
+  render(){
+   const r=state.picker==='rest';
+   const rows=r?[['All it needs','Cooks as many portions as diners come',1],['50 kg a day','At most 50 kg of onion a day',0],['20 kg a day','At most 20 kg a day',0],['10 kg a day','At most 10 kg a day',0],['5 kg a day','At most 5 kg a day',0],['None','None from your store: all of it bought',0]]
+     :[['All it needs','16 kg a day',0],['Half of a day','8 kg a day',1],['A quarter of a day','4 kg a day',0],['10 kg a day','At most 10 kg a day',0],['5 kg a day','At most 5 kg a day',0],['None','None from your store: all of it bought',0]];
+   let h=rows.map(x=>`<div class="rich" style="min-height:74px"><div class="tx"><b>${x[0]}</b><div class="v">${x[1]}</div></div>${qb('cap')}${x[2]?`<div style="font:700 22px var(--display);color:var(--green2);padding:0 18px">In force</div>`:btn('Choose','green')}</div>`.replace('class="btn green"','class="btn"')).join('');
+   const t=r?'Onion for the restaurant':'Tomato for the stall';
+   return base()+sheet(t,'How much of it may be taken from your store each day',r?I.onion:I.tomato,h)}},
+ other:{label:'4 · Mill, bakery, restaurant',ctl:[['other','bakery','Bakery'],['other','mill','Flour mill'],['other','rest','Restaurant']],
+  notes:[['What to check',['The <b>mill, dairy and tea stall</b> already have their own amount a day ("your wheat a day", "your milk a day"). Their Supply tab shows <b>that row</b> with the same Change as today, plus today\'s counters. There is no Automatic/Manual for them: that row is their cap.','The <b>bakery</b>\'s atta comes from your mill: the Supply tab shows it as "from your mill" and Manual caps it like any good. The sugar and the rest are bought, so they show today\'s count with no cap.','The <b>restaurant</b> shows each ingredient and, in Manual, its kg cap (screen 3).']]],
+  render(){
+   const o=state.other;let h='',title,icon;
+   if(o==='mill'){title='Flour mill';icon=I.mill;
+    h+=`<div class="hdr">Today · from 6:00</div>`;
+    h+=rich(I.wheat,'Wheat','From you 1,200 kg · bought 800 kg','Your wheat a day: 1,200 kg',false,btn('Change','sand','1,500 kg'),'from');
+    h+=`<div class="rich" style="min-height:70px"><div class="ico">${I.coin}</div><div class="tx"><b>Buy wheat at the market</b><div class="v">Yes: what your wheat does not cover is bought in</div></div>${qb('')}${btn('Stop buying','sand')}</div>`;
+    h+=`<div class="hint2">The mill's wheat a day is its cap on what it takes from your store, as before.</div>`;
+   } else if(o==='bakery'){title='Bakery';icon=I.bakery;
+    h+=`${modeRow(false,'Automatic takes all it needs from your mill first')}`;
+    h+=`<div class="hdr">Today · from 6:00</div>`;
+    h+=rich(I.sack,'Atta','From your mill 180 kg · bought 20 kg','Takes all it needs',false,'','from');
+    h+=rich(I.sack,'Sugar','Bought 14 kg','Not from you: always bought',false,'','from');
+    h+=`<div class="rich" style="min-height:70px"><div class="ico">${I.coin}</div><div class="tx"><b>Buy the rest at the market</b><div class="v">Yes</div></div>${qb('')}${btn('Stop buying','sand')}</div>`;
+   } else {title='Restaurant';icon=I.rest;
+    h+=`${modeRow(true,'Manual: fixed kg a day for each ingredient')}`;
+    h+=`<div class="hdr">Today · from 6:00</div>`;
+    h+=rich(I.onion,'Onion','From you 10 kg · bought 6 kg','Takes up to 10 kg a day',false,btn('Change','sand'),'from');
+    h+=rich(I.potato,'Potato','From you 22 kg · bought 0 kg','Takes all it needs',false,btn('Change','sand'),'from');
+    h+=rich(I.tomato,'Tomato','From you 9 kg · bought 3 kg','Takes all it needs',false,btn('Change','sand'),'from');
+   }
+   return base()+sheet(title,'Open now',icon,h,{tabs:o==='mill'?['Today','Books','Supply','Settings']:shopTabs,on:'Supply'})}},
+ hub:{label:'5 · The hub row',ctl:[['hub','two','Stall and mill']],
+  notes:[['What to check',['Under each business\'s profit on the Businesses hub: one line, <b>Today: 38 kg from you, 12 kg bought</b>, with a ? giving the per-good split. It shows only for a business that takes goods in.','This is the line Preview 23 left out. It totals all goods in kg.']]],
+  render(){
+   const row=(ic,n,st,who,stars,profit,cash,sup)=>`<div class="rich" style="min-height:92px"><div class="ico">${ic}</div><div class="tx"><b>${n}</b><div class="v">${stars}</div><div class="n">${st} · ${who}</div></div>${qb('stars')}${btn('See','green')}</div><div class="plain"><div class="grow">Profit this season</div><div class="val">${profit}</div>${qb('p')}</div><div class="plain"><div class="grow">Today: ${sup}</div><div class="val"></div>${qb('from')}</div><div class="rich" style="min-height:76px"><div class="tx"><b style="font-size:26px">Cash in the ${n.toLowerCase()}</b><div class="v">${cash} coins</div></div>${qb('c')}${btn('Take out','green')}</div>`;
+   let h=`<div class="plain"><div class="grow">Profit this season, all businesses</div><div class="val">27,300 coins</div>${qb('p')}</div><div class="plain"><div class="grow">Cash in your businesses</div><div class="val">85,000 coins</div>${qb('c')}</div><div class="hdr">Yours</div>`;
+   h+=row(I.veg,'Vegetable stall','Open until 19:00','You','4.1 stars','9,100','21,000','38 kg from you, 12 kg bought');
+   h+=row(I.mill,'Flour mill','Open until 18:00','Manoj, miller','3.0 stars','18,200','64,000','1,200 kg from you, 800 kg bought');
+   return base()+sheet('Your businesses','How each is doing',I.mill,h,{back:false})}},
+ why:{label:'6 · The ? on a supply row',ctl:[['why','from','Today\'s supply'],['why','cap','The cap']],
+  notes:[['What to check',['Every number has a ? in words: the day (6:00 to 6:00), from you, bought, the prices today, and why the stall takes what it does.','Prices are <b>today\'s</b> (your tomato at the trader\'s price, the mandi\'s price for what it buys), not stored per purchase; the line says so.']]],
+  render(){const h=rich(I.tomato,'Tomato','From you 12 kg · bought 4 kg','Takes all it needs',false,'','from')+rich(I.potato,'Potato','From you 20 kg · bought 0 kg','Takes all it needs',false,'','from');
+   return base()+sheet('Vegetable stall','Open now · until 19:00',I.veg,`<div class="hdr">Today · from 6:00</div>`+h,{tabs:shopTabs,on:'Supply'})+whyCard(state.why)}}
+};
+function render(){
+ const v=views[tab];
+ $('#stage').innerHTML=v.render();
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ $('#ctl').innerHTML=(v.ctl&&v.ctl.length?'<span>Show:</span>':'')+(v.ctl||[]).map(c=>`<button data-set="${c[0]}:${c[1]}" aria-pressed="${state[c[0]]===c[1]}">${c[2]}</button>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;render()});
+$('#ctl').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b)return;const [g,v]=b.dataset.set.split(':');state[g]=v;render()});
+$('#stage').addEventListener('click',e=>{const q=e.target.closest('.q[data-why]');if(q&&WHY[q.dataset.why]){tab='why';state.why=q.dataset.why;render()}});
+addEventListener('resize',fit);
+(location.hash.slice(1)||'').split(',').filter(Boolean).forEach(x=>{const [a,b]=x.split(':');if(views[a]&&!b)tab=a;else if(a in state)state[a]=b});
+render();
+</script>
+</body>
+</html>
