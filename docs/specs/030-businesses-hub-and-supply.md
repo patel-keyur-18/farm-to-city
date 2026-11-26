@@ -85,8 +85,9 @@ From one sheet, the player sees every business at a glance (how it's doing, its 
 
 | Rule | Formula or behaviour | Bounds |
 | --- | --- | --- |
-| The order | A field order whose crop is *For your vegetable stall* (crop index `−2`), with the stall's business id. Every season, like *Let him choose*. Seed, fertiliser and the sell rule as any field order; the sell rule defaults to *Keep in store* | one stall per order |
-| The pick, at each sowing | The in-season crops whose good the stall sells (`VegShare > 0`), that `MaySow` on the field and whose sowing the cash can pay. Ranked: (1) a crop not already growing on another field with this stall's order first (spreads the variety); (2) most grams the stall bought at the market over the last `supplyLookbackDays` days; (3) the stall's day's amount (`PutOut`); (4) crop index. The first is sown | – |
+| The order | A field order whose crop is *For your vegetable stall* (crop index `−2`), with the stall's business id; one row in the crop list for each open stall of yours. Every season, like *Let him choose* (the same *this season only* or *every season* step). Seed and fertiliser as any field order. The sell rule is **Keep in store only** (owner, 2026-11-26): the hand never sells it to the trader, and the stall takes it at its 6:00 round by its Supply (Automatic: all it needs; Manual: its caps), which is the hand's sale to the stall at the day's market price | one stall per order |
+| The stall's preorder | What the stall needs tomorrow of each vegetable it sells, worked out when asked and never saved: `max(0, PutOut − its own Stock − your store's free stock − what is growing or standing ready for it)`. *Growing for it* is the expected harvest of the crops on fields whose stall order is this stall's. It shows on the hand's sheet ("Stall preorder: okra 12 kg, spinach 8 kg") | grams, ≥ 0 |
+| The pick, at each sowing | The in-season crops whose good the stall sells (`VegShare > 0`), that `MaySow` on the field and whose seed the cash can pay. Ranked: (1) the biggest unmet preorder; (2) most grams the stall bought at the market over the last `supplyLookbackDays` days; (3) the stall's day's amount (`PutOut`); (4) crop index. The first is sown. Growing crops already count against the preorder, so the fields spread across the vegetables by themselves | – |
 | Nothing fits | No such crop in season or none affordable: he sows his best pick, as *Let him choose* (ADR 0050) | – |
 | Sown in turn | Each field is resown when its crop is in, so fields sown on different days keep harvests apart; nothing holds a field back | – |
 | The harvest | Goes to your store as any harvest; the stall takes it at the morning round by its Supply (Automatic: all it needs) | – |
@@ -218,7 +219,7 @@ Previews (exact-looking artifacts) of 7.2, 7.3, 7.4 and 7.5 come before their UI
 | AC-10 | Automatic leaves every existing test and golden replay unchanged | `GoldenTests`, the full suite |
 | AC-11 | Manual at half a stall's tomato: it takes at most half its day's amount from your store; the rest at the market if allowed, none if not | `SupplyTests.ManualCap` |
 | AC-12 | Manual never takes more than needed, and never takes what the store doesn't hold | `SupplyTests.CapNeverForces` |
-| AC-13 | A stall order sows the in-season vegetable the stall bought most, spreads across fields, and falls back to the best pick | `SupplyTests.StallOrderPick` |
+| AC-13 | A stall order sows the in-season vegetable with the biggest unmet preorder (ties: the most bought at the market), spreads across fields, keeps in store only, and falls back to the best pick | `SupplyTests.StallOrderPick` |
 | AC-14 | A stall sold: its orders become *Let him choose* | `SupplyTests.StallGone` |
 | AC-15 | Schema 24 saves load as Automatic with no stall orders; the schema 25 fixture round-trips | `MigrationTests.EverySchemaLoads` |
 | AC-16 | No money loop: Manual and the stall order across 200 seeds keep `ExactLedger` and the money-loop checks | `GateTests.SupplyExploits` |

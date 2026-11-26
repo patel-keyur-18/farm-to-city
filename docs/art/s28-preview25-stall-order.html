@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 25 Grow for the vegetable stall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen scaled to fit, one tab for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible,.ctl button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center;color:#d9c9a8;font-size:14px;min-height:34px}
+.ctl button{font:600 14px var(--body);padding:6px 12px;border-radius:9px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.ctl button[aria-pressed=true]{background:var(--sand);border-color:var(--sand2);color:var(--ink)}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink)}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.scrim.dark{background:rgba(30,20,12,.72)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.row small.warn{color:var(--warn);font-weight:700}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.red{background:var(--red);border-color:#a23a2c;color:#fff}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.act{display:flex;flex-direction:column;align-items:flex-end;gap:4px;max-width:360px}
+.act .why{font-size:15px;color:var(--warn);text-align:right;line-height:1.25;font-weight:600}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:760px}
+.card h3{margin:0 0 6px;font:700 32px var(--display);text-align:center}
+.card p.b{margin:0 0 8px;font-size:21px;line-height:1.4;text-align:center;color:var(--ink)}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:800px;text-align:center}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice .tx{flex:1;font-size:22px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px}
+.choice .ico{width:56px;height:56px}
+.choice .ico svg{width:34px;height:34px}
+.hint{font-size:17px;color:var(--wood);margin:12px 4px 0;line-height:1.4;text-align:center}
+
+.tabrow{display:flex;gap:10px;padding:0 20px 8px}
+.tabrow .btn{flex:1;min-width:0;padding:8px 6px 10px;font-size:21px}
+.tabrow .btn.sand{background:var(--sand);border-color:var(--sand2)}
+.rich{display:flex;align-items:center;gap:14px;padding:9px 4px;border-bottom:1px solid #eadfba;min-height:78px}
+.rich .tx{flex:1}
+.rich .tx b{display:block;font:700 28px var(--display);line-height:1.15}
+.rich .tx .v{font-size:21px;color:var(--wood);margin-top:1px}
+.rich .tx .n{font:700 20px var(--display);color:var(--ink);margin-top:1px}
+.rich .tx .n.warn{color:var(--warn)}
+.rich .ico{width:52px;height:52px}
+.seg{display:flex;gap:0;border:3px solid var(--sand2);border-radius:14px;overflow:hidden;flex:none}
+.seg span{padding:8px 18px;font:700 21px var(--body);background:#f8e6b6;color:var(--wood)}
+.seg span.on{background:var(--green);color:#fff;text-shadow:-1px -1px 0 var(--ink),1px -1px 0 var(--ink),-1px 1px 0 var(--ink),1px 1px 0 var(--ink)}
+.hint2{font-size:18px;color:var(--wood);margin:8px 4px;line-height:1.35}
+.plain{display:flex;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid #eadfba;font-size:22px;min-height:58px}
+.plain .grow{flex:1}
+.plain .val{font:700 24px var(--display);text-align:right}
+.hdr{font:600 24px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:12px 0 2px;padding-bottom:2px}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 25: Grow for the vegetable stall</h1>
+  <p class="lead">Sprint 28, US-269 (spec 030 §3.6, §7.5). A hand can be told to grow for your vegetable stall. The stall's <b>preorder</b> is what it will need tomorrow: what it puts out, less its own stock, less what your store holds and what is already growing for it. The hand sows the vegetable with the biggest unmet preorder, keeps the harvest in your store, and the stall takes it at its 6:00 round. Nothing is sold to the trader.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="ctl" id="ctl"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const I={
+ veg:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#79c84a" stroke="#3f7d20" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><circle cx="12" cy="19" r="3" fill="#c2410c"/><circle cx="18" cy="19" r="3" fill="#79c84a"/><rect x="3" y="24" width="24" height="3" fill="#8a5a2b"/></svg>',
+ mill:'<svg viewBox="0 0 30 30"><rect x="6" y="12" width="18" height="14" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><path d="M4 13l11-9 11 9z" fill="#a8743c" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="19" r="4" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ bakery:'<svg viewBox="0 0 30 30"><rect x="4" y="13" width="22" height="12" rx="2" fill="#d9a05b" stroke="#8a5a2b" stroke-width="2"/><path d="M3 14c1-7 7-9 12-9s11 2 12 9z" fill="#c2410c" stroke="#8a5a2b" stroke-width="2"/><rect x="12" y="17" width="6" height="8" fill="#6b4423"/></svg>',
+ rest:'<svg viewBox="0 0 30 30"><rect x="5" y="13" width="20" height="12" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><path d="M3 14l12-9 12 9z" fill="#b02a1e" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="20" r="3.5" fill="#fff3d1" stroke="#8a5a2b" stroke-width="1.8"/></svg>',
+ tomato:'<svg viewBox="0 0 30 30"><circle cx="15" cy="17" r="9" fill="#d63a2a" stroke="#8a2a1c" stroke-width="2"/><path d="M10 9c3 2 7 2 10 0-1 4-9 4-10 0z" fill="#3f7d20"/></svg>',
+ potato:'<svg viewBox="0 0 30 30"><ellipse cx="15" cy="17" rx="10" ry="8" fill="#c9a064" stroke="#8a5a2b" stroke-width="2"/><circle cx="11" cy="15" r="1.3" fill="#8a5a2b"/><circle cx="18" cy="19" r="1.3" fill="#8a5a2b"/></svg>',
+ okra:'<svg viewBox="0 0 30 30"><path d="M8 24c-2-8 2-16 12-18-1 9-5 16-12 18z" fill="#79c84a" stroke="#3f7d20" stroke-width="2"/></svg>',
+ pav:'<svg viewBox="0 0 30 30"><rect x="5" y="12" width="20" height="11" rx="5" fill="#e0a867" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ sack:'<svg viewBox="0 0 30 30"><path d="M9 8h12l3 16H6z" fill="#d9c08a" stroke="#8a5a2b" stroke-width="2"/><path d="M9 8c1-3 11-3 12 0" fill="none" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ milk:'<svg viewBox="0 0 30 30"><rect x="9" y="8" width="12" height="16" rx="3" fill="#f4f4f0" stroke="#8a8372" stroke-width="2"/><rect x="11" y="4" width="8" height="5" fill="#cfd8dc" stroke="#8a8372" stroke-width="1.6"/></svg>',
+ wheat:'<svg viewBox="0 0 30 30"><path d="M15 26V8M15 12c-4 0-5-3-5-5 4 0 5 2 5 5zM15 12c4 0 5-3 5-5-4 0-5 2-5 5zM15 18c-4 0-5-3-5-5 4 0 5 2 5 5zM15 18c4 0 5-3 5-5-4 0-5 2-5 5z" fill="#d9a53a" stroke="#9a6a2a" stroke-width="1.4"/></svg>',
+ coin:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/><path d="M15 8v14M11 12h8M11 18h8" stroke="#9a6a2a" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ onion:'<svg viewBox="0 0 30 30"><ellipse cx="15" cy="18" rx="9" ry="8" fill="#b66a9a" stroke="#7a3f66" stroke-width="2"/><path d="M15 10c0-3 2-5 3-5" stroke="#3f7d20" stroke-width="2" fill="none"/></svg>'
+};
+let tab='crops',state={stalls:'one',why:'okra',hand:'now'};
+const qb=k=>`<div class="q" ${k?`data-why="${k}"`:''}>?</div>`;
+function btn(label,look,detail){return `<button class="btn ${look||'sand'}" style="min-width:190px"><span>${label}${detail?`<small>${detail}</small>`:''}</span></button>`}
+function mapSvg(){let t='';for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+520,y=140+(c+r)*46;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][(c*7+r*3)%5];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f6a2a" stroke-width="2" opacity=".95"/>`}return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}</svg>`}
+function base(){return `<div class="map">${mapSvg()}</div><div class="hud l"><div class="s">Monsoon · 3 days left</div><div class="big">16:10</div><div class="s">Clear until 22:00</div></div><div class="hud r"><div class="big" style="font-size:40px">1.12 L</div></div>`}
+function sheet(title,sub,icon,body,o){o=o||{};return `<div class="scrim"></div><div class="sheet"><div class="head">${o.back===false?'':'<div class="cbtn">←</div>'}<div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div>${o.tabs?tabrow(o.tabs,o.on):''}<div class="body">${body}</div></div>`}
+function tabrow(tabs,on){return `<div class="tabrow">${tabs.map(t=>`<button class="btn ${t===on?'':'sand'}"><span>${t}</span></button>`).join('')}</div>`}
+function modeRow(manual,desc){return `<div class="rich" style="min-height:84px"><div class="ico">${I.coin}</div><div class="tx"><b>How it is supplied</b><div class="v">${manual?'Manual':'Automatic'}</div><div class="n">${desc}</div></div>${qb('')}${btn(manual?'Use Automatic':'Use Manual','sand')}</div>`}
+const shopTabs=['Today','Customers','Books','Supply','Settings'];
+function rich(ic,name,v,n,warn,right,why){return `<div class="rich"><div class="ico">${ic}</div><div class="tx"><b>${name}</b><div class="v">${v}</div>${n?`<div class="n ${warn?'warn':''}">${n}</div>`:''}</div>${why?qb(why):''}${right||''}</div>`}
+function plain(l,v,why){return `<div class="plain"><div class="grow">${l}</div><div class="val">${v}</div>${why?qb(why):''}</div>`}
+const CAPS={all:'All it needs',half:'Half of a day',quarter:'A quarter of a day',none:'None',k5:'5 kg a day',k10:'10 kg a day',k20:'20 kg a day'};
+function capText(c,need){return c}
+const WHY_OLD={
+ from:{t:'Tomato: what the stall took today',h:'16 kg',rows:[['From your store, at 6:00 and when it ran low','12 kg'],['Bought at the mandi','4 kg'],['Its price today for your tomato (the trader\'s)','22 a kg'],['The mandi\'s price today','25 a kg']],foot:'The day runs from 6:00 to 6:00. The stall puts out 16 kg of tomato a day. It takes yours first, then buys the rest if Buy the rest at the market is on. The prices are today\'s, so a figure paid earlier in the day may differ a little.'},
+ cap:{t:'Tomato: how much the stall may take from you',h:'Half of a day',rows:[['The stall\'s day of tomato','16 kg'],['Half of it','8 kg'],['In your store now','140 kg']],foot:'Manual caps what the stall takes from your store a day. It never takes more than it needs or more than the store holds. What is not sent stays in your store, for the trader or your orders.'}
+};
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:780px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 28px var(--display)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}${w.foot?`<div class="note" style="font-size:18px;margin-top:10px;color:var(--wood)">${w.foot}</div>`:''}<div class="btnrow"><button class="btn" style="max-width:220px;margin:0 auto"><span>OK</span></button></div></div>`}
+
+
+I.person='<svg viewBox="0 0 30 30"><circle cx="15" cy="9" r="5" fill="#e0a867" stroke="#8a5a2b" stroke-width="2"/><path d="M6 27c0-8 4-11 9-11s9 3 9 11z" fill="#c2410c" stroke="#8a5a2b" stroke-width="2"/></svg>';
+I.spinach='<svg viewBox="0 0 30 30"><path d="M5 22c0-10 8-16 20-16 0 11-8 17-20 16z" fill="#4f9a2e" stroke="#2f6a16" stroke-width="2"/></svg>';
+const WHY={
+ okra:{t:'Why okra on Field 4',h:'Okra',rows:[['The stall\'s day of okra','20 kg'],['Its own stock of okra now','3 kg'],['Your store holds','0 kg'],['Already growing for it (Field 7)','5 kg'],['Okra it will still need tomorrow','12 kg'],['Spinach it will still need tomorrow','8 kg'],['Tomato it will still need tomorrow','0 kg']],foot:'Manoj sows the vegetable in season that the stall will most lack, so the fields spread across what it sells. If two are equal he takes the one the stall bought most at the mandi lately, then the one it sells most of. If none is in season, or his cash cannot pay the seed, he sows his best pick as if you had said Let him choose.'}
+};
+function crow(name,note,right,why){return `<div class="rich" style="min-height:92px"><div class="tx"><b style="font-size:27px">${name}</b><div class="v" style="margin-top:6px">${note}</div></div>${why?qb(why):''}${right||''}</div>`}
+const ch=btn('Choose','green');
+function cropList(){
+ const two=state.stalls==='two';
+ let rows=crow('Let Manoj choose','Best here now: Rice',ch);
+ if(!two) rows+=crow('For your vegetable stall','Grows what the stall will lack tomorrow: Okra now',ch,'okra');
+ else{ rows+=crow('For your vegetable stall · Field 9','Grows what this stall will lack tomorrow: Okra now',ch,'okra');
+       rows+=crow('For your vegetable stall · Field 14','Grows what this stall will lack tomorrow: Spinach now',ch,'');}
+ rows+=crow('Radish','Can be sown now',ch)+crow('Wheat','Sown in Winter; Manoj picks the best crop in between',ch);
+ return base()+sheet('Manoj looks after Field 4','Keep Lentils · Keep in store · Every season',I.person,rows+`<div style="margin-top:10px">${btn('Remove the order','red')}</div>`,{back:false})}
+function sellStep(){
+ const rows=crow('Keep in store','The stall takes it from your store at 6:00, at the day\'s price. Nothing is sold to the trader.',btn('Set the order','green'));
+ return base()+sheet('Manoj looks after Field 4','For your vegetable stall · Every season',I.person,rows)}
+function handSheet(){
+ const gone=state.hand==='gone';
+ const ord=gone?'Let Manoj choose (Okra now) · Keep in store · Every season':'For your vegetable stall (Okra now) · Keep in store · Every season';
+ let h=`<div class="rich" style="min-height:70px"><div class="tx"><b style="font-size:27px">Field 3</b><div class="v">Keep Lentils (Rice now) · Keep in store · Every season</div><div class="n" style="font-weight:400;font-size:20px;color:var(--wood)">Last: sowed, 4 h 58 min ago</div></div>${qb('')}${btn('Remove','sand')}</div>`;
+ h+=`<div class="rich" style="min-height:130px"><div class="tx"><b style="font-size:27px">Field 4</b><div class="v">${ord}</div><div class="n" style="font-weight:400;font-size:20px;color:var(--wood)">Last: sowed, 58 min ago</div>${gone?`<div class="n warn" style="margin-top:4px">Your vegetable stall is gone, so Manoj chooses the crop now.</div>`:`<div class="n" style="margin-top:4px">Stall preorder: okra 12 kg, spinach 8 kg</div>`}</div>${qb(gone?'':'okra')}${btn('Remove','sand')}</div>`;
+ h+=`<div class="rich" style="min-height:70px"><div class="tx"><b style="font-size:27px">Field 7</b><div class="v">Keep Okra (Okra now) · Keep in store · Every season</div></div>${qb('')}${btn('Remove','sand')}</div>`;
+ return base()+sheet('Manoj','Farm hand · with you for 5 d 11 h',I.person,h,{back:false})}
+const views={
+ crops:{label:'1 · The crop list',ctl:[['stalls','one','One stall'],['stalls','two','Two stalls (a branch)']],
+  notes:[['What to check',['A new row, <b>For your vegetable stall</b>, sits right under <b>Let Manoj choose</b>, with the vegetable he would sow now. It shows only when you have an open vegetable stall.','With a branch there is a row for each stall, named by its place, so you choose which stall he grows for. Each row's ? opens that stall's own working.','Choose goes on to the usual steps: this season only or every season, then the sell step (screen 2).']],
+   ['Why it is here',['You asked for a hand who grows for the stall. Today the stall buys at the mandi what your store lacks; this lets a hand keep it stocked from your own fields.']]],
+  render:cropList},
+ sell:{label:'2 · The sell step',ctl:[],
+  notes:[['What to check',['<b>One way only: Keep in store.</b> No offer, no trader. The line says the stall takes it at 6:00.','The stall takes the crop through its Supply (Automatic takes all it needs, Manual the caps you set), at the day\'s price. That is the hand\'s sale to the stall.','Anything the stall does not take stays in your store for you to sell or use.']]],
+  render:sellStep},
+ hand:{label:'3 · The hand\'s sheet',ctl:[['hand','now','Order in force'],['hand','gone','Stall sold or closed']],
+  notes:[['What to check',['Field 4 reads <b>For your vegetable stall (Okra now)</b>, like <i>Rice now</i> on the other orders, and a line <b>Stall preorder</b>: what the stall will still lack tomorrow, vegetable by vegetable.','The <b>?</b> opens the working (screen 4).','If you sell or close the stall, the order becomes <b>Let Manoj choose</b> by itself at his next sowing, and this line says so. Nothing is lost and the hand never stands idle.']]],
+  render:handSheet},
+ why:{label:'4 · The ? of the pick',ctl:[],
+  notes:[['What to check',['Every number in words: the stall\'s day, its own stock, what your store holds, what is already growing for it, and what it will still need of each vegetable.','No formula shown, only the plain rule for the pick and what happens when nothing fits.']]],
+  render(){return handSheet()+whyCard('okra')}}
+};
+function render(){
+ const v=views[tab];
+ $('#stage').innerHTML=v.render();
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ $('#ctl').innerHTML=(v.ctl&&v.ctl.length?'<span>Show:</span>':'')+(v.ctl||[]).map(c=>`<button data-set="${c[0]}:${c[1]}" aria-pressed="${state[c[0]]===c[1]}">${c[2]}</button>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;render()});
+$('#ctl').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b)return;const [g,v]=b.dataset.set.split(':');state[g]=v;render()});
+$('#stage').addEventListener('click',e=>{const q=e.target.closest('.q[data-why]');if(q&&WHY[q.dataset.why]){tab='why';state.why=q.dataset.why;render()}});
+addEventListener('resize',fit);
+(location.hash.slice(1)||'').split(',').filter(Boolean).forEach(x=>{const [a,b]=x.split(':');if(views[a]&&!b)tab=a;else if(a in state)state[a]=b});
+render();
+</script>
+</body>
+</html>
