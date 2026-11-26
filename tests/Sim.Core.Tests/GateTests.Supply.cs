@@ -6,6 +6,7 @@ using Sim.Core.Commands;
 using Sim.Core.Finance;
 using Sim.Core.Maths;
 using Sim.Core.Definitions;
+using Sim.Core.People;
 using Tools.Balancer;
 
 namespace Sim.Core.Tests
@@ -38,7 +39,7 @@ namespace Sim.Core.Tests
             SimConfig config = LiveTownship();
             int seeds = P3Seeds;
             var failures = new ConcurrentBag<string>();
-            long accepted = 0, flipped = 0;
+            long accepted = 0, flipped = 0, stallOrders = 0;
             long gainSum = 0, towns = 0;
             object gate = new object();
             System.Threading.Tasks.Parallel.For(0, seeds, i =>
@@ -53,22 +54,71 @@ namespace Sim.Core.Tests
                 for (int c = 0; c < 30; c++) if (sim.Execute(SupplyCommand(sim, t, Rng.Next(seed, (RngStream)985, 0, (ulong)c), own)).Accepted) ok++;
                 long gain = Reporting.NetWorth(sim).Total - before;
                 if (gain != 0) failures.Add("seed " + seed + ": net worth moved by " + gain + " in zero time with " + ok + " supply commands");
-                int flips = 0;
+                int flips = 0, stalled = 0;
                 for (int d = 0; d < 3; d++) // flipped every morning
                 {
                     long day = (sim.State.Clock.SimTime / 86_400 + 1) * 86_400;
                     sim.AdvanceTo(day + 5 * 3600 + 1800);
                     for (int c = 0; c < 6; c++) if (sim.Execute(SupplyCommand(sim, sim.State.Clock.SimTime, Rng.Next(seed, (RngStream)986, (ulong)d, (ulong)c), own)).Accepted) flips++;
+                    // A hand told to grow for a stall (US-269, spec 030 §3.6) on a random field, kept in store: books stay exact.
+                    var stalls = StallOrderRules.OpenStalls(sim);
+                    var fields = sim.State.Land.Tiles.Where(x => Land.LandRules.Tillable(x.Terrain) && sim.State.Land.Parcels[x.ParcelId].Owned && sim.State.Businesses.On(x.Id) == null).ToList();
+                    if (stalls.Count > 0 && fields.Count > 0 && sim.State.People != null && sim.State.People.Hands.Count > 0)
+                    {
+                        ulong q = Rng.Next(seed, (RngStream)987, (ulong)d, 0);
+                        var order = OrderSpec.ForStall(fields[(int)Rng.Below(q, (ulong)fields.Count)].Id, stalls[(int)Rng.Below(q + 1, (ulong)stalls.Count)].Id, "none");
+                        if (sim.Execute(new SetStandingOrder(sim.State.Clock.SimTime, sim.State.People.Hands[0].Id, order)).Accepted) stalled++;
+                    }
                     sim.AdvanceTo(day + 8 * 3600);
                 }
                 if (sim.State.Ledger.Reconcile() != null) failures.Add("seed " + seed + ": your ledger");
                 foreach (Business.Business b in sim.State.Businesses.Businesses) if (b.Ledger.Reconcile() != null) failures.Add("seed " + seed + ": business " + b.Id);
-                lock (gate) { accepted += ok; flipped += flips; gainSum += gain; towns++; }
+                lock (gate) { accepted += ok; flipped += flips; stallOrders += stalled; gainSum += gain; towns++; }
             });
-            TestContext.Out.WriteLine("SUPPLY " + towns + " of " + seeds + " towns had a business to set; " + accepted + " zero-time commands accepted, " + flipped + " morning flips; net worth moved " + gainSum + " in zero time");
+            TestContext.Out.WriteLine("SUPPLY " + towns + " of " + seeds + " towns had a business to set; " + accepted + " zero-time commands accepted, " + flipped + " morning flips, " + stallOrders + " stall orders; net worth moved " + gainSum + " in zero time");
             Assert.That(towns, Is.GreaterThan(seeds / 4), "the check really had businesses to set");
             Assert.That(accepted, Is.GreaterThan(towns), "the check really changed the supply");
             Assert.That(failures.OrderBy(f => f, System.StringComparer.Ordinal).ToList(), Is.Empty);
+        }
+
+        /// <summary>
+        /// US-269 (spec 030 §3.6), measured and reported, not asserted: on Township towns with a vegetable stall and a hand, the same town for 20 days with two fields ordered
+        /// for the stall and without. What the stall took from you against what it bought at the mandi, and what the town is worth after.
+        /// </summary>
+        [Test, Category("Balance")]
+        public void StallOrderMeasured()
+        {
+            SimConfig config = LiveTownship();
+            long towns = 0, fromYouWith = 0, fromYouWithout = 0, boughtWith = 0, boughtWithout = 0, worthWith = 0, worthWithout = 0;
+            for (int i = 0; i < 20; i++)
+            {
+                ulong seed = (ulong)(i + 1);
+                Simulation baseSim = Economy.RunBot(config, new TownshipBot(false), 28 + i % 4, seed, null).Sim;
+                var stalls = StallOrderRules.OpenStalls(baseSim);
+                var fields = baseSim.State.Land.Tiles.Where(x => Land.LandRules.Tillable(x.Terrain) && baseSim.State.Land.Parcels[x.ParcelId].Owned && baseSim.State.Businesses.On(x.Id) == null).Take(2).ToList();
+                if (stalls.Count == 0 || fields.Count < 2 || baseSim.State.People == null || baseSim.State.People.Hands.Count == 0) continue;
+                for (int arm = 0; arm < 2; arm++)
+                {
+                    Simulation sim = Simulation.FromState(baseSim.Config, baseSim.State.Clone());
+                    if (arm == 1)
+                        foreach (Land.Tile f in fields) sim.Execute(new SetStandingOrder(sim.State.Clock.SimTime, sim.State.People.Hands[0].Id, OrderSpec.ForStall(f.Id, stalls[0].Id, "none")));
+                    long you = 0, bought = 0;
+                    for (int d = 0; d < 20; d++)
+                    {
+                        sim.AdvanceTo((sim.State.Clock.SimTime / 86_400 + 1) * 86_400 + 12 * 3600);
+                        Business.Business st = sim.State.Businesses.Find(stalls[0].Id);
+                        if (st == null) continue;
+                        you += st.FromYouToday.Sum();
+                        bought += st.BoughtToday.Sum();
+                    }
+                    long worth = Reporting.NetWorth(sim).Total;
+                    if (arm == 1) { fromYouWith += you; boughtWith += bought; worthWith += worth; }
+                    else { fromYouWithout += you; boughtWithout += bought; worthWithout += worth; }
+                }
+                towns++;
+            }
+            TestContext.Out.WriteLine("STALLORDER " + towns + " towns, 20 days: from you " + fromYouWithout / 1000 + " kg without orders, " + fromYouWith / 1000 + " kg with; bought at the mandi " + boughtWithout / 1000 + " kg without, " + boughtWith / 1000 + " kg with; net worth sum " + worthWithout / 100 + " without, " + worthWith / 100 + " with");
+            Assert.That(towns, Is.GreaterThan(0), "the check had towns to measure");
         }
     }
 }

@@ -286,6 +286,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0173 | US-266 as built: one business run by you (`AlreadyRunOne`), a card at load for an older town that runs several (time waits for the answer), no save change |
 | 0174 | US-267 as built: the Businesses hub (totals, a row each with profit, cash, stars and *Needs you*, Take out back to the hub, *See*), the HUD's fourth round button with a badge, no sim or save change |
 | 0175 | US-268 as built: today's supply counted at every path (from you, bought; 6:00 to 6:00), Automatic untouched, Manual caps per good (none, quarter, half, all, fixed kg; the restaurant fixed kg only), a Supply tab, save schema 25 hashed only once used |
+| 0176 | US-269 as built: a hand grows for your vegetable stall (one crop-list row for each open stall, Keep in store only, the stall's preorder steers the pick, gone stall = Let him choose), no new save tag, `ForBusiness` hashed once used |
 
 ## Current status
 

@@ -85,7 +85,7 @@ From one sheet, the player sees every business at a glance (how it's doing, its 
 
 | Rule | Formula or behaviour | Bounds |
 | --- | --- | --- |
-| The order | A field order whose crop is *For your vegetable stall* (crop index `−2`), with the stall's business id; one row in the crop list for each open stall of yours. Every season, like *Let him choose* (the same *this season only* or *every season* step). Seed and fertiliser as any field order. The sell rule is **Keep in store only** (owner, 2026-11-26): the hand never sells it to the trader, and the stall takes it at its 6:00 round by its Supply (Automatic: all it needs; Manual: its caps), which is the hand's sale to the stall at the day's market price | one stall per order |
+| The order | A field order whose crop is *For your vegetable stall* (crop id `stall:<id>`), with the stall's business id; one row in the crop list for each open stall of yours. Every season, like *Let him choose* (the same *this season only* or *every season* step). Seed and fertiliser as any field order. The sell rule is **Keep in store only** (owner, 2026-11-26): the hand never sells it to the trader, and the stall takes it at its 6:00 round by its Supply (Automatic: all it needs; Manual: its caps), which is the hand's sale to the stall at the day's market price | one stall per order |
 | The stall's preorder | What the stall needs tomorrow of each vegetable it sells, worked out when asked and never saved: `max(0, PutOut − its own Stock − your store's free stock − what is growing or standing ready for it)`. *Growing for it* is the expected harvest of the crops on fields whose stall order is this stall's. It shows on the hand's sheet ("Stall preorder: okra 12 kg, spinach 8 kg") | grams, ≥ 0 |
 | The pick, at each sowing | The in-season crops whose good the stall sells (`VegShare > 0`), that `MaySow` on the field and whose seed the cash can pay. Ranked: (1) the biggest unmet preorder; (2) most grams the stall bought at the market over the last `supplyLookbackDays` days; (3) the stall's day's amount (`PutOut`); (4) crop index. The first is sown. Growing crops already count against the preorder, so the fields spread across the vegetables by themselves | – |
 | Nothing fits | No such crop in season or none affordable: he sows his best pick, as *Let him choose* (ADR 0050) | – |
@@ -113,7 +113,7 @@ Optional keys: no key, the frozen golden content stays as it is.
 | `Business` | `FromYouToday`, `BoughtToday` | long[] by good | g; they turn at 6:00 (a lazy roll: the first count or read of a new supply day starts it, so no pass order matters). "Yesterday" is kept only as `BoughtDays` (as built, ADR 0175) |
 | `Business` | `BoughtDays` | list of long[good], newest first, up to `supplyLookbackDays` | g bought on each day before today (the order's ranking, US-269) |
 | `Business` | `SupplyUsed`, `SupplyDay` | bool, long | the state is hashed only once Manual or a cap has been set, so no town that never uses it moves its hash |
-| `StandingOrder` | `ForBusiness` | long | the stall's id for crop `−2`, else 0 |
+| `StandingOrder` | `ForBusiness` | long | the stall's id for an order that grows for it, else 0; its `Crop` stays −1 (the hand's choice), so the fallback to *Let him choose* needs no second path (as built, ADR 0176) |
 
 Older saves load with Automatic, zero counters and no stall orders.
 
@@ -126,7 +126,7 @@ Older saves load with Automatic, zero counters and no stall orders.
 | `KeepRunningYourself` | at, businessId | `UnknownBusiness`; `InvalidArgument` unless it is run by you and you run two or more | the others to *Nobody yet* |
 | `SetSupplyMode` | at, businessId, manual | `UnknownBusiness`; `InvalidArgument` for the mill, dairy and tea stall | sets Automatic or Manual |
 | `SetSupplyCap` | at, businessId, good, share, grams | `UnknownBusiness`; `InvalidArgument` (a good it doesn't take from you, a share not 0/25/50/100, grams not a step) | sets the good's cap (Manual) |
-| `SetStandingOrder` | (unchanged) + `forBusiness` | `InvalidArgument` when crop `−2` without an open vegetable stall of yours | the order |
+| `SetStandingOrder` | (unchanged); the crop id `stall:<id>` carries the stall (as built, ADR 0176) | `InvalidArgument` without an open vegetable stall of yours, or when the sell rule is not Keep in store | the order |
 
 | Event | Payload | Emitted when | Consumers |
 | --- | --- | --- | --- |

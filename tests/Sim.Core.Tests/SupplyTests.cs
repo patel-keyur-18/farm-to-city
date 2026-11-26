@@ -9,7 +9,7 @@ using static Sim.Core.Tests.TestSim;
 namespace Sim.Core.Tests
 {
     /// <summary>Spec 030 §3.4, §3.5 (US-268): today's supply counted at every path, Automatic and Manual, the caps, the commands and schema 25.</summary>
-    public class SupplyTests
+    public partial class SupplyTests
     {
         private static long NextDayAt(Simulation sim, int hour) { return (sim.State.Clock.SimTime / 86_400 + 1) * 86_400 + hour * 3600L; }
 

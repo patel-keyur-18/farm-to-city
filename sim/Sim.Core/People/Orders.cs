@@ -4,6 +4,7 @@ using Sim.Core.Events;
 using Sim.Core.Farm;
 using Sim.Core.Market;
 using Sim.Core.Time;
+using Sim.Core.Business;
 
 namespace Sim.Core.People
 {
@@ -111,6 +112,12 @@ namespace Sim.Core.People
         {
             FarmDefs farm = sim.Config.Game.Farm;
             FertiliserDef fert = farm.Fertilisers[o.Fertiliser];
+            Sim.Core.Business.Business stall = StallOrderRules.Stall(sim, o);
+            if (stall != null) // for your vegetable stall (spec 030 §3.6): the biggest preorder; nothing fits, or the stall is gone: his best pick below
+            {
+                int forStall = StallOrderRules.Pick(sim, (int)o.Target, o.Fertiliser, stall);
+                if (forStall >= 0) return forStall;
+            }
             if (o.Crop >= 0)
             {
                 CropDef own = farm.Crops[o.Crop];
