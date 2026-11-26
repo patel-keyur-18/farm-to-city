@@ -1,6 +1,6 @@
 # 031. Two towns
 
-- Status: In review
+- Status: Approved (the owner, 2026-11-26)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Offline play and saves (save system), UI/UX (settings and saves), Notifications

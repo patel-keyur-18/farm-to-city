@@ -1,6 +1,6 @@
 # 030. The businesses hub, supply between your businesses, and UI fixes
 
-- Status: In review
+- Status: Approved (the owner, 2026-11-26)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Businesses (founding and running), Production chains, UI/UX (HUD, sheets)
