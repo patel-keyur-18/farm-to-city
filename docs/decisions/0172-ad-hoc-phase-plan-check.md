@@ -37,18 +37,30 @@ Phase 3 is closed (ADR 0171) and Phase 4 is not started. The owner asked for one
 11. **Long tab rows scroll sideways** with a fade at the edge (every sheet).
 12. **Badges grow to fit and never wrap** (People, Orders, alerts), capped at "99+". The HUD under an open sheet stays as it is (the owner).
 
+**Spec 031 gaps (the owner, 2026-11-26):**
+
+13. **A notification's tap opens its town** (switching at launch if it isn't the open one).
+14. **Town 2 starts with the same first session** as any new town; the notification ask isn't repeated.
+15. **The town's name on the time card** once a second town exists ("Town 2 · Monsoon · …").
+16. **No removing a town:** New game replaces the open one.
+17. **Two towns in two stories:** US-270 (slots, Your towns, the switch, 5 points) and US-272 (notifications from both, a play log each, 3 points).
+
 ## The plan
 
 | Sprint | Branch | Scope | Specs |
 | --- | --- | --- | --- |
 | 28 | `sprint/28-business-hub` | US-265 UI fixes, US-266 one business run by you, US-267 the Businesses hub, US-268 supply (today's supply, Manual), US-269 *Grow for the vegetable stall* | 030 (written and reviewed first), 031 (written and reviewed in the sprint for Sprint 29) |
-| 29 | `sprint/29-two-towns` | US-270 two towns; US-271 the art inventory and the three samples | 032 (graphics) |
-| 30 onward | `sprint/30-art-…` | The art redesign, one category per story | 032 |
+| 29 | `sprint/29-two-towns` | US-270 and US-272 two towns; US-271 the three samples | 032 (graphics) |
+| 30 | `sprint/30-art-land` | US-273 ground and terrain, US-274 crops, US-275 trees (13 points) | 032 |
+| 31 | `sprint/31-art-people-farm` | US-276 people, US-277 animals and machines, US-278 your farm (16 points) | 032 |
+| 32 | `sprint/32-art-town` | US-279 businesses, US-280 village and town, US-281 icons, US-282 effects (16 points) | 032 |
 
 - **One exception to ADR 0019:** spec 032 is written in Sprint 29, not in the phase's first sprint, because its style can't be fixed before the owner picks from the samples.
 - **Save schema 25** ships once, in Sprint 28 (the supply caps, the day's supply counters, the stall order's business). Sprint 29's two towns need no sim state.
 - **Goldens must not move.** The new rule only refuses; the new state is empty by default; no bot gives the new order or sets Manual. A golden that moves comes back to the owner.
 - Each story ends at the owner's review; every screen is previewed as an exact-looking artifact before its UI code.
+
+**The art inventory (2026-11-26, [docs/art/inventory.md](../art/inventory.md)):** 605 Blender sprites in ten categories (ground 48, crops 69, trees 22, people 137, animals and machines 18, your farm 50, businesses 93, village 85, icons 76, effects 7) and eight kinds drawn in code (sky, weather, shadow, ring, lit acre, guide arrow, overlays, the UI). The redesign is ten stories, about 45 points over Sprints 30–32, sized again after the samples.
 
 ## Consequences
 

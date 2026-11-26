@@ -39,7 +39,7 @@
 | E18 | Wealth and politics | 4 | Investments, elections with council mood, town identity, districts, public debt and trade with other cities. | [F18.1](features/F18.1-investments.md), [F18.2](features/F18.2-elections-and-council-mood.md), [F18.3](features/F18.3-town-identity-and-districts.md), [F18.4](features/F18.4-public-debt-and-conflicts-of-interest.md), [F18.5](features/F18.5-trade-with-other-cities.md) | 24 |
 | E19 | Polish and release readiness | 5 | Hindi, accessibility, the Blender art pipeline, scenarios and difficulty modes; store readiness if the owner decides. | [F19.1](features/F19.1-hindi-localisation.md), [F19.2](features/F19.2-accessibility.md), [F19.3](features/F19.3-art-pipeline.md), [F19.6](features/F19.6-audio-and-music.md), [F19.4](features/F19.4-scenarios-and-difficulty.md), [F19.5](features/F19.5-store-readiness-deferred.md) | 48 |
 | E20 | Balancing and quality | 0–5 | The headless balancer, bots and health checks that gate every phase (ADR 0016). | [F20.1](features/F20.1-balancer-and-health-checks.md) | 22 |
-| E21 | Ad hoc UX | 3.5 | The owner's UX requests before Phase 4 (ADR 0172): UI fixes, a businesses hub, supply between businesses, two towns, a graphics redesign. | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md), [F21.2](features/F21.2-supply-between-businesses.md), [F21.3](features/F21.3-two-towns.md), [F21.4](features/F21.4-graphics-redesign.md) | 32 |
+| E21 | Ad hoc UX | 3.5 | The owner's UX requests before Phase 4 (ADR 0172): UI fixes, a businesses hub, supply between businesses, two towns, a graphics redesign. | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md), [F21.2](features/F21.2-supply-between-businesses.md), [F21.3](features/F21.3-two-towns.md), [F21.4](features/F21.4-graphics-redesign.md) | 77 |
 
 ## Features
 
@@ -132,8 +132,8 @@
 | [F19.5](features/F19.5-store-readiness-deferred.md) | Store readiness (deferred) | E19 | 5 | To write at the start of Phase 5 | Backlog | US-176–US-176 | 8 |
 | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | UI fixes and the businesses hub | E21 | 3.5 | Spec 030 | In progress | US-265–US-267 | 11 |
 | [F21.2](features/F21.2-supply-between-businesses.md) | Supply between your businesses | E21 | 3.5 | Spec 030 | Backlog | US-268–US-269 | 10 |
-| [F21.3](features/F21.3-two-towns.md) | Two towns | E21 | 3.5 | Spec 031 | Backlog | US-270 | 8 |
-| [F21.4](features/F21.4-graphics-redesign.md) | Graphics redesign | E21 | 3.5 | Spec 032 | Backlog | US-271 | 3 |
+| [F21.3](features/F21.3-two-towns.md) | Two towns | E21 | 3.5 | Spec 031 | Backlog | US-270, US-272 | 8 |
+| [F21.4](features/F21.4-graphics-redesign.md) | Graphics redesign | E21 | 3.5 | Spec 032 | In progress | US-271, US-273–US-282 | 48 |
 
 ## Conventions (ADR 0025)
 

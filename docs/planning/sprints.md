@@ -1257,7 +1257,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 - **Branch:** `sprint/28-business-hub`, from `main` after PR #38 (`5e5a4301`)
 - **Goal:** Every business at a glance from one button, with its money and its supply; only one business run by you; what you send your businesses from your farm is yours to set, and a hand grows for the vegetable stall; the HUD and sheets never cut or wrap. Save schema 25 ships once, with a fixture. Goldens don't move.
 - **Points:** 21 = US-265 3, US-266 3, US-267 5, US-268 5, US-269 5
-- **Specs to write and review:** spec 030 (this sprint's stories, first), spec 031 (two towns, for Sprint 29)
+- **Specs to write and review:** spec 030 (this sprint's stories) and spec 031 (two towns, for Sprint 29), both reviewed before any code
 - **Device build:** Yes: a Development build at the sprint's end
 - **Milestone and labels:** `Phase 3.5 · Ad hoc`; `type:feature`, `type:spec`, `type:adr`; `area:sim`, `area:content`, `area:ui`, `area:tooling`; `documentation`
 
@@ -1269,4 +1269,13 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-268 | Today's supply, Automatic or Manual | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Must | Backlog |
 | US-269 | Grow for the vegetable stall | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Should | Backlog |
 
-**Next sprints (ADR 0172):** Sprint 29 `sprint/29-two-towns` (US-270 two towns, US-271 the art inventory and samples, spec 032); Sprint 30 onward the art redesign.
+**Next sprints (ADR 0172; detailed before Sprint 28's code, 2026-11-26):**
+
+| Sprint | Branch | Stories | Points | Spec |
+| --- | --- | --- | --- | --- |
+| 29 | `sprint/29-two-towns` | US-270 two towns: slots, Your towns, the switch (5); US-272 notifications from both, a play log each (3); US-271 the three samples and spec 032 (3) | 11 | 031 (approved with 030), 032 (written after the pick) |
+| 30 | `sprint/30-art-land` | US-273 ground and terrain (5), US-274 crops and garden (5), US-275 trees and orchards (3) | 13 | 032 |
+| 31 | `sprint/31-art-people-farm` | US-276 people and portraits (8), US-277 animals and machines (3), US-278 your farm (5) | 16 | 032 |
+| 32 | `sprint/32-art-town` | US-279 businesses and stalls (5), US-280 village and town (5), US-281 icons (3), US-282 effects (3) | 16 | 032 |
+
+The art stories are sized from the inventory ([docs/art/inventory.md](../art/inventory.md)) and sized again once the samples set the style. Each art sprint ends with a Development build and both frame-time p95s on the iPhone (ADR 0172 §8).
