@@ -1253,7 +1253,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 ## Sprint 28 · Phase 3.5 · Ad hoc (UI fixes, one business run by you, the Businesses hub, supply between your businesses; specs 030 and 031; ADR 0172)
 
-- **Status:** Built and approved story by story 2026-11-26 (US-265 to US-269); the independent Opus 5.5 review done and its fixes made (ADR 0177); the checklist is `docs/test-checklists/s28-business-hub-supply.md`; no pull request or Development build yet (the owner decides when). Started 2026-11-25. **Plan approved by the owner 2026-11-25** (ADR 0172, every gap closed one per message).
+- **Status:** Built and approved story by story 2026-11-26 (US-265 to US-269); the independent Opus 5.5 review done and its fixes made (ADR 0177); the checklist is `docs/test-checklists/s28-business-hub-supply.md`; pull request #39 open for the owner to merge; no Development build yet (the owner will ask). Started 2026-11-25. **Plan approved by the owner 2026-11-25** (ADR 0172, every gap closed one per message).
 - **Branch:** `sprint/28-business-hub`, from `main` after PR #38 (`5e5a4301`)
 - **Goal:** Every business at a glance from one button, with its money and its supply; only one business run by you; what you send your businesses from your farm is yours to set, and a hand grows for the vegetable stall; the HUD and sheets never cut or wrap. Save schema 25 ships once, with a fixture. Goldens don't move.
 - **Points:** 21 = US-265 3, US-266 3, US-267 5, US-268 5, US-269 5
