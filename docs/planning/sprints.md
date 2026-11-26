@@ -1263,7 +1263,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 
 | Story | Title | Feature | Points | Priority | Status |
 | --- | --- | --- | --- | --- | --- |
-| US-265 | UI fixes: Collect all, tabs, badges, overflow check | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 3 | Must | Backlog |
+| US-265 | UI fixes: Collect all, tabs, badges, overflow check | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 3 | Must | Built 2026-11-26, awaiting review |
 | US-266 | One business run by you | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 3 | Must | Backlog |
 | US-267 | The Businesses hub | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | 5 | Must | Backlog |
 | US-268 | Today's supply, Automatic or Manual | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Must | Backlog |

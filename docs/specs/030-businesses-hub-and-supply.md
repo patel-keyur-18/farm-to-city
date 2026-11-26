@@ -45,7 +45,7 @@ From one sheet, the player sees every business at a glance (how it's doing, its 
 | --- | --- |
 | Collect all | Shown only when `ReadyCount > 0`; it appears with the HUD's pop when something becomes ready and goes when the last is collected. Dadi's first-return letter ("Tap Collect all…") is unchanged: it is only shown when something is ready. |
 | Tab rows | A tab row wider than its sheet scrolls sideways (touch drag), with a 60-unit fade at each edge that has more; the showing tab is scrolled into view when the sheet opens. Tabs size to their words (no 260 minimum). Same strip on every sheet. |
-| Badges | A badge is a circle for one digit and a pill for two or more (height 54, padding 14), text never wraps; 100 or more shows "99+". People, Orders and the alerts bell. |
+| Badges | A badge is a circle for one digit and a pill for two or more (height 54, padding 12), text never wraps; 100 or more shows "99+". People, Orders and the alerts bell. |
 | Overflow check | An Editor tool opens every sheet the game can open (from a scripted town at each era) and lists any element whose box leaves its sheet's or any label whose text is cut; the list is fixed to empty before the story is done. |
 
 ### 3.3 The Businesses hub (US-267; view only)

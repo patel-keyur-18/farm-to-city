@@ -138,11 +138,11 @@ namespace Game.Editor
             return new Vector2(r.center.x * k, height - r.center.y * k);
         }
 
-        /// <summary>The first ScrollView's vertical offset, to check that a finger drag scrolled it.</summary>
+        /// <summary>The sheet's vertical ScrollView's offset, to check that a finger drag scrolled it.</summary>
         public static float ScrollOffset()
         {
             UIDocument doc = Object.FindFirstObjectByType<UIDocument>();
-            ScrollView s = doc == null ? null : doc.rootVisualElement.Q<ScrollView>();
+            ScrollView s = doc == null ? null : doc.rootVisualElement.Q<ScrollView>(Game.Presentation.Ui.SheetPresenter.SheetScroll);
             return s == null ? -1f : s.scrollOffset.y;
         }
 

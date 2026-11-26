@@ -485,5 +485,8 @@
   {"label":"US-259","view":"all","date":"2026-11-24","drawCalls":1254,"batches":1254,"setPassCalls":12,"triangles":32056,"visibleSprites":1509,"sprites":2402},
   {"label":"Sprint 26 final","view":"all","date":"2026-11-24","drawCalls":1167,"batches":1167,"setPassCalls":12,"triangles":23654,"visibleSprites":1424,"sprites":2314},
   {"label":"Sprint 26 final","view":"village","date":"2026-11-24","drawCalls":523,"batches":523,"setPassCalls":10,"triangles":10496,"visibleSprites":617,"sprites":2314},
-  {"label":"Sprint 26 final","view":"farm","date":"2026-11-24","drawCalls":391,"batches":391,"setPassCalls":9,"triangles":7426,"visibleSprites":436,"sprites":2314}
+  {"label":"Sprint 26 final","view":"farm","date":"2026-11-24","drawCalls":391,"batches":391,"setPassCalls":9,"triangles":7426,"visibleSprites":436,"sprites":2314},
+  {"label":"US-265 UI fixes","view":"all","date":"2026-11-26","drawCalls":1184,"batches":1184,"setPassCalls":12,"triangles":23758,"visibleSprites":1536,"sprites":2241},
+  {"label":"US-265 UI fixes","view":"village","date":"2026-11-26","drawCalls":546,"batches":546,"setPassCalls":10,"triangles":11117,"visibleSprites":646,"sprites":2241},
+  {"label":"US-265 UI fixes","view":"farm","date":"2026-11-26","drawCalls":339,"batches":339,"setPassCalls":9,"triangles":6600,"visibleSprites":378,"sprites":2241}
 ]

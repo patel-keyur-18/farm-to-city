@@ -167,6 +167,7 @@ namespace Game.Presentation.Ui
             alertBadge.style.justifyContent = Justify.Center;
             _alertCount = UiKit.Text("", 30, Color.white, UiKit.Heading);
             alertBadge.Add(_alertCount);
+            UiKit.FitBadge(alertBadge, _alertCount, 50);
             _alerts.Add(alertBadge);
             _alerts.RegisterCallback<ClickEvent>(_ => { if (OnAlerts != null) OnAlerts(); });
             _alerts.style.display = DisplayStyle.None;
@@ -239,6 +240,7 @@ namespace Game.Presentation.Ui
             _badge.style.justifyContent = Justify.Center;
             _badgeText = UiKit.Text("", 32, Color.white, UiKit.Heading);
             _badge.Add(_badgeText);
+            UiKit.FitBadge(_badge, _badgeText, 54);
             _badge.style.display = DisplayStyle.None;
             _people.Add(_badge);
             _people.RegisterCallback<PointerDownEvent>(_ => _people.style.scale = new Scale(new Vector3(0.92f, 0.92f, 1f)));
@@ -268,6 +270,7 @@ namespace Game.Presentation.Ui
             _ordersBadge.style.justifyContent = Justify.Center;
             _ordersBadgeText = UiKit.Text("", 32, Color.white, UiKit.Heading);
             _ordersBadge.Add(_ordersBadgeText);
+            UiKit.FitBadge(_ordersBadge, _ordersBadgeText, 54);
             _ordersBadge.style.display = DisplayStyle.None;
             _orders.Add(_ordersBadge);
             _orders.RegisterCallback<ClickEvent>(_ => { if (OnOrders != null) OnOrders(); });
@@ -401,7 +404,7 @@ namespace Game.Presentation.Ui
                 bool newUrgent = hud.AlertUrgent && !_urgentShown && _alertsShown >= 0;
                 _alertsShown = hud.AlertCount;
                 _urgentShown = hud.AlertUrgent;
-                _alertCount.text = hud.AlertCount.ToString();
+                _alertCount.text = HudVm.BadgeText(hud.AlertCount);
                 _alerts.style.display = hud.AlertCount > 0 ? DisplayStyle.Flex : DisplayStyle.None;
                 _alerts.style.backgroundColor = hud.AlertUrgent ? UiKit.Red : UiKit.Sand;
                 UiKit.Border(_alerts, 5, hud.AlertUrgent ? UiKit.RedDark : UiKit.SandDark);
@@ -431,7 +434,7 @@ namespace Game.Presentation.Ui
             {
                 bool popped = hud.PeopleBadge > _badgeShown && _badgeShown >= 0 && animate;
                 _badgeShown = hud.PeopleBadge;
-                _badgeText.text = hud.PeopleBadge.ToString();
+                _badgeText.text = HudVm.BadgeText(hud.PeopleBadge);
                 _badge.style.display = hud.PeopleBadge > 0 ? DisplayStyle.Flex : DisplayStyle.None;
                 if (popped) Bounce(_people);
             }
@@ -441,12 +444,14 @@ namespace Game.Presentation.Ui
             {
                 bool popped = hud.OrdersBadge > _ordersShown && _ordersShown >= 0 && animate;
                 _ordersShown = hud.OrdersBadge;
-                _ordersBadgeText.text = hud.OrdersBadge.ToString();
+                _ordersBadgeText.text = HudVm.BadgeText(hud.OrdersBadge);
                 _ordersBadge.style.display = hud.OrdersBadge > 0 ? DisplayStyle.Flex : DisplayStyle.None;
                 if (popped) Bounce(_orders);
             }
 
-            bool enabled = hud.ReadyCount > 0;
+            bool enabled = hud.ShowCollect;
+            _collectHolder.style.display = enabled ? DisplayStyle.Flex : DisplayStyle.None; // only with something to collect (spec 030 §3.2)
+            _alerts.style.bottom = enabled ? 150 : 28; // the bell sits above Collect all, or in its corner when that is hidden
             if (_readyShown != hud.ReadyCount || _collectEnabled != enabled || _collect == null)
             {
                 _readyShown = hud.ReadyCount;
@@ -456,7 +461,7 @@ namespace Game.Presentation.Ui
                 _collect.style.minWidth = 380;
                 _collect.style.marginTop = 0;
                 _collectHolder.Add(_collect);
-                _collectHolder.pickingMode = PickingMode.Position;
+                _collectHolder.pickingMode = enabled ? PickingMode.Position : PickingMode.Ignore;
             }
         }
 

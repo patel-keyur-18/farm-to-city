@@ -33,6 +33,12 @@ namespace Sim.View.Views
         public int ReadyCount { get; internal set; }
         public string CollectText { get; internal set; }
 
+        /// <summary>Collect all is on screen only when something is ready (spec 030 §3.2).</summary>
+        public bool ShowCollect { get { return ReadyCount > 0; } }
+
+        /// <summary>A button badge's number: the count, or "99+" from 100 (spec 030 §3.2).</summary>
+        public static string BadgeText(int count) { return count > 99 ? "99+" : count.ToString(); }
+
         /// <summary>The current weather run and the next: "Sun until 14:00 · then heavy rain about 1 h" (ADR 0043 §2).</summary>
         public string ForecastText { get; internal set; }
 
