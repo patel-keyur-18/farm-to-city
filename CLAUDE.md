@@ -288,6 +288,9 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0175 | US-268 as built: today's supply counted at every path (from you, bought; 6:00 to 6:00), Automatic untouched, Manual caps per good (none, quarter, half, all, fixed kg; the restaurant fixed kg only), a Supply tab, save schema 25 hashed only once used |
 | 0176 | US-269 as built: a hand grows for your vegetable stall (one crop-list row for each open stall, Keep in store only, the stall's preorder steers the pick, gone stall = Let him choose), no new save tag, `ForBusiness` hashed once used |
 | 0177 | Sprint 28 independent review (Opus 5.5): no blocker; a stall order waits when the stall needs nothing more (owner's choice), the supply *Why?* prices and the profit rows corrected, the coverage test widened, docs and spec brought in line; two items flagged |
+| 0178 | US-270 two towns as built: two slots (`Saves/`, `Saves/town2/`), Your towns in Settings, the switch loads the target first and an unreadable one leaves the open town as it is, the town's name on the time card, a summary beside each save |
+| 0179 | US-272 notifications from both towns as built: the leaving town's plan kept in `notes.json`, merged by importance then time, past-due urgent and needs-you notes sent once, town names in titles, a tap opens its town, a switch drops the old town's cards |
+| 0180 | US-271 the graphics direction: a realistic valley (Option B: baked shadows on buildings only, kept short, as their own sprites), default zoom 3 acres across, people 6 heads tall, a device check first, the UI restyled after the map in spec 033; spec 032 plans 55 points over Sprints 30 to 33 |
 
 ## Current status
 

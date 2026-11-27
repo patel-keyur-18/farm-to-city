@@ -1,6 +1,6 @@
 # 032. Graphics redesign: a realistic valley
 
-- Status: In review
+- Status: Approved (the owner, 2026-11-27)
 - Author: Claude
 - Reviewer: Keyur Patel
 - GDD sections: Art direction, Camera and map, Weather and the day's light
