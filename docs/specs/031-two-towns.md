@@ -31,7 +31,7 @@ One player keeps two towns on one phone and plays a second strategy beside the f
 | Each town's own | Its save and backups, its clock (its own `LastWallUtc`: time passes for it while you play the other, and catches up when you open it, capped at 72 h like a closed app, ADR 0002), its away card, its guide and letters, its play log, its camera position. |
 | Shared | Settings (notifications on or off, play log on or off, text size, reduced motion, sound, haptics, number format), the notification permission and its ask (asked once for the phone). |
 | Start a second town | From an empty slot: saves the open town, then makes a new town in Town 2 exactly as a first game (the same inheritance, the first session, Dadi's letters, ADR 0172 gap 2); the notification ask isn't repeated. |
-| Switch | A confirm card ("Switch to Town 2? Town 1 is saved and keeps its time"). Then: save the open town; plan its notifications (§3.1) and keep them; write its play log and camera; load the other town (its recovery and unreadable cards as at launch); the first Sync is its away advance, with its away card; the run-two card (spec 030) if it applies. A veil with "Opening Town 2…" covers the load. |
+| Switch | A confirm card ("Switch to Town 2? Town 1 is saved and keeps its time"). Then: save the open town; plan its notifications (§3.1) and keep them; write its play log and camera; load the other town (its recovery and unreadable cards as at launch); the first Sync is its away advance, with its away card; the run-two card (spec 030) if it applies. A veil with "Opening Town 2…" covers the load. **The target is loaded first** (before the open town is torn down): if it can't be read (save and every backup bad), nothing changes, the open town stays, the usual *Unreadable* card shows (the bad file kept and copied to Documents), and the slot is empty again so Settings offers *Start a second town* (owner, 2026-11-27). |
 | Town name on the HUD | With two towns, the time card's top line starts with the name: "Town 2 · Monsoon · 2 days left · Year 1". With one, as today. |
 | New game | Replaces the open town only (the card names it: "Replaces Town 2 for good"), offering an export first, as today. |
 | Export | The open town, the file named with it: `FarmToCity-Town2-2026-11-26-1430.ftc`. |
@@ -45,7 +45,8 @@ One player keeps two towns on one phone and plays a second strategy beside the f
 | --- | --- |
 | The open town | Planned when the app goes to the background, as today (`NotificationPlanner.Plan`). |
 | The other town | Planned once when you leave it (at a switch), from its own simulated absence, and kept in `Saves/town<n>/notes.json` (wall times, kinds, words). Nothing changes that town until it is opened again, so the plan stays right. Opening it deletes its kept plan. |
-| Scheduling | At each backgrounding: the open town's plan plus the other's kept plan, merged by time; iOS's 64 pending (`maxPending`) are the soonest 64. Quiet hours apply to both. |
+| Scheduling | At each backgrounding: the open town's plan plus the other's kept plan, merged. Over iOS's 64 pending (`maxPending`) the same rule as one town (ADR 0041) keeps the most important first (urgent, needs you, information; soonest first within each) and schedules them in time order (owner, 2026-11-27; this amends the first draft's "soonest 64"). Kept notes whose time has already passed are dropped at the merge (iOS would fire them at once). Quiet hours apply to both. |
+| Kept even when off | The leaving town's plan is always planned and kept at a switch, whether notifications are on or not; the toggle only decides whether anything is scheduled. Turning them on later then covers the other town too. |
 | Words | With two towns, each title starts with its town: "Town 2 · Your wheat is ready". With one, as today. |
 | A tap | Opens the town the notification came from (its id is in the notification's data). If it isn't the open one, the app switches to it at launch, with a toast "Town 2". |
 | Turned off | Notifications off: none for either town. |
@@ -130,7 +131,8 @@ None: no sim change.
 
 ## 10. Open questions
 
-- None open: gaps closed with the owner (ADR 0172 §4–§5; spec 031 gaps 1–4, 2026-11-26: a tap opens its town, Town 2 starts with the first session, the name on the time card with two towns, no remove).
+- None open: gaps closed with the owner (ADR 0172 §4–§5; spec 031 gaps 1–4, 2026-11-26: a tap opens its town, Town 2 starts with the first session, the name on the time card with two towns, no remove; gaps 5–6, 2026-11-27, Sprint 29's plan check: a switch to an unreadable town stays in the open town, merged plans keep importance first).
+- Implementation calls (no owner decision needed): `SaveServiceTests` link `SaveService.cs` into `Sim.Core.Tests` (it uses only `System.IO` and `Sim.Core`); a missing `summary.json` falls back to the save's header (saved-at, no era); *Start a second town* has no confirm card (nothing is lost; the veil covers it).
 
 ## 11. Cut first
 
