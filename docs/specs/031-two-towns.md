@@ -67,7 +67,7 @@ One player keeps two towns on one phone and plays a second strategy beside the f
 
 ## 5. Commands and events
 
-No sim commands. Settings actions (presentation ids, like *Save now*): `town.switch:<n>`, `town.start2`.
+No sim commands. Settings actions (presentation ids, like *Save now*): `townSwitch:<n>`, `townStart`.
 
 ## 6. Decision card
 
@@ -114,9 +114,9 @@ Previews of 7.1 and 7.2 (exact-looking artifacts) come before their UI code.
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
 | AC-1 | Given one town, Settings shows it and *Start a second town*; starting it saves Town 1 and opens a new town with the first session | `TownSlotTests.StartSecond` (Editor), `SettingsViewTests.Towns` |
-| AC-2 | Given two towns, a switch saves the open one and opens the other with its away card; switching back finds the first exactly as saved, plus its time away | `TownSlotTests.SwitchRoundTrip` |
-| AC-3 | A town left more than 72 h catches up 72 h, as a closed app | `TownSlotTests.AwayCap` |
-| AC-4 | Town 1's backups, recovery and New game never touch Town 2's folder, and the reverse | `SaveServiceTests.SlotsApart` |
+| AC-2 | Given two towns, a switch saves the open one and opens the other with its away card; switching back finds the first exactly as saved, plus its time away | `TownSlotTests.SwitchRoundTrip` (in `Game.Services.Tests`) |
+| AC-3 | A town left more than 72 h catches up 72 h, as a closed app | `TownSlotTests.AwayCap` (in `Game.Services.Tests`) |
+| AC-4 | Town 1's backups, recovery and New game never touch Town 2's folder, and the reverse | `SaveServiceTests.SlotsApart` (in `Game.Services.Tests`) |
 | AC-5 | An existing player's Town 1 loads from today's folder unchanged | `SaveServiceTests.TownOneInPlace` |
 | AC-6 | With two towns the time card and notification titles start with the town's name; with one, they don't | `HudViewTests.TownName`, `NotificationTextTests.TownName` |
 | AC-7 | Backgrounding schedules the open town's plan and the other's kept plan, merged, at most 64 | `NotificationMergeTests.Merge` |
@@ -132,7 +132,7 @@ None: no sim change.
 ## 10. Open questions
 
 - None open: gaps closed with the owner (ADR 0172 §4–§5; spec 031 gaps 1–4, 2026-11-26: a tap opens its town, Town 2 starts with the first session, the name on the time card with two towns, no remove; gaps 5–6, 2026-11-27, Sprint 29's plan check: a switch to an unreadable town stays in the open town, merged plans keep importance first).
-- Implementation calls (no owner decision needed): `SaveServiceTests` link `SaveService.cs` into `Sim.Core.Tests` (it uses only `System.IO` and `Sim.Core`); a missing `summary.json` falls back to the save's header (saved-at, no era); *Start a second town* has no confirm card (nothing is lost; the veil covers it).
+- Implementation calls (no owner decision needed): `SaveServiceTests` run the real `SaveService.cs`, linked into a new `Game.Services.Tests` project (it uses only `System.IO` and `Sim.Core`; its `Game.Services` namespace would shadow `Sim.Core.Tests`' `Game(...)` helper, so it has a project of its own); a missing `summary.json` falls back to the save's header (saved-at, no era); *Start a second town* has no confirm card (nothing is lost; the veil covers it).
 
 ## 11. Cut first
 

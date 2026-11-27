@@ -500,5 +500,8 @@
   {"label":"US-268","view":"farm","date":"2026-11-26","drawCalls":328,"batches":328,"setPassCalls":9,"triangles":6594,"visibleSprites":367,"sprites":2236},
   {"label":"US-269","view":"all","date":"2026-11-26","drawCalls":1282,"batches":1282,"setPassCalls":11,"triangles":25633,"visibleSprites":1636,"sprites":2294},
   {"label":"US-269","view":"village","date":"2026-11-26","drawCalls":566,"batches":566,"setPassCalls":9,"triangles":11624,"visibleSprites":676,"sprites":2294},
-  {"label":"US-269","view":"farm","date":"2026-11-26","drawCalls":353,"batches":353,"setPassCalls":8,"triangles":7331,"visibleSprites":398,"sprites":2294}
+  {"label":"US-269","view":"farm","date":"2026-11-26","drawCalls":353,"batches":353,"setPassCalls":8,"triangles":7331,"visibleSprites":398,"sprites":2294},
+  {"label":"US-270","view":"all","date":"2026-11-27","drawCalls":1293,"batches":1282,"setPassCalls":11,"triangles":37330,"visibleSprites":1636,"sprites":2293},
+  {"label":"US-270","view":"village","date":"2026-11-27","drawCalls":576,"batches":565,"setPassCalls":9,"triangles":16247,"visibleSprites":675,"sprites":2293},
+  {"label":"US-270","view":"farm","date":"2026-11-27","drawCalls":364,"batches":353,"setPassCalls":8,"triangles":10638,"visibleSprites":398,"sprites":2293}
 ]

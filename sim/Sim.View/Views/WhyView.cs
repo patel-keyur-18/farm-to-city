@@ -75,7 +75,7 @@ namespace Sim.View.Views
             // The truck and supermarket orders (spec 011).
             { "orderPrice", OrderPrice }, { "owed", Owed }, { "truck", Truck }, { "truckRoom", TruckRoom },
             // Time and weather (spec 001).
-            { "calendar", CalendarWhy }, { "forecast", Forecast }, { "saved", Saved }, { "importFiles", ImportFiles }, { "playLog", PlayLogWhy }, { "textSize", TextSize },
+            { "calendar", CalendarWhy }, { "forecast", Forecast }, { "saved", Saved }, { "importFiles", ImportFiles }, { "town", TownRow }, { "townStart", TownStart }, { "playLog", PlayLogWhy }, { "textSize", TextSize },
             // The founder (spec 003).
             { "labour", Labour }, { "health", Health }, { "fatigue", Fatigue }, { "diet", Diet }, { "hours", WorkHoursWhy },
             { "dayLabour", DayLabour }, { "medicine", Medicine },

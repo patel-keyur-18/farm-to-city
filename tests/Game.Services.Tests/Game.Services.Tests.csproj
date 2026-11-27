@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- C# 9 is for sim/ only (Unity). Tests never ship to Unity. -->
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Game.Services.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="NUnit" Version="4.6.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.3.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The Unity side's save slots (spec 031): plain System.IO over Sim.Core, so the tests run the real class. It lives in its own test
+         project because its namespace (Game.Services) would shadow the `Game(...)` helper that Sim.Core.Tests imports. -->
+    <Compile Include="..\..\unity\FarmToCity\Assets\Game\Services\SaveService.cs" Link="Linked\SaveService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\sim\Sim.Core\Sim.Core.csproj" />
+    <ProjectReference Include="..\..\sim\Sim.Content\Sim.Content.csproj" />
+  </ItemGroup>
+</Project>

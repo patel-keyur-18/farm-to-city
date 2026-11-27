@@ -62,6 +62,9 @@ namespace Game.Services
     {
         public const string Extension = ".ftc";
 
+        /// <summary>The slots: two towns on one phone (spec 031, ADR 0172 §5). A constant, not content.</summary>
+        public const int Slots = 2;
+
         private readonly FileStore _store;
         private readonly SavePoints _points;
         private readonly AutosavePolicy _policy;
@@ -69,25 +72,55 @@ namespace Game.Services
         public string Documents { get; }
         public long LastSavedWallUtc { get; private set; }
 
-        public SaveService(string savesFolder, string documentsFolder, SaveDef def)
+        /// <summary>1 or 2: which town this service keeps.</summary>
+        public int Slot { get; }
+
+        /// <summary>This town's folder: Town 1 in the saves folder itself (where it has always been), Town 2 in <c>town2/</c> inside it.</summary>
+        public string Folder { get; }
+
+        public SaveService(string savesFolder, string documentsFolder, SaveDef def, int slot = 1)
         {
-            _store = new FileStore(savesFolder);
+            Slot = slot;
+            Folder = FolderFor(savesFolder, slot);
+            _store = new FileStore(Folder);
             _points = new SavePoints(_store, def);
             _policy = new AutosavePolicy(def);
             Documents = documentsFolder;
             Directory.CreateDirectory(documentsFolder);
         }
 
+        /// <summary>Town 1 stays in today's folder, so an existing player's town doesn't move; each other slot has its own folder inside it (spec 031 §3).</summary>
+        public static string FolderFor(string savesFolder, int slot) { return slot == 1 ? savesFolder : Path.Combine(savesFolder, "town" + slot); }
+
+        /// <summary>True when that slot has a town (a save or a backup), without creating its folder.</summary>
+        public static bool SlotHasTown(string savesFolder, int slot)
+        {
+            string dir = FolderFor(savesFolder, slot);
+            if (!Directory.Exists(dir)) return false;
+            foreach (string f in Directory.GetFiles(dir))
+            {
+                string n = Path.GetFileName(f);
+                if (n == SavePoints.Latest || n.StartsWith("town.hourly.", StringComparison.Ordinal) || n.StartsWith("town.daily.", StringComparison.Ordinal)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>The town's play log file (spec 031 §3.2): one in each town's own folder.</summary>
+        public string PlayLogPath { get { return Path.Combine(Folder, "playlog.jsonl"); } }
+
+        /// <summary>The name a town's files carry in Documents: "Town2" (Town 1's too, so an export always says which town it is).</summary>
+        public string TownTag { get { return "Town" + Slot; } }
+
         /// <summary>Loads the town (or a backup). An unreadable town is kept, and a copy is put in Documents so it can be exported.</summary>
         public LoadOutcome Load(SimConfig config, long nowWallUtc, int utcOffsetMinutes)
         {
             LoadOutcome o = _points.LoadNewestValid(config, nowWallUtc + utcOffsetMinutes * 60L);
-            if (o.KeptAs != null) File.WriteAllBytes(Path.Combine(Documents, o.KeptAs), _store.Read(o.KeptAs));
+            if (o.KeptAs != null) File.WriteAllBytes(Path.Combine(Documents, Slot == 1 ? o.KeptAs : TownTag + "-" + o.KeptAs), _store.Read(o.KeptAs));
             // A town from an older build is upgraded as it loads; its file as it was goes to Documents first (the Files app shows
             // it), once per schema, so a week of play is never lost to an upgrade (owner, Sprint 12).
             if (o.State != null && o.Schema < SaveCodec.SchemaVersion)
             {
-                string copy = Path.Combine(Documents, "FarmToCity-before-update-schema" + o.Schema + Extension);
+                string copy = Path.Combine(Documents, "FarmToCity-before-update-" + (Slot == 1 ? "" : TownTag + "-") + "schema" + o.Schema + Extension);
                 if (!File.Exists(copy)) File.WriteAllBytes(copy, _store.Read(o.File));
             }
             if (o.State != null) LastSavedWallUtc = o.SavedAtWallUtc;
@@ -95,12 +128,23 @@ namespace Game.Services
             return o;
         }
 
-        public int Save(GameState state, SimConfig config, long nowWallUtc, ulong contentFingerprint)
+        public int Save(GameState state, SimConfig config, long nowWallUtc, ulong contentFingerprint, TownSummary summary = null)
         {
             byte[] bytes = _points.Save(state, config, nowWallUtc, contentFingerprint);
             LastSavedWallUtc = nowWallUtc;
             _policy.Saved(nowWallUtc);
+            if (summary != null) File.WriteAllText(Path.Combine(Folder, TownSummary.FileName), summary.ToJson()); // beside the save, never part of it (spec 031 §3)
             return bytes.Length;
+        }
+
+        /// <summary>What this town's row on Settings shows, from <c>summary.json</c>; without one, from the save's header (saved-at only, no era).</summary>
+        public TownSummary ReadSummary()
+        {
+            string path = Path.Combine(Folder, TownSummary.FileName);
+            TownSummary s = File.Exists(path) ? TownSummary.Parse(File.ReadAllText(path)) : null;
+            if (s != null) return s;
+            SaveHeader h = _store.Exists(SavePoints.Latest) ? SaveCodec.ReadHeader(_store.Read(SavePoints.Latest)) : null;
+            return h == null ? null : new TownSummary(null, (int)(h.SimTime / 86400) + 1, TownSummary.Unknown, h.SavedAtWallUtc);
         }
 
         public void OnCommand(long nowWallUtc) { _policy.OnCommand(nowWallUtc); }
@@ -109,7 +153,7 @@ namespace Game.Services
         /// <summary>A copy of the latest save in Documents, named by the local date and time; the caller saves first.</summary>
         public string Export(long nowWallUtc, int utcOffsetMinutes)
         {
-            string name = "FarmToCity-" + Local(nowWallUtc, utcOffsetMinutes).ToString("yyyy-MM-dd-HHmm", CultureInfo.InvariantCulture) + Extension;
+            string name = "FarmToCity-" + TownTag + "-" + Local(nowWallUtc, utcOffsetMinutes).ToString("yyyy-MM-dd-HHmm", CultureInfo.InvariantCulture) + Extension;
             File.WriteAllBytes(Path.Combine(Documents, name), _store.Read(SavePoints.Latest));
             return name;
         }

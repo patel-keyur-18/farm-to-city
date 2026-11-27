@@ -1269,6 +1269,22 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-268 | Today's supply, Automatic or Manual | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Must | Done (ADR 0175, approved 2026-11-26) |
 | US-269 | Grow for the vegetable stall | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Should | Done (ADR 0176, approved 2026-11-26) |
 
+## Sprint 29 · Phase 3.5 · Ad hoc (two towns, notifications from both, the graphics samples; specs 031 and 032; ADR 0172)
+
+- **Status:** Started 2026-11-27. US-270 built (ADR 0178), awaiting the owner's review. US-272 and US-271 not started. **Plan check done 2026-11-27** (two gaps closed one per message, six calls recorded in spec 031).
+- **Branch:** `sprint/29-two-towns`, from `main` after PR #39
+- **Goal:** Two towns on one phone, each its own save, clock, play log and away card, switched from Settings; notifications from both; three graphics samples rendered for the owner to pick, then spec 032. No sim change, no save schema change, goldens don't move.
+- **Points:** 11 = US-270 5, US-272 3, US-271 3
+- **Specs:** 031 (approved), 032 (written after the owner picks a sample, reviewed before any art code)
+- **Device build:** No Development build until the owner asks
+- **Milestone and labels:** `Phase 3.5 · Ad hoc`; `type:feature`, `type:spec`, `type:adr`; `area:ui`, `area:tooling`, `area:art`; `documentation`
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-270 | Two towns: slots, Your towns, the switch | [F21.3](features/F21.3-two-towns.md) | 5 | Must | Built 2026-11-27, awaiting review (ADR 0178) |
+| US-272 | Notifications from both towns, a play log each | [F21.3](features/F21.3-two-towns.md) | 3 | Must | Not started |
+| US-271 | The three graphics samples, then spec 032 | [F21.4](features/F21.4-graphics-redesign.md) | 3 | Must | Not started |
+
 **Next sprints (ADR 0172; detailed before Sprint 28's code, 2026-11-26):**
 
 | Sprint | Branch | Stories | Points | Spec |

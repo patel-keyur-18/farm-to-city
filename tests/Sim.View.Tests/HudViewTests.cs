@@ -39,5 +39,18 @@ namespace Sim.View.Tests
             Assert.That(HudVm.BadgeText(100), Is.EqualTo("99+"));
             Assert.That(HudVm.BadgeText(250), Is.EqualTo("99+"));
         }
+
+        // AC-6: with two towns the time card's top line starts with the open town's name; with one it is as it was.
+        [Test]
+        public void TownName()
+        {
+            Simulation sim = ViewKit.NewGame(seed: 5);
+            ViewContext ctx = ViewKit2.Context(sim);
+            string plain = HudView.Build(ctx).DateText;
+            Assert.That(plain, Does.Not.Contain("Town"));
+            ctx.TownName = "Town 2";
+            string named = HudView.Build(ctx).DateText;
+            Assert.That(named, Is.EqualTo("Town 2 · " + plain));
+        }
     }
 }

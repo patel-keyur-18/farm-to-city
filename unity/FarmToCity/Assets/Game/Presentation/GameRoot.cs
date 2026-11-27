@@ -525,7 +525,7 @@ namespace Game.Presentation
                 case "Slot": _sheet.Show(FieldSheets.ForSlot(_ctx, r.Id), refreshOnly); break;
                 case "Bed": _sheet.Show(FieldSheets.ForBed(_ctx, r.Id), refreshOnly); break;
                 case "Store": _sheet.Show(StoreSheet.Build(_ctx), refreshOnly); break;
-                case "Settings": _sheet.Show(SettingsSheet.Build(_ctx, Info()), refreshOnly); break;
+                case "Settings": _sheet.Show(SettingsSheet.Build(_ctx, InfoWithTowns()), refreshOnly); break;
                 case "Import":
                     if (!refreshOnly) ScanImports();
                     _sheet.Show(ImportSheet.Build(_ctx, _importFiles, Info()), refreshOnly);
