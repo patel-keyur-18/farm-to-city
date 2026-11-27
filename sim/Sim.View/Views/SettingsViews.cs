@@ -442,6 +442,16 @@ namespace Sim.View.Views
     /// <summary>A notification's title and line from the string table (spec 007 §3.5): kind, count, crop; never money.</summary>
     public static class NotificationText
     {
+        /// <summary>
+        /// The same with the town first when there are two ("Town 2 · Your wheat is ready", spec 031 §3.1); <paramref name="town"/> 0 leaves the words as they
+        /// are with one town.
+        /// </summary>
+        public static (string Title, string Body) For(ViewContext ctx, PlannedNotification n, int town)
+        {
+            (string title, string body) = For(ctx, n);
+            return town <= 0 ? (title, body) : (ctx.Strings.Get("notify.townTitle", "town", SettingsSheet.TownName(ctx, town), "title", title), body);
+        }
+
         public static (string Title, string Body) For(ViewContext ctx, PlannedNotification n)
         {
             var s = ctx.Strings;

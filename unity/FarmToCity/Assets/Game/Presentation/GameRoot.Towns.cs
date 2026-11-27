@@ -27,6 +27,12 @@ namespace Game.Presentation
         private readonly SaveService[] _services = new SaveService[SaveService.Slots + 1];
         private VisualElement _townVeil;
 
+        /// <summary>A tap on the other town's notification opened the app: the town to switch to once the scene is up (0 for none).</summary>
+        private int _tapTown;
+
+        /// <summary>The next session belongs to a town a notification tap opened: its play log line says so.</summary>
+        private bool _nextSessionFromNote;
+
         private SaveService SavesFor(int slot)
         {
             return _services[slot] ?? (_services[slot] = new SaveService(SavesFolder, DocumentsFolder, _savesDefs.Save, slot));
@@ -104,6 +110,7 @@ namespace Game.Presentation
             if (target == _slot) return;
             SaveService next = SavesFor(target);
             LoadOutcome o = next.Load(_config, WallNow(), UtcOffsetMinutes());
+            if (o.State != null) next.DeleteNotes(); // opened: the town itself is the truth again
             if (o.State == null)
             {
                 RefreshTownName();
@@ -128,6 +135,7 @@ namespace Game.Presentation
             LeaveOpenTown();
             _slot = target;
             _saves = SavesFor(target);
+            _saves.DeleteNotes();
             PlayerPrefs.SetInt("town.open", target);
             PlayerPrefs.Save();
             _playLog = OpenLog(_saves);
@@ -140,7 +148,20 @@ namespace Game.Presentation
         private void LeaveOpenTown()
         {
             SaveNow();
+            _saves.WriteNotes(PlanNotes(named: true)); // kept for the other town's backgrounding, notifications on or off (spec 031 §3.1)
             EndSession(WallNow());
+        }
+
+        /// <summary>A tap on the other town's notification (spec 031 §3.1): the app switches to that town, then says which.</summary>
+        private void OpenFromNote(int town)
+        {
+            _nextSessionFromNote = true;
+            WithVeil(town, () =>
+            {
+                SwitchTown(town);
+                if (_slot == town) Toast(SettingsSheet.TownName(_ctx, town)); // not when the town couldn't be opened: its card says so
+                else _nextSessionFromNote = false;
+            });
         }
 
         /// <summary>The screen for the town just opened: its sheets and what was waiting for the old one gone, the map redrawn, the camera where it was left.</summary>
@@ -148,6 +169,10 @@ namespace Game.Presentation
         {
             _holdUntil = 0;
             _sheet.Close();
+            _sheet.DropVeils(); // the old town's cards, letters and away card
+            _letterOpen = false;
+            _celebrating = false;
+            foreach (VisualElement toast in new[] { _codexToast, _mileToast, _storyToast }) if (toast != null) toast.style.display = DisplayStyle.None;
             _open = null;
             _back.Clear();
             _selected = Hit.None;

@@ -18,12 +18,16 @@ namespace Game.Services
         /// <summary>Groups the notification in iOS's list (one thread per kind).</summary>
         public string Thread { get; }
 
-        public ScheduledNote(long wallUtc, string title, string body, string thread)
+        /// <summary>The slot of the town it is about, 1 or 2; 0 when it isn't about one (spec 031 §3.1: a tap opens that town).</summary>
+        public int Town { get; }
+
+        public ScheduledNote(long wallUtc, string title, string body, string thread, int town = 0)
         {
             WallUtc = wallUtc;
             Title = title;
             Body = body;
             Thread = thread;
+            Town = town;
         }
     }
 
@@ -43,8 +47,8 @@ namespace Game.Services
         /// <summary>Removes scheduled and delivered notifications (the player is back).</summary>
         void CancelAll();
 
-        /// <summary>Calls back true once per notification tap that opened the app (the play log's <c>fromNote</c>, ADR 0047 §2).</summary>
-        void OpenedByNote(Action<bool> done);
+        /// <summary>Calls back once per notification tap that opened the app (the play log's <c>fromNote</c>, ADR 0047 §2), with the town it was from.</summary>
+        void OpenedByNote(Action<NoteOpened> done);
     }
 
     public static class NotificationServices
@@ -64,18 +68,26 @@ namespace Game.Services
     {
         public List<ScheduledNote> Last { get; } = new List<ScheduledNote>();
 
+        /// <summary>Editor checks: the tap the next <see cref="OpenedByNote"/> reports (set it by script, then the app reads it once, like a note's data).</summary>
+        public static NoteOpened? StubbedTap;
+
         public void RequestPermission(Action<bool> done) { done(true); }
 
         public void Schedule(long nowWallUtc, IReadOnlyList<ScheduledNote> notes)
         {
             Last.Clear();
             Last.AddRange(notes);
-            foreach (ScheduledNote n in notes) Debug.Log("Notification in " + (n.WallUtc - nowWallUtc) + " s: " + n.Title + " — " + n.Body);
+            foreach (ScheduledNote n in notes) Debug.Log("Notification in " + (n.WallUtc - nowWallUtc) + " s (town " + n.Town + ", " + n.Thread + "): " + n.Title + " — " + n.Body);
         }
 
         public void CancelAll() { Last.Clear(); }
 
-        public void OpenedByNote(Action<bool> done) { done(false); }
+        public void OpenedByNote(Action<NoteOpened> done)
+        {
+            NoteOpened tap = StubbedTap ?? new NoteOpened(false, 0);
+            StubbedTap = null;
+            done(tap);
+        }
     }
 
 #if UNITY_IOS
@@ -109,15 +121,15 @@ namespace Game.Services
                     Body = n.Body,
                     ThreadIdentifier = n.Thread,
                     ShowInForeground = false,
-                    Data = nowWallUtc + ":" + i, // unique per schedule, so a stale "last responded" isn't counted twice
+                    Data = n.Town + "|" + nowWallUtc + ":" + i, // the town it is about, then a mark unique per schedule, so a stale "last responded" isn't counted twice
                     Trigger = new iOSNotificationTimeIntervalTrigger { TimeInterval = TimeSpan.FromSeconds(Math.Max(1, n.WallUtc - nowWallUtc)), Repeats = false },
                 });
             }
         }
 
-        public void OpenedByNote(Action<bool> done) { _host.StartCoroutine(Opened(done)); }
+        public void OpenedByNote(Action<NoteOpened> done) { _host.StartCoroutine(Opened(done)); }
 
-        private static IEnumerator Opened(Action<bool> done)
+        private static IEnumerator Opened(Action<NoteOpened> done)
         {
             QueryLastRespondedNotificationOp op = iOSNotificationCenter.QueryLastRespondedNotification();
             float until = Time.realtimeSinceStartup + 2f;
@@ -130,7 +142,7 @@ namespace Game.Services
                 PlayerPrefs.SetString("note.lastOpened", n.Data);
                 PlayerPrefs.Save();
             }
-            done(fresh);
+            done(new NoteOpened(fresh, fresh ? NoteOpened.TownOfData(n.Data) : 0));
         }
 
         public void CancelAll()

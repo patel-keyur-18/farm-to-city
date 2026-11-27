@@ -90,6 +90,7 @@ namespace Game.Presentation
             _slot = OpenSlotAtLaunch(); // spec 031 §3: the one last open, Town 1 by default
             _saves = SavesFor(_slot);
             _playLog = OpenLog(_saves);
+            _saves.DeleteNotes(); // what was kept for this town is stale now: the town itself is the truth
 
             _lastSyncWall = WallNow();
             LoadOutcome o = _saves.Load(_config, _lastSyncWall, UtcOffsetMinutes());
@@ -238,17 +239,39 @@ namespace Game.Presentation
         {
             long now = WallNow();
             SaveNow();
-            if (NotificationsOn)
-            {
-                var notes = new List<ScheduledNote>();
-                foreach (PlannedNotification n in NotificationPlanner.Plan(Sim, _savesDefs.Notify, true, UtcOffsetMinutes()))
-                {
-                    (string title, string body) = NotificationText.For(_ctx, n);
-                    notes.Add(new ScheduledNote(n.WallUtc, title, body, n.Kind.ToString()));
-                }
-                _notes.Schedule(now, notes);
-            }
+            if (NotificationsOn) ScheduleNotes(now);
             EndSession(now);
+        }
+
+        /// <summary>The open town's planned notifications as shown: with its name first once there are two towns (spec 031 §3.1).</summary>
+        private List<KeptNote> PlanNotes(bool named)
+        {
+            var list = new List<KeptNote>();
+            foreach (PlannedNotification n in NotificationPlanner.Plan(Sim, _savesDefs.Notify, true, UtcOffsetMinutes()))
+            {
+                (string title, string body) = NotificationText.For(_ctx, n, named ? _slot : 0);
+                list.Add(new KeptNote(n.WallUtc, n.Kind, title, body, _slot));
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Schedules the open town's notes and, with two towns, the other's kept plan, merged (spec 031 §3.1, owner 2026-11-27): over the platform's limit the most
+        /// important stay; the other town's notes that came due while you played this one go out once and leave its kept file.
+        /// </summary>
+        private void ScheduleNotes(long now)
+        {
+            List<KeptNote> all = PlanNotes(_twoTowns);
+            if (_twoTowns)
+            {
+                SaveService other = SavesFor(_slot == 1 ? 2 : 1);
+                List<KeptNote> kept = other.ReadNotes();
+                all = KeptNotes.Merge(all, kept, now, _savesDefs.Notify, UtcOffsetMinutes(), out List<KeptNote> remaining);
+                if (remaining.Count != kept.Count) other.WriteNotes(remaining);
+            }
+            var notes = new List<ScheduledNote>();
+            foreach (KeptNote n in all) notes.Add(new ScheduledNote(n.WallUtc, n.Title, n.Body, _twoTowns ? "town" + n.Town + "-" + n.Kind : n.Kind.ToString(), n.Town));
+            _notes.Schedule(now, notes);
         }
 
         /// <summary>The open town's session ends: its play log line and its camera (spec 031 §3: each town keeps its own).</summary>
@@ -303,9 +326,21 @@ namespace Game.Presentation
         {
             _sessionStart = wall;
             long simTime = Sim.State.Clock.SimTime;
-            _notes.OpenedByNote(fromNote =>
+            if (_nextSessionFromNote)
             {
-                _playLog.SessionStart(wall, simTime, BuildName, SystemInfo.deviceModel, UtcOffsetMinutes(), fromNote);
+                // A tap on the other town's note brought us here (spec 031 §3.2): this town's session is the one the tap opened.
+                _nextSessionFromNote = false;
+                _playLog.SessionStart(wall, simTime, BuildName, SystemInfo.deviceModel, UtcOffsetMinutes(), true);
+                WritePlayLog();
+                _notes.CancelAll();
+                return;
+            }
+            _notes.OpenedByNote(tap =>
+            {
+                // A tap on the other town's note opens that town once the scene is up (OpenFromNote); the town the app opened on isn't "from a note".
+                int elsewhere = tap.Elsewhere(_slot, slot => SaveService.SlotHasTown(SavesFolder, slot));
+                if (elsewhere != 0) _tapTown = elsewhere;
+                _playLog.SessionStart(wall, simTime, BuildName, SystemInfo.deviceModel, UtcOffsetMinutes(), tap.Fresh && elsewhere == 0);
                 WritePlayLog();
             });
             _notes.CancelAll();

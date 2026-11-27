@@ -8751,5 +8751,6 @@
   "why.townStart.what": "A new town starts like a first game, beside this one. Each town has its own save, clock and away card: time passes in the town you are not playing, up to 3 days, and it catches up when you open it. Nothing is shared between towns, only the settings.",
   "towns.opening": "Opening {town}…",
   "card.townNotOpenedTitle": "{town} couldn't be opened",
-  "card.townStayed": "{open} is still open, and Settings offers to start a second town again."
+  "card.townStayed": "{open} is still open, and Settings offers to start a second town again.",
+  "notify.townTitle": "{town} · {title}"
 }

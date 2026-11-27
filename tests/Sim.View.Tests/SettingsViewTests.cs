@@ -245,5 +245,20 @@ namespace Sim.View.Tests
             Assert.That(card.Buttons.Select(b => b.Id), Is.EqualTo(new[] { SettingsIds.Cancel, SettingsIds.Switch }));
             Assert.That(card.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Not now", "Switch" }));
         }
+
+        // AC-6 (notifications): with two towns each title starts with its town; with one, the words are as they were.
+        [Test]
+        public void NotificationTextTownName()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
+            var n = new PlannedNotification { Kind = NotifyKind.LoanMissed, Count = 1 };
+            (string plain, string body) = NotificationText.For(ctx, n);
+            Assert.That(plain, Is.EqualTo("A loan payment was missed"));
+            Assert.That(NotificationText.For(ctx, n, 0).Title, Is.EqualTo(plain), "one town: no name");
+            (string t2, string b2) = NotificationText.For(ctx, n, 2);
+            Assert.That(t2, Is.EqualTo("Town 2 \u00b7 A loan payment was missed"));
+            Assert.That(b2, Is.EqualTo(body), "only the title takes the name");
+            Assert.That(NotificationText.For(ctx, n, 1).Title, Does.StartWith("Town 1 \u00b7 "));
+        }
     }
 }

@@ -105,6 +105,27 @@ namespace Game.Services
             return false;
         }
 
+        /// <summary>The notifications kept for this town while you are in the other (spec 031 §3.1).</summary>
+        public List<KeptNote> ReadNotes()
+        {
+            string path = Path.Combine(Folder, KeptNotes.FileName);
+            return KeptNotes.Parse(File.Exists(path) ? File.ReadAllText(path) : null);
+        }
+
+        public void WriteNotes(IReadOnlyList<KeptNote> notes)
+        {
+            if (notes.Count == 0) { DeleteNotes(); return; }
+            Directory.CreateDirectory(Folder);
+            File.WriteAllText(Path.Combine(Folder, KeptNotes.FileName), KeptNotes.ToJson(notes));
+        }
+
+        /// <summary>Opening a town deletes what was kept for it: the town itself is the truth again.</summary>
+        public void DeleteNotes()
+        {
+            string path = Path.Combine(Folder, KeptNotes.FileName);
+            if (File.Exists(path)) File.Delete(path);
+        }
+
         /// <summary>The town's play log file (spec 031 §3.2): one in each town's own folder.</summary>
         public string PlayLogPath { get { return Path.Combine(Folder, "playlog.jsonl"); } }
 

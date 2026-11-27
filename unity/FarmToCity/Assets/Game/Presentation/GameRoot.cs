@@ -208,6 +208,7 @@ namespace Game.Presentation
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (_dev != null && _dev.IsOpen) { return; }
 #endif
+            if (_tapTown != 0 && _safeRoot != null && _sheet != null) { int town = _tapTown; _tapTown = 0; OpenFromNote(town); return; }
             if (_choosing) return; // an older town runs several businesses itself: time waits until the player chooses one (spec 030 §7.3)
             // Sync once per wall-clock second: the sim's time unit is a whole second (spec 001 §3.4).
             long now = WallNow();

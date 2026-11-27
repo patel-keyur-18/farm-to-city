@@ -16,6 +16,7 @@
     <!-- The Unity side's save slots (spec 031): plain System.IO over Sim.Core, so the tests run the real class. It lives in its own test
          project because its namespace (Game.Services) would shadow the `Game(...)` helper that Sim.Core.Tests imports. -->
     <Compile Include="..\..\unity\FarmToCity\Assets\Game\Services\SaveService.cs" Link="Linked\SaveService.cs" />
+    <Compile Include="..\..\unity\FarmToCity\Assets\Game\Services\NoteOpened.cs" Link="Linked\NoteOpened.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\sim\Sim.Core\Sim.Core.csproj" />

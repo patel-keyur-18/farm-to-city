@@ -80,5 +80,72 @@ namespace Game.Services.Tests
             Assert.That(away.AppliedSeconds, Is.EqualTo(cap));
             Assert.That(opened.State.Clock.SimTime - before, Is.EqualTo(cap));
         }
+
+        // AC-8: a tap on Town 2's notification opens Town 2; a tap on the open town's own note, an old note or an emptied slot opens nothing else.
+        [Test]
+        public void OpenFromNote()
+        {
+            Assert.That(NoteOpened.TownOfData("2|1800000000:3"), Is.EqualTo(2));
+            Assert.That(NoteOpened.TownOfData("1800000000:3"), Is.EqualTo(0), "a note from an older build has no town");
+            Assert.That(NoteOpened.TownOfData("9|1:1"), Is.EqualTo(0), "a slot that doesn't exist");
+            Assert.That(NoteOpened.TownOfData(null), Is.EqualTo(0));
+
+            bool Has(int slot) { return true; }
+            Assert.That(new NoteOpened(true, 2).Elsewhere(1, Has), Is.EqualTo(2), "Town 1 is open and the note is Town 2's: switch");
+            Assert.That(new NoteOpened(true, 2).Elsewhere(2, Has), Is.EqualTo(0), "the open town's own note: nothing to switch");
+            Assert.That(new NoteOpened(false, 2).Elsewhere(1, Has), Is.EqualTo(0), "not a tap that opened the app (counted once)");
+            Assert.That(new NoteOpened(true, 0).Elsewhere(1, Has), Is.EqualTo(0));
+            Assert.That(new NoteOpened(true, 2).Elsewhere(1, slot => false), Is.EqualTo(0), "that slot holds no town now");
+
+            // The kept plan lives in the town's own folder and goes when the town is opened.
+            SaveService one = Slot(1), two = Slot(2);
+            Assert.That(two.ReadNotes(), Is.Empty);
+            two.WriteNotes(new[] { new KeptNote(Wall0 + 5, NotifyKind.CropReady, "Town 2 · Wheat is ready", "b", 2) });
+            Assert.That(File.Exists(Path.Combine(_root, "Saves", "town2", KeptNotes.FileName)), Is.True);
+            Assert.That(File.Exists(Path.Combine(_root, "Saves", KeptNotes.FileName)), Is.False, "Town 1's folder holds nothing of it");
+            Assert.That(two.ReadNotes().Single().Title, Is.EqualTo("Town 2 · Wheat is ready"));
+            one.DeleteNotes();
+            Assert.That(two.ReadNotes().Count, Is.EqualTo(1), "opening Town 1 leaves Town 2's plan alone");
+            two.DeleteNotes();
+            Assert.That(two.ReadNotes(), Is.Empty);
+            two.WriteNotes(new KeptNote[0]);
+            Assert.That(File.Exists(Path.Combine(_root, "Saves", "town2", KeptNotes.FileName)), Is.False, "an empty plan is no file");
+        }
+
+        // AC-9: each town's play log is in its own folder and holds only its own sessions; a switch ends one and starts the other.
+        [Test]
+        public void PlayLogPerTown()
+        {
+            SaveService s1 = Slot(1), s2 = Slot(2);
+            var def = ContentLoaderPlayLog();
+            var log1 = new PlayLog(def, "") { Enabled = true };
+            var log2 = new PlayLog(def, "") { Enabled = true };
+
+            // What GameRoot does: Town 1's session, a switch (end one, start the other), a tap-opened return to Town 1.
+            log1.SessionStart(Wall0, 0, "b", "d", 330, false);
+            File.WriteAllText(s1.PlayLogPath, log1.Text);
+            log1.SessionEnd(Wall0 + 100, 100, 100);
+            log2.NewGame(Wall0 + 100, 0);
+            log2.SessionStart(Wall0 + 100, 0, "b", "d", 330, false);
+            Directory.CreateDirectory(s2.Folder);
+            File.WriteAllText(s1.PlayLogPath, log1.Text);
+            File.WriteAllText(s2.PlayLogPath, log2.Text);
+            log2.SessionEnd(Wall0 + 400, 300, 300);
+            log1.SessionStart(Wall0 + 400, 100, "b", "d", 330, true);
+            File.WriteAllText(s1.PlayLogPath, log1.Text);
+            File.WriteAllText(s2.PlayLogPath, log2.Text);
+
+            string[] a = File.ReadAllLines(s1.PlayLogPath), b = File.ReadAllLines(s2.PlayLogPath);
+            Assert.That(a.Select(Type), Is.EqualTo(new[] { "sessionStart", "sessionEnd", "sessionStart" }));
+            Assert.That(b.Select(Type), Is.EqualTo(new[] { "newGame", "sessionStart", "sessionEnd" }), "Town 2's log has only Town 2's sessions");
+            Assert.That(a[2], Does.Contain("\"fromNote\":true"));
+            Assert.That(a[0], Does.Contain("\"fromNote\":false"));
+            Assert.That(s1.PlayLogPath, Is.Not.EqualTo(s2.PlayLogPath));
+            Assert.That(new PlayLog(def, File.ReadAllText(s2.PlayLogPath)).Lines.Count, Is.EqualTo(3), "a log read back is the town's own");
+        }
+
+        private static string Type(string line) { int at = line.IndexOf("\"type\":\"", System.StringComparison.Ordinal) + 8; return line.Substring(at, line.IndexOf('"', at) - at); }
+
+        private static Sim.Core.Definitions.PlayLogDef ContentLoaderPlayLog() { return Sim.Content.ContentLoader.LoadSaves(ReadContent("saves.json")).PlayLog; }
     }
 }
