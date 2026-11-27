@@ -293,6 +293,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0178 | US-270 two towns as built: two slots (`Saves/`, `Saves/town2/`), Your towns in Settings, the switch loads the target first and an unreadable one leaves the open town as it is, the town's name on the time card, a summary beside each save |
 | 0179 | US-272 notifications from both towns as built: the leaving town's plan kept in `notes.json`, merged by importance then time, past-due urgent and needs-you notes sent once, town names in titles, a tap opens its town, a switch drops the old town's cards |
 | 0180 | US-271 the graphics direction: a realistic valley (Option B: baked shadows on buildings only, kept short, as their own sprites), default zoom 3 acres across, people 6 heads tall, a device check first, the UI restyled after the map in spec 033; spec 032 plans 55 points over Sprints 30 to 33 |
+| 0181 | Sprint 29 independent review (Opus 5.5): no blocker; a delivered note is never sent twice, the town's name on every rebuilt time card, the switch changes slot, log and sim together, spec 032's shadow frame and test places corrected, the triangle growth found to be the Editor town's state not code |
 
 ## Current status
 
