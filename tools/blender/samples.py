@@ -21,6 +21,7 @@ import bpy
 from mathutils import Matrix, Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.dont_write_bytecode = True   # no __pycache__ beside render.py
 _spec = importlib.util.spec_from_file_location("render", os.path.join(HERE, "render.py"))
 R = importlib.util.module_from_spec(_spec)
 sys.modules["render"] = R
