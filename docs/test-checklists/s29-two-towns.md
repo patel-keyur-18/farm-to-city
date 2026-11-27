@@ -49,25 +49,25 @@
 | 25 | Developer panel → **Away cap (72 h)** in a big town, and read its time | Inside the budget shown (2,000 ms) with no hitch | **Device only** | |
 | 26 | Each save writes a small summary (net worth is read from the town): save a large Village town a few times | No visible pause at a save | **Device only** | |
 
-## Tests (2026-11-27, at the end of US-272)
+## Tests (2026-11-27, after the independent review's fixes)
 
 | Project | Result |
 | --- | --- |
-| `Sim.Core.Tests` (not Balance, not Perf) | 974 passed |
+| `Sim.Core.Tests` (not Balance, not Perf) | 975 passed |
 | `Sim.Core.Tests` Perf | 6 passed |
 | `Sim.View.Tests` | 460 passed |
-| `Game.Services.Tests` (new: compiles the Unity-side `SaveService.cs`) | 7 passed |
+| `Game.Services.Tests` (new: compiles the Unity-side `SaveService.cs`) | 9 passed |
 | Goldens | unmoved |
 
-## Render statistics (Editor, 2026-11-27, after US-272, against the last reading)
+## Render statistics (Editor, 2026-11-27, at the sprint's end, against the last reading)
 
 | View | Draw calls | Triangles | Visible sprites |
 | --- | --- | --- | --- |
-| The whole map | 1,150 | 33,224 | 1,436 |
-| The village | 576 | 16,251 | 675 |
-| The farm | 364 | 10,634 | 398 |
+| The whole map | 1,283 | 35,729 | 1,639 |
+| The village | 561 | 14,909 | 673 |
+| The farm | 349 | 9,297 | 396 |
 
-**Flagged:** triangles are +40 to 46% against the US-269 reading (draw calls and sprites unchanged, no art code touched; weather off does not explain it, so the cause is not found). US-272 added nothing on top of US-270's reading.
+**The triangle growth is explained and is not this sprint's.** Readings after US-269 showed triangles +40 to 46% with draw calls and sprites unchanged. The independent review asked for the cause. An A/B in the same Editor town on `main`'s Unity and view code (`ca431e10`) and on this branch gave the same numbers (farm 9,296 and 9,297; village 14,910 and 14,909; the whole map 35,727 and 35,729), and the map alone (the UI hidden) is 8,589 triangles on both. So nothing of this sprint adds map triangles: the Editor town itself has grown since the US-269 reading (more crops standing, its season and weather), and the readings taken right after US-270 and US-272 also had a transient piece of UI up (11 more batches than draw calls). Against the US-272 reading the whole map reads +12% in draw calls and sprites for the same reason (the Editor town's state). **The baseline for the device check and Spec 032's stories is these readings.**
 
 ## What to report
 

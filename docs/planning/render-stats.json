@@ -506,5 +506,8 @@
   {"label":"US-270","view":"farm","date":"2026-11-27","drawCalls":364,"batches":353,"setPassCalls":8,"triangles":10638,"visibleSprites":398,"sprites":2293},
   {"label":"US-272","view":"all","date":"2026-11-27","drawCalls":1150,"batches":1139,"setPassCalls":11,"triangles":33224,"visibleSprites":1436,"sprites":2293},
   {"label":"US-272","view":"village","date":"2026-11-27","drawCalls":576,"batches":565,"setPassCalls":9,"triangles":16251,"visibleSprites":675,"sprites":2293},
-  {"label":"US-272","view":"farm","date":"2026-11-27","drawCalls":364,"batches":353,"setPassCalls":8,"triangles":10634,"visibleSprites":398,"sprites":2293}
+  {"label":"US-272","view":"farm","date":"2026-11-27","drawCalls":364,"batches":353,"setPassCalls":8,"triangles":10634,"visibleSprites":398,"sprites":2293},
+  {"label":"Sprint 29 end (review)","view":"farm","date":"2026-11-27","drawCalls":349,"batches":349,"setPassCalls":9,"triangles":9297,"visibleSprites":396,"sprites":2291},
+  {"label":"Sprint 29 end (review)","view":"village","date":"2026-11-27","drawCalls":561,"batches":561,"setPassCalls":10,"triangles":14909,"visibleSprites":673,"sprites":2291},
+  {"label":"Sprint 29 end (review)","view":"all","date":"2026-11-27","drawCalls":1283,"batches":1283,"setPassCalls":12,"triangles":35729,"visibleSprites":1639,"sprites":2291}
 ]
