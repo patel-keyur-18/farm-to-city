@@ -177,6 +177,21 @@ namespace Sim.Core.Events
         protected override string Describe() { return "WorkerLeft(business=" + BusinessId + ", worker=" + WorkerId + ", severance=" + Severance + ")"; }
     }
 
+    /// <summary>An older town ran several businesses itself and the player chose the one to keep running (spec 030 §3.1); the others now wait for a hire.</summary>
+    public sealed class RunYourselfChosen : SimEvent
+    {
+        public long KeptId { get; }
+        public long[] StoppedIds { get; }
+
+        public RunYourselfChosen(long simTime, long keptId, long[] stoppedIds) : base(simTime)
+        {
+            KeptId = keptId;
+            StoppedIds = stoppedIds;
+        }
+
+        protected override string Describe() { return "RunYourselfChosen(kept=" + KeptId + ", stopped=" + string.Join("+", StoppedIds) + ")"; }
+    }
+
     public sealed class ApplicantArrived : SimEvent
     {
         public long ApplicantId { get; }

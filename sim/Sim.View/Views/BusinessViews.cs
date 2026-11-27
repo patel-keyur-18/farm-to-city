@@ -194,13 +194,17 @@ namespace Sim.View.Views
         {
             Simulation sim = ctx.Sim;
             var s = ctx.Strings;
+            string runBlocked = RunOne.Blocked(ctx, "runone.plan"); // you already run one: a hire here (spec 030 §3.1)
+            if (runBlocked != null) self = false;
             BusinessTypeDef t = BusinessRules.Defs(sim).Types[type];
             long borrow = BusinessWords.LoanFor(sim, t, loan);
             BusinessRules.Projection p = BusinessRules.Projected(sim, t, self, BusinessRules.DefaultOwnPerDay(sim, t), t.Fee, borrow);
             long id = BusinessWords.PlanId(type, self, loan);
             var vm = new SheetVm { Icon = t.Id, Title = s.Get("plan.title", "name", BusinessWords.InSentence(ctx, t)), Subtitle = s.Get("plan.subtitle") };
             var who = new LineVm(s.Get("plan.who"), s.Get(self ? "plan.whoYou" : "plan.whoHire", "role", s.Get("business.role." + t.Worker)));
-            who.Action = ActionVm.Open("who", s.Get("plan.change"), new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(!self, loan)));
+            who.Action = runBlocked != null
+                ? new ActionVm("who", s.Get("plan.change"), null, ActionKind.Open, false, runBlocked, null, new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(true, loan)))
+                : ActionVm.Open("who", s.Get("plan.change"), new SheetRequest("BusinessPlan", type, BusinessWords.PlanArg(!self, loan)));
             vm.Lines.Add(who);
             // How it's paid for (§3.8): your cash, or a co-op bank business loan for 60% of the building and equipment.
             var funding = new LineVm(s.Get("plan.funding"), loan ? s.Get("plan.fundingLoan", "amount", ctx.Fmt.Coins(borrow)) : s.Get("plan.fundingCash"), "planLoan", id);
@@ -353,7 +357,9 @@ namespace Sim.View.Views
             };
             if (t.IsShop) vm.Tabs.Insert(1, ActionVm.Open("tab:" + ShopSheet.Customers, s.Get("shop.tabCustomers"), new SheetRequest("Business", id, ShopSheet.Customers)));
             if (InvoiceSheet.Applies(ctx, b)) vm.Tabs.Insert(t.IsShop ? 2 : 1, ActionVm.Open("tab:" + InvoiceSheet.Tab, s.Get("business.tabOrders"), new SheetRequest("Business", id, InvoiceSheet.Tab))); // spec 028 §3.1, from the Township
-            if (tab == InvoiceSheet.Tab && InvoiceSheet.Applies(ctx, b)) InvoiceSheet.AddOrders(ctx, vm, b, t);
+            if (SupplySheet.Applies(ctx, b)) vm.Tabs.Insert(vm.Tabs.FindIndex(x => x.Id == "tab:" + Settings), ActionVm.Open("tab:" + SupplySheet.Tab, s.Get("supply.tab"), new SheetRequest("Business", id, SupplySheet.Tab))); // spec 030 §3.5: what it took today and how much it may take from you
+            if (tab == SupplySheet.Tab && SupplySheet.Applies(ctx, b)) SupplySheet.Add(ctx, vm, b, t);
+            else if (tab == InvoiceSheet.Tab && InvoiceSheet.Applies(ctx, b)) InvoiceSheet.AddOrders(ctx, vm, b, t);
             else if (tab == ShopSheet.Customers && t.IsShop) ShopSheet.AddCustomers(ctx, vm, b, t);
             else if (tab == Settings) AddSettings(ctx, vm, b, t);
             else if (tab == Books) BusinessBooksSheet.AddBooks(ctx, vm, b);
@@ -425,8 +431,12 @@ namespace Sim.View.Views
             if (b.Worker == WorkerKind.None)
             {
                 long id = b.Id;
-                vm.Lines.Add(new LineVm(s.Get("business.runYourself"), s.Get("business.runYourselfWhy"), "businessWorker", b.Id)
-                    { Icon = "person_founder", Action = ActionVm.Checked(ctx, "runYourself", s.Get("business.runIt"), null, ActionKind.Secondary, at => new RunBusinessYourself(at, id)) });
+                string runBlocked = RunOne.Blocked(ctx, "runone.card"); // you already run another business (spec 030 §3.1)
+                var runRow = new LineVm(s.Get("business.runYourself"), s.Get("business.runYourselfWhy"), "businessWorker", b.Id) { Icon = "person_founder" };
+                runRow.Action = runBlocked != null
+                    ? new ActionVm("runYourself", s.Get("business.runIt"), null, ActionKind.Secondary, false, runBlocked, null)
+                    : ActionVm.Checked(ctx, "runYourself", s.Get("business.runIt"), null, ActionKind.Secondary, at => new RunBusinessYourself(at, id));
+                vm.Lines.Add(runRow);
             }
             var cash = new LineVm(s.Get(BusinessWords.Key(ctx, "business.cash", t)), ctx.Fmt.Coins(b.Ledger.Cash), "businessCash", b.Id) { Icon = "coin" };
             if (BusinessBooks.Short(sim, b) && b.Worker != WorkerKind.None) // with nobody working, the worker's row says so
@@ -467,7 +477,7 @@ namespace Sim.View.Views
             }
             if (w == null)
             {
-                if (b.Worker == WorkerKind.None) { line.Note = s.Get("business.needsWorker"); line.NoteTone = Tone.Warn; }
+                if (b.Worker == WorkerKind.None) { line.Note = s.Get(BusinessRules.RunByYouNow(sim) != null ? "business.needsWorkerHire" : "business.needsWorker"); line.NoteTone = Tone.Warn; }
                 line.Action = ActionVm.Open("hireWorker", s.Get("business.workerHire"), new SheetRequest("Word", b.Id));
                 return line;
             }
@@ -526,9 +536,7 @@ namespace Sim.View.Views
             if (t.IsKiln) { AddCash(ctx, vm, b, t); return; } // its hours and its cash: the rest is the hand's rate
             if (t.ByRecipe)
             {
-                AddMix(ctx, vm, b, t);
-                if (t.TakesMilk) AddMilkADay(ctx, vm, b, t);
-                if (BusinessRules.BoughtInputs(t).Count > 0) AddMarket(ctx, vm, b, t);
+                AddMix(ctx, vm, b, t); // its milk a day and buying at the market are on its Supply tab (spec 030 §3.5, US-268)
             }
             else AddMillSettings(ctx, vm, b, t);
             AddCash(ctx, vm, b, t);
@@ -541,8 +549,6 @@ namespace Sim.View.Views
             long id = b.Id;
             int fi = System.Array.IndexOf(FeePresets, (int)b.Fee.RoundToLong());
             Fixed nextFee = Fixed.FromInt(FeePresets[(fi + 1) % FeePresets.Length]);
-            int oi = System.Array.IndexOf(OwnPresets, b.OwnPerDay);
-            long nextOwn = OwnPresets[(oi + 1) % OwnPresets.Length];
             Fixed fee = b.Fee;
             long ownNow = b.OwnPerDay;
             bool market = b.BuyFromMarket;
@@ -551,15 +557,28 @@ namespace Sim.View.Views
             feeLine.Action = ActionVm.Checked(ctx, "fee", s.Get("business.change"), ctx.Fmt.PricePerKg(nextFee * sim.State.Market.PriceIndex), ActionKind.Secondary,
                 at => new SetBusiness(at, id, open, close, nextFee, ownNow, market));
             vm.Lines.Add(feeLine);
-            var own = new LineVm(s.Get("business.ownDay", "good", s.Get(sim.Config.Game.Market.Goods[t.Input].NameKey).ToLowerInvariant()), ctx.Fmt.Kg(ownNow), "businessOwn", id);
+            // Its wheat a day and buying at the market are on its Supply tab (spec 030 §3.5, US-268).
+        }
+
+        /// <summary>The mill's own wheat a day, Change cycling the presets (on its Supply tab).</summary>
+        internal static void AddOwnDay(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
+        {
+            Simulation sim = ctx.Sim;
+            var s = ctx.Strings;
+            long id = b.Id;
+            int oi = System.Array.IndexOf(OwnPresets, b.OwnPerDay);
+            long nextOwn = OwnPresets[(oi + 1) % OwnPresets.Length];
+            Fixed fee = b.Fee;
+            bool market = b.BuyFromMarket;
+            int open = b.OpenHour, close = b.CloseHour;
+            var own = new LineVm(s.Get("business.ownDay", "good", s.Get(sim.Config.Game.Market.Goods[t.Input].NameKey).ToLowerInvariant()), ctx.Fmt.Kg(b.OwnPerDay), "businessOwn", id);
             own.Action = ActionVm.Checked(ctx, "own", s.Get("business.change"), ctx.Fmt.Kg(nextOwn), ActionKind.Secondary,
                 at => new SetBusiness(at, id, open, close, fee, nextOwn, market));
             vm.Lines.Add(own);
-            AddMarket(ctx, vm, b, t);
         }
 
         /// <summary>Buy inputs at the market (wheat for the mill, atta for the bakery), yes or no.</summary>
-        private static void AddMarket(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
+        internal static void AddMarket(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
         {
             var s = ctx.Strings;
             long id = b.Id;
@@ -598,7 +617,7 @@ namespace Sim.View.Views
         }
 
         /// <summary>The dairy's milk a day (§3.9b): what the mix needs, half, a quarter; your milk first, then neighbours' if allowed.</summary>
-        private static void AddMilkADay(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
+        internal static void AddMilkADay(ViewContext ctx, SheetVm vm, Business b, BusinessTypeDef t)
         {
             var s = ctx.Strings;
             long id = b.Id, need = BusinessRules.MilkFor(t, b.Mix);

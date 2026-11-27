@@ -47,6 +47,7 @@ namespace Sim.View.Tests
             if (sim.State.Businesses != null)
             {
                 yield return Named("businesses", BusinessesSheet.Build(ctx));
+                yield return Named("business hub", BusinessHub.Build(ctx)); // spec 030 §3.3 (AC-17)
                 for (int i = 0; i < sim.Config.Game.Businesses.Types.Count; i++)
                 {
                     yield return Named("research " + i, BusinessResearchSheet.Build(ctx, i));
@@ -63,6 +64,10 @@ namespace Sim.View.Tests
                     yield return Named("business settings " + b.Id, BusinessSheet.Build(ctx, b.Id, BusinessSheet.Settings));
                     yield return Named("business customers " + b.Id, BusinessSheet.Build(ctx, b.Id, ShopSheet.Customers));
                     yield return Named("business orders " + b.Id, BusinessSheet.Build(ctx, b.Id, InvoiceSheet.Tab));
+                    yield return Named("business supply " + b.Id, BusinessSheet.Build(ctx, b.Id, SupplySheet.Tab)); // spec 030 §3.4, §3.5 (AC-17)
+                    if (Sim.Core.Business.SupplyRules.HasMode(sim, Sim.Core.Business.BusinessRules.TypeOf(sim, b)))
+                        foreach (int g in Sim.Core.Business.SupplyRules.CappedInputs(sim, Sim.Core.Business.BusinessRules.TypeOf(sim, b)))
+                            yield return Named("business cap " + b.Id + " " + g, SupplySheet.Cap(ctx, b.Id, BusinessWords.GoodId(b.Id, g).ToString(System.Globalization.CultureInfo.InvariantCulture)));
                     yield return Named("sell expand " + b.Id, ExitSheet.Build(ctx, b.Id)); // spec 028 §3.3
                     yield return Named("manager report " + b.Id, ManagerSheet.Report(ctx, b.Id)); // spec 028 §3.2: every number has a Why?
                     yield return Named("owners " + b.Id, OwnerSheet.Owners(ctx, b.Id)); // spec 028 §3.4
@@ -95,6 +100,9 @@ namespace Sim.View.Tests
                     if (t.Terrain == Terrain.Farm && PeopleWords.OrderHand(sim, Sim.Core.People.OrderTargetKind.Field, t.Id) != null)
                     {
                         yield return Named("order other " + t.Id, OrderSheet.Other(ctx, t.Id, "+none"));
+                        var crops = new SheetVm();
+                        crops.Lines.AddRange(OrderSheet.Crops(ctx, t.Id, null).Lines);
+                        yield return Named("order crops " + t.Id, crops); // with a stall row when one is open (spec 030 §3.6, AC-17)
                         break;
                     }
             foreach (var extra in Panels.All(ctx)) yield return extra;

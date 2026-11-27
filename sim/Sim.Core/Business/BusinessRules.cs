@@ -365,6 +365,25 @@ namespace Sim.Core.Business
             return batch.MulRatio(1000, r.OutputGrams);
         }
 
+        // ---- one business run by you (spec 030 §3.1) ----
+
+        /// <summary>Your businesses you run yourself (not closed), in id order: at most one for a new town, more only in a town saved before the rule.</summary>
+        public static List<Business> RunByYou(Simulation sim)
+        {
+            var list = new List<Business>();
+            if (sim.State.Businesses == null) return list;
+            foreach (Business b in sim.State.Businesses.Businesses)
+                if (b.Worker == WorkerKind.Founder && b.Status != BusinessStatus.Closed) list.Add(b);
+            return list;
+        }
+
+        /// <summary>The business you run yourself, or null: the first, when an older town runs more than one.</summary>
+        public static Business RunByYouNow(Simulation sim)
+        {
+            List<Business> list = RunByYou(sim);
+            return list.Count == 0 ? null : list[0];
+        }
+
         // ---- founding (§3.3) ----
 
         internal static CommandResult Found(Simulation sim, string typeId, int tileId, long capital, bool runYourself, Financing financing = null, int pitch = -1)
@@ -374,6 +393,7 @@ namespace Sim.Core.Business
             if (type < 0) return CommandResult.Reject(RejectReason.UnknownBusiness);
             BusinessTypeDef t = d.Types[type];
             if (!Unlocked(sim, t)) return CommandResult.Reject(RejectReason.EraLocked);
+            if (runYourself && RunByYouNow(sim) != null) return CommandResult.Reject(RejectReason.AlreadyRunOne); // your day has room for one (spec 030 §3.1)
             RejectReason tooMany = ExitRules.Branch(sim, type, out Business first); // spec 028 §3.3: a second of a kind is a branch of the first, up to the most
             if (tooMany != RejectReason.None) return CommandResult.Reject(tooMany);
             if (pitch >= 0)
@@ -677,6 +697,7 @@ namespace Sim.Core.Business
                     b.Ledger.Post(now, sim.Period, "ledger.boughtFromFarm", reference, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                 }
                 Grind(sim, b, own, value);
+                SupplyRules.FromYou(sim, b, t.Input, own);
                 b.OwnToday += own;
                 b.OwnSeason += own;
                 left -= own;
@@ -693,6 +714,7 @@ namespace Sim.Core.Business
                     BusinessBooks.Draw(sim, b, value + PowerCost(sim, b, bought));
                     b.Ledger.Post(now, sim.Period, "ledger.boughtAtMarket", reference, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                     Grind(sim, b, bought, value);
+                    SupplyRules.Bought(sim, b, t.Input, bought);
                     b.OwnSeason += bought;
                 }
             }
@@ -872,6 +894,7 @@ namespace Sim.Core.Business
                     if (value > 0) b.Ledger.Post(now, sim.Period, "ledger.boughtAtMarket", reference, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                     b.Stock[g] += buy;
                     b.StockCost[g] += value;
+                    SupplyRules.Bought(sim, b, g, buy);
                 }
                 long part = (long)((System.Numerics.BigInteger)b.StockCost[g] * need / b.Stock[g]);
                 b.Stock[g] -= need;
@@ -1001,13 +1024,14 @@ namespace Sim.Core.Business
             foreach (Business to in sim.State.Businesses.Businesses)
             {
                 if (to == from || to.Status != BusinessStatus.Open || from.Stock[good] <= 0 || InvoiceRules.Blocked(sim, from, to)) continue;
-                long need = NeedOf(sim, to, good);
+                long need = SupplyRules.Allowed(sim, to, good, NeedOf(sim, to, good)); // Manual: no more than its cap a day
                 long q = System.Math.Min(from.Stock[good], need);
                 if (q <= 0) continue;
                 long value = MarketRules.Value(sim, good, q, MarketRules.Floor(sim, good));
                 q = System.Math.Min(q, BusinessBooks.CanSpend(sim, to) >= value ? q : 0);
                 if (q <= 0) continue;
                 InvoiceRules.Sale(sim, from, to, good, q, value);
+                SupplyRules.FromYou(sim, to, good, q);
             }
         }
 
@@ -1042,6 +1066,7 @@ namespace Sim.Core.Business
                     b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.boughtFromFarm", "business:" + b.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
                     b.Stock[good] += q;
                     b.StockCost[good] += value;
+                    SupplyRules.FromYou(sim, b, good, q);
                     taken[k] += q;
                     room -= q;
                 }
@@ -1065,6 +1090,7 @@ namespace Sim.Core.Business
             b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.boughtFromNeighbours", "business:" + b.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
             b.Stock[good] += ml;
             b.StockCost[good] += value;
+            SupplyRules.Bought(sim, b, good, ml);
         }
 
         /// <summary>A business sells grams of a good: its stock leaves at cost, the sale is booked against <paramref name="paidTo"/> (cash, or Owed by buyers for a sale on terms).</summary>

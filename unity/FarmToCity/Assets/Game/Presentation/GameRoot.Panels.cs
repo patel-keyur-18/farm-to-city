@@ -96,6 +96,7 @@ namespace Game.Presentation
                 OnMenu = () => OpenSheet(new SheetRequest("Menu", 0)),
                 OnAlerts = () => OpenSheet(new SheetRequest("Alerts", 0)),
                 OnOrders = () => OpenSheet(new SheetRequest("Orders", 0)),
+                OnBusinesses = () => OpenSheet(new SheetRequest(BusinessHub.Kind, 0)),
                 OnOverlays = OnOverlaysButton,
                 OnUrgent = () => _sounds.Play("urgent"),
             };
@@ -231,8 +232,9 @@ namespace Game.Presentation
                 case TreasurySheet.GiveKind: Return(new SheetRequest(TreasurySheet.Kind, 0)); return; // given: back to the treasury to see its balance
                 case TreasurySheet.BudgetKind: Return(new SheetRequest(TreasurySheet.Kind, 0, TreasurySheet.BudgetTab)); return; // set: back to the Budget tab, the new figure there
                 case "Borrow": case "Repay": Return(new SheetRequest("Money", 0, MoneySheet.Wealth)); return;
-                case "BusinessCash": Return(new SheetRequest("Business", r.Id, BusinessSheet.Books)); return; // see the cash move in its books
+                case "BusinessCash": Return(_back.Count > 0 && _back[_back.Count - 1].Kind == BusinessHub.Kind ? new SheetRequest(BusinessHub.Kind, 0) : new SheetRequest("Business", r.Id, BusinessSheet.Books)); return; // the hub it came from (take from the next), else see the cash move in its books
                 case "BusinessClose": Return(new SheetRequest("Businesses", 0)); return;
+                case SupplySheet.CapKind: Return(new SheetRequest("Business", r.Id, SupplySheet.Tab)); return; // chosen: back to the Supply tab, the new cap there
                 case "BuyInput":
                     // Back where the purchase started: Buy inputs, the shed's Fill, a buy card, an alert.
                     if (_back.Count > 0) Back(); else Return(new SheetRequest("BuyInputs", 0));

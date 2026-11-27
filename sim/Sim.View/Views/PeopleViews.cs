@@ -90,7 +90,9 @@ namespace Sim.View.Views
             string sell = o.Sell == SellRule.Store ? ctx.Strings.Get("order.sellStore")
                 : o.Sell == SellRule.Trader ? ctx.Strings.Get("order.sellTrader")
                 : ctx.Strings.Get("order.sellOffer", "min", ctx.Fmt.Integer(o.MinPrice.RoundToLong()));
+            Sim.Core.Business.Business stall = Sim.Core.Business.StallOrderRules.Stall(ctx.Sim, o);
             string what = o.Kind != OrderTargetKind.Field ? ctx.Strings.Get("order.pick")
+                : stall != null ? ForStall(ctx, stall)
                 : o.Crop < 0 ? ctx.Strings.Get("order.handChooses", "name", Name(ctx, ctx.Sim.State.People.Hand(o.HandId).Name))
                 : ctx.Strings.Get("order.keep", "crop", ctx.Strings.Get(ctx.Sim.Config.Game.Farm.Crops[o.Crop].NameKey));
             if (o.Kind == OrderTargetKind.Field) what += With(ctx, ctx.Sim.Config.Game.Farm.Fertilisers[o.Fertiliser].Id);
@@ -98,6 +100,54 @@ namespace Sim.View.Views
             Crop now = o.Kind == OrderTargetKind.Field ? ctx.Sim.State.Farm.CropOn((int)o.Target) : null;
             if (now != null && now.Def != o.Crop) what += " " + ctx.Strings.Get("order.now", "crop", ctx.Strings.Get(ctx.Sim.Config.Game.Farm.Crops[now.Def].NameKey));
             return what + (fodder ? "" : " · " + sell) + " · " + ctx.Strings.Get(o.Once ? "order.once" : "order.every");
+        }
+
+        /// <summary>Where a stall is: its pitch, or the acre it stands on.</summary>
+        public static string StallPlace(ViewContext ctx, Sim.Core.Business.Business b) { return b.Pitch >= 0 ? ShopWords.Pitch(ctx, b.Pitch) : Field(ctx, b.TileId); }
+
+        /// <summary>"For your vegetable stall", with its place when you have more than one open (spec 030 §3.6).</summary>
+        public static string ForStall(ViewContext ctx, Sim.Core.Business.Business b)
+        {
+            string name = ctx.Strings.Get("order.forStall");
+            return Sim.Core.Business.StallOrderRules.OpenStalls(ctx.Sim).Count > 1 ? name + " · " + StallPlace(ctx, b) : name;
+        }
+
+        /// <summary>
+        /// A stall order's own line on the hand's and the field's sheets: what the stall will still need tomorrow, or that it is gone and he chooses
+        /// (spec 030 §3.6, §7.5). Null for any other order.
+        /// </summary>
+        public static string StallLine(ViewContext ctx, StandingOrder o)
+        {
+            if (o.ForBusiness == 0) return null;
+            var s = ctx.Strings;
+            Simulation sim = ctx.Sim;
+            Sim.Core.Business.Business b = Sim.Core.Business.StallOrderRules.Stall(sim, o);
+            if (b == null) return s.Get("order.stallGone", "name", Name(ctx, sim.State.People.Hand(o.HandId).Name));
+            var list = new List<string>();
+            foreach (KeyValuePair<int, long> want in Sim.Core.Business.StallOrderRules.Wanted(sim, b))
+            {
+                if (list.Count == 3) break; // the three it lacks most; the ? has the rest
+                CropDef c = sim.Config.Game.Farm.Crops[want.Key];
+                list.Add(s.Get(c.NameKey).ToLowerInvariant() + " " + ctx.Fmt.Quantity(sim.Config.Game.Market.Goods[c.OutputGood], want.Value));
+            }
+            return list.Count == 0 ? s.Get("order.stallPreorderNone") : s.Get("order.stallPreorder", "list", string.Join(", ", list));
+        }
+
+        /// <summary>The order's words with its last action and, for a stall order, its preorder, one to a line.</summary>
+        public static string OrderLines(ViewContext ctx, StandingOrder o)
+        {
+            string text = Order(ctx, o);
+            if (Last(ctx, o) is string last) text += "\n" + last;
+            if (StallLine(ctx, o) is string stall) text += "\n" + stall;
+            return text;
+        }
+
+        /// <summary>The ? of an order's line: the stall's working for a stall order, else the order's own.</summary>
+        public static void OrderWhy(StandingOrder o, Simulation sim, long handId, out string key, out long id)
+        {
+            key = "order";
+            id = handId;
+            if (Sim.Core.Business.StallOrderRules.Stall(sim, o) != null) { key = "stallPick"; id = o.ForBusiness * 1000 + o.Target; }
         }
 
         /// <summary>" with compost" for an order's fertiliser, nothing without one.</summary>
@@ -471,8 +521,8 @@ namespace Sim.View.Views
                 if (o.HandId != h.Id) continue;
                 any = true;
                 StandingOrder order = o;
-                string last = PeopleWords.Last(ctx, o);
-                var line = new LineVm(PeopleWords.Target(ctx, o.Kind, o.Target), PeopleWords.Order(ctx, o) + (last == null ? "" : "\n" + last), "order", h.Id);
+                PeopleWords.OrderWhy(o, sim, h.Id, out string whyKey, out long whyId);
+                var line = new LineVm(PeopleWords.Target(ctx, o.Kind, o.Target), PeopleWords.OrderLines(ctx, o), whyKey, whyId);
                 line.Action = ActionVm.Checked(ctx, "clear:" + o.Kind + ":" + o.Target, ctx.Strings.Get("action.remove"), null, ActionKind.Secondary,
                     at => new ClearStandingOrder(at, h.Id, order.Kind, order.Target));
                 vm.Lines.Add(line);
@@ -599,6 +649,15 @@ namespace Sim.View.Views
                 best < 0 ? s.Get("order.handChoosesWhy") : s.Get("order.handChoosesNow", "crop", s.Get(defs.Farm.Crops[best].NameKey)));
             choice.Action = ActionVm.Open("crop:" + OrderSpec.HandChooses, s.Get("action.choose"), Req(sim, h, target, OrderSpec.HandChooses + "+" + fert));
             vm.Lines.Add(choice);
+            // For your vegetable stall (spec 030 §3.6, US-269): a row for each open stall, with the vegetable he would sow for it now.
+            foreach (Sim.Core.Business.Business stall in Sim.Core.Business.StallOrderRules.OpenStalls(sim))
+            {
+                int forStall = Sim.Core.Business.StallOrderRules.Pick(sim, (int)target, defs.Farm.IndexOfFertiliser(fert), stall, out bool needless);
+                var row = new LineVm(PeopleWords.ForStall(ctx, stall),
+                    needless ? s.Get("order.forStallNeedless", "name", name) : forStall < 0 ? s.Get("order.forStallNone", "name", name) : s.Get("order.forStallNow", "crop", s.Get(defs.Farm.Crops[forStall].NameKey)), "stallPick", stall.Id * 1000 + target);
+                row.Action = ActionVm.Open("crop:" + OrderSpec.StallPrefix + stall.Id, s.Get("action.choose"), Req(sim, h, target, OrderSpec.StallPrefix + stall.Id + "+" + fert));
+                vm.Lines.Add(row);
+            }
             // Another season's crop, set now (ADR 0048: his best in-season pick till then), behind one row (spec 020 §3.6, G22).
             if (OtherSeasonCrops(ctx).Count > 0)
             {
@@ -696,8 +755,12 @@ namespace Sim.View.Views
             string head = kind == OrderTargetKind.Field ? parts[0] : "tree";
             string crop = kind == OrderTargetKind.Field ? head.Split('+')[0] : null;
             string fert = FertiliserOf(arg);
-            bool auto = crop == OrderSpec.HandChooses;
-            if (crop != null) vm.Subtitle = (auto ? ctx.Strings.Get("order.handChooses", "name", name)
+            bool stall = crop != null && crop.StartsWith(OrderSpec.StallPrefix, System.StringComparison.Ordinal);
+            bool auto = crop == OrderSpec.HandChooses || stall;
+            Sim.Core.Business.Business forStall = stall && long.TryParse(crop.Substring(OrderSpec.StallPrefix.Length), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out long stallId)
+                ? Sim.Core.Business.StallOrderRules.OpenStall(sim, sim.State.Businesses?.Find(stallId)) : null;
+            if (crop != null) vm.Subtitle = (stall ? (forStall == null ? ctx.Strings.Get("order.forStall") : PeopleWords.ForStall(ctx, forStall))
+                : auto ? ctx.Strings.Get("order.handChooses", "name", name)
                 : ctx.Strings.Get("order.keep", "crop", ctx.Strings.Get(defs.Farm.Crops[defs.Farm.IndexOfCrop(crop)].NameKey))) + PeopleWords.With(ctx, fert);
             if (parts.Length < 2)
             {
@@ -732,6 +795,15 @@ namespace Sim.View.Views
                 var keep = new LineVm(ctx.Strings.Get("order.fodderKeep"), ctx.Strings.Get("order.fodderKeepWhy"));
                 keep.Action = ActionVm.Checked(ctx, "set:store", ctx.Strings.Get("action.setOrder"), null, ActionKind.Primary, at => new SetStandingOrder(at, h.Id, Spec(SellRule.Store, 0)));
                 vm.Lines.Add(keep);
+                AddClear(ctx, vm, h, existing, kind, target);
+                return vm;
+            }
+            if (stall)
+            {
+                // For your vegetable stall: kept in your store, which the stall takes from at 6:00 (spec 030 §3.6); never sold to the trader.
+                var keepForStall = new LineVm(ctx.Strings.Get("order.sellStore"), ctx.Strings.Get("order.sellStallWhy"));
+                keepForStall.Action = ActionVm.Checked(ctx, "set:store", ctx.Strings.Get("action.setOrder"), null, ActionKind.Primary, at => new SetStandingOrder(at, h.Id, Spec(SellRule.Store, 0)));
+                vm.Lines.Add(keepForStall);
                 AddClear(ctx, vm, h, existing, kind, target);
                 return vm;
             }

@@ -755,7 +755,7 @@ namespace Sim.View.Views
             { "LabourersHired", Use.Motion }, { "LabourersLeft", Use.Motion }, { "LabourersHarvested", Use.Motion }, { "ConstructionStarted", Use.Motion }, { "HandHutBuilt", Use.Motion },
             { "JobPosted", Use.StateOnly }, { "JobPostExpired", Use.StateOnly }, { "ApplicantArrived", Use.Motion }, { "RegularAsksToMoveIn", Use.Motion },
             { "ApplicantLeft", Use.StateOnly }, { "ApplicantInterviewed", Use.StateOnly }, { "OfferDeclined", Use.StateOnly }, { "HandHired", Use.Motion },
-            { "ReferenceChecked", Use.Motion }, { "CounterOffer", Use.StateOnly }, { "WorkerHired", Use.Motion }, { "WorkerLeft", Use.StateOnly },
+            { "ReferenceChecked", Use.Motion }, { "CounterOffer", Use.StateOnly }, { "WorkerHired", Use.Motion }, { "WorkerLeft", Use.StateOnly }, { "RunYourselfChosen", Use.StateOnly },
             { "CourseFinished", Use.Away }, { "LongDaysStopped", Use.Away },
             { "HrEventRaised", Use.Alert }, { "HrEventAnswered", Use.StateOnly }, { "HrEventDefaulted", Use.Away }, { "HrOutcome", Use.StateOnly }, { "SupervisorHired", Use.Motion }, { "SupervisorLeft", Use.Away }, { "AccidentHappened", Use.StateOnly }, { "ConflictRaised", Use.StateOnly }, { "AssociationFormed", Use.StateOnly }, { "ReputationChanged", Use.StateOnly },
             { "ContractRenewed", Use.Away }, { "ContractLapsed", Use.Away }, { "HandLeft", Use.Away }, { "CitizenRetired", Use.Away }, { "CitizenBorn", Use.Away }, { "CitizenMarried", Use.Away }, { "CitizenDied", Use.Away }, { "FamilyRequest", Use.Alert }, { "LeasesOffered", Use.Alert }, { "LeaseRenewed", Use.Away }, { "FamilyMovedIn", Use.Away },

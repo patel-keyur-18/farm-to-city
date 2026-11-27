@@ -209,8 +209,8 @@ namespace Sim.Core.Tests
             Business.Business mill = old.State.Businesses.Businesses.Last();
             Assert.That((mill.Pitch, mill.PriceFactor, mill.Stars, mill.PutOut.Sum()), Is.EqualTo((-1, Maths.Fixed.One, config.Game.Shops.StartStars, 0L)));
 
-            RecipeTests.Village(sim);
-            Assert.That(sim.Execute(new FoundBusiness(sim.State.Clock.SimTime, "tea_stall", 0, 100_000_00, true, null, 0)).Accepted, Is.True);
+            RecipeTests.Village(sim); // the mill is run by you, so the tea stall is hired: one business a founder (spec 030 §3.1)
+            Assert.That(sim.Execute(new FoundBusiness(sim.State.Clock.SimTime, "tea_stall", 0, 100_000_00, false, null, 0)).Accepted, Is.True);
             sim.AdvanceTo(sim.State.Clock.SimTime + TestSim.Day);
             LoadResult again = SaveCodec.Read(SaveCodec.Write(sim.State, config, TestSim.Wall0), config, MinSchema);
             Assert.That(again.Error, Is.EqualTo(SaveError.None), again.Detail);

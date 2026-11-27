@@ -55,6 +55,45 @@ namespace Game.Presentation.Ui
             e.style.paddingLeft = e.style.paddingRight = e.style.paddingTop = e.style.paddingBottom = bleed;
         }
 
+        /// <summary>
+        /// A round badge's number (spec 030 §3.2): one line, never wrapped, and the badge grows from a circle (one digit) to a pill as the number
+        /// gets longer. The label is made empty and filled later, so <see cref="Text"/> would leave it wrapping inside a fixed-width circle
+        /// ("11" drew as "1" with a stray "1" beside the button).
+        /// </summary>
+        public static void FitBadge(VisualElement badge, Label number, float size)
+        {
+            number.style.whiteSpace = WhiteSpace.NoWrap;
+            number.style.flexShrink = 0;
+            badge.style.width = StyleKeyword.Auto;
+            badge.style.minWidth = size;
+            badge.style.height = size;
+            badge.style.paddingLeft = 12; badge.style.paddingRight = 12;
+            badge.style.flexShrink = 0;
+        }
+
+        private static Texture2D _fade;
+
+        /// <summary>
+        /// A 60-unit fade at a scrolling row's edge (spec 030 §3.2): the sheet's cream, solid at the edge and clear inward, so a cut-off tab
+        /// reads as "more this way". <paramref name="atLeft"/> picks the edge.
+        /// </summary>
+        public static VisualElement EdgeFade(bool atLeft)
+        {
+            if (_fade == null)
+            {
+                _fade = new Texture2D(64, 1, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+                for (int x = 0; x < 64; x++) _fade.SetPixel(x, 0, new Color(1f, 1f, 1f, 1f - x / 63f));
+                _fade.Apply();
+            }
+            var e = new VisualElement { pickingMode = PickingMode.Ignore };
+            e.style.position = Position.Absolute;
+            e.style.top = 0; e.style.bottom = 0; e.style.width = 60;
+            if (atLeft) e.style.left = 0; else { e.style.right = 0; e.style.scale = new Scale(new Vector3(-1f, 1f, 1f)); }
+            e.style.backgroundImage = new StyleBackground(_fade);
+            e.style.unityBackgroundImageTintColor = Cream;
+            return e;
+        }
+
         public static Label Text(string text, float size, Color colour, Font font = null, bool outline = false)
         {
             var l = new Label(text);

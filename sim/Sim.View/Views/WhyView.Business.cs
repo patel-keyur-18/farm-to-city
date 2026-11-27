@@ -208,8 +208,14 @@ namespace Sim.View.Views
                 Row(vm, ctx, BusinessWords.Key(ctx, "why.books.rowIncome", t), Money(ctx, Amount(BusinessBooksSheet.Fees) + Amount(BusinessBooksSheet.Sales)));
                 Row(vm, ctx, BusinessWords.Key(ctx, "why.books.rowGoods", t), "−" + Money(ctx, Amount(BusinessBooksSheet.Goods)));
                 if (line == BusinessBooksSheet.Profit)
-                    Row(vm, ctx, "why.books.rowRunning", "−" + Money(ctx, Amount(BusinessBooksSheet.Wages) + Amount(BusinessBooksSheet.Power) + Amount(BusinessBooksSheet.Repairs)
-                        + Amount(BusinessBooksSheet.Depreciation) + Amount(BusinessBooksSheet.Interest) + Amount(BusinessBooksSheet.Rent)));
+                {
+                    long running = Amount(BusinessBooksSheet.Wages) + Amount(BusinessBooksSheet.Power) + Amount(BusinessBooksSheet.Repairs)
+                        + Amount(BusinessBooksSheet.Depreciation) + Amount(BusinessBooksSheet.Interest) + Amount(BusinessBooksSheet.Rent);
+                    Row(vm, ctx, "why.books.rowRunning", "−" + Money(ctx, running));
+                    // Marketing, bad debt, tax and losses on sales are in the profit too (review, 2026-11-26): one more row so the rows add up.
+                    long other = Amount(BusinessBooksSheet.Fees) + Amount(BusinessBooksSheet.Sales) - Amount(BusinessBooksSheet.Goods) - running - Amount(BusinessBooksSheet.Profit);
+                    if (other != 0) Row(vm, ctx, "why.hubProfit.rowOther", (other > 0 ? "−" : "") + Money(ctx, System.Math.Abs(other)));
+                }
             }
             if (line >= BusinessBooksSheet.BridgeProfit && line <= BusinessBooksSheet.BridgeOther)
             {

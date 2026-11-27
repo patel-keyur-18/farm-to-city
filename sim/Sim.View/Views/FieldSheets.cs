@@ -422,8 +422,11 @@ namespace Sim.View.Views
             }
             Sim.Core.People.StandingOrder o = p.OrderFor(kind, target);
             string name = PeopleWords.Name(ctx, hand.Name);
+            string whyKey = "order";
+            long whyId = hand.Id;
+            if (o != null) PeopleWords.OrderWhy(o, ctx.Sim, hand.Id, out whyKey, out whyId);
             var line = new LineVm(ctx.Strings.Get("field.handLooksAfter", "name", name),
-                o == null ? ctx.Strings.Get("field.noOrder") : PeopleWords.Order(ctx, o) + (PeopleWords.Last(ctx, o) is string last ? "\n" + last : ""), "order", hand.Id);
+                o == null ? ctx.Strings.Get("field.noOrder") : PeopleWords.OrderLines(ctx, o), whyKey, whyId);
             line.Action = ActionVm.Open("order", ctx.Strings.Get(o == null ? "action.giveOrder" : "action.changeOrder"),
                 new SheetRequest("Order", target, kind == Sim.Core.People.OrderTargetKind.Tree ? "tree" : null));
             vm.Lines.Add(line);

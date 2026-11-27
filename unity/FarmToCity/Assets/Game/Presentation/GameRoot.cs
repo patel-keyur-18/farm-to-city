@@ -105,7 +105,8 @@ namespace Game.Presentation
             BuildScene();
             RestoreCamera();
             Refresh(false);
-            if (first != null) ShowCard(first, _ => { });
+            if (first != null) ShowCard(first, _ => AskWhichToRun());
+            else AskWhichToRun();
         }
 
         private static string RegionCode()
@@ -207,6 +208,7 @@ namespace Game.Presentation
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (_dev != null && _dev.IsOpen) { return; }
 #endif
+            if (_choosing) return; // an older town runs several businesses itself: time waits until the player chooses one (spec 030 §7.3)
             // Sync once per wall-clock second: the sim's time unit is a whole second (spec 001 §3.4).
             long now = WallNow();
             if (_alignPending) { _alignPending = false; AlignClock(); }
@@ -500,6 +502,8 @@ namespace Game.Presentation
                 case ShopPlaceSheet.Kind: _sheet.Show(ShopPlaceSheet.Build(_ctx, (int)r.Id, r.Arg), refreshOnly); break; // a pitch in the square or your acre (spec 017 §3.4)
                 case "ShedPlacement": if (!refreshOnly) StartPlacing(PlaceKind.Shed); break;
                 case "Businesses": _sheet.Show(BusinessesSheet.Build(_ctx), refreshOnly); break;
+                case BusinessHub.Kind: _sheet.Show(BusinessHub.Build(_ctx), refreshOnly); break;
+                case SupplySheet.CapKind: _sheet.Show(SupplySheet.Cap(_ctx, r.Id, r.Arg), refreshOnly); break;
                 case "BusinessResearch": _sheet.Show(BusinessResearchSheet.Build(_ctx, (int)r.Id), refreshOnly); break;
                 case "BusinessPlan": _sheet.Show(BusinessPlanSheet.Build(_ctx, (int)r.Id, BusinessWords.Self(r.Arg), BusinessWords.Loan(r.Arg)), refreshOnly); break;
                 case "BusinessClose": _sheet.Show(BusinessCloseSheet.Build(_ctx, r.Id), refreshOnly); break;

@@ -290,6 +290,9 @@ namespace Sim.Core.People
 
         /// <summary>The store is full and the trader's truck is away (spec 011 §3.6b).</summary>
         TraderAway = 6,
+
+        /// <summary>A stall order, and no vegetable the stall sells has a preorder: nothing to grow for it (spec 030 §3.6, owner 2026-11-26).</summary>
+        NothingNeeded = 7,
     }
 
     /// <summary>A standing order: one hand, one target (spec 006 §3.8). Target: a tile id or a tree slot id.</summary>
@@ -320,6 +323,12 @@ namespace Sim.Core.People
         public long LastAmount { get; internal set; }
         public OrderWait Waiting { get; internal set; }
 
+        /// <summary>
+        /// A field order that grows for your vegetable stall (spec 030 §3.6, US-269): the stall's business id; 0 otherwise. Its <see cref="Crop"/> stays −1, the hand's
+        /// choice, which falls back to his best pick when the stall is gone. Save schema 25, hashed once used.
+        /// </summary>
+        public long ForBusiness { get; internal set; }
+
         internal StandingOrder Clone() { return (StandingOrder)MemberwiseClone(); }
 
         internal void WriteTo(IStateWriter h)
@@ -338,6 +347,7 @@ namespace Sim.Core.People
             h.WriteLong(LastQuantity);
             h.WriteLong(LastAmount);
             h.WriteInt((int)Waiting);
+            if (h.Hashing ? ForBusiness != 0 : !(h is SaveWriter s25 && s25.Schema < Business.SupplyRules.Schema)) h.WriteLong(ForBusiness); // schema 25; hashed once a stall order is set
         }
 
         internal static StandingOrder ReadFrom(SaveReader r)
@@ -349,6 +359,7 @@ namespace Sim.Core.People
                 Once = r.ReadBool(), LastAction = (OrderAction)r.ReadInt(), LastAt = r.ReadLong(), LastQuantity = r.ReadLong(), LastAmount = r.ReadLong(),
                 Waiting = (OrderWait)r.ReadInt(),
             };
+            if (r.Schema >= Business.SupplyRules.Schema) o.ForBusiness = r.ReadLong();
             if (r.OldMap && o.Kind == OrderTargetKind.Field) o.Target = Saves.MapMigration.Remap((int)o.Target); // spec 010 §3.4
             return o;
         }

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 23 The Businesses hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: the game's own 1280 x 720 landscape screen scaled to fit, one tab for each screen of the preview.
+   Palette and sizes come from the game's UiKit (Cream, Wood, Green, Sand, Warn). */
+:root{
+  --cream:#FFF3D1; --cream2:#F2DDA6; --wood:#8A5A2B; --ink:#4A3320; --bar:#6B4423;
+  --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A; --grey:#C9C2B0; --grey2:#8A8372;
+  --warn:#C2410C; --red:#E8604C; --gold:#FFD968;
+  --page:#241a12; --pagetext:#f1e6cf; --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:80ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.tabs button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.tabs button:focus-visible,.ctl button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center;color:#d9c9a8;font-size:14px;min-height:34px}
+.ctl button{font:600 14px var(--body);padding:6px 12px;border-radius:9px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.ctl button[aria-pressed=true]{background:var(--sand);border-color:var(--sand2);color:var(--ink)}
+.wrap{width:100%;overflow:hidden;border-radius:14px;border:2px solid #5a4430}
+#stage{width:1280px;height:720px;position:relative;transform-origin:0 0;overflow:hidden;background:#5b8a3a;font-family:var(--body);color:var(--ink)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 16px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.5;font-size:14px;color:#e3d5b8}
+/* in-game pieces */
+.map{position:absolute;inset:0}
+.hud{position:absolute;background:var(--bar);border:3px solid #3b2614;border-radius:18px;color:#fff;padding:10px 16px}
+.hud.l{left:20px;top:16px;width:250px}
+.hud .s{font-size:17px;opacity:.9}
+.hud .big{font:700 44px var(--display);color:var(--gold);line-height:1.1}
+.hud.r{right:20px;top:16px;width:220px;text-align:right}
+.hud.r2{right:20px;top:92px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display)}
+.hud.r3{right:20px;top:152px;width:220px;padding:8px 16px;text-align:right;font:700 22px var(--display);color:#fff}
+.roundbtn{position:absolute;width:98px;height:98px;border-radius:50%;background:var(--sand);border:5px solid var(--wood);display:flex;align-items:flex-end;justify-content:center;font:700 17px var(--display);padding-bottom:8px;color:var(--ink)}
+.badge{position:absolute;right:-4px;top:-4px;min-width:34px;height:34px;border-radius:17px;background:var(--red);border:3px solid #fff;color:#fff;font:700 20px var(--display);display:flex;align-items:center;justify-content:center;padding:0 6px}
+.scrim{position:absolute;inset:0;background:rgba(40,28,16,.45)}
+.scrim.dark{background:rgba(30,20,12,.72)}
+.sheet{position:absolute;left:146px;top:12px;width:988px;height:696px;background:var(--cream);border:4px solid var(--wood);border-radius:24px;overflow:hidden;display:flex;flex-direction:column}
+.head{display:flex;align-items:center;gap:16px;padding:14px 18px 8px}
+.head .tt{flex:1}
+.head h2{margin:0;font:700 34px var(--display);color:var(--ink);line-height:1.1}
+.head .sub{font-size:19px;color:var(--wood);margin-top:2px}
+.cbtn{width:52px;height:52px;border-radius:50%;background:var(--sand);border:3px solid var(--wood);display:flex;align-items:center;justify-content:center;font:700 30px var(--body);color:var(--ink);flex:none}
+.cbtn.x{background:var(--red);border-color:#fff;color:#fff;box-shadow:0 0 0 3px var(--wood)}
+.ico{width:48px;height:48px;border-radius:50%;background:var(--sand);border:3px solid var(--sand2);display:flex;align-items:center;justify-content:center;flex:none}
+.ico svg{width:30px;height:30px}
+.body{padding:0 20px 14px;overflow:hidden;flex:1}
+.sec{font:600 23px var(--display);color:var(--wood);border-bottom:2px solid var(--wood);margin:14px 0 4px;padding-bottom:2px}
+.row{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid #eadfba;font-size:20px;min-height:62px}
+.row .grow{flex:1}
+.row .val{font-weight:700;text-align:right}
+.row small{display:block;font-size:16px;color:var(--wood);margin-top:2px}
+.row small.warn{color:var(--warn);font-weight:700}
+.q{width:38px;height:38px;border-radius:50%;border:2.5px solid var(--wood);background:#f8e6b6;color:var(--wood);font:700 22px var(--body);display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.btn{position:relative;font:700 21px var(--body);color:#fff;text-shadow:-1.5px -1.5px 0 var(--ink),1.5px -1.5px 0 var(--ink),-1.5px 1.5px 0 var(--ink),1.5px 1.5px 0 var(--ink);background:var(--green);border:4px solid var(--green2);border-radius:16px;padding:10px 20px 12px;min-width:150px;cursor:pointer;overflow:hidden}
+.btn::before{content:"";position:absolute;left:8px;right:8px;top:3px;height:42%;border-radius:10px;background:rgba(255,255,255,.22)}
+.btn span{position:relative}
+.btn.sand{background:var(--sand);border-color:var(--sand2);color:var(--ink);text-shadow:none}
+.btn.grey{background:var(--grey);border-color:var(--grey2);color:#6e6858;text-shadow:none;cursor:not-allowed}
+.btn:focus-visible,.q:focus-visible{outline:3px solid #1c5fd1;outline-offset:2px}
+.btn small{display:block;font:600 15px var(--body);text-shadow:none;color:rgba(255,255,255,.95)}
+.btn.sand small{color:var(--ink)}
+.act{display:flex;flex-direction:column;align-items:flex-end;gap:4px;max-width:360px}
+.act .why{font-size:15px;color:var(--warn);text-align:right;line-height:1.25;font-weight:600}
+.card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--cream);border:4px solid var(--wood);border-radius:22px;padding:22px 26px;width:760px}
+.card h3{margin:0 0 6px;font:700 32px var(--display);text-align:center}
+.card p.b{margin:0 0 8px;font-size:21px;line-height:1.4;text-align:center;color:var(--ink)}
+.cost{display:flex;justify-content:space-between;font-size:21px;padding:8px 6px;border-bottom:1px solid #eadfba}
+.cost b{font-weight:700}
+.btnrow{display:flex;gap:14px;margin-top:16px}
+.toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:var(--bar);color:#fff;border:3px solid #3b2614;border-radius:16px;padding:12px 22px;font-size:20px;max-width:800px;text-align:center}
+.choice{display:flex;align-items:center;gap:16px;padding:12px 14px;border-radius:14px;background:#f8e6b6;border:2px solid #e3c677;margin-top:10px}
+.choice .tx{flex:1;font-size:22px;font-weight:700}
+.choice .tx small{display:block;font:400 17px var(--body);color:var(--wood);margin-top:3px}
+.choice .ico{width:56px;height:56px}
+.choice .ico svg{width:34px;height:34px}
+.hint{font-size:17px;color:var(--wood);margin:12px 4px 0;line-height:1.4;text-align:center}
+</style>
+<style>
+.row.bz{min-height:70px}
+.row .ico.big{width:56px;height:56px}
+.row .ico.big svg{width:34px;height:34px}
+.bang{width:34px;height:34px;border-radius:50%;background:var(--red);border:3px solid #fff;box-shadow:0 0 0 2px var(--warn);color:#fff;font:700 22px var(--display);display:flex;align-items:center;justify-content:center;flex:none}
+.stars{color:#e0a21c;letter-spacing:2px;font-size:22px}
+.stars i{color:#cdbf94;font-style:normal}
+.row.alert{background:#fdeadb}
+.row.tot{background:var(--cream2);border-radius:12px;border:0;margin-top:6px}
+.pic2{display:flex;gap:10px}
+.ctl{margin:0 0 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;color:#d9c9a8}
+.ctl button{font:600 14px var(--body);padding:6px 12px;border-radius:9px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.ctl button[aria-pressed=true]{background:var(--gold);border-color:#9a6a2a;color:#3a2b10}
+.rb{position:absolute;bottom:20px}
+.tag{display:inline-block;font:700 14px var(--body);padding:2px 9px;border-radius:9px;background:#e9d9a8;border:2px solid var(--wood);color:var(--wood);vertical-align:middle;margin-left:10px}
+.tag.warn{background:#fde2cf;border-color:var(--warn);color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 23: the Businesses hub</h1>
+  <p class="lead">Sprint 28, US-267 (spec 030 §3.3, §7.1, §7.2). Every screen is drawn at the game's own 1280 × 720 size, in the layout of the sheets you already have. One new round button on the HUD opens one sheet that lists all your businesses with what each earned this season and the cash inside it. Pick the situation in "Show" on each tab. The supply line from the spec comes with US-268.</p>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div class="ctl" id="ctl"></div>
+  <div class="wrap"><div id="stage"></div></div>
+  <div class="notes" id="notes"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const I={
+ person:'<svg viewBox="0 0 30 30"><circle cx="15" cy="9" r="5" fill="#8a5a2b"/><path d="M5 27c0-8 4-11 10-11s10 3 10 11z" fill="#c2410c"/></svg>',
+ mill:'<svg viewBox="0 0 30 30"><rect x="6" y="12" width="18" height="14" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><path d="M4 13l11-9 11 9z" fill="#a8743c" stroke="#8a5a2b" stroke-width="2"/><circle cx="15" cy="19" r="4" fill="#fff3d1" stroke="#8a5a2b" stroke-width="2"/></svg>',
+ veg:'<svg viewBox="0 0 30 30"><path d="M4 12l3-7h16l3 7z" fill="#79c84a" stroke="#3f7d20" stroke-width="2"/><rect x="6" y="12" width="18" height="12" fill="#e9d9a8" stroke="#8a5a2b" stroke-width="2"/><circle cx="12" cy="19" r="3" fill="#c2410c"/><circle cx="18" cy="19" r="3" fill="#79c84a"/><rect x="3" y="24" width="24" height="3" fill="#8a5a2b"/></svg>',
+ bakery:'<svg viewBox="0 0 30 30"><rect x="4" y="13" width="22" height="12" rx="2" fill="#d9a05b" stroke="#8a5a2b" stroke-width="2"/><path d="M3 14c1-7 7-9 12-9s11 2 12 9z" fill="#c2410c" stroke="#8a5a2b" stroke-width="2"/><rect x="12" y="17" width="6" height="8" fill="#6b4423"/></svg>',
+ bank:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/><path d="M15 8v14M11 12h8M11 18h8" stroke="#9a6a2a" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ coin:'<svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="11" fill="#ffd968" stroke="#9a6a2a" stroke-width="3"/><path d="M15 8v14M11 12h8M11 18h8" stroke="#9a6a2a" stroke-width="2.4" stroke-linecap="round"/></svg>',
+ star:'<svg viewBox="0 0 30 30"><path d="M15 3l3.6 8 8.4.8-6.4 5.6 1.9 8.4L15 21.2 7.5 25.8l1.9-8.4L3 11.8l8.4-.8z" fill="#ffd968" stroke="#9a6a2a" stroke-width="2"/></svg>'
+};
+let tab='hud',state={hud:'ok',hub:'three',take:'ok',why:'profit'};
+const qb=k=>`<div class="q" ${k?`data-why="${k}"`:''}>?</div>`;
+const sec=t=>`<div class="sec">${t}</div>`;
+function act(label,enabled,reason,look){return `<div class="act"><button class="btn ${enabled?(look||'sand'):'grey'}" ${enabled?'':'aria-disabled="true"'}><span>${label}</span></button>${reason?`<div class="why">${reason}</div>`:''}</div>`}
+function mapSvg(){let t='';for(let r=0;r<9;r++)for(let c=0;c<14;c++){const x=70+(c-r)*92+520,y=140+(c+r)*46;const f=['#6f9a42','#8aa84a','#a86f3b','#7a5230','#5b8a3a'][(c*7+r*3)%5];t+=`<polygon points="${x},${y} ${x+92},${y+46} ${x},${y+92} ${x-92},${y+46}" fill="${f}" stroke="#3f6a2a" stroke-width="2" opacity=".95"/>`}return `<svg class="map" viewBox="0 0 1280 720" width="1280" height="720"><rect width="1280" height="720" fill="#5b8a3a"/>${t}</svg>`}
+function badge(n){return n>0?`<div class="badge">${n>99?'99+':n}</div>`:''}
+function base(o){o=o||{};
+ const bz=o.bz!==undefined?o.bz:-1;
+ return `<div class="map">${mapSvg()}</div>
+ <div class="hud l"><div class="s">Monsoon · 3 days left</div><div class="big">16:10</div><div class="s">Clear until 22:00</div></div>
+ <div class="hud r"><div class="big" style="font-size:40px">1.12 L</div></div><div class="hud r2">Store 48%</div><div class="hud r3">184 people &nbsp;78</div>
+ <div class="roundbtn" style="right:20px;bottom:20px"><span style="color:#fff;background:#b02a1e;position:absolute;top:18px;left:28px;width:42px;height:34px;border-radius:6px"></span>Menu</div>
+ <div class="roundbtn" style="right:132px;bottom:20px"><span style="position:absolute;top:14px;left:30px;width:40px;height:40px">${I.person}</span>People${badge(o.people||0)}</div>
+ <div class="roundbtn" style="right:244px;bottom:20px"><span style="position:absolute;top:12px;left:28px;width:42px;height:42px;background:#d9a05b;border-radius:6px"></span>Orders${badge(o.orders||0)}</div>
+ ${bz>=0?`<div class="roundbtn" style="right:356px;bottom:20px"><span style="position:absolute;top:12px;left:28px;width:42px;height:42px">${I.mill}</span><span style="font-size:15px">Businesses</span>${badge(bz)}</div>`:''}
+ ${o.collect?`<div class="btn" style="position:absolute;left:20px;bottom:20px;min-width:230px"><span>Collect all · 3</span></div>`:''}`}
+function sheet(title,sub,icon,body,back){return `<div class="scrim"></div><div class="sheet"><div class="head">${back===false?'':'<div class="cbtn">←</div>'}<div class="ico" style="width:52px;height:52px">${icon}</div><div class="tt"><h2>${title}</h2><div class="sub">${sub}</div></div><div class="cbtn x">✕</div></div><div class="body">${body}</div></div>`}
+const stars=n=>`<span class="stars">${'★'.repeat(n)}<i>${'★'.repeat(5-n)}</i></span>`;
+
+/* the three businesses */
+const B={
+ mill:{n:'Flour mill',ic:I.mill,status:'Open until 18:00',who:'Manoj, miller',profit:'18,200',cash:'64,000',stars:3,bad:'Nobody works here: hire someone on the board.'},
+ veg:{n:'Vegetable stall',ic:I.veg,status:'Open until 19:00',who:'You',profit:'9,100',cash:'21,000',stars:4},
+ bak:{n:'Bakery',ic:I.bakery,status:'Opens in 2 days',who:'Not hired yet',profit:'0',cash:'0',building:true}
+};
+function bizRows(keys,needs){
+ let h='';
+ for(const k of keys){const b=Object.assign({},B[k]);const bad=needs.includes(k);if(bad&&k==='mill'){b.who='Nobody yet';b.status='Shut: nobody to work it'}
+  h+=`<div class="row bz ${bad?'alert':''}"><div class="ico big">${b.ic}</div><div class="grow"><b>${b.n}</b>${bad?'<span class="tag warn">Needs you</span>':''}<small>${b.status} · ${b.who}</small></div>${b.stars?`<div>${stars(b.stars)}</div>${qb('stars')}`:''}${act('See',true,'','sand')}</div>`;
+  if(bad)h+=`<div class="row alert" style="min-height:48px;padding-top:6px;padding-bottom:6px"><div class="bang">!</div><div class="grow" style="font-weight:600;color:var(--warn)">${b.bad||'Overdraft used up: it can\'t buy inputs.'}</div></div>`;
+  h+=`<div class="row"><div class="grow" style="padding-left:70px">Profit this season<small>so far, as its Books show</small></div><div class="val">${b.profit}</div>${qb('profit')}<div style="width:176px"></div></div>`;
+  h+=`<div class="row"><div class="grow" style="padding-left:70px">Cash in the ${b.n.toLowerCase()}</div><div class="val">${b.cash}</div>${qb('cash')}${b.cash==='0'?act('Take out',false,'Nothing to take out yet.'):act('Take out',true,'','green')}</div>`;
+ }
+ return h}
+const WHY={
+ profit:{t:'Profit this season',h:'+27,300',rows:[['Flour mill, season so far','18,200'],['Vegetable stall, season so far','9,100'],['Bakery (still being built)','0']],foot:'Each is that business\'s own Books: what it sold, less what it bought, its wages and wear. Your hours at the stall are counted too. Tap See on a business for its lines.'},
+ cash:{t:'Cash in your businesses',h:'85,000',rows:[['Flour mill','64,000'],['Vegetable stall','21,000'],['Bakery','0']],foot:'Each business keeps its own cash, apart from yours. Take out moves some to you; its next wages and repairs need some left.'},
+ stars:{t:'The mill\'s stars',h:'★★★☆☆',rows:[['What customers thought of its prices','Good'],['How long they waited','Fair'],['Distance','Fair']],foot:'Stars move a tenth of the way a day (the same Why as on the mill\'s card).'}
+};
+function whyCard(k){const w=WHY[k];return `<div class="scrim" style="background:rgba(40,28,16,.35)"></div><div class="card" style="width:760px;padding:20px 28px"><div style="display:flex;justify-content:space-between;align-items:baseline"><div><div style="font:700 17px var(--body);color:var(--wood)">Why?</div><div style="font:700 28px var(--display);margin-top:2px">${w.t}</div></div><div style="font:700 28px var(--display)">${w.h}</div></div>${w.rows.map(r=>`<div class="cost"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}${w.foot?`<div class="note" style="font-size:18px;margin-top:10px;color:var(--wood)">${w.foot}</div>`:''}<div class="btnrow"><button class="btn" style="max-width:220px;margin:0 auto"><span>OK</span></button></div></div>`}
+
+const views={
+ hud:{label:'1 · The HUD button',ctl:[['hud','none','No business yet'],['hud','ok','One or more, all fine'],['hud','one','One needs you'],['hud','two','Two need you'],['hud','more','Collect all is there too']],
+  notes:[
+   ['What to check',['A <b>fourth round button</b>, left of Orders, the same size and look as People and Orders. It appears once you own a business that is open or being built, and goes away when none is left.','The red <b>badge counts businesses that need you</b>: one with nobody working it, or whose overdraft is used up. No badge when all is well.','The picture is the flour mill\'s, the same as Menu → Businesses. Sprint 32 redraws every icon.']],
+   ['The rule, in words',['Needs you = open and nobody works it, or its overdraft is used to the limit so it can\'t buy inputs (the same test as the business\'s own red line).','Collect all (bottom left) still shows only when something is ready.']]],
+  render(){const m={none:-1,ok:0,one:1,two:2,more:2}[state.hud];return base({bz:m,collect:state.hud==='more',people:state.hud==='more'?11:0,orders:state.hud==='more'?3:0})}},
+ hub:{label:'2 · The hub',ctl:[['hub','three','Mill, stall, bakery (mill needs you)'],['hub','calm','Mill and stall, all fine'],['hub','one','Just the stall'],['hub','empty','All closed (button is gone: this only shows if you were looking)']],
+  notes:[
+   ['What to check',['At the top, <b>two totals</b> that add up the rows below: profit this season so far, and the cash across your businesses. Both have a ?.','<b>Start a business</b> opens today\'s Menu → Businesses list (the picture buttons); Back returns here.','Each business has three rows: its <b>picture, name, status, who runs it, stars</b> (only where it earns them) and <b>See</b>; its <b>profit this season</b>; its <b>cash</b> with <b>Take out</b>. Every number has its own ?.','A business that needs you has an orange background, a "Needs you" tag and a ! row saying why. Order: open first, then being built, then shut, each by id.','A business still being built shows "Opens in 2 days" and a closed Take out ("Nothing to take out yet").']],
+   ['Differences from the spec\'s sketch',['The spec drew profit and cash on one line. With a ? on each they need a row each, so a business takes three rows.','Today\'s supply line (from you / bought) is not here yet: it comes with US-268.']]],
+  render(){
+   const keys={three:['mill','veg','bak'],calm:['mill','veg'],one:['veg'],empty:[]}[state.hub];
+   const needs=state.hub==='three'?['mill']:[];
+   const P={three:['27,300','85,000'],calm:['27,300','85,000'],one:['9,100','21,000'],empty:['0','0']}[state.hub];
+   let h=`<div class="row tot"><div class="grow"><b>Profit this season</b><small>all your businesses, so far</small></div><div class="val">${P[0]}</div>${qb('profit')}</div>`;
+   h+=`<div class="row tot" style="margin-top:4px"><div class="grow"><b>Cash in your businesses</b><small>apart from your own cash</small></div><div class="val">${P[1]}</div>${qb('cash')}</div>`;
+   h+=`<div class="row"><div class="grow"><b>Start a business</b><small>See what each one would cost and earn</small></div>${act('Start',true,'','green')}</div>`;
+   h+=sec('Yours');
+   h+=keys.length?bizRows(keys,needs):`<div class="row"><div class="grow"><b>No business open</b><small>Use Start a business above</small></div></div>`;
+   return base({bz:keys.length?needs.length:-1})+sheet('Your businesses','How each is doing',I.mill,h,false)}},
+ take:{label:'3 · Take out, and back',ctl:[['take','ok','Mill: take out'],['take','after','After taking 25,000 out']],
+  notes:[
+   ['What to check',['<b>Take out</b> on a business opens the same sheet as today (amounts to choose, each with what it does). The ← at the top returns to the hub.','After you take money out you land <b>back on the hub</b> with the totals changed, so you can take from the next business. (Today it returns to that business\'s Books; See still gets you there.)']],
+   ['Unchanged',['The amounts and their notes, and the wage and repairs that stay behind, are today\'s sheet.']]],
+  render(){
+   if(state.take==='after'){
+     const h=`<div class="row tot"><div class="grow"><b>Profit this season</b><small>all your businesses, so far</small></div><div class="val">27,300</div>${qb('profit')}</div><div class="row tot" style="margin-top:4px"><div class="grow"><b>Cash in your businesses</b><small>apart from your own cash</small></div><div class="val" style="color:var(--green2)">60,000</div>${qb('cash')}</div><div class="row"><div class="grow"><b>Start a business</b></div>${act('Start',true,'','green')}</div>`+sec('Yours')+bizRows(['mill','veg'],[]).replace('64,000','39,000');
+     return base({bz:0})+sheet('Your businesses','How each is doing',I.mill,h,false)+`<div class="toast">25,000 coins from the flour mill to you.</div>`;
+   }
+   let h=[['5,000','Within what you put in: your own money coming back'],['10,000','Within what you put in: your own money coming back'],['25,000','Mostly profit: it counts as your drawings'],['60,000','All of it, to the 1,000 below']].map(r=>`<div class="row"><div class="grow"><b>${r[0]}</b><small>${r[1]}</small></div>${qb('cash')}${act('Take out',true,'','green')}</div>`).join('');
+   return base({bz:1})+sheet('Take cash out of the flour mill','The mill has 64,000. It keeps 14,000 for its next wages and repairs.',I.coin,h)}},
+ why:{label:'4 · The ? on the hub',ctl:[['why','profit','Profit'],['why','cash','Cash'],['why','stars','Stars']],
+  notes:[['What to check',['Every number on the hub has a ? with its sums in words, as every other sheet does: the totals add the rows, a row\'s profit is its Books line, its cash is its own ledger, its stars the same Why as the business card.']]],
+  render(){
+   let h=`<div class="row tot"><div class="grow"><b>Profit this season</b></div><div class="val">27,300</div>${qb('profit')}</div><div class="row tot" style="margin-top:4px"><div class="grow"><b>Cash in your businesses</b></div><div class="val">85,000</div>${qb('cash')}</div>`+sec('Yours')+bizRows(['mill','veg'],[]);
+   return base({bz:0})+sheet('Your businesses','How each is doing',I.mill,h,false)+whyCard(state.why)}}
+};
+function render(){
+ const v=views[tab];
+ $('#stage').innerHTML=v.render();
+ $('#notes').innerHTML=(v.notes||[]).map(n=>`<section><h2>${n[0]}</h2><ul>${n[1].map(x=>`<li>${x}</li>`).join('')}</ul></section>`).join('');
+ $('#ctl').innerHTML=(v.ctl&&v.ctl.length?'<span>Show:</span>':'')+(v.ctl||[]).map(c=>`<button data-set="${c[0]}:${c[1]}" aria-pressed="${state[c[0]]===c[1]}">${c[2]}</button>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===tab));
+ fit();
+}
+function fit(){const w=document.querySelector('.wrap').clientWidth,s=Math.min(1,w/1280);$('#stage').style.transform=`scale(${s})`;document.querySelector('.wrap').style.height=720*s+'px'}
+$('#tabs').innerHTML=Object.keys(views).map(k=>`<button role="tab" data-t="${k}" aria-selected="false">${views[k].label}</button>`).join('');
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.t;render()});
+$('#ctl').addEventListener('click',e=>{const b=e.target.closest('[data-set]');if(!b)return;const [g,v]=b.dataset.set.split(':');state[g]=v;render()});
+$('#stage').addEventListener('click',e=>{const q=e.target.closest('.q[data-why]');if(q){tab='why';state.why=q.dataset.why;render()}});
+addEventListener('resize',fit);
+(location.hash.slice(1)||'').split(',').filter(Boolean).forEach(x=>{const [a,b]=x.split(':');if(views[a]&&!b)tab=a;else if(a in state)state[a]=b});
+render();
+</script>
+</body>
+</html>

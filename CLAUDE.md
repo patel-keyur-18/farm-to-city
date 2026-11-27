@@ -27,7 +27,7 @@ Every session starts with no memory. The repository is the only memory.
 3. Commit and push.
 4. At the end of a session or sprint, open a pull request to `main` and ask the owner to merge it. The next session clones `main`, so unmerged work is invisible to it.
 5. **Every pull request gets labels and a milestone** (owner rule, 2026-10-17). Use only labels and milestones that already exist in the repository:
-   - **Milestone:** the phase the sprint belongs to (`Phase 0 · Pre-production`, `Phase 1 · Homestead slice`, `Phase 2 · Hamlet & Village`, `Phase 3 · Township`, `Phase 4 · Town & City`, `Phase 5 · Launch`).
+   - **Milestone:** the phase the sprint belongs to (`Phase 0 · Pre-production`, `Phase 1 · Homestead slice`, `Phase 2 · Hamlet & Village`, `Phase 3 · Township`, `Phase 3.5 · Ad hoc`, `Phase 4 · Town & City`, `Phase 5 · Launch`). The owner's ad hoc work between Phase 3 and Phase 4 is tracked under `Phase 3.5 · Ad hoc`.
    - **`type:` labels**, one for each kind of change in the pull request: `type:feature`, `type:spec`, `type:adr`, `type:bug`, `type:balance`.
    - **`area:` labels**, one for each area touched: `area:sim`, `area:content`, `area:tooling`, `area:ui`, `area:art`.
    - **`documentation`** when docs change.
@@ -282,6 +282,12 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0169 | US-249 the Phase 3 playtest town: the Village bot to the close after the Village unlock (`playtest-save … village`), shown to the owner before the Release build |
 | 0170 | The game's time of day matches the device's: at a load or import the sim moves forward when behind (an away advance) and waits when ahead, nothing lost; the playtest tool matches the machine; the build starts from a delayed call |
 | 0171 | Phase 3 is closed (owner, 2026-11-24): A1 and A7 passed, A2–A5 run in parallel as the owner's play (findings ad hoc in `docs/playtest/phase-3-findings.md`), the frame-time p95s and the phone's golden replays deferred, part B before Launch |
+| 0172 | The ad hoc phase before Phase 4 (Phase 3.5): UI fixes, one business run by you, a Businesses hub, supply caps (Automatic or Manual) and a hand growing for the vegetable stall (spec 030, Sprint 28); two towns from Settings, superseding ADR 0023's one town (spec 031, Sprint 29); a graphics redesign from three samples (spec 032); in-game time travel dropped for now; save schema 25 |
+| 0173 | US-266 as built: one business run by you (`AlreadyRunOne`), a card at load for an older town that runs several (time waits for the answer), no save change |
+| 0174 | US-267 as built: the Businesses hub (totals, a row each with profit, cash, stars and *Needs you*, Take out back to the hub, *See*), the HUD's fourth round button with a badge, no sim or save change |
+| 0175 | US-268 as built: today's supply counted at every path (from you, bought; 6:00 to 6:00), Automatic untouched, Manual caps per good (none, quarter, half, all, fixed kg; the restaurant fixed kg only), a Supply tab, save schema 25 hashed only once used |
+| 0176 | US-269 as built: a hand grows for your vegetable stall (one crop-list row for each open stall, Keep in store only, the stall's preorder steers the pick, gone stall = Let him choose), no new save tag, `ForBusiness` hashed once used |
+| 0177 | Sprint 28 independent review (Opus 5.5): no blocker; a stall order waits when the stall needs nothing more (owner's choice), the supply *Why?* prices and the profit rows corrected, the coverage test widened, docs and spec brought in line; two items flagged |
 
 ## Current status
 

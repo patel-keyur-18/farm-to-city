@@ -251,6 +251,12 @@ namespace Sim.Core.Definitions
         /// <summary>The goods a mill's unsold output is also offered to the village market (US-264, spec 016 §3.5c): atta.</summary>
         public System.Collections.Generic.List<string> VillageGoods { get; internal set; } = new System.Collections.Generic.List<string>();
 
+        /// <summary>Manual supply's fixed amounts a day, grams, ascending (spec 030 §3.5, US-268; optional in content: 5, 10, 20, 50 kg).</summary>
+        public System.Collections.Generic.List<long> SupplySteps { get; internal set; } = new System.Collections.Generic.List<long> { 5_000, 10_000, 20_000, 50_000 };
+
+        /// <summary>Days of a stall's market buying the order for your vegetable stall ranks by (spec 030 §3.6; optional in content: 2).</summary>
+        public int SupplyLookbackDays { get; internal set; } = 2;
+
         public Fixed BusinessLtv { get; internal set; }
         public int TermSeasons { get; internal set; }
         public Fixed OverdraftLimit { get; internal set; }

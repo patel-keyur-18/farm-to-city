@@ -10,6 +10,7 @@
 | 1 | Vertical slice: Homestead to Hamlet unlock | E01–E10 | Part A (owner's solo week, ADR 0047): a reason to return each day, the Hamlet on day 5–9, no blocker, RC and CI pass. Part B (US-185, before Launch): fresh players back on day 2 and day 3 unprompted |
 | 2 | Hamlet and Village | E11–E14, plus F02.4, F02.5 and F04.3 (the owner's enhancements, ADR 0052–0057, 0084) | Part A (owner's playtest from a day-14 Hamlet town, ADR 0101): the bots' Village pace, the Village within 3 weeks, a reason to return each day, no blocker, profit versus cash explained from the screens, build health. Part B (before Launch): fresh players explain profit versus cash |
 | 3 | Township | E15–E16, plus F12.5–F12.7, US-103 and F10.3 (ADR 0107) | Part A (the owner's 4 weeks from a town just past the Village, ADR 0107 §11): the bots reach the Township in 9–11 weeks using credit, the owner within 4 weeks of the saved town, a reason to return each day, no blocker, public versus personal money explained from the screens, build health, no exploits (ADR 0016's rule and Phase 3's checks). Part B (before Launch): fresh players explain public versus personal money |
+| 3.5 | Ad hoc (before Phase 4, ADR 0172) | E21 | The owner's review of each sprint; no gate |
 | 4 | Town and City | E17–E18 | 20,000 population at 60 fps on the reference phone |
 | 5 | Polish | E19 | Owner's call |
 
@@ -38,6 +39,7 @@
 | E18 | Wealth and politics | 4 | Investments, elections with council mood, town identity, districts, public debt and trade with other cities. | [F18.1](features/F18.1-investments.md), [F18.2](features/F18.2-elections-and-council-mood.md), [F18.3](features/F18.3-town-identity-and-districts.md), [F18.4](features/F18.4-public-debt-and-conflicts-of-interest.md), [F18.5](features/F18.5-trade-with-other-cities.md) | 24 |
 | E19 | Polish and release readiness | 5 | Hindi, accessibility, the Blender art pipeline, scenarios and difficulty modes; store readiness if the owner decides. | [F19.1](features/F19.1-hindi-localisation.md), [F19.2](features/F19.2-accessibility.md), [F19.3](features/F19.3-art-pipeline.md), [F19.6](features/F19.6-audio-and-music.md), [F19.4](features/F19.4-scenarios-and-difficulty.md), [F19.5](features/F19.5-store-readiness-deferred.md) | 48 |
 | E20 | Balancing and quality | 0–5 | The headless balancer, bots and health checks that gate every phase (ADR 0016). | [F20.1](features/F20.1-balancer-and-health-checks.md) | 22 |
+| E21 | Ad hoc UX | 3.5 | The owner's UX requests before Phase 4 (ADR 0172): UI fixes, a businesses hub, supply between businesses, two towns, a graphics redesign. | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md), [F21.2](features/F21.2-supply-between-businesses.md), [F21.3](features/F21.3-two-towns.md), [F21.4](features/F21.4-graphics-redesign.md) | 77 |
 
 ## Features
 
@@ -128,6 +130,10 @@
 | [F19.6](features/F19.6-audio-and-music.md) | Audio and music | E19 | 5 | To write at the start of Phase 5 | Backlog | US-173–US-173 | 5 |
 | [F19.4](features/F19.4-scenarios-and-difficulty.md) | Scenarios and difficulty | E19 | 5 | To write at the start of Phase 5 | Backlog | US-174–US-175 | 8 |
 | [F19.5](features/F19.5-store-readiness-deferred.md) | Store readiness (deferred) | E19 | 5 | To write at the start of Phase 5 | Backlog | US-176–US-176 | 8 |
+| [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | UI fixes and the businesses hub | E21 | 3.5 | Spec 030 | In progress | US-265–US-267 | 11 |
+| [F21.2](features/F21.2-supply-between-businesses.md) | Supply between your businesses | E21 | 3.5 | Spec 030 | Backlog | US-268–US-269 | 10 |
+| [F21.3](features/F21.3-two-towns.md) | Two towns | E21 | 3.5 | Spec 031 | Backlog | US-270, US-272 | 8 |
+| [F21.4](features/F21.4-graphics-redesign.md) | Graphics redesign | E21 | 3.5 | Spec 032 | In progress | US-271, US-273–US-282 | 48 |
 
 ## Conventions (ADR 0025)
 

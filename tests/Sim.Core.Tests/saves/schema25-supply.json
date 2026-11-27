@@ -1,0 +1,23 @@
+{
+  "Schema": 25,
+  "Hash": "0x9E839ED5743F0FAB",
+  "Facts": {
+    "buildings": 2,
+    "cash": 80605944,
+    "chaptersSeen": 0,
+    "crops": 0,
+    "era": 2,
+    "gardenBedsSown": 0,
+    "guidanceStep": 0,
+    "hands": 0,
+    "loansOpen": 0,
+    "orders": 0,
+    "parcelsOwned": 4,
+    "profitableSeasons": 1,
+    "roster": 8,
+    "seasonReports": 1,
+    "simTime": 374400,
+    "storeTotal": 2512873,
+    "trees": 0
+  }
+}

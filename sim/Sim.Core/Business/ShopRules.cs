@@ -776,6 +776,7 @@ namespace Sim.Core.Business
         /// <summary>Produce from your store at today's market price (the trader's, as spec 016's own wheat): Cr the farm's sales, Dr the stall's stock.</summary>
         internal static long FromStore(Simulation sim, Business b, int g, long need)
         {
+            need = SupplyRules.Allowed(sim, b, g, need); // Manual: no more than its cap a day (spec 030 §3.5)
             long q = System.Math.Min(need, sim.State.Market.Stock[g] - sim.State.Market.Offered[g]);
             Fixed price = MarketRules.Floor(sim, g);
             q = System.Math.Min(q, Money.QuantityFor(System.Math.Max(0, BusinessBooks.CanSpend(sim, b)), price, 1000));
@@ -793,6 +794,7 @@ namespace Sim.Core.Business
             }
             b.Stock[g] += q;
             b.StockCost[g] += value;
+            SupplyRules.FromYou(sim, b, g, q);
             return q;
         }
 
@@ -800,6 +802,7 @@ namespace Sim.Core.Business
         internal static long FromYours(Simulation sim, Business to, int g, long need, long[] took)
         {
             long got = 0;
+            need = SupplyRules.Allowed(sim, to, g, need); // Manual: no more than its cap a day, with what your store gave it
             foreach (Business from in sim.State.Businesses.Businesses)
             {
                 if (from == to || from.Status != BusinessStatus.Open || from.Stock[g] <= 0 || !BusinessRules.TypeOf(sim, from).Makes(g) || InvoiceRules.Blocked(sim, from, to)) continue;
@@ -811,6 +814,7 @@ namespace Sim.Core.Business
                 BusinessBooks.Sweep(sim, from);
                 took[g] += q;
                 got += q;
+                SupplyRules.FromYou(sim, to, g, q);
             }
             return got;
         }
@@ -828,6 +832,7 @@ namespace Sim.Core.Business
             b.Ledger.Post(sim.State.Clock.SimTime, sim.Period, "ledger.boughtAtMarket", "business:" + b.Id, new Posting(Account.BusinessStock, value), new Posting(Account.Cash, -value));
             b.Stock[g] += q;
             b.StockCost[g] += value;
+            SupplyRules.Bought(sim, b, g, q);
         }
 
         // ---- the season (§3.4) ----

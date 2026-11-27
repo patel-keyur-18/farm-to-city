@@ -1,5 +1,7 @@
 using Sim.Core.Business;
 
+using System.Collections.Generic;
+
 namespace Sim.Core.Commands
 {
     /// <summary>
@@ -240,6 +242,102 @@ namespace Sim.Core.Commands
         }
     }
 
+    /// <summary>
+    /// A town saved before the one-business rule runs two or more businesses itself (spec 030 §3.1, §7.3): you keep running this one and
+    /// every other you run goes to nobody, waiting for a hire. Rejected unless this is one you run and you run at least two.
+    /// </summary>
+    public sealed class KeepRunningYourself : TimedCommand
+    {
+        public long BusinessId { get; }
+
+        public KeepRunningYourself(long at, long businessId) : base(at) { BusinessId = businessId; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            List<Business.Business> run = BusinessRules.RunByYou(sim);
+            if (run.Count < 2 || b.Worker != WorkerKind.Founder) return CommandResult.Reject(RejectReason.InvalidArgument);
+            Farm.FarmSystem.Accrue(sim);
+            var stopped = new List<long>();
+            foreach (Business.Business other in run)
+            {
+                if (other == b) continue;
+                other.Worker = WorkerKind.None; // it waits for a hire, as when a worker is let go; its cash and stock stay
+                stopped.Add(other.Id);
+            }
+            Farm.FarmSystem.Refresh(sim); // your hours come off the one you keep
+            sim.Emit(new Events.RunYourselfChosen(sim.State.Clock.SimTime, b.Id, stopped.ToArray()));
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// Automatic or Manual supply (spec 030 §3.5, US-268): Automatic takes all it needs from you first, as always; Manual caps each good a day. Switching to Manual
+    /// starts every good at "all it needs". Not for the mill, dairy and tea stall: their own amount a day is their cap.
+    /// </summary>
+    public sealed class SetSupplyMode : TimedCommand
+    {
+        public long BusinessId { get; }
+        public bool Manual { get; }
+
+        public SetSupplyMode(long at, long businessId, bool manual) : base(at) { BusinessId = businessId; Manual = manual; }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.BusinessClosed);
+            if (!SupplyRules.HasMode(sim, BusinessRules.TypeOf(sim, b))) return CommandResult.Reject(RejectReason.InvalidArgument);
+            SupplyRules.Touch(sim, b);
+            if (Manual && !b.SupplyManual)
+                for (int g = 0; g < b.CapGrams.Length; g++) { b.CapGrams[g] = 0; b.CapShare[g] = 100; } // every good starts at "all it needs"
+            b.SupplyManual = Manual;
+            b.SupplyUsed = true;
+            return CommandResult.Ok;
+        }
+    }
+
+    /// <summary>
+    /// A Manual business's cap for a good a day (spec 030 §3.5): <see cref="Grams"/> above 0 (one of the content's steps), else <see cref="Share"/> of its day's amount
+    /// (0, 25, 50 or 100 percent; a restaurant has no day's amount, so 0 or 100 only).
+    /// </summary>
+    public sealed class SetSupplyCap : TimedCommand
+    {
+        public long BusinessId { get; }
+        public string Good { get; }
+        public int Share { get; }
+        public long Grams { get; }
+
+        public SetSupplyCap(long at, long businessId, string good, int share, long grams) : base(at)
+        {
+            BusinessId = businessId;
+            Good = good;
+            Share = share;
+            Grams = grams;
+        }
+
+        protected override CommandResult ApplyAt(Simulation sim)
+        {
+            Business.Business b = sim.State.Businesses?.Find(BusinessId);
+            if (b == null) return CommandResult.Reject(RejectReason.UnknownBusiness);
+            if (b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.BusinessClosed);
+            Definitions.BusinessTypeDef t = BusinessRules.TypeOf(sim, b);
+            if (!SupplyRules.HasMode(sim, t) || !b.SupplyManual) return CommandResult.Reject(RejectReason.InvalidArgument);
+            int g = sim.Config.Game.Market.IndexOf(Good);
+            if (g < 0) return CommandResult.Reject(RejectReason.UnknownGood);
+            if (!SupplyRules.CappedInputs(sim, t).Contains(g)) return CommandResult.Reject(RejectReason.InvalidArgument);
+            if (Grams < 0 || (Grams > 0 && !BusinessRules.Defs(sim).SupplySteps.Contains(Grams))) return CommandResult.Reject(RejectReason.InvalidArgument);
+            bool share = Share == 0 || Share == 25 || Share == 50 || Share == 100;
+            if (!share || (t.IsMeals && Share != 0 && Share != 100)) return CommandResult.Reject(RejectReason.InvalidArgument);
+            SupplyRules.Touch(sim, b);
+            b.CapGrams[g] = Grams;
+            b.CapShare[g] = Grams > 0 ? 100 : Share;
+            b.SupplyUsed = true;
+            return CommandResult.Ok;
+        }
+    }
+
     /// <summary>You run a business with nobody hired yourself (spec 016 §3.6): no wage, its hours come off your farm work.</summary>
     public sealed class RunBusinessYourself : TimedCommand
     {
@@ -253,6 +351,7 @@ namespace Sim.Core.Commands
             if (b == null || b.Status == BusinessStatus.Closed) return CommandResult.Reject(RejectReason.UnknownBusiness);
             if (b.Worker != WorkerKind.None) return CommandResult.Reject(RejectReason.AlreadyStaffed);
             if (sim.State.People?.ManagerAt(b.Id) != null) return CommandResult.Reject(RejectReason.HasManager); // his to run: let him go first
+            if (BusinessRules.RunByYouNow(sim) != null) return CommandResult.Reject(RejectReason.AlreadyRunOne); // your day has room for one (spec 030 §3.1)
             Farm.FarmSystem.Accrue(sim);
             b.Worker = WorkerKind.Founder;
             Farm.FarmSystem.Refresh(sim);

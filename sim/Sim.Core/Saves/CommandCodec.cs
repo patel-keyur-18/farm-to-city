@@ -70,6 +70,8 @@ namespace Sim.Core.Saves
             SetTuitionFee, SetDish,
             SetMarketing, SetKhata, SetKhataLimit, CutOffHousehold,
             DismissSupervisor,
+            KeepRunningYourself,
+            SetSupplyMode, SetSupplyCap,
         }
 
         public static void Write(SaveWriter w, Command command)
@@ -214,6 +216,9 @@ namespace Sim.Core.Saves
                 case SetNightShift c: At(c, Tag.SetNightShift); w.WriteLong(c.BusinessId); w.WriteBool(c.On); break;
                 case SetTuitionFee c: At(c, Tag.SetTuitionFee); w.WriteLong(c.BusinessId); w.WriteInt(c.Preset); break;
                 case DismissSupervisor c: At(c, Tag.DismissSupervisor); break;
+                case KeepRunningYourself c: At(c, Tag.KeepRunningYourself); w.WriteLong(c.BusinessId); break;
+                case SetSupplyMode c: At(c, Tag.SetSupplyMode); w.WriteLong(c.BusinessId); w.WriteBool(c.Manual); break;
+                case SetSupplyCap c: At(c, Tag.SetSupplyCap); w.WriteLong(c.BusinessId); w.WriteString(c.Good); w.WriteInt(c.Share); w.WriteLong(c.Grams); break;
                 case SetMarketing c: At(c, Tag.SetMarketing); w.WriteLong(c.BusinessId); w.WriteLong(c.Budget); break;
                 case SetKhata c: At(c, Tag.SetKhata); w.WriteLong(c.BusinessId); w.WriteBool(c.On); break;
                 case SetKhataLimit c: At(c, Tag.SetKhataLimit); w.WriteLong(c.BusinessId); w.WriteLong(c.Limit); break;
@@ -414,6 +419,9 @@ namespace Sim.Core.Saves
                 case Tag.SetNightShift: return new SetNightShift(at, r.ReadLong(), r.ReadBool());
                 case Tag.SetTuitionFee: return new SetTuitionFee(at, r.ReadLong(), r.ReadInt());
                 case Tag.DismissSupervisor: return new DismissSupervisor(at);
+                case Tag.KeepRunningYourself: return new KeepRunningYourself(at, r.ReadLong());
+                case Tag.SetSupplyMode: return new SetSupplyMode(at, r.ReadLong(), r.ReadBool());
+                case Tag.SetSupplyCap: return new SetSupplyCap(at, r.ReadLong(), r.ReadString(), r.ReadInt(), r.ReadLong());
                 case Tag.SetMarketing: return new SetMarketing(at, r.ReadLong(), r.ReadLong());
                 case Tag.SetKhata: return new SetKhata(at, r.ReadLong(), r.ReadBool());
                 case Tag.SetKhataLimit: return new SetKhataLimit(at, r.ReadLong(), r.ReadLong());

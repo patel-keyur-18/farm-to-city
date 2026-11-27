@@ -191,11 +191,25 @@ namespace Game.Presentation.Ui
             bool had = _sheet != null;
             if (had)
             {
-                ScrollView oldScroll = _sheet.Q<ScrollView>(), newScroll = sheet.Q<ScrollView>();
+                ScrollView oldScroll = _sheet.Q<ScrollView>(SheetScroll), newScroll = sheet.Q<ScrollView>(SheetScroll);
                 if (refresh && oldScroll != null && newScroll != null)
                 {
                     Vector2 offset = oldScroll.scrollOffset;
                     newScroll.schedule.Execute(() => newScroll.scrollOffset = offset); // after layout, so the offset isn't clamped to 0
+                }
+                // A tab row the player scrolled stays where it was through a refresh; a freshly opened sheet shows its tab (TabStrip).
+                // A sheet can have more than one tab row (the tabs and a switch strip): each keeps its own offset, in order.
+                if (refresh)
+                {
+                    var oldTabs = _sheet.Query<ScrollView>(TabScroll).ToList();
+                    var newTabs = sheet.Query<ScrollView>(TabScroll).ToList();
+                    for (int i = 0; i < oldTabs.Count && i < newTabs.Count; i++)
+                    {
+                        Vector2 tabOffset = oldTabs[i].scrollOffset;
+                        ScrollView kept = newTabs[i];
+                        kept.userData = "kept";
+                        kept.schedule.Execute(() => kept.scrollOffset = tabOffset);
+                    }
                 }
                 _holder.Remove(_sheet);
             }
@@ -354,6 +368,48 @@ namespace Game.Presentation.Ui
             text.style.unityTextAlign = TextAnchor.MiddleCenter;
             text.style.marginTop = 10;
             card.Add(text);
+            // Rows to choose from (the one-business card, spec 030 §7.3): a picture, a name and its detail, and the button that answers.
+            foreach (CardChoice choice in vm.Choices)
+            {
+                string id = choice.Id;
+                var row = new VisualElement { pickingMode = PickingMode.Ignore };
+                row.style.flexDirection = FlexDirection.Row;
+                row.style.alignItems = Align.Center;
+                row.style.backgroundColor = Painter.Hex(0xF8E6B6);
+                UiKit.Border(row, 3, Painter.Hex(0xE3C677));
+                UiKit.Radius(row, 22);
+                UiKit.Padding(row, 14, 18);
+                row.style.marginTop = 14;
+                Sprite sprite = IconBank.Good(choice.Icon);
+                if (sprite != null)
+                {
+                    VisualElement pic = UiKit.Icon(sprite, 96);
+                    pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                    pic.style.marginRight = 18;
+                    row.Add(pic);
+                }
+                var words = new VisualElement { pickingMode = PickingMode.Ignore };
+                words.style.flexGrow = 1; words.style.flexShrink = 1;
+                words.Add(UiKit.Heading1(choice.Title, 40));
+                Label detail = UiKit.Text(choice.Detail, 30, UiKit.Wood, UiKit.Body);
+                detail.style.whiteSpace = WhiteSpace.Normal;
+                words.Add(detail);
+                row.Add(words);
+                Button pick = UiKit.MakeButton(choice.ButtonLabel, ActionLook.Primary, () => { veil.RemoveFromHierarchy(); onButton(id); });
+                pick.name = "card:" + id;
+                pick.style.marginTop = 0; pick.style.marginLeft = 18;
+                pick.style.flexShrink = 0;
+                row.Add(pick);
+                card.Add(row);
+            }
+            if (vm.Hint != null)
+            {
+                Label hint = UiKit.Text(vm.Hint, 28, UiKit.Wood, UiKit.Body);
+                hint.style.whiteSpace = WhiteSpace.Normal;
+                hint.style.unityTextAlign = TextAnchor.MiddleCenter;
+                hint.style.marginTop = 14;
+                card.Add(hint);
+            }
             var buttons = new VisualElement { pickingMode = PickingMode.Ignore };
             buttons.style.flexDirection = FlexDirection.Row;
             buttons.style.justifyContent = Justify.Center;
@@ -367,7 +423,7 @@ namespace Game.Presentation.Ui
                 button.name = "card:" + id;
                 buttons.Add(button);
             }
-            card.Add(buttons);
+            if (vm.Buttons.Count > 0) card.Add(buttons);
             veil.Add(card);
             _holder.parent.Add(veil);
             card.style.scale = new Scale(new Vector3(0.8f, 0.8f, 1f));
@@ -455,9 +511,13 @@ namespace Game.Presentation.Ui
             });
         }
 
+        /// <summary>The name of a sheet's vertical scroll (its tab rows have their own, <c>tabScroll</c>).</summary>
+        public const string SheetScroll = "sheetScroll";
+
         private static ScrollView NewScroll()
         {
             var scroll = new ScrollView(ScrollViewMode.Vertical);
+            scroll.name = SheetScroll; // a tab row scrolls sideways too (spec 030 §3.2): the sheet's own scroll is found by name
             scroll.verticalScrollerVisibility = ScrollerVisibility.Hidden;
             scroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
             scroll.touchScrollBehavior = ScrollView.TouchScrollBehavior.Elastic;
@@ -916,23 +976,58 @@ namespace Game.Presentation.Ui
             return box;
         }
 
-        /// <summary>Tabs over the rows (People: Workers and Town): the showing one filled, the other a plain button.</summary>
+        /// <summary>The name of a tab row's sideways scroll (spec 030 §3.2).</summary>
+        public const string TabScroll = "tabScroll";
+
+        /// <summary>
+        /// Tabs over the rows (People: Workers and Town): the showing one filled, the others plain buttons. Tabs are as wide as their words and
+        /// share the row when they fit; a row that doesn't fit scrolls sideways with a fade at each edge that has more, and opens with the
+        /// showing tab in view (spec 030 §3.2: the Hiring board's seven roles ran past the sheet).
+        /// </summary>
         private VisualElement TabStrip(System.Collections.Generic.List<ActionVm> tabs, string showing)
         {
-            var strip = new VisualElement { pickingMode = PickingMode.Ignore };
-            strip.style.flexDirection = FlexDirection.Row;
-            strip.style.marginTop = 10;
-            foreach (ActionVm t in tabs)
+            var holder = new VisualElement { pickingMode = PickingMode.Ignore };
+            holder.style.marginTop = 10;
+            var scroll = new ScrollView(ScrollViewMode.Horizontal) { name = TabScroll };
+            scroll.horizontalScrollerVisibility = ScrollerVisibility.Hidden;
+            scroll.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+            scroll.touchScrollBehavior = ScrollView.TouchScrollBehavior.Clamped;
+            scroll.contentContainer.style.flexDirection = FlexDirection.Row;
+            scroll.contentContainer.style.flexGrow = 1;
+            Button current = null;
+            for (int i = 0; i < tabs.Count; i++)
             {
-                ActionVm tab = t;
-                bool on = t.Id == showing;
-                Button b = UiKit.MakeButton(t.Label, on ? ActionLook.Primary : ActionLook.Secondary, () => { if (!on && OnAction != null) OnAction(tab); });
-                b.name = t.Id;
-                b.style.flexGrow = 1; b.style.flexBasis = 0;
-                b.style.marginTop = 0; b.style.marginRight = 14;
-                strip.Add(b);
+                ActionVm tab = tabs[i];
+                bool on = tab.Id == showing;
+                Button b = UiKit.MakeButton(tab.Label, on ? ActionLook.Primary : ActionLook.Secondary, () => { if (!on && OnAction != null) OnAction(tab); });
+                b.name = tab.Id;
+                b.style.minWidth = 0;
+                b.style.flexGrow = 1; b.style.flexShrink = 0;
+                b.style.paddingLeft = 28; b.style.paddingRight = 28;
+                b.style.marginTop = 0; b.style.marginRight = i == tabs.Count - 1 ? 0 : 14;
+                scroll.Add(b);
+                if (on) current = b;
             }
-            return strip;
+            holder.Add(scroll);
+            VisualElement left = UiKit.EdgeFade(true), right = UiKit.EdgeFade(false);
+            holder.Add(left);
+            holder.Add(right);
+            void Fades()
+            {
+                // The scroller's own range: the content container reports the viewport's width however far the tabs run on.
+                float max = scroll.horizontalScroller.highValue;
+                float x = scroll.horizontalScroller.value;
+                left.style.display = max > 2f && x > 2f ? DisplayStyle.Flex : DisplayStyle.None;
+                right.style.display = max > 2f && x < max - 2f ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+            scroll.horizontalScroller.valueChanged += _ => Fades();
+            scroll.contentContainer.RegisterCallback<GeometryChangedEvent>(_ => Fades());
+            scroll.contentViewport.RegisterCallback<GeometryChangedEvent>(_ => Fades());
+            left.style.display = right.style.display = DisplayStyle.None;
+            scroll.schedule.Execute(Fades).StartingIn(50); // once the first layout has set the range
+            if (current != null)
+                scroll.schedule.Execute(() => { if (!(scroll.userData is string)) scroll.ScrollTo(current); }).StartingIn(80); // after layout; a refresh keeps the offset it had
+            return holder;
         }
 
         /// <summary>
@@ -1004,12 +1099,22 @@ namespace Game.Presentation.Ui
             Tappable(row, line);
             if (line.Action == null && line.Note == null && line.Badge == null)
             {
-                row.Add(WithIcon(line.Icon, 56, UiKit.Text(line.Label, 31, UiKit.Ink, UiKit.Body)));
+                Label name = UiKit.Text(line.Label, 31, UiKit.Ink, UiKit.Body);
+                bool noValue = string.IsNullOrEmpty(line.Value);
+                if (line.Label.Length > 28)
+                {
+                    // A long plain line (Savings: "Interest is Other money, not farm profit…") takes the width left after its value and the ? chip:
+                    // at its full text width it pushed the ? off the sheet's edge, out of reach.
+                    name.style.flexBasis = 0; name.style.flexGrow = 1; name.style.flexShrink = 1; name.style.minWidth = 0;
+                }
+                VisualElement nameBox = WithIcon(line.Icon, 56, name);
+                if (nameBox != name) { nameBox.style.minWidth = 0; if (line.Label.Length > 28) nameBox.style.flexGrow = 1; }
+                row.Add(nameBox);
                 Label v = UiKit.Text(line.Value, 33, UiKit.Ink, UiKit.Heading);
                 v.style.unityTextAlign = TextAnchor.MiddleRight;
                 v.style.flexShrink = 1;
-                v.style.flexGrow = 1; // right-aligned against the ? chip, not floating mid-row
-                v.style.marginLeft = 24;
+                v.style.flexGrow = noValue && line.Label.Length > 28 ? 0 : 1; // right-aligned against the ? chip, not floating mid-row
+                v.style.marginLeft = noValue ? 0 : 24;
                 if (line.Stars.HasValue)
                 {
                     var right = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -1404,8 +1509,13 @@ namespace Game.Presentation.Ui
             return col;
         }
 
+        /// <summary>The open sheet's root element and the model it was built from, for the Editor's layout check (US-265, <c>Game.Editor.SheetLayoutCheck</c>).</summary>
+        public VisualElement Root { get { return _sheet; } }
+        public SheetVm Last { get; private set; }
+
         public void Show(SheetVm vm, bool refresh = false)
         {
+            Last = vm;
             var key = new System.Text.StringBuilder(vm.Title).Append('|').Append(vm.Subtitle).Append('|').Append(vm.Tab).Append('|').Append(vm.SwitchOn).Append(vm.Amber);
             foreach (LineVm l in vm.Lines)
             {
@@ -1437,13 +1547,13 @@ namespace Game.Presentation.Ui
                 // A smaller strip under the tabs (This season | Last season), indented and slimmer so it reads as part of the tab above.
                 VisualElement sw = TabStrip(vm.Switch, vm.SwitchOn);
                 sw.style.marginLeft = 60; sw.style.marginRight = 46;
-                foreach (VisualElement b in sw.Children())
+                sw.Query<Button>().ForEach(b =>
                 {
                     b.style.minHeight = 56;
                     b.style.borderBottomWidth = 5;
                     b.style.paddingTop = b.style.paddingBottom = 2;
                     b.Query<Label>().ForEach(l => l.style.fontSize = 30);
-                }
+                });
                 sheet.Add(sw);
             }
             var scroll = NewScroll();
@@ -1560,6 +1670,8 @@ namespace Game.Presentation.Ui
                         b.Add(pic);
                         Label name = UiKit.Text(crop.Name, many ? 28 : 32, UiKit.Ink, UiKit.Heading);
                         name.style.flexShrink = 1;
+                        name.style.whiteSpace = WhiteSpace.Normal; // a short name is one line by default: "Fodder sorghum" ran past its column, so it wraps instead
+                        name.style.unityTextAlign = TextAnchor.MiddleLeft;
                         b.Add(name);
                         c.Add(b);
                     }

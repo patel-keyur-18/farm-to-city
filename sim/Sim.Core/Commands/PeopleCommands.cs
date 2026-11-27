@@ -334,6 +334,15 @@ namespace Sim.Core.Commands
         /// <summary>The crop id for <see cref="CropId"/> that leaves the choice to the hand (ADR 0048 §1).</summary>
         public const string HandChooses = "auto";
 
+        /// <summary>A crop id "stall:12" grows for your vegetable stall, business 12 (spec 030 §3.6): the hand's choice, steered by the stall's preorder.</summary>
+        public const string StallPrefix = "stall:";
+
+        /// <summary>KEEP what vegetable stall <paramref name="businessId"/> lacks ON tile, keeping it in store (the stall takes it at 6:00).</summary>
+        public static OrderSpec ForStall(int tileId, long businessId, string fertiliserId)
+        {
+            return KeepCrop(tileId, StallPrefix + businessId.ToString(System.Globalization.CultureInfo.InvariantCulture), SeedSource.Certified, fertiliserId, SellRule.Store);
+        }
+
         public string CropId { get; }
         public SeedSource Seed { get; }
         public string FertiliserId { get; }
@@ -398,14 +407,26 @@ namespace Sim.Core.Commands
             if (h == null) return CommandResult.Reject(RejectReason.NoHand);
             GameDefs defs = sim.Config.Game;
             int crop = 0, fert = 0;
+            long stallId = 0;
             if (Order.Kind == OrderTargetKind.Field)
             {
                 if (Order.Target < 0 || Order.Target >= sim.State.Land.Tiles.Count) return CommandResult.Reject(RejectReason.UnknownTarget);
                 Tile tile = sim.State.Land.Tiles[(int)Order.Target];
                 if (!Land.LandRules.Tillable(tile.Terrain) || !sim.State.Land.Parcels[tile.ParcelId].Owned) return CommandResult.Reject(RejectReason.UnknownTarget);
                 if (sim.State.Land.Parcels[tile.ParcelId].Leased) return CommandResult.Reject(RejectReason.Leased); // a leased acre is the tenant's (spec 024 §3.6)
-                crop = Order.CropId == OrderSpec.HandChooses ? -1 : defs.Farm.IndexOfCrop(Order.CropId);
-                if (crop < 0 && Order.CropId != OrderSpec.HandChooses) return CommandResult.Reject(RejectReason.UnknownCrop);
+                bool forStall = Order.CropId != null && Order.CropId.StartsWith(OrderSpec.StallPrefix, System.StringComparison.Ordinal);
+                if (forStall)
+                {
+                    // For your vegetable stall (spec 030 §3.6): an open stall of yours, and the harvest kept in store for its 6:00 round.
+                    if (!long.TryParse(Order.CropId.Substring(OrderSpec.StallPrefix.Length), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out stallId)) return CommandResult.Reject(RejectReason.UnknownCrop);
+                    if (Business.StallOrderRules.OpenStall(sim, sim.State.Businesses?.Find(stallId)) == null || Order.Sell != SellRule.Store) return CommandResult.Reject(RejectReason.InvalidArgument);
+                    crop = -1;
+                }
+                else
+                {
+                    crop = Order.CropId == OrderSpec.HandChooses ? -1 : defs.Farm.IndexOfCrop(Order.CropId);
+                    if (crop < 0 && Order.CropId != OrderSpec.HandChooses) return CommandResult.Reject(RejectReason.UnknownCrop);
+                }
                 if (Order.Seed == SeedSource.Saved && (crop < 0 || !defs.Farm.Crops[crop].CanSaveSeed)) return CommandResult.Reject(RejectReason.SeedCannotBeSaved);
                 fert = defs.Farm.IndexOfFertiliser(Order.FertiliserId);
                 if (fert < 0) return CommandResult.Reject(RejectReason.UnknownFertiliser);
@@ -425,7 +446,7 @@ namespace Sim.Core.Commands
             var order = new StandingOrder
             {
                 HandId = h.Id, Kind = Order.Kind, Target = Order.Target, Crop = crop, Seed = Order.Seed, Fertiliser = fert,
-                Sell = Order.Sell, MinPrice = Order.MinPrice, Once = Order.Once,
+                Sell = Order.Sell, MinPrice = Order.MinPrice, Once = Order.Once, ForBusiness = stallId,
             };
             int i = 0;
             while (i < s.Orders.Count && s.Orders[i].CompareKey(order) < 0) i++;
