@@ -20,8 +20,9 @@ namespace Game.Presentation.Map
         }
 
         // Front plots first (nearest the camera), doors towards the camera; a little irregular so a street of them looks built, not stamped.
-        // Two homes sharing a wall (as village houses stand along a lane), set back so their courtyards open onto the acre's front.
-        private static readonly HousePlot[] HousePlots = { new HousePlot(-0.168f, 0.07f, "s"), new HousePlot(0.168f, 0.07f, "s") };
+        // Two homes side by side with a small gap between their courtyard walls (the owner, 2026-11-27: they were attached), set back so their courtyards open onto the acre's front.
+        // A house and its courtyard are about 0.36 of an acre wide, so 0.48 apart leaves about 0.12 (the outer walls stay inside the acre).
+        private static readonly HousePlot[] HousePlots = { new HousePlot(-0.24f, 0.07f, "s"), new HousePlot(0.24f, 0.07f, "s") };
 
         /// <summary>The homestead's shared ground: a shade tree behind, a haystack at the side, a charpai on the open ground in front (nothing tall in front of the courtyards).</summary>
         private static readonly VillagePiece[] HomesteadProps =

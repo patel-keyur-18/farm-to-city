@@ -43,8 +43,6 @@ namespace Sim.View.Content
         public Rgb Overlay { get; internal set; } = new Rgb(1, 1, 1);
         public float OverlayAlpha { get; internal set; }
 
-        /// <summary>How strong a building's baked shadow is in this weather, 0 to 1 (spec 032 §3.3): sun 1, cloud and rain fade it, a storm nearly takes it.</summary>
-        public float Shadow { get; internal set; } = 1f;
         public float Saturation { get; internal set; } = 1f;
         public float Brightness { get; internal set; } = 1f;
         public CloudsDef Clouds { get; internal set; }

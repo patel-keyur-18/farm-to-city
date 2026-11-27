@@ -14,7 +14,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 ## 2. Scope
 
 **In:**
-- **The pick (US-271, Preview 27):** the realistic style, Option B: physically lit materials, no outline, real cast shadows on buildings only, kept short. The owner, 2026-11-27.
+- **The pick (US-271, Preview 27):** the realistic style: physically lit materials, no outline. Option B (short baked shadows on buildings) was the first pick; **after the device check the owner dropped baked shadows altogether (ADR 0183, 2026-11-27): Option A.** The code-drawn contact oval under moving things stays.
 - **The device check first (US-283, Sprint 30):** the realistic house, wheat acre and the hand and his wife in the game at the new zoom, read on the iPhone before the other sprites are re-rendered.
 - **The redesign, one category a story (US-273 to US-282, Sprints 30 to 33):** every Blender sprite on the map re-rendered realistic at twice today's resolution; building shadows as their own sprites; the map's code-drawn pictures to match.
 - **The camera:** the default view 3 acres across; the closest zoom 2 acres across.
@@ -23,7 +23,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 - **The UI** (sheets, buttons, fonts, the HUD and the 76 icons): restyled to match in its own spec, 033, written in Sprint 32 against the finished map, coded in Sprints 34 and 35 (the owner, 2026-11-27). Until then the icons stay as they are.
 - **Any sim, content-balance or save change.** Goldens do not move.
 - **New shaders, lights or particles in Unity.** Everything realistic is in the render; the game still draws sprites.
-- **Time-of-day light on the buildings** (a sun that moves): the sun is fixed; only the shadows' strength follows the day and the weather (§3.4).
+- **Time-of-day light on the buildings** (a sun that moves): the sun is fixed. **No baked shadows (ADR 0183).**
 
 ## 3. Rules
 
@@ -48,14 +48,13 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Compression | iOS override on every rendered sprite: ASTC 4×4 (8 bits a pixel), mipmaps on. The default platform (the Editor) stays uncompressed. | 4× the pixels at a quarter of the bytes: about today's 195 MB (260 MB with mipmaps). |
 | Memory budget | Rendered sprites at most **320 MB** on the iPhone with mipmaps, read in Xcode's memory report at the device check. | Today about 260 MB; Option B estimated about 300. |
 
-### 3.3 Shadows
+### 3.3 Shadows (none baked: ADR 0183)
 
 | Rule | Behaviour | Why |
 | --- | --- | --- |
-| What casts a baked shadow | Buildings and big fixed things: houses, huts, sheds, stores, businesses, the village's and town's buildings, wells, trees and orchards, the kiln, the tower. | Option B: shadows where they show most. |
-| What doesn't | People, animals, vehicles and machines (they move): today's code-drawn contact shadow, made softer to match (US-281). Crops, ground and boundaries: none of their own (their texture already has the light). | Option B; a moving sprite with a baked shadow would drag it through walls. |
-| A shadow is its own sprite | Rendered in a second pass (the model hidden from the camera, a shadow catcher seen): `<name>_shadow.png`, with **its own frame** (a shadow falls outside its building's: Preview 27's house is 316 px wide with its shadow against 252 px without) and its pivot at the same world anchor as the building's, so the two line up; `sprites.json` gives each its own `w`, `h` and pivot. Drawn on the ground layer under its building, black, with alpha = its render's × the strength below. | The owner, 2026-11-27: so weather and night can fade it. About one more draw call for each shadow-casting sprite in view (buildings, trees, orchards, wells, the kiln, the tower): **counted in US-283 (ADR 0182): +9.6% at the whole map** (about 130 calls on 1,326 in the Village bot town). The most crowded view draws about 1,150 to 1,330 calls today (`render-stats.json`). |
-| Strength | `strength = day × weather`. `day` is the weather presenter's day light (`WeatherLook` `Light` mapped 0 at night to 1 by day, as the ground's tint already is). `weather` is a new `shadow` field on each weather style in `content/ui.json`: sun 1.0, heatwave 1.0, frost 0.8, cloudy 0.45, rain 0.25, heavy rain 0.15, storm 0.10. It moves with the weather's cross-fade. | Shadows go soft under cloud and vanish at night. Placeholder values, tuned on the phone at the device check (art, not balance). |
+| Baked shadows | **None.** No `_shadow` sprites, no shadow layer, no weather `shadow` value. | The owner, 2026-11-27, after the device check: "I don't want shadows at all." (US-283 built the mechanism and counted it: +9.6% draw calls at the whole map, ADR 0182; it was removed.) |
+| Contact shadow | Today's code-drawn soft oval under people, animals, vehicles and some buildings stays; US-281 makes it softer to match. | The owner's answer to ADR 0183: without it moving things float on the realistic ground. |
+| Light | The Blender sun at 60° lights each render (its own shading, not a cast shadow on the ground). | Shading stays; the ground carries no shadow. |
 
 ### 3.4 The camera
 
@@ -71,7 +70,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Rule | Behaviour |
 | --- | --- |
 | The bar | On the iPhone 13, at the most crowded view: main thread p95 ≤ 8.3 ms, GPU p95 ≤ 11 ms, about 60 fps, under 1% of frames over 25 ms, no heating over a 20-minute session (the phone warm, not hot; no iOS thermal warning). |
-| The device check (US-283, built: ADR 0182) | The realistic house, field and the hand and his wife replace today's in a branch build, with their shadows and the new zoom. One Development build (`Game.Editor.BuildCli`, Xcode quit first, `Builds/iOS` deleted first), both p95s and the memory read at the default view and at the farthest zoom with a Village bot town. **If the GPU p95 is over 11 ms, the redesign goes on as Option A** (no baked shadows) and comes back to the owner. The build stands the realistic house, wheat and people in for every house, crop and person, gives every other caster the house's shadow scaled, and loads a 271 MB ASTC ballast, behind a Development-only switch (*Art check*, off by default). |
+| The device check (US-283, read 2026-11-27: GPU p95 7.94 ms, main 4.43 ms, 59.3 fps, 2.03% over 25 ms; ADR 0182, 0183) | The realistic house, field and the hand and his wife replace today's in a branch build, with their shadows and the new zoom. One Development build (`Game.Editor.BuildCli`, Xcode quit first, `Builds/iOS` deleted first), both p95s and the memory read at the default view and at the farthest zoom with a Village bot town. **The GPU p95 passed; the owner chose no baked shadows anyway (ADR 0183).** The build stands the realistic house, wheat and people in for every house, crop and person, gives every other caster the house's shadow scaled, and loads a 271 MB ASTC ballast, behind a Development-only switch (*Art check*, off by default). |
 | Every story | `Game.Editor.RenderStats` at all three views, growth over 10% reported (sprite pixels count too: a new column, `spritePixels`, the sum of visible sprites' screen area). |
 | The phase's build | Both p95s read again on the iPhone before the last art pull request. |
 
@@ -81,13 +80,12 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 
 | Definition | Field | Type | Default | Bounds | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `weatherLook.weathers.<kind>` | `shadow` | float | §3.3 | 0 to 1 | The buildings' shadow strength in that weather. |
 | `camera` (new) | `defaultAcresAcross` | float | 3 | 2 to 6 | The default view. |
 | `camera` | `closestAcresAcross` | float | 2 | 1.5 to 3 | The closest zoom. |
 
 **State:** none. No save change; goldens unchanged.
 
-**Art files:** every `Resources/Art/Blender/*.png` re-rendered at 8×; `<name>_shadow.png` for each building; `sprites.json`'s `pixelsPerUnit` 1,056 and a `shadow` flag on each sprite that has one.
+**Art files:** every `Resources/Art/Blender/*.png` re-rendered at 8×; `sprites.json`'s `pixelsPerUnit` 1,056.
 
 ## 5. Commands and events
 
@@ -106,11 +104,11 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
 | AC-1 | Given the manifest at 1,056 px a unit, when any rendered sprite other than a shadow is placed, then its anchor stays within 0.01 world units of today's (its pivot's distance from the frame's middle across and from its bottom up) and its frame within 5% (people 15%: new bodies); a shadow's pivot is at its building's world anchor. *Amended by ADR 0182 §7: 1% was not reachable for a realistic silhouette (no outline, real stalks, slimmer figures).* | `Game.Editor.SpriteSizeCheck` (new, Editor: every sprite's world size and anchor against `docs/art/sprite-world-sizes.json`, the table of today's recorded before any new art) |
-| AC-2 | Every map sprite in `SpriteBank` has its realistic render, and every building's has its `_shadow`. | `Game.Editor.RenderedArtCheck` (new, Editor: every name `SpriteBank` asks for has its file, and every building its `_shadow`) |
-| AC-3 | A building's shadow alpha is `day × weather.shadow`: 1 in sun by day, 0.25 in rain by day, 0 at night, cross-fading with the weather. | `WeatherLookTests.ShadowStrength` (Sim.View) |
+| AC-2 | Every map sprite in `SpriteBank` has its realistic render. | `Game.Editor.RenderedArtCheck` (new, Editor: every name `SpriteBank` asks for has its file, and every building its `_shadow`) |
+| AC-3 | *Withdrawn (ADR 0183): no baked shadows.* | |
 | AC-4 | At launch (the default half-height moves from `MapInput.OpeningHalfHeight` into `MapCamera`, read from `content/ui.json`) the view is 3 acres across; the closest zoom is 2 acres across; the farthest is unchanged. | `IsoGridTests.DefaultAndClosestZoom` (new, Sim.View) |
 | AC-5 | A saved camera outside the new bounds opens clamped. | `IsoGridTests.SavedZoomClamped` (new, Sim.View) |
-| AC-6 | `content/ui.json` validates the new fields and their bounds. | `UiContentTests.CameraAndShadow` (new, Sim.View.Tests: `ui.json` is loaded by `Sim.View`'s `UiLoader`) |
+| AC-6 | `content/ui.json` validates the camera fields and their bounds. | `UiContentTests.Camera` (new, Sim.View.Tests: `ui.json` is loaded by `Sim.View`'s `UiLoader`) |
 | AC-7 | On the iPhone 13 the device check meets §3.5's bar, or the redesign switches to Option A. | Device: the US-283 test checklist (both p95s, memory, 20 minutes of play) |
 | AC-8 | Every category's before/after preview approved before its renders go in; each story's `RenderStats` reading recorded. | Review: the story's ADR |
 | AC-9 | Goldens unchanged. | The golden replay tests |
@@ -127,7 +125,7 @@ None: no rule or number of the game changes.
 ## 11. Cut first
 
 1. The work frames' extra poses (keep one work frame a kind).
-2. Shadows on trees (keep buildings').
+2. *(Shadows: gone, ADR 0183.)*
 3. The 4,096 import for the hills (render them at 6× instead).
 
 ## 12. The plan (re-sized after the pick)
@@ -136,8 +134,8 @@ None: no rule or number of the game changes.
 | --- | --- | --- |
 | 30 | US-283 the device check (2); US-273 ground, terrain and boundaries, with the sky and the river's banks (5); US-274 crops and the kitchen garden (5); US-275 trees and orchards, with their shadows (4) | 16 |
 | 31 | US-276 people and portraits: new 6-head bodies, walk and work frames, portraits (13); US-277 animals, vehicles and machines (3) | 16 |
-| 32 | US-278 your farm, with shadows (6); US-279 businesses and stalls, with shadows (6); US-280 the village and town, with shadows (6); spec 033 written | 18 |
+| 32 | US-278 your farm (6); US-279 businesses and stalls (6); US-280 the village and town (6); spec 033 written | 18 |
 | 33 | US-281 the map's code-drawn pictures (contact shadow, ring, lit acre, arrow, overlays) (2); US-282 effects, markers and the weather's look (3); the phase's device build; spec 033 reviewed | 5 + review |
 | 34–35 | The UI restyle (spec 033) | Sized in spec 033 |
 
-Was 45 points over Sprints 30 to 32; now 55 over Sprints 30 to 33 (people +5 for new bodies, shadows +4 across buildings and trees, the device check +2, US-281's icons moved to spec 033 −1). Phase 4 starts about three sprints later than ADR 0172 planned.
+Was 45 points over Sprints 30 to 32; now 55 over Sprints 30 to 33 (people +5 for new bodies, shadows +4 across buildings and trees (dropped by ADR 0183; the points stay as slack), the device check +2, US-281's icons moved to spec 033 −1). Phase 4 starts about three sprints later than ADR 0172 planned.

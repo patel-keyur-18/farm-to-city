@@ -57,29 +57,6 @@ namespace Sim.View.Tests
             Assert.That(look.Step(Frame, "rain", false, 1f).Light, Is.EqualTo(1f));
         }
 
-        // AC-3 (spec 032 §3.3): a building's shadow strength is the day's light (0 at night, 1 by day) times the weather's `shadow`, fading with the weather.
-        [Test]
-        public void ShadowStrength()
-        {
-            WeatherLookDef def = Def();
-            var look = new WeatherLook(def);
-            Run(look, "sun", 5);
-            Assert.That(look.Step(Frame, "sun", false, 1f).Shadow, Is.EqualTo(1f).Within(1e-3f), "sun by day");
-            Run(look, "rain", 5);
-            Assert.That(look.Step(Frame, "rain", false, 1f).Shadow, Is.EqualTo(0.25f).Within(1e-3f), "rain by day");
-            Assert.That(look.Step(Frame, "rain", false, 0.55f).Shadow, Is.EqualTo(0f).Within(1e-3f), "none at night");
-            Assert.That(look.Step(Frame, "rain", false, 0.775f).Shadow, Is.EqualTo(0.125f).Within(0.02f), "dusk: half the day's light");
-            Run(look, "sun", 5);
-            Assert.That(look.Step(Frame, "sun", false, 0.55f).Shadow, Is.EqualTo(0f).Within(1e-3f), "none at night in sun");
-
-            // Cross-fade: as the weather changes, the strength goes from one weather's to the other's, never past either.
-            look.Step(Frame, "storm", false, 1f);
-            List<WeatherFrame> fade = Run(look, "storm", def.EaseSeconds + 1f);
-            Assert.That(fade.All(f => f.Shadow <= 1f + 1e-4f && f.Shadow >= 0.10f - 1e-4f), Is.True);
-            Assert.That(fade.Zip(fade.Skip(1), (a, b) => b.Shadow <= a.Shadow + 1e-4f).All(x => x), Is.True, "eases down from sun's 1.0 to storm's 0.10");
-            Assert.That(fade[fade.Count - 1].Shadow, Is.EqualTo(0.10f).Within(1e-3f));
-        }
-
         // AC-19: with reduced motion nothing moves (Moving false: the presenter freezes rain, clouds and splashes), there's no glow and no
         // gust in a storm; the thunder still comes (Sound decides), and a change still fades.
         [Test]

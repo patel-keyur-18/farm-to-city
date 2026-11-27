@@ -1,6 +1,6 @@
 # 0182. US-283 the device check as built: the realistic house, wheat and hands at 8×, shadows as their own sprites, stand-ins and a memory ballast
 
-- Status: Accepted as built (the plan check's seven gaps answered by the owner, one per message, 2026-11-27); the device reading and the owner's review of the story are pending
+- Status: Accepted as built (the plan check's seven gaps answered by the owner, one per message, 2026-11-27). **Read on the iPhone 13 and amended by ADR 0183: the shadow parts (decisions 2 and 6, the shadow layer, the `_shadow` sprites) were removed at the owner's word; everything else stands.**
 - Date: 2026-11-27
 - Deciders: Keyur Patel
 - Related ADRs: 0094, 0172 (§8), 0180; spec 032 §3.2 §3.3 §3.4 §3.5 (AC-1 amended below)

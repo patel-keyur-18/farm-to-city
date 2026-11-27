@@ -147,14 +147,13 @@ namespace Sim.View.Content
             {
                 string q = Join(wp, p.Name);
                 JObject w = Object(p.Value, q);
-                OnlyFields(w, q, "multiply", "multiplyAlpha", "shadow", "overlay", "overlayAlpha", "saturation", "brightness", "clouds", "streaks", "splashesPerSecond",
+                OnlyFields(w, q, "multiply", "multiplyAlpha", "overlay", "overlayAlpha", "saturation", "brightness", "clouds", "streaks", "splashesPerSecond",
                     "mist", "mistAlpha", "haze", "shimmer", "rime", "glow");
                 var s = new WeatherStyle
                 {
                     Id = p.Name, Multiply = Colour(Required(w, q, "multiply"), Join(q, "multiply")), MultiplyAlpha = F(w, q, "multiplyAlpha", "0", "1"),
                     Saturation = F(w, q, "saturation", "0", "2"), Brightness = F(w, q, "brightness", "0.5", "1.5"),
                 };
-                if (w["shadow"] != null) s.Shadow = F(w, q, "shadow", "0", "1"); // spec 032 §3.3: a building's baked shadow in this weather
                 if (w["overlay"] != null) { s.Overlay = Colour(w["overlay"], Join(q, "overlay")); s.OverlayAlpha = F(w, q, "overlayAlpha", "0", "1"); }
                 if (w["mist"] != null) { s.Mist = Colour(w["mist"], Join(q, "mist")); s.MistAlpha = F(w, q, "mistAlpha", "0", "1"); }
                 if (w["splashesPerSecond"] != null) s.SplashesPerSecond = F(w, q, "splashesPerSecond", "0", "300");

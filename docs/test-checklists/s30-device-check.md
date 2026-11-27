@@ -1,5 +1,7 @@
 # Sprint 30 build: the device check for the realistic valley (US-283)
 
+> **Read by the owner on 2026-11-27** (ADR 0183): main p95 4.43 ms, GPU p95 7.94 ms, 59.3 fps, 2.03% of frames over 25 ms, memory ok. **Baked shadows were dropped afterwards**; the shadow rows below (the soft shadow under houses and trees, the weather fade of shadows, rows 10 and 13) describe the build as measured and no longer apply to the game. The next device build reads the frame time again.
+
 - **Build:** the one Development build of Sprint 30, from the head of branch `sprint/30-art-land` (`BuildCli.IosDevelopment`). It has the realistic house, wheat acre and the hand and his wife at 8× with the new camera (3 acres across), and a **developer-panel switch, *Art check***, that stands those in for every house, crop and person on the map and for every other building's and tree's shadow, and loads a memory ballast (spec 032 §3.5, ADR 0182). **Off by default.**
 - **Device:** iPhone 13, iOS version: ____
 - **Tested by / date:** ____

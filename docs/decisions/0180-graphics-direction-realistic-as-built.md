@@ -15,7 +15,7 @@ ADR 0172 §7 asked for three samples (a family house, a wheat field, a person) i
 
 ## Decision (the owner, one per message, 2026-11-27)
 
-1. **Realistic, Option B** (the owner liked it and asked what it costs): baked shadows on buildings only, kept short (sun at 60°); not Option A (no baked shadows) and not C (shadows on everything, over the GPU budget at the crowded view by estimate: 12 to 13 ms against 11).
+1. **Realistic, Option B** (*baked shadows later dropped, ADR 0183: Option A*) (the owner liked it and asked what it costs): baked shadows on buildings only, kept short (sun at 60°); not Option A (no baked shadows) and not C (shadows on everything, over the GPU budget at the crowded view by estimate: 12 to 13 ms against 11).
 2. **The default zoom 3 acres across** (the owner's "render pixels" zoom is 1.2 acres across, too close to play; 3 acres is today's closest zoom), the closest zoom 2 acres across.
 3. **A device check first** (US-283, 2 points): the realistic house, field and people at the new zoom on the iPhone before the other sprites are re-rendered; a GPU p95 over 11 ms means Option A.
 4. **A building's shadow is its own sprite** so weather and night can fade it (the strength is the day's light times a weather value, placeholders tuned on the phone).
