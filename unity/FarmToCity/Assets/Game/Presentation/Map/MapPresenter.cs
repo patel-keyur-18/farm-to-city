@@ -190,8 +190,12 @@ namespace Game.Presentation.Map
             MapPresenter m = go.AddComponent<MapPresenter>();
             m._tweens = tweens;
             m._ui = ui;
+            m.Shadows = go.AddComponent<ShadowLayer>();
             return m;
         }
+
+        /// <summary>The baked shadows of buildings and trees (spec 032 §3.3): the weather presenter sets their strength.</summary>
+        public ShadowLayer Shadows { get; private set; }
 
         private Vector3 TileCentre(int tile)
         {

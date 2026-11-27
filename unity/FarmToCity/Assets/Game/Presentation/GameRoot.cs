@@ -103,6 +103,7 @@ namespace Game.Presentation
 
             CardVm first = LoadTown(); // the saved town, a backup after a crash, or a new town (spec 007 §3.3)
             BuildScene();
+            if (Art.ArtCheck.On) StartCoroutine(Art.ArtCheck.LoadBallast()); // the device check's memory ballast (US-283; Development builds only)
             RestoreCamera();
             Refresh(false);
             if (first != null) ShowCard(first, _ => AskWhichToRun());
@@ -145,7 +146,7 @@ namespace Game.Presentation
             _mapVm = MapView.Build(_ctx);
             _map = MapPresenter.Create(transform, _tweens, _ui);
             _map.Refresh(_mapVm, false);
-            _input = MapInput.Create(gameObject, _camera, _map, _document, OnTap);
+            _input = MapInput.Create(gameObject, _camera, _map, _document, OnTap, _ui.Camera);
             _input.ApplyRing(_mapVm);
             _input.Focus(_mapVm.HomeX, _mapVm.HomeY); // the yard (spec 010 §3.5)
 

@@ -21,7 +21,7 @@ import os
 import sys
 from mathutils import Matrix, Vector
 
-SCALE = 4                                      # supersampling: the game shows sprites at 1/SCALE
+SCALE = int(os.environ.get("FTC_SCALE", "4"))  # supersampling: the game shows sprites at 1/SCALE (8 for the realistic redesign, spec 032 §3.2)
 PX_PER_UNIT = 132.0 / math.sqrt(2.0) * SCALE   # px per world unit in the camera plane
 MARGIN_PX = 8 * SCALE
 OUTLINE = 0.0065                               # world units after scaling; about 2 px at 1x

@@ -60,7 +60,16 @@ namespace Game.Presentation.DevTools
             return "main " + Ms(_main.DefaultIfEmpty().Average()) + " / p95 " + Ms(P95(_main)) + " / max " + Ms(_main.DefaultIfEmpty().Max())
                 + " · GPU " + Ms(_gpu.DefaultIfEmpty().Average()) + " / p95 " + Ms(P95(_gpu))
                 + "\nover 25 ms " + dropped.ToString("0.00") + "% · " + (_interval.Count / Span).ToString("0.0") + " fps · " + _interval.Count + " frames"
+                + "\n" + Memory()
                 + "\n" + (pass ? "PASS" : "FAIL") + " (main p95 ≤ " + MainP95 + " ms, GPU p95 ≤ " + GpuP95 + " ms, under 1% over 25 ms" + (_main.Any(x => x > 0) ? ")" : "; no timings: frame-timing stats off)");
+        }
+
+        /// <summary>The memory the build holds now (US-283): the graphics driver's share is where the textures are. Xcode's memory report is the one to quote; this is the in-game cross-check.</summary>
+        private static string Memory()
+        {
+            const double MB = 1000000.0;
+            return "memory: total " + (UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / MB).ToString("0") + " MB · graphics driver "
+                + (UnityEngine.Profiling.Profiler.GetAllocatedMemoryForGraphicsDriver() / MB).ToString("0") + " MB · art check " + (Art.ArtCheck.On ? "ON (ballast " + Art.ArtCheck.BallastMegabytes + " MB)" : "off");
         }
 
         private static double P95(List<double> xs)

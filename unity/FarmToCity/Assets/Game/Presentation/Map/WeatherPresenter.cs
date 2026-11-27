@@ -232,6 +232,7 @@ namespace Game.Presentation.Map
             _look.Override = DevOverride;
             WeatherFrame f = _look.Step(Time.unscaledDeltaTime, _spell(), reduced, _dayLight());
             if (f.To == null) return;
+            if (_map != null && _map.Shadows != null) _map.Shadows.Strength = f.Shadow; // the day's light × the weather's shadow (spec 032 §3.3)
             if (f.Moving) _time += Time.unscaledDeltaTime;
             float day = Mathf.Clamp01((f.Light - _def.NightLight) / Mathf.Max(0.01f, 1f - _def.NightLight));
             _ground = 0.22f + 0.23f * day;

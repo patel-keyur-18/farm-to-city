@@ -25,7 +25,8 @@ namespace Game.Presentation.Art
 
         // ---- Blender renders ----
 
-        [System.Serializable] private class RenderedInfo { public string name; public int w, h; public float pivotX, pivotY; }
+        /// <summary>One manifest entry. <c>ppu</c> (when set) is this sprite's own pixels per world unit: the realistic redesign renders at 8x (1,056) while the rest is still 4x (528); <c>shadow</c> says a <c>&lt;name&gt;_shadow</c> sprite goes under it (spec 032 §3.3).</summary>
+        [System.Serializable] private class RenderedInfo { public string name; public int w, h; public float pivotX, pivotY, ppu; public bool shadow; }
         [System.Serializable] private class RenderedManifest { public float pixelsPerUnit; public RenderedInfo[] sprites; }
 
         private static Dictionary<string, RenderedInfo> _rendered;
@@ -34,6 +35,7 @@ namespace Game.Presentation.Art
         /// <summary>A sprite rendered by the Blender rig at its true map scale, or null if there is no such render.</summary>
         public static Sprite Rendered(string name)
         {
+            name = ArtCheck.StandIn(name);
             if (_rendered == null)
             {
                 _rendered = new Dictionary<string, RenderedInfo>();
@@ -49,8 +51,27 @@ namespace Game.Presentation.Art
             return Get("blender:" + name, () =>
             {
                 var tex = Resources.Load<Texture2D>("Art/Blender/" + name);
-                return tex == null ? null : Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(info.pivotX, info.pivotY), _renderedPpu);
+                if (tex == null) return null;
+                Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(info.pivotX, info.pivotY), info.ppu > 0f ? info.ppu : _renderedPpu);
+                sprite.name = name;
+                return sprite;
             });
+        }
+
+        /// <summary>The baked shadow that goes under a sprite (spec 032 §3.3): its own sprite, with its own frame and its pivot at the same world anchor; null if it has none.</summary>
+        public static Sprite ShadowOf(Sprite sprite)
+        {
+            if (sprite == null || string.IsNullOrEmpty(sprite.name)) return null;
+            Rendered(""); // the manifest
+            if (!_rendered.TryGetValue(sprite.name, out RenderedInfo info) || !info.shadow) return null;
+            return Rendered(sprite.name + "_shadow");
+        }
+
+        /// <summary>A sprite's width in world units (its frame over its pixels per unit), 0 if it isn't a render.</summary>
+        public static float WorldWidth(string name)
+        {
+            Rendered("");
+            return _rendered.TryGetValue(name, out RenderedInfo info) ? info.w / (info.ppu > 0f ? info.ppu : _renderedPpu) : 0f;
         }
 
         /// <summary>Every rendered sprite's name (the Editor check that each state has its render).</summary>
