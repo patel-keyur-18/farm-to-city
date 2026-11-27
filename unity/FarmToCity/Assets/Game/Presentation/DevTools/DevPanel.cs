@@ -82,7 +82,9 @@ namespace Game.Presentation.DevTools
             scroll.Add(Section("Weather look (ADR 0083: look only, no command, reset on leaving play)"));
             scroll.Add(ButtonRow(Btn("Weather look ▸", NextWeatherLook)));
             scroll.Add(Section("Art check (US-283: realistic stand-ins and memory ballast; takes effect on the next launch)"));
-            scroll.Add(ButtonRow(Btn("Art check: " + (Art.ArtCheck.On ? "ON" : "off"), () => ToggleArtCheck())));
+            Button artCheck = null;
+            artCheck = Btn("Art check: " + (Art.ArtCheck.On ? "ON" : "off"), () => { ToggleArtCheck(); artCheck.text = "Art check: " + (Art.ArtCheck.On ? "ON" : "off"); });
+            scroll.Add(ButtonRow(artCheck));
             scroll.Add(Section("Performance (ADR 0047)"));
             scroll.Add(ButtonRow(Btn("Measure frame time (20 s)", MeasureFrames)));
 

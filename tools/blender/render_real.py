@@ -181,6 +181,8 @@ def render_shadow(sc, cam, name, objs):
             o.visible_shadow = False
         else:
             casters.append(o)
+    # Only the sun's shadow: the sky's light is occluded under every overhang and corner, which as a shadow sprite would be a smudge that no sun casts.
+    bpy.context.scene.world.node_tree.nodes["Background"].inputs[1].default_value = 0.0
     tall = max(world_top(o) for o in casters)
     catcher = shadow_catcher(objs, pad=tall * 1.2)
     info = R.frame_and_render(sc, cam, name + "_shadow", [catcher])

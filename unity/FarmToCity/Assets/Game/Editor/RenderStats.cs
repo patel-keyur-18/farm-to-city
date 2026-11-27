@@ -30,7 +30,7 @@ namespace Game.Editor
         /// <summary>Growth that is flagged, in percent (ADR 0107 §12).</summary>
         public const double FlagPercent = 10.0;
 
-        private static readonly string[] Metrics = { "drawCalls", "batches", "setPassCalls", "visibleSprites", "triangles" };
+        private static readonly string[] Metrics = { "drawCalls", "batches", "setPassCalls", "visibleSprites", "triangles", "spritePixels" };
 
         private static string LogPath { get { return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "..", "docs", "planning", "render-stats.json")); } }
 
@@ -77,11 +77,20 @@ namespace Game.Editor
         public static Dictionary<string, double> Measure()
         {
             int visible = 0, total = 0;
+            double pixels = 0; // the screen area the visible sprites' frames cover, in thousands of pixels (spec 032 §3.5: the realistic sprites are bigger and overdraw more)
+            Camera cam = Camera.main;
             foreach (SpriteRenderer s in UnityEngine.Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None))
             {
                 if (!s.enabled || !s.gameObject.activeInHierarchy) continue;
                 total++;
-                if (s.isVisible) visible++;
+                if (!s.isVisible) continue;
+                visible++;
+                if (cam == null) continue;
+                Bounds b = s.bounds;
+                Vector3 lo = cam.WorldToScreenPoint(b.min), hi = cam.WorldToScreenPoint(b.max);
+                float x0 = Mathf.Max(0f, Mathf.Min(lo.x, hi.x)), x1 = Mathf.Min(Screen.width, Mathf.Max(lo.x, hi.x));
+                float y0 = Mathf.Max(0f, Mathf.Min(lo.y, hi.y)), y1 = Mathf.Min(Screen.height, Mathf.Max(lo.y, hi.y));
+                if (x1 > x0 && y1 > y0) pixels += (x1 - x0) * (y1 - y0); // only the part on the screen
             }
             return new Dictionary<string, double>
             {
@@ -90,6 +99,7 @@ namespace Game.Editor
                 { "setPassCalls", UnityStats.setPassCalls },
                 { "triangles", UnityStats.triangles },
                 { "visibleSprites", visible },
+                { "spritePixels", Math.Round(pixels / 1000.0) },
                 { "sprites", total },
             };
         }
