@@ -91,6 +91,23 @@ namespace Sim.View.Views
 
         private static WhyVm ImportFiles(ViewContext ctx, long id) { return SimpleWhy(ctx, "importFiles"); }
 
+        /// <summary>A town's row on Settings → Your towns (spec 031): its figures as the row shows them, and where they come from.</summary>
+        private static WhyVm TownRow(ViewContext ctx, long id)
+        {
+            TownInfo t = null;
+            if (ctx.Towns != null) foreach (TownInfo x in ctx.Towns) if (x.Slot == id) t = x;
+            WhyVm vm = New(ctx, "why.town.title", t == null || t.NetWorth == Sim.Core.Saves.TownSummary.Unknown ? null : ctx.Fmt.Amount(t.NetWorth), "town", SettingsSheet.TownName(ctx, (int)id));
+            if (t != null)
+            {
+                if (t.EraId != null) Row(vm, ctx, "why.town.era", ctx.Strings.Get("towns.era." + t.EraId));
+                Row(vm, ctx, "why.town.day", ctx.Fmt.Integer(t.Day));
+            }
+            Text(vm, ctx, "why.town.what");
+            return vm;
+        }
+
+        private static WhyVm TownStart(ViewContext ctx, long id) { return SimpleWhy(ctx, "townStart"); }
+
         private static WhyVm PlayLogWhy(ViewContext ctx, long id) { return SimpleWhy(ctx, "playLog"); }
 
         private static WhyVm TextSize(ViewContext ctx, long id) { return SimpleWhy(ctx, "textSize"); }

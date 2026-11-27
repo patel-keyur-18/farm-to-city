@@ -39,17 +39,17 @@ namespace Sim.View.Tests
                 "Sound | Little sounds when you harvest and sell | On",
                 "Haptics | A light tap on harvest and sale | On",
                 "Files |  | -",
-                "Export town | A copy to the Files app | Export",
-                "Import a town | 2 town files in Files | Choose",
-                "Export play log | 3 entries | Export",
-                "New game | Replaces your town for good | New game…",
+                "Export Town 1 | A copy to the Files app | Export",
+                "Import into Town 1 | 2 town files in Files | Choose",
+                "Export play log of Town 1 | 3 entries | Export",
+                "New game in Town 1 | Replaces Town 1 for good | New game…",
             }));
             Assert.That(vm.Lines.Last().Action.Kind, Is.EqualTo(ActionKind.Danger));
             Assert.That(vm.Lines[1].Action.Kind, Is.EqualTo(ActionKind.Danger), "a switch that is off is a red Off");
             LineVm Row(SheetVm v, string label) { return v.Lines.Single(l => l.Label == label); }
-            Assert.That(Row(vm, "Import a town").Action.Opens.Value.Kind, Is.EqualTo("Import"));
+            Assert.That(Row(vm, "Import into Town 1").Action.Opens.Value.Kind, Is.EqualTo("Import"));
             Assert.That(Row(vm, "Large").Action.Id, Is.EqualTo(SettingsIds.TextPrefix + "125"));
-            foreach (LineVm l in vm.Lines.Where(l => l.Value != null && l.Value.Any(char.IsDigit)))
+            foreach (LineVm l in vm.Lines.Where(l => l.Value != null && l.Value.Replace("Town 1", "").Any(char.IsDigit))) // a town's name is not a number
                 Assert.That(WhyView.Has(l.WhyKey), Is.True, "a Why? for " + l.Label);
 
             SheetVm on = SettingsSheet.Build(ctx, new SettingsInfo { NowWallUtc = Wall0, NotificationsOn = true, PlayLogOn = true });
@@ -57,7 +57,7 @@ namespace Sim.View.Tests
             Assert.That(on.Lines[1].Value + " / " + on.Lines[1].Action.Label, Is.EqualTo("A nudge when crops are ready · never at night / On"));
             Assert.That(on.Lines[1].Action.Kind, Is.EqualTo(ActionKind.Primary), "a switch that is on is a green On");
             Assert.That(on.Lines[2].Action.Label, Is.EqualTo("On"));
-            Assert.That(on.Lines.Single(l => l.Label == "Export play log").Action.Enabled, Is.False, "an empty play log can't be exported");
+            Assert.That(on.Lines.Single(l => l.Label == "Export play log of Town 1").Action.Enabled, Is.False, "an empty play log can't be exported");
         }
 
         [Test]
@@ -88,10 +88,10 @@ namespace Sim.View.Tests
         public void Cards_ReplaceRestoredUnreadable()
         {
             ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
-            CardVm replace = Cards.Replace(ctx);
+            CardVm replace = Cards.Replace(ctx, Info());
             Assert.That(replace.Buttons.Select(b => b.Id), Is.EqualTo(new[] { SettingsIds.ExportFirst, SettingsIds.Replace, SettingsIds.Cancel }));
-            Assert.That(replace.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Export first", "Replace", "Cancel" }));
-            Assert.That(Cards.Replace(ctx, "old.ftc").Title, Is.EqualTo("Import old.ftc?"));
+            Assert.That(replace.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Export first", "Replace Town 1", "Cancel" }));
+            Assert.That(Cards.Replace(ctx, Info(), "old.ftc").Title, Is.EqualTo("Import old.ftc into Town 1?"));
             Assert.That(Cards.Restored(ctx, Wall0 - 7200, Info()).Text, Is.EqualTo("It came back from the save of 11:30 today. A few minutes of play may be missing."));
             Assert.That(Cards.Unreadable(ctx, SaveError.SaveTooOld, "town.unreadable-20261019-0800.ftc").Text, Does.Contain("older test build").And.Contain("town.unreadable-20261019-0800.ftc"));
         }
@@ -153,5 +153,112 @@ namespace Sim.View.Tests
         }
 
         private static Sim.Core.Definitions.NotifyDef Def() { return new Sim.Core.Definitions.NotifyDef(64, 30, 240, 22 * 60, 7 * 60); }
+
+        // ---- spec 031: two towns ----
+
+        private static TownInfo Town(int slot, bool exists = true, bool open = false, string era = "village", int day = 64, long worth = 142_000_000, long saved = Wall0 - 86_400 - 600)
+            => new TownInfo { Slot = slot, Exists = exists, Open = open, EraId = exists ? era : null, Day = day, NetWorth = worth, SavedWallUtc = exists ? saved : 0 };
+
+        private static SettingsInfo TwoTowns(int open)
+        {
+            SettingsInfo info = Info();
+            info.OpenTown = open;
+            info.Towns = new[] { Town(1, open: open == 1), Town(2, era: "hamlet", day: 6, worth: 21_000_000, open: open == 2) };
+            return info;
+        }
+
+        // AC-1, AC-6 (Settings): one town shows it and "Start a second town"; two show a row each, the open one "Open now", the other "Switch".
+        [Test]
+        public void Towns()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
+            SettingsInfo one = Info();
+            one.Towns = new[] { Town(1, open: true), Town(2, exists: false) };
+            SheetVm vm = SettingsSheet.Build(ctx, one);
+            Assert.That(vm.Lines.Take(4).Select(l => l.Label + " | " + l.Value + " | " + (l.Action == null ? "-" : l.Action.Label)), Is.EqualTo(new[]
+            {
+                "Your towns |  | -",
+                "Town 1 | Village · day 64 · net worth 14,20,000 | Open now",
+                "Start a second town | A new town beside this one. You keep both. | Start",
+                "Saved automatically | Last at 13:20 today | Save now",
+            }));
+            Assert.That(vm.Lines[1].Action.Enabled, Is.False, "the open town's button does nothing");
+            Assert.That(vm.Lines[2].Action.Id, Is.EqualTo(SettingsIds.TownStart));
+
+            SheetVm two = SettingsSheet.Build(ctx, TwoTowns(open: 1));
+            LineVm other = two.Lines[2];
+            Assert.That(other.Label + " | " + other.Value + " | " + other.Action.Label + " | " + other.Note, Is.EqualTo("Town 2 | Hamlet · day 6 · net worth 2,10,000 | Switch | Last played 13:20 yesterday"));
+            Assert.That(other.Action.Id, Is.EqualTo(SettingsIds.TownSwitchPrefix + "2"));
+            Assert.That(other.Action.Enabled, Is.True);
+            Assert.That(SettingsSheet.Build(ctx, TwoTowns(open: 2)).Lines[1].Action.Id, Is.EqualTo(SettingsIds.TownSwitchPrefix + "1"), "Town 1 switches when Town 2 is open");
+            Assert.That(two.Lines[1].Note, Is.Null, "the open town has no last-played line");
+            foreach (LineVm l in two.Lines.Skip(1).Take(2)) Assert.That(WhyView.Has(l.WhyKey), Is.True, "a Why? for " + l.Label);
+            Assert.That(SettingsSheet.Build(ctx, one).Lines[2].WhyKey, Is.EqualTo("townStart"));
+
+            // Without a ledger-less summary (header only), the row leaves out what it doesn't know.
+            SettingsInfo bare = Info();
+            bare.Towns = new[] { Town(1, open: true), new TownInfo { Slot = 2, Exists = true, Day = 3, NetWorth = Sim.Core.Saves.TownSummary.Unknown, SavedWallUtc = Wall0 - 60 } };
+            Assert.That(SettingsSheet.Build(ctx, bare).Lines[2].Value, Is.EqualTo("day 3"));
+
+            ctx.Towns = TwoTowns(open: 1).Towns;
+            WhyVm why = WhyView.Build(ctx, "town", 2);
+            Assert.That(why.Value, Is.EqualTo("2,10,000"));
+            Assert.That(why.Rows.Select(r => r.Label), Does.Contain("Hamlet").Or.Contain("Era"));
+        }
+
+        // AC-10: Export, Import, the play log and New game name the open town, and the cards say what they replace.
+        [Test]
+        public void TownNamed()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
+            SheetVm two = SettingsSheet.Build(ctx, TwoTowns(open: 2));
+            string[] labels = two.Lines.Select(l => l.Label).ToArray();
+            Assert.That(labels, Does.Contain("Export Town 2").And.Contain("Import into Town 2").And.Contain("Export play log of Town 2").And.Contain("New game in Town 2"));
+            Assert.That(two.Lines.Single(l => l.Label == "New game in Town 2").Value, Is.EqualTo("Replaces Town 2 for good"));
+
+            CardVm replace = Cards.Replace(ctx, TwoTowns(open: 2));
+            Assert.That(replace.Title, Is.EqualTo("Start a new Town 2?"));
+            Assert.That(replace.Text, Does.Contain("replaces Town 2 for good").And.Contain("Town 1 is not touched."));
+            Assert.That(replace.Buttons[1].Label, Is.EqualTo("Replace Town 2"));
+            Assert.That(Cards.Replace(ctx, TwoTowns(open: 1), "FarmToCity-Town2-x.ftc").Title, Is.EqualTo("Import FarmToCity-Town2-x.ftc into Town 1?"));
+            Assert.That(Cards.Replace(ctx, Info()).Text, Does.Not.Contain("not touched"), "with one town there is no other town to name");
+        }
+
+        // Spec 031 §3: a switch to a town that can't be read leaves the open town as it is and says so.
+        [Test]
+        public void TownNotOpenedCard()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
+            CardVm card = Cards.TownNotOpened(ctx, 2, 1, SaveError.CorruptSave, "town.unreadable-20261127-1413.ftc");
+            Assert.That(card.Title, Is.EqualTo("Town 2 couldn't be opened"));
+            Assert.That(card.Text, Does.Contain("town.unreadable-20261127-1413.ftc").And.EndWith("Town 1 is still open, and Settings offers to start a second town again."));
+            Assert.That(card.Title, Does.Not.Contain("new town"), "nothing new has started");
+        }
+
+        [Test]
+        public void SwitchCard()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
+            CardVm card = Cards.SwitchTown(ctx, 1, 2);
+            Assert.That(card.Title, Is.EqualTo("Switch to Town 2?"));
+            Assert.That(card.Text, Is.EqualTo("Town 1 is saved and its time keeps running. Town 2 catches up on the time since you left (at most 3 days)."));
+            Assert.That(card.Buttons.Select(b => b.Id), Is.EqualTo(new[] { SettingsIds.Cancel, SettingsIds.Switch }));
+            Assert.That(card.Buttons.Select(b => b.Label), Is.EqualTo(new[] { "Not now", "Switch" }));
+        }
+
+        // AC-6 (notifications): with two towns each title starts with its town; with one, the words are as they were.
+        [Test]
+        public void NotificationTextTownName()
+        {
+            ViewContext ctx = ViewKit2.Context(ViewKit.NewGame());
+            var n = new PlannedNotification { Kind = NotifyKind.LoanMissed, Count = 1 };
+            (string plain, string body) = NotificationText.For(ctx, n);
+            Assert.That(plain, Is.EqualTo("A loan payment was missed"));
+            Assert.That(NotificationText.For(ctx, n, 0).Title, Is.EqualTo(plain), "one town: no name");
+            (string t2, string b2) = NotificationText.For(ctx, n, 2);
+            Assert.That(t2, Is.EqualTo("Town 2 \u00b7 A loan payment was missed"));
+            Assert.That(b2, Is.EqualTo(body), "only the title takes the name");
+            Assert.That(NotificationText.For(ctx, n, 1).Title, Does.StartWith("Town 1 \u00b7 "));
+        }
     }
 }

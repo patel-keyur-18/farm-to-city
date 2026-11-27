@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Sim.Core.Events;
 using Sim.Core.Saves;
 
@@ -20,6 +21,12 @@ namespace Sim.View.Views
         public bool PlayLogOn { get; set; }
         public int PlayLogLines { get; set; }
         public int ImportFiles { get; set; }
+
+        /// <summary>The open town's slot, 1 or 2 (spec 031): the Files rows and the cards name it.</summary>
+        public int OpenTown { get; set; } = 1;
+
+        /// <summary>One entry for each slot, for Settings → Your towns; null or empty leaves the section out.</summary>
+        public System.Collections.Generic.IReadOnlyList<TownInfo> Towns { get; set; }
 
         // Look and sound (spec 008 §3.13, ADR 0043 §9): kept in the settings file, never in the town.
         public Sim.View.Text.NumberFormat Numbers { get; set; }
@@ -90,9 +97,33 @@ namespace Sim.View.Views
         }
     }
 
+    /// <summary>One town's row on Settings → Your towns (spec 031 §7.1): read from its <c>summary.json</c>, or from the open town itself.</summary>
+    public sealed class TownInfo
+    {
+        public int Slot { get; set; }
+
+        /// <summary>False for an empty slot: its row offers to start a town.</summary>
+        public bool Exists { get; set; }
+        public bool Open { get; set; }
+
+        /// <summary>The era's content id, or null when unknown.</summary>
+        public string EraId { get; set; }
+        public int Day { get; set; }
+
+        /// <summary>1/100 coin, or <see cref="Sim.Core.Saves.TownSummary.Unknown"/>.</summary>
+        public long NetWorth { get; set; } = Sim.Core.Saves.TownSummary.Unknown;
+        public long SavedWallUtc { get; set; }
+    }
+
     /// <summary>The ids of the Settings actions: the platform runs them, they are not sim commands.</summary>
     public static class SettingsIds
     {
+        /// <summary>A town row's Switch: this prefix and the slot (spec 031 §5).</summary>
+        public const string TownSwitchPrefix = "townSwitch:";
+        public const string TownStart = "townStart";
+        public const string TownOpen = "townOpen";
+        public const string Switch = "switch";
+
         public const string SaveNow = "saveNow";
         public const string Notifications = "notifications";
         public const string PlayLog = "playLog";
@@ -131,6 +162,7 @@ namespace Sim.View.Views
         {
             var s = ctx.Strings;
             var vm = new SheetVm { Title = s.Get("settings.title"), Icon = "gear" };
+            Towns(ctx, vm, info);
             string saved = info.LastSavedWallUtc == 0 ? s.Get("settings.notSaved") : s.Get("settings.lastSaved", "time", WallTime.When(ctx, info.LastSavedWallUtc, info));
             vm.Lines.Add(Row(s.Get("settings.saved"), saved, new ActionVm(SettingsIds.SaveNow, s.Get("settings.saveNow"), null, ActionKind.Primary, true, null, null), info.LastSavedWallUtc == 0 ? null : "saved"));
             // A switch shows its state (owner, device run): a green On or a red Off; tapping it flips it.
@@ -149,19 +181,54 @@ namespace Sim.View.Views
             vm.Lines.Add(Row(s.Get("settings.sound"), s.Get(info.Sound ? "settings.soundOn" : "settings.soundOff"), Switch(ctx, SettingsIds.Sound, info.Sound)));
             vm.Lines.Add(Row(s.Get("settings.haptics"), s.Get(info.Haptics ? "settings.hapticsOn" : "settings.hapticsOff"), Switch(ctx, SettingsIds.Haptics, info.Haptics)));
             vm.Lines.Add(LineVm.Header(s.Get("settings.files")));
-            vm.Lines.Add(Row(s.Get("settings.exportTown"), s.Get("settings.toFiles"),
+            string town = TownName(ctx, info.OpenTown);
+            vm.Lines.Add(Row(s.Get("settings.exportTown", "town", town), s.Get("settings.toFiles"),
                 new ActionVm(SettingsIds.Export, s.Get("settings.export"), null, ActionKind.Primary, true, null, null)));
-            vm.Lines.Add(Row(s.Get("settings.importTown"), s.Plural("settings.importFiles", info.ImportFiles, "count", ctx.Fmt.Integer(info.ImportFiles)),
+            vm.Lines.Add(Row(s.Get("settings.importTown", "town", town), s.Plural("settings.importFiles", info.ImportFiles, "count", ctx.Fmt.Integer(info.ImportFiles)),
                 ActionVm.Open("openImport", s.Get("settings.choose"), new SheetRequest("Import", 0)), "importFiles"));
             bool hasLog = info.PlayLogLines > 0;
-            vm.Lines.Add(Row(s.Get("settings.exportLog"), s.Plural("settings.logLines", info.PlayLogLines, "count", ctx.Fmt.Integer(info.PlayLogLines)),
+            vm.Lines.Add(Row(s.Get("settings.exportLog", "town", town), s.Plural("settings.logLines", info.PlayLogLines, "count", ctx.Fmt.Integer(info.PlayLogLines)),
                 new ActionVm(SettingsIds.ExportLog, s.Get("settings.export"), null, ActionKind.Primary, hasLog, hasLog ? null : s.Get("settings.logEmpty"), null), "playLog"));
-            vm.Lines.Add(Row(s.Get("settings.newGame"), s.Get("settings.newGameNote"),
+            vm.Lines.Add(Row(s.Get("settings.newGame", "town", town), s.Get("settings.newGameNote", "town", town),
                 new ActionVm(SettingsIds.NewGame, s.Get("settings.newGameButton"), null, ActionKind.Danger, true, null, null)));
             return vm;
         }
 
         internal static LineVm Row(string label, string value, ActionVm action, string why = null) { return new LineVm(label, value, why) { Action = action }; }
+
+        /// <summary>"Town 1": the slot's name (ADR 0172 §5: no naming yourself).</summary>
+        public static string TownName(ViewContext ctx, int slot) { return ctx.Strings.Get("towns.name", "n", slot.ToString(CultureInfo.InvariantCulture)); }
+
+        /// <summary>Your towns (spec 031 §7.1): a row for each town with its Switch, or the offer to start the second.</summary>
+        private static void Towns(ViewContext ctx, SheetVm vm, SettingsInfo info)
+        {
+            if (info.Towns == null || info.Towns.Count == 0) return;
+            var s = ctx.Strings;
+            vm.Lines.Add(LineVm.Header(s.Get("towns.title")));
+            foreach (TownInfo t in info.Towns)
+            {
+                LineVm row;
+                if (!t.Exists)
+                {
+                    row = Row(s.Get("towns.start"), s.Get("towns.startNote"), new ActionVm(SettingsIds.TownStart, s.Get("towns.startButton"), null, ActionKind.Primary, true, null, null), "townStart");
+                }
+                else
+                {
+                    var parts = new List<string>();
+                    if (t.EraId != null) parts.Add(s.Get("towns.era." + t.EraId));
+                    parts.Add(s.Get("towns.day", "day", ctx.Fmt.Integer(t.Day)));
+                    if (t.NetWorth != Sim.Core.Saves.TownSummary.Unknown) parts.Add(s.Get("towns.worth", "worth", ctx.Fmt.Amount(t.NetWorth)));
+                    ActionVm action = t.Open
+                        ? new ActionVm(SettingsIds.TownOpen, s.Get("towns.openNow"), null, ActionKind.Secondary, false, null, null)
+                        : new ActionVm(SettingsIds.TownSwitchPrefix + t.Slot, s.Get("towns.switch"), null, ActionKind.Primary, true, null, null);
+                    row = Row(TownName(ctx, t.Slot), string.Join(" · ", parts), action, "town");
+                    row.WhyId = t.Slot;
+                    if (!t.Open && t.SavedWallUtc > 0) row.Note = s.Get("towns.lastPlayed", "when", WallTime.When(ctx, t.SavedWallUtc, info));
+                }
+                row.Icon = "family_house";
+                vm.Lines.Add(row);
+            }
+        }
 
         private static ActionVm Choice(ViewContext ctx, string id, bool chosen)
         {
@@ -216,21 +283,37 @@ namespace Sim.View.Views
         }
 
         /// <summary>A new game or an import replaces the town for good (ADR 0023): export it first, replace, or cancel.</summary>
-        public static CardVm Replace(ViewContext ctx, string importName = null)
+        public static CardVm Replace(ViewContext ctx, SettingsInfo info, string importName = null)
         {
             var s = ctx.Strings;
+            string town = SettingsSheet.TownName(ctx, info.OpenTown);
+            bool two = info.Towns != null && info.Towns.Count(t => t.Exists) > 1;
             var c = new CardVm
             {
-                Title = s.Get(importName == null ? "card.newGameTitle" : "card.importTitle", "file", importName ?? ""),
-                Text = s.Get("card.replaceText"),
+                Title = s.Get(importName == null ? "card.newGameTitle" : "card.importTitle", "file", importName ?? "", "town", town),
+                Text = s.Get("card.replaceText", "town", town) + (two ? " " + s.Get("card.otherUntouched", "other", SettingsSheet.TownName(ctx, info.OpenTown == 1 ? 2 : 1)) : ""),
             };
             c.Buttons.Add(new CardButton(SettingsIds.ExportFirst, s.Get("card.exportFirst"), ActionKind.Secondary));
-            c.Buttons.Add(new CardButton(SettingsIds.Replace, s.Get("card.replace"), ActionKind.Danger));
+            c.Buttons.Add(new CardButton(SettingsIds.Replace, s.Get("card.replace", "town", town), ActionKind.Danger));
             c.Buttons.Add(new CardButton(SettingsIds.Cancel, s.Get("action.cancel"), ActionKind.Secondary));
             return c;
         }
 
-        /// <summary>After a crash the town came back from a backup (spec 007 §3.3).</summary>
+        /// <summary>Switching towns asks first (spec 031 §7.2): the town left is saved and keeps its time; the other catches up, at most 3 days.</summary>
+        public static CardVm SwitchTown(ViewContext ctx, int from, int to)
+        {
+            var s = ctx.Strings;
+            var c = new CardVm
+            {
+                Title = s.Get("card.switchTitle", "town", SettingsSheet.TownName(ctx, to)),
+                Text = s.Get("card.switchText", "from", SettingsSheet.TownName(ctx, from), "to", SettingsSheet.TownName(ctx, to), "days", ctx.Fmt.Integer(ctx.Sim.Clock.AwayCapHours / 24)),
+            };
+            c.Buttons.Add(new CardButton(SettingsIds.Cancel, s.Get("card.notNow"), ActionKind.Secondary));
+            c.Buttons.Add(new CardButton(SettingsIds.Switch, s.Get("towns.switch"), ActionKind.Primary));
+            return c;
+        }
+
+        /// <summary>After a crash the town came back from a backup (spec 031 is separate; spec 007 §3.3).</summary>
         public static CardVm Restored(ViewContext ctx, long savedAtWallUtc, SettingsInfo info)
         {
             var c = new CardVm { Title = ctx.Strings.Get("card.restoredTitle"), Text = ctx.Strings.Get("card.restoredText", "time", WallTime.When(ctx, savedAtWallUtc, info)) };
@@ -252,6 +335,19 @@ namespace Sim.View.Views
         {
             var c = new CardVm { Title = ctx.Strings.Get("card.unreadableTitle"), Text = ctx.Strings.Get("card.unreadable." + error, "file", keptAs ?? "") };
             c.Buttons.Add(new CardButton(SettingsIds.Ok, ctx.Strings.Get("card.ok"), ActionKind.Primary));
+            return c;
+        }
+
+        /// <summary>A switch to a town that can't be read (spec 031 §3): nothing changed, the open town stays, and the slot is empty again.</summary>
+        public static CardVm TownNotOpened(ViewContext ctx, int slot, int open, SaveError error, string keptAs)
+        {
+            var s = ctx.Strings;
+            var c = new CardVm
+            {
+                Title = s.Get("card.townNotOpenedTitle", "town", SettingsSheet.TownName(ctx, slot)),
+                Text = s.Get("card.unreadable." + error, "file", keptAs ?? "") + " " + s.Get("card.townStayed", "open", SettingsSheet.TownName(ctx, open)),
+            };
+            c.Buttons.Add(new CardButton(SettingsIds.Ok, s.Get("card.ok"), ActionKind.Primary));
             return c;
         }
 
@@ -346,6 +442,16 @@ namespace Sim.View.Views
     /// <summary>A notification's title and line from the string table (spec 007 §3.5): kind, count, crop; never money.</summary>
     public static class NotificationText
     {
+        /// <summary>
+        /// The same with the town first when there are two ("Town 2 · Your wheat is ready", spec 031 §3.1); <paramref name="town"/> 0 leaves the words as they
+        /// are with one town.
+        /// </summary>
+        public static (string Title, string Body) For(ViewContext ctx, PlannedNotification n, int town)
+        {
+            (string title, string body) = For(ctx, n);
+            return town <= 0 ? (title, body) : (ctx.Strings.Get("notify.townTitle", "town", SettingsSheet.TownName(ctx, town), "title", title), body);
+        }
+
         public static (string Title, string Body) For(ViewContext ctx, PlannedNotification n)
         {
             var s = ctx.Strings;

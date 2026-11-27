@@ -91,7 +91,7 @@ namespace Sim.View.Views
                 DisasterText = EventSheet.DisasterNote(ctx),
                 AlertCount = alerts.Count,
                 AlertUrgent = alerts.Count > 0 && alerts[0].Level == AlertLevel.Urgent,
-                DateText = ctx.Fmt.HudDate(d, sim.Clock.DaysPerSeason), // words (spec 020 §3.6c); the forecast and the Why?'s title keep date.full
+                DateText = (ctx.TownName == null ? "" : ctx.Strings.Get("hud.townName", "town", ctx.TownName)) + ctx.Fmt.HudDate(d, sim.Clock.DaysPerSeason), // words (spec 020 §3.6c); the forecast and the Why?'s title keep date.full
                 ClockText = Text.Formatter.Clock(d),
                 WeatherId = sim.CurrentWeather.Id,
                 WeatherText = ctx.Strings.Get(sim.CurrentWeather.NameKey),

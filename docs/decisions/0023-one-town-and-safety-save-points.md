@@ -1,6 +1,6 @@
 # 0023. One town at a time; save points are a safety guard, never an undo
 
-- Status: Accepted
+- Status: Accepted; the one-town rule is superseded by ADR 0172 §5 and ADR 0178 (two towns, one open at a time); the rule that no save point is ever an undo stands
 - Date: 2026-10-17
 - Deciders: Keyur Patel
 - Related: ADR 0002 (real-time clock), ADR 0009 (mistakes are recoverable), ADR 0017 (dev time-travel panel)

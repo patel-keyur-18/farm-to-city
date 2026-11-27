@@ -28,6 +28,12 @@ namespace Sim.View.Views
 
         public long Now { get { return Sim.State.Clock.SimTime; } }
 
+        /// <summary>"Town 2" once a second town exists, else null (spec 031 §3: the time card leads with it). The presentation sets it.</summary>
+        public string TownName { get; set; }
+
+        /// <summary>The towns' rows as Settings shows them, for the *Why?* of a row (the presentation sets it when it builds the sheet).</summary>
+        public System.Collections.Generic.IReadOnlyList<TownInfo> Towns { get; set; }
+
         private DateTime? _localNow;
 
         /// <summary>

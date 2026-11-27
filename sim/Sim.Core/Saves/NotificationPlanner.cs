@@ -227,7 +227,7 @@ namespace Sim.Core.Saves
         }
 
         /// <summary>A time inside quiet hours (device local time) moves to the end of them.</summary>
-        private static long OutOfQuiet(long wallUtc, NotifyDef def, int utcOffsetMinutes)
+        public static long OutOfQuiet(long wallUtc, NotifyDef def, int utcOffsetMinutes)
         {
             long local = wallUtc + utcOffsetMinutes * 60L;
             long day = local - Mod(local, 86400);

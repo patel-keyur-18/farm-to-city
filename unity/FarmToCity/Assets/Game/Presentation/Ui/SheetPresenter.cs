@@ -430,6 +430,21 @@ namespace Game.Presentation.Ui
             _tweens.Run(card, 0.2f, Ease.OutBack, k => card.style.scale = new Scale(new Vector3(0.8f + 0.2f * k, 0.8f + 0.2f * k, 1f)));
         }
 
+        /// <summary>
+        /// Removes every card, letter, away card and <i>Why?</i> popup at once, without answering them (spec 031 §3: a switch to the other town, such as one a
+        /// notification tap asks for, must not leave the old town's cards over the new one).
+        /// </summary>
+        public void DropVeils()
+        {
+            VisualElement r = _holder.parent;
+            if (r == null) return;
+            foreach (string name in new[] { "Veil", "AwayVeil", "WhyVeil" })
+            {
+                VisualElement v;
+                while ((v = r.Q(name)) != null) v.RemoveFromHierarchy();
+            }
+        }
+
         /// <summary>True while a Why? popup (or a Codex card) is open: the Codex's toast waits for it.</summary>
         public bool WhyOpen { get { VisualElement r = _holder.parent; return r != null && r.Q("WhyVeil") != null; } }
 

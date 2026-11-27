@@ -49,7 +49,7 @@ namespace Game.Presentation
             {
                 _format = Numbers;
                 _fmt = new Formatter(_strings, _format);
-                _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+                NewContext();
             }
         }
 

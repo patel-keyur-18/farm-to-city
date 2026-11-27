@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview 27 Art samples</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* US-271: three samples (a family house, a wheat field, a farm hand and his wife), each today / rich stylised / realistic,
+   from the same models, the game's camera and the same light direction. Palette from the game's UiKit. */
+:root{
+  --cream:#FFF3D1; --wood:#8A5A2B; --ink:#4A3320; --green:#79C84A; --green2:#3F7D20; --sand:#F3C777; --sand2:#9A6A2A;
+  --gold:#FFD968; --sky:#86CDD8; --page:#241a12; --pagetext:#f1e6cf;
+  --display:'Baloo 2','Trebuchet MS',sans-serif; --body:'Noto Sans','Segoe UI',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--pagetext);font-family:var(--body)}
+.page{max-width:1320px;margin:0 auto;padding:20px 16px 40px}
+h1.t{font-family:var(--display);font-size:28px;margin:0 0 4px;font-weight:700;text-wrap:balance}
+p.lead{margin:0 0 14px;max-width:84ch;line-height:1.5;color:#d9c9a8}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.tabs button,.ctl button{font:600 15px var(--body);padding:9px 14px;border-radius:10px;border:2px solid #5a4430;background:#3a2b1d;color:var(--pagetext);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--green);border-color:var(--green2);color:#1d3a0c}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;align-items:center;color:#d9c9a8;font-size:14px}
+.ctl button{padding:6px 12px;font-size:14px}
+.ctl button[aria-pressed=true]{background:var(--sand);border-color:var(--sand2);color:var(--ink)}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.col{background:var(--sky);border:3px solid var(--wood);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.col h2{margin:0;background:var(--cream);color:var(--ink);font:700 22px var(--display);padding:8px 14px;border-bottom:3px solid var(--wood)}
+.col h2 small{display:block;font:400 13px var(--body);color:var(--wood)}
+.shot{flex:1;min-height:200px;display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:18px 8px;overflow:auto}
+.shot img{display:block;image-rendering:auto}
+.col.scene .shot{align-items:center;min-height:320px}
+.why{margin:10px 0 0;font-size:13px;color:#cdbb98;line-height:1.5;max-width:110ch}
+.why b{color:var(--gold)}
+.notes{margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.notes section{background:#31241a;border:1px solid #5a4430;border-radius:12px;padding:12px 16px}
+.notes h2{font:600 17px var(--display);margin:0 0 6px;color:var(--gold)}
+.notes ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px;color:#e3d5b8}
+table.cmp{border-collapse:collapse;width:100%;font-size:14px;margin-top:4px}
+table.cmp th,table.cmp td{border-bottom:1px solid #5a4430;padding:7px 8px;text-align:left;vertical-align:top}
+table.cmp th{color:var(--gold);font-weight:600}
+table.cmp td:first-child{color:#d9c9a8;width:22%}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1 class="t">Preview 27 · Three art samples, three looks</h1>
+  <p class="lead">The same family house, wheat acre and farm hand with his wife, drawn three ways from the same models, the game's camera and the same light direction. Only the style differs. Pick the size first: the phone's opening view is how you see the farm most of the time.</p>
+
+  <div class="tabs" role="tablist" aria-label="Samples">
+    <button role="tab" aria-selected="true" data-tab="house">Family house</button>
+    <button role="tab" aria-selected="false" data-tab="field">Wheat field</button>
+    <button role="tab" aria-selected="false" data-tab="people">The hand and his wife</button>
+    <button role="tab" aria-selected="false" data-tab="scene">In the game</button>
+    <button role="tab" aria-selected="false" data-tab="cost">What each costs</button>
+  </div>
+
+  <div class="ctl" id="sizes" role="group" aria-label="Size">
+    <span>Size:</span>
+    <button aria-pressed="true" data-f="0.193">Opening view, true size</button>
+    <button aria-pressed="false" data-f="0.39">Closest zoom, true size</button>
+    <button aria-pressed="false" data-f="1">Close up (the render's pixels)</button>
+  </div>
+
+  <div id="panel"></div>
+  <p class="why" id="sizewhy"><b>Why these sizes?</b> The game's opening view is 2.8 acres tall on the phone (<code>OpeningHalfHeight</code> 1.4), so on the iPhone 13 (1170 px tall, 460 ppi) an acre is 418 phone pixels, about 0.9 inches. On a MacBook screen (about 112 points an inch) 0.9 inches is 102 points: a sprite rendered at 528 px an acre is shown at 102 ÷ 528 = 0.193. The closest zoom fits 3 acres across the 2532 px screen, 844 phone pixels an acre, so 0.39. On another screen the true sizes are only roughly true.</p>
+
+  <div class="notes" id="notes"></div>
+</div>
+
+<script>
+const S = 's29-samples/';
+const STYLES = [
+  ['today', 'Today', 'What the game draws now'],
+  ['rich', 'Rich stylised', 'Painted surfaces, soft light, warm outline, more modelled detail'],
+  ['real', 'Realistic', 'Physically lit materials, no outline, real cast shadows, true proportions'],
+];
+const TABS = {
+  house: {files: ['house'], notes: [
+    ['What changed in both', ['Bare brick where the lime has fallen, panelled doors with hinges and a lintel, a barred window with open shutters.',
+      'Tile ribs and rafters on the verandah, coping round the parapet, the roof tank on its stand, dung cakes on the side wall.',
+      'A marigold garland over the doors, the tulsi on its chabutara, a charpai with its rope and a quilt, gate leaves, a pebbled yard.']],
+    ['Rich stylised', ['Every surface painted: lime wash, brick, tile, wood grain, earth.', 'Light blends softly instead of three hard bands, and a warm rim catches the edges.', 'The outline stays (thinner), so it sits with the cream-and-wood UI.']],
+    ['Realistic', ['Lit by the sun and the sky’s blue fill; materials with roughness and bump.', 'It casts its own soft shadow, baked into the sprite (the sun never moves).', 'No outline: on busy ground its edges can blur into what is behind it.']],
+  ]},
+  field: {files: ['field'], notes: [
+    ['What changed in both', ['Twelve stalks a clump instead of seven, 17 clumps a row instead of 10: 1,428 stalks an acre.', 'Each ear is built of paired spikelets with awns, the stalks lean a little with the wind, dry leaves at the foot, a canopy of gold between them.', 'A few green weeds where the drill missed, along the edge.']],
+    ['Rich stylised', ['The same toon light as today, softened, with painted stalks.', 'The tilled soil block is today’s (ground is its own story).']],
+    ['Realistic', ['Ears and leaves let light through (subsurface), so the field glows a little against the sun.', 'One acre renders in 19 seconds on the Mac (today’s in 2): render time is not what decides.']],
+  ]},
+  people: {files: ['hand_m', 'hand_f'], notes: [
+    ['Three proportions', ['Today: a big-head figure, about 2.2 heads tall, door-high.', 'Rich stylised: about 4 heads tall at the same height, stockier, a face you can read: eyes with a glint, brows, moustache, bindi, earrings, bangles, the pagdi’s turns.', 'Realistic: 7.5 heads tall, the true proportion, at the same height.']],
+    ['What you see at the opening view', ['A person is 150 render pixels tall: about 29 points on your screen at the opening view.', 'At that size the realistic head is 3 points tall: no eyes, no expression. The rich stylised head is about 6 points, today\u2019s about 8.', 'The look approved in Sprint 5 stays: pagdi, dhoti and vest; a cotton saree with the head uncovered, a bun, bindi and bangles.']],
+    ['Cost', ['People are the biggest category (137 sprites with walk and work frames). Whatever is picked here is redone in every frame.']],
+  ]},
+  scene: {files: ['scene'], scene: true, notes: [
+    ['The scene', ['Four acres: the family house on its grass acre, two acres of ripe wheat behind, the hand and his wife on the lane acre in front.', 'Each style’s scene is one render, so shadows fall on the ground as they would on the map.']],
+    ['Look for', ['Can you tell the man from the woman at the opening view?', 'Does the field read as wheat, or as a gold texture?', 'Which one would sit best under the game’s cream-and-wood buttons?']],
+  ]},
+};
+const COST = `
+<table class="cmp">
+<tr><th></th><th>Today</th><th>Rich stylised</th><th>Realistic</th></tr>
+<tr><td>Frame time on the phone</td><td>Baseline</td><td>The same: same pixel sizes, same sprite count, no new shaders (ADR 0172 §8)</td><td>The same per sprite; each shadow is part of its sprite, so a crowd overlaps darker where shadows cross</td></tr>
+<tr><td>Fits the UI (my judgement)</td><td>Yes</td><td>Yes: outline and warm palette match the cream-and-wood sheets</td><td>Clashes with the cartoon buttons; a UI restyle would follow</td></tr>
+<tr><td>Faces and people at the opening view</td><td>Readable</td><td>Readable</td><td>Not readable (a 3-point head)</td></tr>
+<tr><td>Render time on the Mac (measured on these samples)</td><td>1 to 2 s a sprite: about 15 minutes for all 605</td><td>2 to 4 s a sprite: about 30 minutes for all 605</td><td>2 to 19 s a sprite (a wheat acre 19 s, Cycles on the CPU): about an hour for all 605</td></tr>
+<tr><td>Work in Sprints 30–32</td><td>—</td><td>About 45 points as planned (detail added to each model, one category a story)</td><td>More: new people bodies, shadows checked on every sprite, likely the UI too</td></tr>
+<tr><td>Weather and night</td><td>Tints work</td><td>Tints work</td><td>Baked sun shadows stay on a cloudy day and at night</td></tr>
+</table>`;
+let tab = 'house', f = 0.193;
+const panel = document.getElementById('panel'), notes = document.getElementById('notes');
+function img(name) {
+  const i = new Image();
+  i.alt = name.replace('_', ' ');
+  i.onload = () => { i.style.width = (i.naturalWidth * f) + 'px'; i.style.height = (i.naturalHeight * f) + 'px'; };
+  i.src = S + name + '.png';
+  return i;
+}
+function draw() {
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  document.getElementById('sizes').style.display = tab === 'cost' ? 'none' : '';
+  document.getElementById('sizewhy').style.display = tab === 'cost' ? 'none' : '';
+  panel.innerHTML = ''; notes.innerHTML = '';
+  if (tab === 'cost') {
+    const s = document.createElement('section');
+    s.className = 'notes';
+    s.innerHTML = '<section style="grid-column:1/-1"><h2>What each costs</h2>' + COST + '</section>';
+    panel.appendChild(s);
+    return;
+  }
+  const t = TABS[tab], cols = document.createElement('div');
+  cols.className = 'cols';
+  for (const [key, name, sub] of STYLES) {
+    const c = document.createElement('div');
+    c.className = 'col' + (t.scene ? ' scene' : '');
+    c.innerHTML = `<h2>${name}<small>${sub}</small></h2>`;
+    const shot = document.createElement('div');
+    shot.className = 'shot';
+    for (const file of t.files) shot.appendChild(img(key + '_' + file));
+    c.appendChild(shot);
+    cols.appendChild(c);
+  }
+  panel.appendChild(cols);
+  for (const [h, items] of t.notes) {
+    const s = document.createElement('section');
+    s.innerHTML = `<h2>${h}</h2><ul>${items.map(x => `<li>${x}</li>`).join('')}</ul>`;
+    notes.appendChild(s);
+  }
+}
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; draw(); });
+document.querySelectorAll('#sizes button').forEach(b => b.onclick = () => {
+  f = parseFloat(b.dataset.f);
+  document.querySelectorAll('#sizes button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  draw();
+});
+draw();
+</script>
+</body>
+</html>

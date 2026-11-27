@@ -1269,13 +1269,31 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | US-268 | Today's supply, Automatic or Manual | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Must | Done (ADR 0175, approved 2026-11-26) |
 | US-269 | Grow for the vegetable stall | [F21.2](features/F21.2-supply-between-businesses.md) | 5 | Should | Done (ADR 0176, approved 2026-11-26) |
 
+## Sprint 29 · Phase 3.5 · Ad hoc (two towns, notifications from both, the graphics samples; specs 031 and 032; ADR 0172)
+
+- **Status:** Started 2026-11-27. **All three stories done and approved by the owner 2026-11-27:** US-270 (ADR 0178), US-272 (ADR 0179), US-271 (ADR 0180: realistic, Option B; spec 032 approved). The sprint's end (test checklist, independent review, pull request) follows. **Plan check done 2026-11-27** (two gaps closed one per message, six calls recorded in spec 031).
+- **Branch:** `sprint/29-two-towns`, from `main` after PR #39
+- **Goal:** Two towns on one phone, each its own save, clock, play log and away card, switched from Settings; notifications from both; three graphics samples rendered for the owner to pick, then spec 032. No sim change, no save schema change, goldens don't move.
+- **Points:** 11 = US-270 5, US-272 3, US-271 3
+- **Specs:** 031 (approved), 032 (written after the owner picks a sample, reviewed before any art code)
+- **Device build:** No Development build until the owner asks
+- **Milestone and labels:** `Phase 3.5 · Ad hoc`; `type:feature`, `type:spec`, `type:adr`; `area:ui`, `area:tooling`, `area:art`; `documentation`
+
+| Story | Title | Feature | Points | Priority | Status |
+| --- | --- | --- | --- | --- | --- |
+| US-270 | Two towns: slots, Your towns, the switch | [F21.3](features/F21.3-two-towns.md) | 5 | Must | Done (ADR 0178, approved 2026-11-27) |
+| US-272 | Notifications from both towns, a play log each | [F21.3](features/F21.3-two-towns.md) | 3 | Must | Done (ADR 0179, approved 2026-11-27) |
+| US-271 | The three graphics samples, then spec 032 | [F21.4](features/F21.4-graphics-redesign.md) | 3 | Must | Done (ADR 0180, approved 2026-11-27) |
+
 **Next sprints (ADR 0172; detailed before Sprint 28's code, 2026-11-26):**
 
 | Sprint | Branch | Stories | Points | Spec |
 | --- | --- | --- | --- | --- |
-| 29 | `sprint/29-two-towns` | US-270 two towns: slots, Your towns, the switch (5); US-272 notifications from both, a play log each (3); US-271 the three samples and spec 032 (3) | 11 | 031 (approved with 030), 032 (written after the pick) |
-| 30 | `sprint/30-art-land` | US-273 ground and terrain (5), US-274 crops and garden (5), US-275 trees and orchards (3) | 13 | 032 |
-| 31 | `sprint/31-art-people-farm` | US-276 people and portraits (8), US-277 animals and machines (3), US-278 your farm (5) | 16 | 032 |
-| 32 | `sprint/32-art-town` | US-279 businesses and stalls (5), US-280 village and town (5), US-281 icons (3), US-282 effects (3) | 16 | 032 |
+| 29 | `sprint/29-two-towns` | US-270 two towns (5); US-272 notifications from both, a play log each (3); US-271 the three samples and spec 032 (3) | 11 | 031, 032 (both approved) |
+| 30 | `sprint/30-art-land` | **US-283 the device check (2, first)**; US-273 ground and terrain (5), US-274 crops and garden (5), US-275 trees and orchards (4) | 16 | 032 |
+| 31 | `sprint/31-art-people` | US-276 people and portraits, new 6-head bodies (13), US-277 animals and machines (3) | 16 | 032 |
+| 32 | `sprint/32-art-town` | US-278 your farm (6), US-279 businesses and stalls (6), US-280 the village and town (6); spec 033 (the UI restyle) written | 18 | 032, 033 |
+| 33 | `sprint/33-art-finish` | US-281 the map's code-drawn pictures (2), US-282 effects and the weather's look (3); the phase's Development build; spec 033 reviewed | 5 + review | 032, 033 |
+| 34–35 | (spec 033) | The UI restyle | sized in spec 033 | 033 |
 
-The art stories are sized from the inventory ([docs/art/inventory.md](../art/inventory.md)) and sized again once the samples set the style. Each art sprint ends with a Development build and both frame-time p95s on the iPhone (ADR 0172 §8).
+The art stories are sized from the inventory ([docs/art/inventory.md](../art/inventory.md)) and were sized again after the pick (spec 032 §12, ADR 0180: 55 points over Sprints 30 to 33; Phase 4 starts about three sprints later than ADR 0172 planned). Sprint 30 opens with the device check (one Development build, both frame-time p95s and memory on the iPhone); a GPU p95 over 11 ms means Option A (no baked shadows). The phase's last art build reads both p95s again (ADR 0172 §8).

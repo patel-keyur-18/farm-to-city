@@ -60,11 +60,12 @@ namespace Game.Presentation
             }
         }
 
-        private static string PlayLogPath { get { return Path.Combine(SavesFolder, "playlog.jsonl"); } }
-
         // ---- the settings file (spec 007 §4): PlayerPrefs, iOS's own preferences file, never in the town ----
 
         private static bool NotificationsOn { get { return PlayerPrefs.GetInt("notify.on", 0) == 1; } set { PlayerPrefs.SetInt("notify.on", value ? 1 : 0); PlayerPrefs.Save(); } }
+        /// <summary>When the app last came to the foreground (launch or a return): the other town's notes due before it were due while closed, so the platform had them (KeptNotes.Merge). Unset: now, so nothing is sent twice.</summary>
+        private static long ForegroundSince { get { return long.TryParse(PlayerPrefs.GetString("notify.foreground", ""), out long t) ? t : long.MaxValue; } }
+        private static void MarkForeground(long wall) { PlayerPrefs.SetString("notify.foreground", wall.ToString()); PlayerPrefs.Save(); }
         private static int NotifyAsked { get { return PlayerPrefs.GetInt("notify.asked", 0); } set { PlayerPrefs.SetInt("notify.asked", value); PlayerPrefs.Save(); } }
         private static bool PlayLogOn { get { return PlayerPrefs.GetInt("playlog.on", 0) == 1; } set { PlayerPrefs.SetInt("playlog.on", value ? 1 : 0); PlayerPrefs.Save(); } }
 
@@ -77,35 +78,55 @@ namespace Game.Presentation
                 NowWallUtc = WallNow(), UtcOffsetMinutes = UtcOffsetMinutes(), LastSavedWallUtc = _saves.LastSavedWallUtc,
                 NotificationsOn = NotificationsOn, PlayLogOn = PlayLogOn, PlayLogLines = _playLog.Lines.Count, ImportFiles = _townFiles,
                 Numbers = _format, TextSize = TextSize, ReducedMotion = ReducedMotion, Sound = SoundOn, Haptics = HapticsOn,
+                OpenTown = _slot,
             };
         }
 
         // ---- launch ----
 
-        /// <summary>Loads the town (or a backup), or starts one; returns the card to show first, if any.</summary>
+        /// <summary>Loads the town the player had open (or a backup), or starts one; returns the card to show first, if any.</summary>
         private CardVm LoadTown()
         {
             _savesDefs = ContentLoader.LoadSaves(ContentSource.Read("saves.json"));
             _fingerprint = ContentSource.Fingerprint();
-            _saves = new SaveService(SavesFolder, DocumentsFolder, _savesDefs.Save);
             _notes = NotificationServices.ForPlatform(this);
-            _playLog = new PlayLog(_savesDefs.PlayLog, File.Exists(PlayLogPath) ? File.ReadAllText(PlayLogPath) : "") { Enabled = PlayLogOn };
+            _slot = OpenSlotAtLaunch(); // spec 031 §3: the one last open, Town 1 by default
+            _saves = SavesFor(_slot);
+            _playLog = OpenLog(_saves);
+            _saves.DeleteNotes(); // what was kept for this town is stale now: the town itself is the truth
 
             _lastSyncWall = WallNow();
             LoadOutcome o = _saves.Load(_config, _lastSyncWall, UtcOffsetMinutes());
             Sim = o.State != null ? Simulation.FromState(_config, o.State) : NewTownSim();
-            _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            return AdoptTown(o);
+        }
+
+        /// <summary>
+        /// Makes the town in <see cref="Sim"/> the open one: its view context, guide and log count, its first session or away advance, its camera
+        /// key, and the card its load calls for (a restore, a road take, an unreadable town). <paramref name="o"/> is null for a town just started.
+        /// </summary>
+        private CardVm AdoptTown(LoadOutcome o)
+        {
+            NewContext();
             _guide = new Guide(); // what happened since launch belongs to the old town
             _logCount = Sim.State.CommandLog.Entries.Count;
+            MarkForeground(WallNow());
             StartSession(_lastSyncWall);
             _alignPending = true;
             _choosing = RunOne.MustChoose(Sim); // held until the player chooses (AskWhichToRun)
-            if (o.State == null) SaveNow(); // the first save of a new town
-            if (o.MigratedMap) { PlayerPrefs.DeleteKey("camera.x"); PlayerPrefs.DeleteKey("camera.y"); PlayerPrefs.DeleteKey("camera.h"); } // spec 010 §3.4
+            if (o == null || o.State == null) { SaveNow(); RefreshTownName(); } // the first save of a new town
+            if (o != null && o.MigratedMap) { PlayerPrefs.DeleteKey(CamKey(_slot, "x")); PlayerPrefs.DeleteKey(CamKey(_slot, "y")); PlayerPrefs.DeleteKey(CamKey(_slot, "h")); } // spec 010 §3.4
+            if (o == null) return null;
             if (o.RoadTake != null) return Cards.LandTaken(_ctx, o.RoadTake);
             if (o.Restored) return Cards.Restored(_ctx, o.SavedAtWallUtc, Info());
             if (o.Error != SaveError.None) return Cards.Unreadable(_ctx, o.Error, o.KeptAs);
             return null; // the first Sync is the away advance, with its card
+        }
+
+        /// <summary>A town's play log, from its own folder (spec 031 §3.2).</summary>
+        private PlayLog OpenLog(SaveService saves)
+        {
+            return new PlayLog(_savesDefs.PlayLog, File.Exists(saves.PlayLogPath) ? File.ReadAllText(saves.PlayLogPath) : "") { Enabled = PlayLogOn };
         }
 
         // ---- one business run by you (spec 030 §3.1, §7.3) ----
@@ -142,8 +163,9 @@ namespace Game.Presentation
 
         private void SaveNow()
         {
-            int bytes = _saves.Save(Sim.State, _config, WallNow(), _fingerprint);
-            Debug.Log("Saved " + bytes + " bytes to " + SavesFolder);
+            long now = WallNow();
+            int bytes = _saves.Save(Sim.State, _config, now, _fingerprint, TownSummary.Of(Sim, now));
+            Debug.Log("Saved " + bytes + " bytes to " + _saves.Folder);
         }
 
         /// <summary>After each batch of events: autosave, the play log, the notification ask, a regular's card.</summary>
@@ -220,27 +242,56 @@ namespace Game.Presentation
         {
             long now = WallNow();
             SaveNow();
-            if (NotificationsOn)
+            if (NotificationsOn) ScheduleNotes(now);
+            EndSession(now);
+        }
+
+        /// <summary>The open town's planned notifications as shown: with its name first once there are two towns (spec 031 §3.1).</summary>
+        private List<KeptNote> PlanNotes(bool named)
+        {
+            var list = new List<KeptNote>();
+            foreach (PlannedNotification n in NotificationPlanner.Plan(Sim, _savesDefs.Notify, true, UtcOffsetMinutes()))
             {
-                var notes = new List<ScheduledNote>();
-                foreach (PlannedNotification n in NotificationPlanner.Plan(Sim, _savesDefs.Notify, true, UtcOffsetMinutes()))
-                {
-                    (string title, string body) = NotificationText.For(_ctx, n);
-                    notes.Add(new ScheduledNote(n.WallUtc, title, body, n.Kind.ToString()));
-                }
-                _notes.Schedule(now, notes);
+                (string title, string body) = NotificationText.For(_ctx, n, named ? _slot : 0);
+                list.Add(new KeptNote(n.WallUtc, n.Kind, title, body, _slot));
             }
+            return list;
+        }
+
+        /// <summary>
+        /// Schedules the open town's notes and, with two towns, the other's kept plan, merged (spec 031 §3.1, owner 2026-11-27): over the platform's limit the most
+        /// important stay; the other town's notes that came due while you played this one go out once and leave its kept file.
+        /// </summary>
+        private void ScheduleNotes(long now)
+        {
+            List<KeptNote> all = PlanNotes(_twoTowns);
+            if (_twoTowns)
+            {
+                SaveService other = SavesFor(_slot == 1 ? 2 : 1);
+                List<KeptNote> kept = other.ReadNotes();
+                all = KeptNotes.Merge(all, kept, now, ForegroundSince, _savesDefs.Notify, UtcOffsetMinutes(), out List<KeptNote> remaining);
+                if (remaining.Count != kept.Count) other.WriteNotes(remaining);
+            }
+            var notes = new List<ScheduledNote>();
+            foreach (KeptNote n in all) notes.Add(new ScheduledNote(n.WallUtc, n.Title, n.Body, _twoTowns ? "town" + n.Town + "-" + n.Kind : n.Kind.ToString(), n.Town));
+            _notes.Schedule(now, notes);
+        }
+
+        /// <summary>The open town's session ends: its play log line and its camera (spec 031 §3: each town keeps its own).</summary>
+        private void EndSession(long now)
+        {
             _playLog.SessionEnd(now, Sim.State.Clock.SimTime, now - _sessionStart);
             WritePlayLog();
             Vector2 c = new Vector2(_input.View.CentreX, _input.View.CentreY);
-            PlayerPrefs.SetFloat("camera.x", c.x);
-            PlayerPrefs.SetFloat("camera.y", c.y);
-            PlayerPrefs.SetFloat("camera.h", _input.View.HalfHeight);
+            PlayerPrefs.SetFloat(CamKey(_slot, "x"), c.x);
+            PlayerPrefs.SetFloat(CamKey(_slot, "y"), c.y);
+            PlayerPrefs.SetFloat(CamKey(_slot, "h"), _input.View.HalfHeight);
             PlayerPrefs.Save();
         }
 
         private void Returning()
         {
+            MarkForeground(WallNow());
             StartSession(WallNow());
             if (_holdUntil > 0) _alignPending = true; // the hold counts from the saved anchor, so what passed while away is counted
         }
@@ -279,9 +330,21 @@ namespace Game.Presentation
         {
             _sessionStart = wall;
             long simTime = Sim.State.Clock.SimTime;
-            _notes.OpenedByNote(fromNote =>
+            if (_nextSessionFromNote)
             {
-                _playLog.SessionStart(wall, simTime, BuildName, SystemInfo.deviceModel, UtcOffsetMinutes(), fromNote);
+                // A tap on the other town's note brought us here (spec 031 §3.2): this town's session is the one the tap opened.
+                _nextSessionFromNote = false;
+                _playLog.SessionStart(wall, simTime, BuildName, SystemInfo.deviceModel, UtcOffsetMinutes(), true);
+                WritePlayLog();
+                _notes.CancelAll();
+                return;
+            }
+            _notes.OpenedByNote(tap =>
+            {
+                // A tap on the other town's note opens that town once the scene is up (OpenFromNote); the town the app opened on isn't "from a note".
+                int elsewhere = tap.Elsewhere(_slot, slot => SaveService.SlotHasTown(SavesFolder, slot));
+                if (elsewhere != 0) _tapTown = elsewhere;
+                _playLog.SessionStart(wall, simTime, BuildName, SystemInfo.deviceModel, UtcOffsetMinutes(), tap.Fresh && elsewhere == 0);
                 WritePlayLog();
             });
             _notes.CancelAll();
@@ -291,15 +354,15 @@ namespace Game.Presentation
 
         private void RestoreCamera()
         {
-            if (!PlayerPrefs.HasKey("camera.h")) return;
-            _input.SetView(PlayerPrefs.GetFloat("camera.x"), PlayerPrefs.GetFloat("camera.y"), PlayerPrefs.GetFloat("camera.h"));
+            if (!PlayerPrefs.HasKey(CamKey(_slot, "h"))) return;
+            _input.SetView(PlayerPrefs.GetFloat(CamKey(_slot, "x")), PlayerPrefs.GetFloat(CamKey(_slot, "y")), PlayerPrefs.GetFloat(CamKey(_slot, "h")));
         }
 
         private void WritePlayLog()
         {
             if (!PlayLogOn && _playLog.Lines.Count == 0) return;
-            Directory.CreateDirectory(SavesFolder);
-            File.WriteAllText(PlayLogPath, _playLog.Text);
+            Directory.CreateDirectory(_saves.Folder);
+            File.WriteAllText(_saves.PlayLogPath, _playLog.Text);
         }
 
         // ---- Settings ----
@@ -325,7 +388,12 @@ namespace Game.Presentation
             if (id.StartsWith(SettingsIds.ImportPrefix, StringComparison.Ordinal))
             {
                 string name = id.Substring(SettingsIds.ImportPrefix.Length);
-                ShowCard(Cards.Replace(_ctx, name), b => Replace(b, () => ImportTown(name), () => SettingsAction(action)));
+                ShowCard(Cards.Replace(_ctx, InfoWithTowns(), name), b => Replace(b, () => ImportTown(name), () => SettingsAction(action)));
+                return true;
+            }
+            if (id.StartsWith(SettingsIds.TownSwitchPrefix, StringComparison.Ordinal))
+            {
+                AskSwitch(int.Parse(id.Substring(SettingsIds.TownSwitchPrefix.Length)));
                 return true;
             }
             switch (id)
@@ -352,10 +420,13 @@ namespace Game.Presentation
                     Export();
                     break;
                 case SettingsIds.ExportLog:
-                    Toast(_strings.Get("toast.exported", "file", _saves.ExportText("FarmToCity-playlog-", ".jsonl", _playLog.Text, WallNow(), UtcOffsetMinutes())));
+                    Toast(_strings.Get("toast.exported", "file", _saves.ExportText("FarmToCity-playlog-" + _saves.TownTag + "-", ".jsonl", _playLog.Text, WallNow(), UtcOffsetMinutes())));
+                    break;
+                case SettingsIds.TownStart:
+                    StartSecondTownWithVeil();
                     break;
                 case SettingsIds.NewGame:
-                    ShowCard(Cards.Replace(_ctx), b => Replace(b, NewTown, () => SettingsAction(action)));
+                    ShowCard(Cards.Replace(_ctx, InfoWithTowns()), b => Replace(b, NewTown, () => SettingsAction(action)));
                     break;
                 default:
                     if (!LookAction(id)) return false;
@@ -413,7 +484,7 @@ namespace Game.Presentation
 
         private void ResetTown(bool focus)
         {
-            _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            NewContext();
             _guide = new Guide();
             _logCount = Sim.State.CommandLog.Entries.Count;
             _sheet.Close();

@@ -5380,4 +5380,5 @@ def main():
         f.write("\n")
 
 
-main()
+if __name__ == "__main__":   # samples.py imports this file for its models
+    main()

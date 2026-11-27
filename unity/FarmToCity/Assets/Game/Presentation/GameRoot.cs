@@ -167,7 +167,7 @@ namespace Game.Presentation
             Sim.State.Clock.Reanchor(_lastSyncWall);
             _holdUntil = 0;
             _alignPending = true;
-            _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            NewContext();
             _sheet.Close();
             Refresh(false);
         }
@@ -208,6 +208,7 @@ namespace Game.Presentation
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (_dev != null && _dev.IsOpen) { return; }
 #endif
+            if (_tapTown != 0 && _safeRoot != null && _sheet != null) { int town = _tapTown; _tapTown = 0; OpenFromNote(town); return; }
             if (_choosing) return; // an older town runs several businesses itself: time waits until the player chooses one (spec 030 §7.3)
             // Sync once per wall-clock second: the sim's time unit is a whole second (spec 001 §3.4).
             long now = WallNow();
@@ -525,7 +526,7 @@ namespace Game.Presentation
                 case "Slot": _sheet.Show(FieldSheets.ForSlot(_ctx, r.Id), refreshOnly); break;
                 case "Bed": _sheet.Show(FieldSheets.ForBed(_ctx, r.Id), refreshOnly); break;
                 case "Store": _sheet.Show(StoreSheet.Build(_ctx), refreshOnly); break;
-                case "Settings": _sheet.Show(SettingsSheet.Build(_ctx, Info()), refreshOnly); break;
+                case "Settings": _sheet.Show(SettingsSheet.Build(_ctx, InfoWithTowns()), refreshOnly); break;
                 case "Import":
                     if (!refreshOnly) ScanImports();
                     _sheet.Show(ImportSheet.Build(_ctx, _importFiles, Info()), refreshOnly);
