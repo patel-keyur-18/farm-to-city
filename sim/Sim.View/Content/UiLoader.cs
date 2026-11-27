@@ -17,7 +17,7 @@ namespace Sim.View.Content
             const string root = "ui";
             JObject o = Object(Parse(json, root), root);
             OnlyFields(o, root, "dayTint", "seasonTint", "valleyTint", "motions", "maxFlyingPerEvent", "maxFlyingTotal", "spoilWarningHours",
-                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook", "hintKeepsSpoilagePerDay", "comeBackQuickMinutes", "calendarRungMinutes", "confirmHoldMillis");
+                "storeNearlyFullPercent", "awayRowsMax", "ratingGoodPercent", "ratingFairPercent", "skillBands", "skillStarPoints", "referenceAcreHours", "awayCardMinHours", "happyAbove", "outputBands", "weatherLook", "hintKeepsSpoilagePerDay", "comeBackQuickMinutes", "calendarRungMinutes", "confirmHoldMillis", "camera");
 
             List<Rgb> day = Colours(Required(o, root, "dayTint"), root + ".dayTint", 24);
             List<Rgb> season = Colours(Required(o, root, "seasonTint"), root + ".seasonTint", 4);
@@ -104,8 +104,19 @@ namespace Sim.View.Content
                 Range(b, i == 0 ? 1 : rungs[i - 1] + 1, 10080, Index(root + ".calendarRungMinutes", i));
                 rungs.Add(b);
             }
+            CameraDef camera = Camera(Object(Required(o, root, "camera"), root + ".camera"), root + ".camera");
             return new UiDef(day, season, valley, motions, perEvent, total, spoil, full, away, good, fair, bands, star, acre, awayHours, happy, output, weather, keeps,
-                quickFrom, quickTo, rungs, holdMillis);
+                quickFrom, quickTo, rungs, holdMillis, camera);
+        }
+
+        /// <summary>The map camera's zoom stops (spec 032 §4): the default 2 to 6 acres across, the closest 1.5 to 3 and no farther than the default.</summary>
+        private static CameraDef Camera(JObject o, string path)
+        {
+            OnlyFields(o, path, "_note", "defaultAcresAcross", "closestAcresAcross");
+            float def = F(o, path, "defaultAcresAcross", "2", "6");
+            float closest = F(o, path, "closestAcresAcross", "1.5", "3");
+            if (closest > def) throw new ContentException(Join(path, "closestAcresAcross"), "the closest zoom can't be farther than the default view");
+            return new CameraDef(def, closest);
         }
 
         private static float F(JToken t, string path, string lo, string hi)
@@ -136,13 +147,14 @@ namespace Sim.View.Content
             {
                 string q = Join(wp, p.Name);
                 JObject w = Object(p.Value, q);
-                OnlyFields(w, q, "multiply", "multiplyAlpha", "overlay", "overlayAlpha", "saturation", "brightness", "clouds", "streaks", "splashesPerSecond",
+                OnlyFields(w, q, "multiply", "multiplyAlpha", "shadow", "overlay", "overlayAlpha", "saturation", "brightness", "clouds", "streaks", "splashesPerSecond",
                     "mist", "mistAlpha", "haze", "shimmer", "rime", "glow");
                 var s = new WeatherStyle
                 {
                     Id = p.Name, Multiply = Colour(Required(w, q, "multiply"), Join(q, "multiply")), MultiplyAlpha = F(w, q, "multiplyAlpha", "0", "1"),
                     Saturation = F(w, q, "saturation", "0", "2"), Brightness = F(w, q, "brightness", "0.5", "1.5"),
                 };
+                if (w["shadow"] != null) s.Shadow = F(w, q, "shadow", "0", "1"); // spec 032 §3.3: a building's baked shadow in this weather
                 if (w["overlay"] != null) { s.Overlay = Colour(w["overlay"], Join(q, "overlay")); s.OverlayAlpha = F(w, q, "overlayAlpha", "0", "1"); }
                 if (w["mist"] != null) { s.Mist = Colour(w["mist"], Join(q, "mist")); s.MistAlpha = F(w, q, "mistAlpha", "0", "1"); }
                 if (w["splashesPerSecond"] != null) s.SplashesPerSecond = F(w, q, "splashesPerSecond", "0", "300");

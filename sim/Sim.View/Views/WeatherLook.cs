@@ -29,6 +29,12 @@ namespace Sim.View.Views
 
         /// <summary>The added light's share at this time of day (1 by day, <see cref="WeatherLookDef.NightLight"/> at night).</summary>
         public float Light;
+
+        /// <summary>
+        /// How strong a building's baked shadow is now, 0 to 1 (spec 032 §3.3): the day's light (0 at night, 1 by day) times the weather's shadow,
+        /// cross-fading with the weather. The map draws each shadow sprite at this alpha.
+        /// </summary>
+        public float Shadow;
     }
 
     /// <summary>
@@ -79,6 +85,8 @@ namespace Sim.View.Views
             var f = new WeatherFrame { From = _from, To = _to, Weight = Weight(), Moving = !reduced };
             float night = System.Math.Max(0f, System.Math.Min(1f, (1f - dayLight) / 0.45f));
             f.Light = 1f - night * (1f - _def.NightLight);
+            float dayShare = 1f - night; // 1 by day, 0 at night: Light mapped from NightLight..1 to 0..1
+            if (_from != null && _to != null) f.Shadow = dayShare * (_from.Shadow + (_to.Shadow - _from.Shadow) * f.Weight);
 
             // Lightning: scheduled whenever the weather has it; its glow only drawn with motion on, its thunder either way.
             GlowDef g = _to == null ? null : _to.Glow;

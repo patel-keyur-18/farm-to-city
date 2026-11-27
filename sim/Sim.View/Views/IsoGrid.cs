@@ -75,8 +75,13 @@ namespace Sim.View.Views
 
         private (float left, float bottom, float right, float top) _b;
 
-        /// <summary>Zoomed in all the way: about three acres across the screen.</summary>
+        /// <summary>Zoomed in all the way: the closest zoom, 2 acres across the screen (spec 032 §3.4, <c>ui.json</c> camera).</summary>
         public float MinHalfHeight { get; private set; }
+
+        /// <summary>The view a town opens at and the home button returns to: 3 acres across the screen (spec 032 §3.4), within the zoom limits.</summary>
+        public float DefaultHalfHeight { get { return Math.Max(MinHalfHeight, Math.Min(MaxHalfHeight, _defaultHalfHeight)); } }
+
+        private readonly float _defaultHalfHeight;
 
         /// <summary>
         /// The furthest zoom-out once the ring is open, as a share of the old 16 × 12 window. Preview 1 estimated 90% at +4% draw calls; the Editor's
@@ -84,16 +89,21 @@ namespace Sim.View.Views
         /// </summary>
         public const float RingZoomOut = 0.85f;
 
-        public MapCamera(IsoGrid grid, float aspect)
+        /// <param name="grid">The map's tiles.</param>
+        /// <param name="aspect">The screen's width over its height.</param>
+        /// <param name="defaultAcresAcross">The opening view, in acres across the screen (<c>ui.json</c> camera.defaultAcresAcross).</param>
+        /// <param name="closestAcresAcross">The closest zoom, in acres across the screen (camera.closestAcresAcross).</param>
+        public MapCamera(IsoGrid grid, float aspect, float defaultAcresAcross = 3f, float closestAcresAcross = 2f)
         {
             _grid = grid;
             _aspect = aspect;
             var b = grid.Bounds();
             _b = b;
             float w = b.right - b.left, h = b.top - b.bottom;
-            // The whole map fits both ways; the closest zoom shows about three tile diamonds across.
+            // The whole map fits both ways; the closest zoom and the default view show so many tile diamonds across (an acre is one tile's width).
             MaxHalfHeight = Math.Max(h / 2f, w / aspect / 2f) * 1.05f;
-            MinHalfHeight = 3f * grid.HalfWidth * 2f / aspect / 2f;
+            MinHalfHeight = closestAcresAcross * grid.HalfWidth * 2f / aspect / 2f;
+            _defaultHalfHeight = defaultAcresAcross * grid.HalfWidth * 2f / aspect / 2f;
             if (MinHalfHeight > MaxHalfHeight) MinHalfHeight = MaxHalfHeight;
             HalfHeight = MaxHalfHeight;
             CentreX = (b.left + b.right) / 2f;
