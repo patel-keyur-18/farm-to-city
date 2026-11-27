@@ -48,6 +48,13 @@ namespace Game.Presentation
             return slot > 1 && slot <= SaveService.Slots && SaveService.SlotHasTown(SavesFolder, slot) ? slot : 1;
         }
 
+        /// <summary>A fresh view context for the open town, with its name on it (every rebuild must, or the time card loses "Town 2 ·").</summary>
+        private void NewContext()
+        {
+            _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            RefreshTownName();
+        }
+
         private void RefreshTownName()
         {
             int towns = 0;
@@ -110,7 +117,6 @@ namespace Game.Presentation
             if (target == _slot) return;
             SaveService next = SavesFor(target);
             LoadOutcome o = next.Load(_config, WallNow(), UtcOffsetMinutes());
-            if (o.State != null) next.DeleteNotes(); // opened: the town itself is the truth again
             if (o.State == null)
             {
                 RefreshTownName();
@@ -118,29 +124,50 @@ namespace Game.Presentation
                 if (_open.HasValue && _sheet.IsOpen) ShowCurrentSheet(refreshOnly: true);
                 return;
             }
+            Simulation sim = Simulation.FromState(_config, o.State); // what can throw is made before anything of the open town is changed
+            next.DeleteNotes(); // opened: the town itself is the truth again
             LeaveOpenTown();
-            _slot = target;
-            _saves = next;
-            PlayerPrefs.SetInt("town.open", target);
-            PlayerPrefs.Save();
-            _playLog = OpenLog(next);
-            _lastSyncWall = WallNow();
-            Sim = Simulation.FromState(_config, o.State);
+            Move(target, next, () => OpenLog(next), () => sim);
             EnterTown(AdoptTown(o), focus: false);
+        }
+
+        /// <summary>
+        /// Makes <paramref name="target"/> the open town: the slot, its service, its play log and its sim change together or not at all, so a failure part way
+        /// never leaves the old town's sim paired with the new town's folder (the next autosave would overwrite it).
+        /// </summary>
+        private void Move(int target, SaveService saves, Func<PlayLog> openLog, Func<Simulation> makeSim)
+        {
+            int slot0 = _slot;
+            SaveService saves0 = _saves;
+            PlayLog log0 = _playLog;
+            try
+            {
+                _slot = target;
+                _saves = saves;
+                PlayerPrefs.SetInt("town.open", target);
+                PlayerPrefs.Save();
+                _playLog = openLog();
+                _lastSyncWall = WallNow();
+                Sim = makeSim(); // may write the new town's first log line: after the log and the anchor
+            }
+            catch
+            {
+                _slot = slot0;
+                _saves = saves0;
+                _playLog = log0;
+                PlayerPrefs.SetInt("town.open", slot0);
+                PlayerPrefs.Save();
+                throw;
+            }
         }
 
         /// <summary>A second town in the empty slot: the open town is saved, and a new town starts there exactly as a first game (spec 031 §3).</summary>
         private void StartTown(int target)
         {
             LeaveOpenTown();
-            _slot = target;
-            _saves = SavesFor(target);
-            _saves.DeleteNotes();
-            PlayerPrefs.SetInt("town.open", target);
-            PlayerPrefs.Save();
-            _playLog = OpenLog(_saves);
-            _lastSyncWall = WallNow();
-            Sim = NewTownSim();
+            SaveService saves = SavesFor(target);
+            saves.DeleteNotes();
+            Move(target, saves, () => OpenLog(saves), NewTownSim);
             EnterTown(AdoptTown(null), focus: true);
         }
 
@@ -168,6 +195,7 @@ namespace Game.Presentation
         private void EnterTown(CardVm card, bool focus)
         {
             _holdUntil = 0;
+            _snapshot = null; // a developer snapshot is of the town it was taken in
             _sheet.Close();
             _sheet.DropVeils(); // the old town's cards, letters and away card
             _letterOpen = false;

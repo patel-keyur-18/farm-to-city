@@ -61,6 +61,42 @@ namespace Game.Services.Tests
             Assert.That(backOne.State.Clock.SimTime - simAtLeave, Is.EqualTo(4 * Hour));
         }
 
+        // AC-1 (the save side): a second town starts in the empty slot as its own folder; Town 1 is saved and not touched by it.
+        [Test]
+        public void StartSecond()
+        {
+            Simulation one = NewTown(3), two = NewTown(8);
+            SaveService s1 = Slot(1), s2 = Slot(2);
+            Assert.That(SaveService.SlotHasTown(Path.Combine(_root, "Saves"), 2), Is.False, "the slot is empty: Settings offers Start a second town");
+            one.Execute(new Sync(Wall0 + Hour));
+            s1.Save(one.State, one.Config, Wall0 + Hour, 1, TownSummary.Of(one, Wall0 + Hour));    // LeaveOpenTown: Town 1 saved first
+            s2.WriteNotes(new System.Collections.Generic.List<KeptNote>());
+            s2.DeleteNotes();                                                                    // StartTown: the slot has no kept plan of an older town
+            s2.Save(two.State, two.Config, Wall0 + Hour, 1, TownSummary.Of(two, Wall0 + Hour));
+            Assert.That(SaveService.SlotHasTown(Path.Combine(_root, "Saves"), 2), Is.True);
+            Assert.That(s2.Folder, Is.Not.EqualTo(s1.Folder));
+            Assert.That(Open(s1, one, Wall0 + Hour).State.ComputeHash(), Is.EqualTo(one.State.ComputeHash()), "Town 1 is exactly as it was saved");
+            Assert.That(Open(s2, two, Wall0 + Hour).State.ComputeHash(), Is.EqualTo(two.State.ComputeHash()));
+        }
+
+        // Spec 031 §3 (the owner, 2026-11-27): a target that cannot be read leaves the open town as it is, and its slot is empty again.
+        [Test]
+        public void UnreadableTargetStaysPut()
+        {
+            Simulation one = NewTown(3), two = NewTown(8);
+            SaveService s1 = Slot(1), s2 = Slot(2);
+            s1.Save(one.State, one.Config, Wall0, 1, TownSummary.Of(one, Wall0));
+            s2.Save(two.State, two.Config, Wall0, 1, TownSummary.Of(two, Wall0));
+            string saves = Path.Combine(_root, "Saves");
+            foreach (string f in Directory.GetFiles(s2.Folder)) if (!f.EndsWith(".json") && !f.EndsWith(".jsonl")) File.WriteAllText(f, "not a save");   // the save and every backup
+
+            LoadOutcome o = s2.Load(two.Config, Wall0 + Hour, 0);
+            Assert.That(o.State, Is.Null, "nothing to open");
+            Assert.That(o.Error, Is.Not.EqualTo(SaveError.None), "the usual unreadable card has its reason");
+            Assert.That(SaveService.SlotHasTown(saves, 2), Is.False, "the slot is empty again: Settings offers Start a second town");
+            Assert.That(Open(s1, one, Wall0 + Hour).State.ComputeHash(), Is.EqualTo(one.State.ComputeHash()), "the open town is untouched");
+        }
+
         // AC-3: a town left more than 72 h catches up 72 h, as a closed app does.
         [Test]
         public void AwayCap()

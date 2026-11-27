@@ -29,7 +29,7 @@ namespace Sim.Core.Tests
                 Note(Now - 3 * Hour, NotifyKind.CropReady, 2),                 // needs you, past due: goes out once
                 Note(Now - 4 * Hour, NotifyKind.CalfBorn, 2),                  // information, past due: dropped
             };
-            List<KeptNote> all = KeptNotes.Merge(open, other, Now, def, 0, out List<KeptNote> kept);
+            List<KeptNote> all = KeptNotes.Merge(open, other, Now, Now - 6 * Hour, def, 0, out List<KeptNote> kept);
 
             Assert.That(all.Select(n => n.Kind + "@" + (n.WallUtc - Now) + ":" + n.Town), Is.EqualTo(new[]
             {
@@ -39,7 +39,22 @@ namespace Sim.Core.Tests
             Assert.That(all.Select(n => n.WallUtc), Is.Ordered);
 
             // The open town alone (no other town's plan) is the one-town result, untouched.
-            Assert.That(KeptNotes.Merge(open, new List<KeptNote>(), Now, def, 0, out _).Select(n => n.Title), Is.EqualTo(open.Select(n => n.Title)));
+            Assert.That(KeptNotes.Merge(open, new List<KeptNote>(), Now, Now - 6 * Hour, def, 0, out _).Select(n => n.Title), Is.EqualTo(open.Select(n => n.Title)));
+        }
+
+        // A note the platform already delivered while the app was closed is not sent again (review M1): only what came due since the app last came forward is past due.
+        [Test]
+        public void DeliveredWhileClosed_NotSentAgain()
+        {
+            Definitions.NotifyDef def = Def();
+            var other = new List<KeptNote>
+            {
+                Note(Now - 3 * Hour, NotifyKind.CropReady, 2),     // due at 09:00, before the app came forward at 11:00: the platform delivered it
+                Note(Now - 30 * 60, NotifyKind.FinalNotice, 2),    // due at 11:30 while you played: goes out once
+            };
+            List<KeptNote> all = KeptNotes.Merge(new List<KeptNote>(), other, Now, Now - Hour, def, 0, out List<KeptNote> kept);
+            Assert.That(all.Select(n => n.Kind), Is.EqualTo(new[] { NotifyKind.FinalNotice }), "the delivered note is not sent a second time");
+            Assert.That(kept, Is.Empty, "and it leaves the kept file");
         }
 
         // A past-due note goes out after quiet hours, never in them.
@@ -48,7 +63,7 @@ namespace Sim.Core.Tests
         {
             Definitions.NotifyDef def = Def();
             long night = Midnight + 23 * Hour; // 23:00, inside the quiet hours
-            List<KeptNote> all = KeptNotes.Merge(new List<KeptNote>(), new List<KeptNote> { Note(night - Hour, NotifyKind.LoanMissed, 2) }, night, def, 0, out _);
+            List<KeptNote> all = KeptNotes.Merge(new List<KeptNote>(), new List<KeptNote> { Note(night - Hour, NotifyKind.LoanMissed, 2) }, night, night - 6 * Hour, def, 0, out _);
             long end = Midnight + 24 * Hour + def.QuietToMinute * 60L;
             Assert.That(all.Single().WallUtc, Is.EqualTo(end), "the quiet hours end at " + def.QuietToMinute / 60 + ":00 the next morning");
         }
@@ -61,7 +76,7 @@ namespace Sim.Core.Tests
             var open = new List<KeptNote>();
             for (int i = 0; i < def.MaxPending; i++) open.Add(Note(Now + (i + 1) * 60L, NotifyKind.CalfBorn, 1, "info" + i)); // 64 information notes, soonest
             var other = new List<KeptNote> { Note(Now + 100 * Hour, NotifyKind.FinalNotice, 2), Note(Now + 99 * Hour, NotifyKind.CropReady, 2) };
-            List<KeptNote> all = KeptNotes.Merge(open, other, Now, def, 0, out List<KeptNote> kept);
+            List<KeptNote> all = KeptNotes.Merge(open, other, Now, Now - 6 * Hour, def, 0, out List<KeptNote> kept);
             Assert.That(all.Count, Is.EqualTo(def.MaxPending));
             Assert.That(all.Select(n => n.Kind), Does.Contain(NotifyKind.FinalNotice).And.Contain(NotifyKind.CropReady), "urgent and needs-you beat 64 sooner information notes");
             Assert.That(all.Count(n => n.Kind == NotifyKind.CalfBorn), Is.EqualTo(def.MaxPending - 2));

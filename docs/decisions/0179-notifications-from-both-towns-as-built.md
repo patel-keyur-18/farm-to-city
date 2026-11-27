@@ -1,6 +1,6 @@
 # 0179. US-272 notifications from both towns and a play log each, as built
 
-- Status: Accepted (the owner approved the plan check, 2026-11-27; the story awaits the owner's review)
+- Status: Accepted (approved by the owner, 2026-11-27)
 - Date: 2026-11-27
 - Deciders: Keyur Patel
 - Related ADRs: 0172, 0178, 0041, 0047
@@ -22,11 +22,13 @@ Spec 031 §3.1 and §3.2, on the seams US-270 built (a town's own folder, `Leave
 5. **The play logs.** Each town's log is in its own folder (US-270); a switch ends the session in the town left (`sessionEnd`) and starts the one in the town opened (`sessionStart`, with `fromNote` when a tap caused it; the town the app opened on before the switch logs `fromNote: false`, so it is balanced and not counted as a tap).
 6. **A bug found by the tour and fixed.** A switch with a card, a letter or the away card open (a tap on a note at launch can come while the welcome-back letter is up) left the old town's veil over the new town: Town 1 opened under Town 2's "The farm is yours" letter. A switch now drops every card, letter, away card and *Why?* popup of the old town, the waiting toasts, and the letter and celebration flags (`SheetPresenter.DropVeils`).
 
+7. **A note the platform already delivered is not sent again (independent review, 2026-11-27).** `Merge` takes `sinceWallUtc`, the time the app last came to the foreground (`notify.foreground` in `PlayerPrefs`, set at launch and at each return): a kept note due at or before it was due while the app was closed, so the platform delivered it (or notifications were off) and it is dropped; only notes due since then count as past due. `NotificationMergeTests.DeliveredWhileClosed_NotSentAgain`. Known edge, accepted: a past-due note sent "a minute after you leave" is lost if you come back inside that minute (the return cancels it and moves the time forward).
+
 ## Tests
 
 Core `NotificationMergeTests` (`Merge`: due urgent and needs-you at +60 s, due information dropped, the other town keeps only its future notes; `PastDue_AfterQuietHours`; `OverTheLimit_ImportanceFirst`; `KeptFile_RoundTrips`: quotes, a new line, Hindi, a backslash, a damaged line); View `SettingsViewTests.NotificationTextTownName` (AC-6); `Game.Services.Tests` `TownSlotTests.OpenFromNote` (the data's town, which taps switch, the kept file in the town's own folder), `PlayLogPerTown` (AC-9). Core 974 (not Balance, not Perf), Perf 6, View 460, Services 7; goldens unmoved.
 
-Editor by scripted touch and the logging notification service: Town 1 left for Town 2, so `notes.json` held Town 1's eight notes titled "Town 1 · …"; backgrounding in Town 2 scheduled Town 1's and Town 2's notes together (threads `town1-HandsWork`, `town2-CloseShort`, "Town 2 · The season's close is short of cash"); Town 1's file made past due (a final notice, a finished house): the final notice went out "in 60 s" once, the house was dropped, the file was rewritten without both; a stubbed tap on Town 1's note while Town 2 was open (with Town 2's letter up) opened Town 1 with the toast "Town 1" and no letter over it (captures `docs/art/s29-272-*.png`); the play logs: Town 2 `sessionStart` (`fromNote:false`) then `sessionEnd`, Town 1 `sessionStart` with `fromNote:true`. `SheetLayoutCheck` 76 sheets, 0 problems. Render statistics: draw calls 1,150 / 576 / 364 and triangles within 10% of the last reading (US-270's). Editor saves restored and identical.
+Editor by scripted touch and the logging notification service: Town 1 left for Town 2, so `notes.json` held Town 1's eight notes titled "Town 1 · …"; backgrounding in Town 2 scheduled Town 1's and Town 2's notes together (threads `town1-HandsWork`, `town2-CloseShort`, "Town 2 · The season's close is short of cash"); Town 1's file made past due (a final notice, a finished house): the final notice went out "in 60 s" once, the house was dropped, the file was rewritten without both; a stubbed tap on Town 1's note while Town 2 was open (with Town 2's letter up) opened Town 1 with the toast "Town 1" and no letter over it (captures `docs/art/s29-272-*.png`); the play logs: Town 2 `sessionStart` (`fromNote:false`) then `sessionEnd`, Town 1 `sessionStart` with `fromNote:true`. `SheetLayoutCheck` 76 sheets, 0 problems. Render statistics: draw calls 1,150 / 576 / 364 and triangles 11% below US-270's reading (37,330 to 33,224) and the draw calls and sprites lower with the town's state. Editor saves restored and identical.
 
 ## Consequences
 

@@ -1,6 +1,6 @@
 # 0178. US-270 two towns, as built
 
-- Status: Accepted (Preview 26 approved by the owner, 2026-11-27; the story awaits the owner's review)
+- Status: Accepted (Preview 26 and the story approved by the owner, 2026-11-27)
 - Date: 2026-11-27
 - Deciders: Keyur Patel
 - Related ADRs: 0172, 0023 (superseded in part), 0041, 0046, 0047, 0170
@@ -12,7 +12,7 @@ Spec 031 and Preview 26: two towns on one phone, each a whole save with its own 
 ## Decisions (the owner, 2026-11-27)
 
 1. **A switch to a town that can't be read stays put.** The target is loaded first; if it is unreadable (save and every backup bad) nothing changes: the open town stays, a card says "Town 2 couldn't be opened" (the bad file kept and copied to Documents as `Town2-town.unreadable-…`), and the slot is empty again, so Settings offers *Start a second town*. At launch an unreadable town still becomes a new town, as before.
-2. **Merged notification plans keep importance first** (US-272's rule, recorded here with the spec): the one-town ranking (urgent, needs you, information; soonest first within each), the kept 64 scheduled in time order; past-due kept notes are dropped at the merge; the leaving town's plan is always kept, even with notifications off.
+2. **Merged notification plans keep importance first** (US-272's rule, recorded here with the spec): the one-town ranking (urgent, needs you, information; soonest first within each), the kept 64 scheduled in time order; past-due kept notes are dropped at the merge (amended by ADR 0179: the urgent and needs-you ones that came due while you played go out once); the leaving town's plan is always kept, even with notifications off.
 
 ## As built
 

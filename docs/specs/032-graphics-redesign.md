@@ -54,7 +54,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | --- | --- | --- |
 | What casts a baked shadow | Buildings and big fixed things: houses, huts, sheds, stores, businesses, the village's and town's buildings, wells, trees and orchards, the kiln, the tower. | Option B: shadows where they show most. |
 | What doesn't | People, animals, vehicles and machines (they move): today's code-drawn contact shadow, made softer to match (US-281). Crops, ground and boundaries: none of their own (their texture already has the light). | Option B; a moving sprite with a baked shadow would drag it through walls. |
-| A shadow is its own sprite | Rendered in a second pass (the model hidden from the camera, a shadow catcher seen): `<name>_shadow.png`, the same frame and pivot as its sprite. Drawn on the ground layer under its building, black, with alpha = its render's × the strength below. | The owner, 2026-11-27: so weather and night can fade it. About one more draw call a building: well under 10% of the about 1,290 the most crowded view draws today (`render-stats.json`, US-272). |
+| A shadow is its own sprite | Rendered in a second pass (the model hidden from the camera, a shadow catcher seen): `<name>_shadow.png`, with **its own frame** (a shadow falls outside its building's: Preview 27's house is 316 px wide with its shadow against 252 px without) and its pivot at the same world anchor as the building's, so the two line up; `sprites.json` gives each its own `w`, `h` and pivot. Drawn on the ground layer under its building, black, with alpha = its render's × the strength below. | The owner, 2026-11-27: so weather and night can fade it. About one more draw call for each shadow-casting sprite in view (buildings, trees, orchards, wells, the kiln, the tower): **not yet counted**; US-283 counts them with `RenderStats` at the crowded view and restates this estimate. The most crowded view draws about 1,150 calls today (`render-stats.json`, US-272). |
 | Strength | `strength = day × weather`. `day` is the weather presenter's day light (`WeatherLook` `Light` mapped 0 at night to 1 by day, as the ground's tint already is). `weather` is a new `shadow` field on each weather style in `content/ui.json`: sun 1.0, heatwave 1.0, frost 0.8, cloudy 0.45, rain 0.25, heavy rain 0.15, storm 0.10. It moves with the weather's cross-fade. | Shadows go soft under cloud and vanish at night. Placeholder values, tuned on the phone at the device check (art, not balance). |
 
 ### 3.4 The camera
@@ -62,7 +62,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Rule | Behaviour | Why |
 | --- | --- | --- |
 | Default view | **3 acres across the screen** at launch, when a town opens, and on the home button (today `MapInput.OpeningHalfHeight` 1.4, about 6 acres across the iPhone; it becomes the content value). | The owner, 2026-11-27. |
-| Closest zoom | **2 acres across** (`IsoGrid` `MinHalfHeight` from 3 to 2 acre widths). | The owner, 2026-11-27: room to look closer. At 2 across an acre is 1,266 phone pixels against 1,056 rendered: 1.2× stretched, still sharp enough. |
+| Closest zoom | **2 acres across** (`MapCamera.MinHalfHeight`, in `IsoGrid.cs`, from 3 to 2 acre widths). | The owner, 2026-11-27: room to look closer. At 2 across an acre is 1,266 phone pixels against 1,056 rendered: 1.2× stretched, still sharp enough. |
 | Farthest zoom | Unchanged (the whole map). | The crowded view stays the worst case the frame-time guard reads. |
 | Saved camera | A town saved with a zoom outside the new bounds opens clamped into them (already the rule, `IsoGrid.Clamp`). | No migration needed. |
 
@@ -105,12 +105,12 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
-| AC-1 | Given the manifest at 1,056 px a unit, when any rendered sprite is placed, then it covers the same world size as before (its pivot and its bounds within 1%). | `Game.Editor.SpriteSizeCheck` (new, Editor: every sprite's world bounds against a recorded table of today's) |
+| AC-1 | Given the manifest at 1,056 px a unit, when any rendered sprite other than a shadow is placed, then it covers the same world size as before (its pivot and its bounds within 1%); a shadow's pivot is at its building's world anchor. | `Game.Editor.SpriteSizeCheck` (new, Editor: every sprite's world bounds against a recorded table of today's) |
 | AC-2 | Every map sprite in `SpriteBank` has its realistic render, and every building's has its `_shadow`. | `Game.Editor.RenderedArtCheck` (new, Editor: every name `SpriteBank` asks for has its file, and every building its `_shadow`) |
 | AC-3 | A building's shadow alpha is `day × weather.shadow`: 1 in sun by day, 0.25 in rain by day, 0 at night, cross-fading with the weather. | `WeatherLookTests.ShadowStrength` (Sim.View) |
-| AC-4 | At launch the view is 3 acres across; the closest zoom is 2 acres across; the farthest is unchanged. | `IsoGridTests.DefaultAndClosestZoom` (new, Sim.View) |
+| AC-4 | At launch (the default half-height moves from `MapInput.OpeningHalfHeight` into `MapCamera`, read from `content/ui.json`) the view is 3 acres across; the closest zoom is 2 acres across; the farthest is unchanged. | `IsoGridTests.DefaultAndClosestZoom` (new, Sim.View) |
 | AC-5 | A saved camera outside the new bounds opens clamped. | `IsoGridTests.SavedZoomClamped` (new, Sim.View) |
-| AC-6 | `content/ui.json` validates the new fields and their bounds. | `ContentTests.UiCameraAndShadow` (Sim.Core) |
+| AC-6 | `content/ui.json` validates the new fields and their bounds. | `UiContentTests.CameraAndShadow` (new, Sim.View.Tests: `ui.json` is loaded by `Sim.View`'s `UiLoader`) |
 | AC-7 | On the iPhone 13 the device check meets §3.5's bar, or the redesign switches to Option A. | Device: the US-283 test checklist (both p95s, memory, 20 minutes of play) |
 | AC-8 | Every category's before/after preview approved before its renders go in; each story's `RenderStats` reading recorded. | Review: the story's ADR |
 | AC-9 | Goldens unchanged. | The golden replay tests |

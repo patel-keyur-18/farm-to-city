@@ -43,7 +43,7 @@ Every session starts with no memory. The repository is the only memory.
 - **Sprints (ADR 0025)** are 1 week long, with at most 2 specs to review and 1 device build per sprint. Hierarchy: Epic → Feature → User story → Tasks. Story points, MoSCoW priority, and the Definition of Ready and Definition of Done in ADR 0025.
 - **Work on one branch per sprint** (`sprint/NN-short-name`), unless the session assigns a branch. Use small conventional commits (`docs:`, `feat:`, `test:`, `fix:`, `chore:`). One pull request per sprint, merged by the owner.
 - **Stop for the owner's review at the end of each task.** For anything ambiguous, give a recommendation and ask. Push back when something doesn't make sense.
-- **Independent sprint review (owner rule, 2026-11-18).** Once all of a sprint's stories are built and approved, and before the pull request, dispatch an independent agent (Opus 5.5, high effort) to review the whole sprint against its plan in `sprints.md`: nothing missed, nothing stale, nothing unachievable in the game, every story, task and acceptance criterion done with quality. Fix every finding (or flag it to the owner with evidence), rebuild, run both test projects, and say in the pull request what the review covered, found and fixed.
+- **Independent sprint review (owner rule, 2026-11-18).** Once all of a sprint's stories are built and approved, and before the pull request, dispatch an independent agent (Opus 5.5, high effort) to review the whole sprint against its plan in `sprints.md`: nothing missed, nothing stale, nothing unachievable in the game, every story, task and acceptance criterion done with quality. Fix every finding (or flag it to the owner with evidence), rebuild, run every test project (Sim.Core.Tests, Sim.View.Tests, Game.Services.Tests), and say in the pull request what the review covered, found and fixed.
 - **Every build handed to the owner comes with a test checklist** in `docs/test-checklists/`: what to try, what to expect, what to report.
 - **Test in the Unity Editor before calling a story done** (owner rule, 2026-10-21). Any story that changes what the player sees or taps: recompile, play, drive it with **scripted touch** (`Game.Editor.TouchDriver`, never the mouse), capture the Game view, look at every capture, and fix what renders or responds wrongly before reporting. Dotnet tests alone are not enough. How to drive the Editor is in `docs/planning/STATUS.md` (Environment notes). **Then read the rendering statistics** (`Game.Editor.RenderStats`, US-101): at the most crowded view, `Record` a reading; growth over 10% against the last (`docs/planning/render-stats.json`) is reported with the story.
 - **This file and `docs/` are the project's memory across sessions.** Keep them current.
@@ -82,6 +82,8 @@ sim/                        Unity package com.farmtocity.sim (package.json)
   Sim.Content/              JSON loader + validation (definition classes
                             live in Sim.Core, ADR 0020)
 tests/Sim.Core.Tests/       NUnit 4 tests (net10.0)
+tests/Sim.View.Tests/       view-model tests (net10.0)
+tests/Game.Services.Tests/  tests of the Unity-side SaveService, compiled from its source (ADR 0178)
 tools/Tools.Balancer/       headless balancer on a fake clock (net10.0)
 content/                    JSON definitions (balancing data)
 unity/FarmToCity/           Unity project (Unity 6000.3.26f1, ADR 0029)
@@ -133,7 +135,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0020 | Definition classes live in `Sim.Core`. `Sim.Content` is only the JSON loader and validator |
 | 0021 | Crop calendar follows Indian cropping seasons (radish all year). Fruit trees in yard and field-edge slots; apple on hills only, later |
 | 0022 | Hiring from Homestead: day labourers from neighbouring villages, and a resident hand who needs a hut. Regulars can move in |
-| 0023 | One town at a time. Save points are a crash-safety guard only, never an undo |
+| 0023 | One town at a time (superseded by 0172 §5 and 0178: two towns). Save points are a crash-safety guard only, never an undo (stands) |
 | 0024 | Phase 1 adds the hut store and spoilage, string tables and Indian number formatting, and an opt-in local play log |
 | 0025 | Sprint mechanics: 1-week sprints, story points, MoSCoW, Definition of Ready and Done, a pull request per sprint |
 | 0026 | Test device: iPhone 13 (half-frame-budget headroom). Mac: M2 Air with Xcode 27.1. Android untested for now. Latest LTS Unity, .NET 10 for tests and tools |

@@ -113,7 +113,7 @@ Previews of 7.1 and 7.2 (exact-looking artifacts) come before their UI code.
 
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
-| AC-1 | Given one town, Settings shows it and *Start a second town*; starting it saves Town 1 and opens a new town with the first session | `TownSlotTests.StartSecond` (Editor), `SettingsViewTests.Towns` |
+| AC-1 | Given one town, Settings shows it and *Start a second town*; starting it saves Town 1 and opens a new town with the first session | `TownSlotTests.StartSecond` (the save side, in `Game.Services.Tests`), `SettingsViewTests.Towns`; the veil and the first session by the Editor tour (`s29-270-second-town-first-session.png`) |
 | AC-2 | Given two towns, a switch saves the open one and opens the other with its away card; switching back finds the first exactly as saved, plus its time away | `TownSlotTests.SwitchRoundTrip` (in `Game.Services.Tests`) |
 | AC-3 | A town left more than 72 h catches up 72 h, as a closed app | `TownSlotTests.AwayCap` (in `Game.Services.Tests`) |
 | AC-4 | Town 1's backups, recovery and New game never touch Town 2's folder, and the reverse | `SaveServiceTests.SlotsApart` (in `Game.Services.Tests`) |
@@ -121,8 +121,9 @@ Previews of 7.1 and 7.2 (exact-looking artifacts) come before their UI code.
 | AC-6 | With two towns the time card and notification titles start with the town's name; with one, they don't | `HudViewTests.TownName`, `SettingsViewTests.NotificationTextTownName` |
 | AC-7 | Backgrounding schedules the open town's plan and the other's kept plan, merged, at most 64 | `NotificationMergeTests.Merge`, `PastDue_AfterQuietHours`, `OverTheLimit_ImportanceFirst`, `KeptFile_RoundTrips` |
 | AC-8 | A tap on Town 2's notification opens Town 2 | Editor (notification data stubbed), `TownSlotTests.OpenFromNote` (in `Game.Services.Tests`) |
-| AC-9 | Each town's play log holds only its own sessions; a switch ends one and starts the other | `TownSlotTests.PlayLogPerTown` (in `Game.Services.Tests`) |
+| AC-9 | Each town's play log holds only its own sessions; a switch ends one and starts the other | `TownSlotTests.PlayLogPerTown` (in `Game.Services.Tests`: the log's lines for a switch's sequence; that `GameRoot` writes them in that order is the Editor tour's) |
 | AC-10 | Export and New game name the open town and act on it only | `SettingsViewTests.TownNamed` |
+| AC-12 | A town that cannot be read leaves the open town as it is, and its slot is empty again (gap 1, the owner 2026-11-27) | `TownSlotTests.UnreadableTargetStaysPut` (the save side); the order inside `GameRoot.SwitchTown` (the target loaded first) by the Editor tour (`s29-270-bad-town.png`) |
 | AC-11 | Goldens and every test unchanged (no sim change) | the full suite |
 
 ## 9. Balancing hooks

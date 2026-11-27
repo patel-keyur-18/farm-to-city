@@ -77,8 +77,10 @@ namespace Sim.Core.Saves
         /// platform's pending limit the most important first (urgent, needs you, information; soonest first within each), scheduled in time order.
         /// The other town's notes that came due while you played this one go out once, a minute from now and after quiet hours, if they are urgent or need
         /// you; information ones are dropped. <paramref name="stillKept"/> is what the other town keeps: its future notes (the ones sent or dropped leave).
+        /// <paramref name="sinceWallUtc"/> is when the app last came to the foreground: a kept note due at or before it was due while the app was closed, so the
+        /// platform delivered it (or notifications were off) and it is dropped, never sent again; only the notes due between then and now came due while you played.
         /// </summary>
-        public static List<KeptNote> Merge(IReadOnlyList<KeptNote> open, IReadOnlyList<KeptNote> other, long nowWallUtc, NotifyDef def, int utcOffsetMinutes, out List<KeptNote> stillKept)
+        public static List<KeptNote> Merge(IReadOnlyList<KeptNote> open, IReadOnlyList<KeptNote> other, long nowWallUtc, long sinceWallUtc, NotifyDef def, int utcOffsetMinutes, out List<KeptNote> stillKept)
         {
             stillKept = new List<KeptNote>();
             var all = new List<KeptNote>(open);
@@ -86,6 +88,7 @@ namespace Sim.Core.Saves
             foreach (KeptNote n in other)
             {
                 if (n.WallUtc > nowWallUtc) { stillKept.Add(n); all.Add(n); }
+                else if (n.WallUtc <= sinceWallUtc) continue;
                 else if (n.Importance != NotifyImportance.Information) all.Add(new KeptNote(late, n.Kind, n.Title, n.Body, n.Town));
             }
             all.Sort((a, b) => a.Importance != b.Importance ? a.Importance.CompareTo(b.Importance) : a.WallUtc != b.WallUtc ? a.WallUtc.CompareTo(b.WallUtc) : a.Kind.CompareTo(b.Kind));

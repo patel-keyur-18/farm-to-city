@@ -63,6 +63,9 @@ namespace Game.Presentation
         // ---- the settings file (spec 007 §4): PlayerPrefs, iOS's own preferences file, never in the town ----
 
         private static bool NotificationsOn { get { return PlayerPrefs.GetInt("notify.on", 0) == 1; } set { PlayerPrefs.SetInt("notify.on", value ? 1 : 0); PlayerPrefs.Save(); } }
+        /// <summary>When the app last came to the foreground (launch or a return): the other town's notes due before it were due while closed, so the platform had them (KeptNotes.Merge). Unset: now, so nothing is sent twice.</summary>
+        private static long ForegroundSince { get { return long.TryParse(PlayerPrefs.GetString("notify.foreground", ""), out long t) ? t : long.MaxValue; } }
+        private static void MarkForeground(long wall) { PlayerPrefs.SetString("notify.foreground", wall.ToString()); PlayerPrefs.Save(); }
         private static int NotifyAsked { get { return PlayerPrefs.GetInt("notify.asked", 0); } set { PlayerPrefs.SetInt("notify.asked", value); PlayerPrefs.Save(); } }
         private static bool PlayLogOn { get { return PlayerPrefs.GetInt("playlog.on", 0) == 1; } set { PlayerPrefs.SetInt("playlog.on", value ? 1 : 0); PlayerPrefs.Save(); } }
 
@@ -104,10 +107,10 @@ namespace Game.Presentation
         /// </summary>
         private CardVm AdoptTown(LoadOutcome o)
         {
-            _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
-            RefreshTownName();
+            NewContext();
             _guide = new Guide(); // what happened since launch belongs to the old town
             _logCount = Sim.State.CommandLog.Entries.Count;
+            MarkForeground(WallNow());
             StartSession(_lastSyncWall);
             _alignPending = true;
             _choosing = RunOne.MustChoose(Sim); // held until the player chooses (AskWhichToRun)
@@ -266,7 +269,7 @@ namespace Game.Presentation
             {
                 SaveService other = SavesFor(_slot == 1 ? 2 : 1);
                 List<KeptNote> kept = other.ReadNotes();
-                all = KeptNotes.Merge(all, kept, now, _savesDefs.Notify, UtcOffsetMinutes(), out List<KeptNote> remaining);
+                all = KeptNotes.Merge(all, kept, now, ForegroundSince, _savesDefs.Notify, UtcOffsetMinutes(), out List<KeptNote> remaining);
                 if (remaining.Count != kept.Count) other.WriteNotes(remaining);
             }
             var notes = new List<ScheduledNote>();
@@ -288,6 +291,7 @@ namespace Game.Presentation
 
         private void Returning()
         {
+            MarkForeground(WallNow());
             StartSession(WallNow());
             if (_holdUntil > 0) _alignPending = true; // the hold counts from the saved anchor, so what passed while away is counted
         }
@@ -480,7 +484,7 @@ namespace Game.Presentation
 
         private void ResetTown(bool focus)
         {
-            _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            NewContext();
             _guide = new Guide();
             _logCount = Sim.State.CommandLog.Entries.Count;
             _sheet.Close();

@@ -167,7 +167,7 @@ namespace Game.Presentation
             Sim.State.Clock.Reanchor(_lastSyncWall);
             _holdUntil = 0;
             _alignPending = true;
-            _ctx = new ViewContext(Sim, _strings, _fmt, _ui);
+            NewContext();
             _sheet.Close();
             Refresh(false);
         }
