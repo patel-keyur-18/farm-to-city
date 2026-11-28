@@ -1,7 +1,7 @@
 # 0188. US-276 the people and portraits as built
 
 - **Date:** 2026-11-28
-- **Status:** Built; waiting for the owner's review (the owner approved the before/after preview, Preview 29, on 2026-11-28)
+- **Status:** Accepted (the owner approved US-276 on 2026-11-28, after approving the before/after preview, Preview 29)
 - **Spec:** 032 §3.1, AC-17, AC-18, AC-19
 
 ## Context
