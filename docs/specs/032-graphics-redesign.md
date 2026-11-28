@@ -20,7 +20,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 - **The camera:** the default view 3 acres across; the closest zoom 2 acres across.
 
 **Out:**
-- **The UI** (sheets, buttons, fonts, the HUD and the 76 icons): restyled to match in its own spec, 033, written in Sprint 32 against the finished map, coded in Sprints 34 and 35 (the owner, 2026-11-27). Until then the icons stay as they are.
+- **The UI** (sheets, buttons, fonts, the HUD and the 76 icons; but see §3.1: a person's picture in the UI is their portrait): restyled to match in its own spec, 033, written in Sprint 32 against the finished map, coded in Sprints 34 and 35 (the owner, 2026-11-27). Until then the icons stay as they are.
 - **Any sim, content-balance or save change.** Goldens do not move.
 - **New shaders, lights or particles in Unity.** Everything realistic is in the render; the game still draws sprites.
 - **Time-of-day light on the buildings** (a sun that moves): the sun is fixed. **No baked shadows (ADR 0183).**
@@ -37,7 +37,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Light | One sun from the screen's upper left as today (azimuth unchanged), **elevation 60°** (Preview 27 used 50°), warm (1.00, 0.92, 0.80), energy 5.2, a 2° disc for soft edges; the sky's blue fill (0.55, 0.70, 0.92) at 0.85. | The owner asked for short shadows (Option B): at 60° a shadow is 0.58 × the height (0.84 at 50°), so a house's shadow stays inside its own acre. |
 | Camera | Today's: orthographic, 2:1 dimetric, rotated 45°, tilted 60°. | The map's tiles and pivots don't change. |
 | People | Realistic in material and light, **6 heads tall** at today's height (about the hut door's; ADR 0039): heads about a quarter bigger than true proportion so a face just shows at the default zoom. Clothes as approved in Sprint 5 (pagdi, dhoti and vest; a cotton saree with the head uncovered, a bun, bindi and bangles). New bodies for every kind, with walk (4 frames) and work frames as today. | The owner, 2026-11-27 (7.5 heads: a 6-point head at the default zoom, no face). |
-| Portraits | The card portraits rendered realistic and close up, in the same style. | Faces show on the cards. |
+| Portraits | The card portraits rendered realistic and close up, in the same style, at today's 256 px. **Wherever the UI shows a person it shows their portrait** (the People button, list rows, sheet headers, person chips and buttons); full bodies are the map's. Day labourers get portraits of their own (a man and a woman): 15 portraits. Only which picture is loaded changes: no size, layout or colour (that is spec 033). | Faces show on the cards. The owner, 2026-11-28: a 6-head body's face is about 11 phone pixels on the People button and 7 on a chip (a portrait's head there is about 60, an estimate until rendered). |
 
 ### 3.2 Sizes and memory
 
@@ -151,7 +151,8 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | AC-14 | A fodder field is drawn tall once its first cut is due, half cut from a morning's cut until 12:00, then tall again. | `CattleViewTests.Fodder_LooksCut_TillNoon` (the two cut pictures: AC-13's test) |
 | AC-15 | Every fruit tree of `content/trees.json` at all four stages, the neem, babul, village tree, the banyan, its panel picture and the temple's peepal is rendered at 8×. | `TreeArtTests.EveryTreePictureIsRenderedAt8x` |
 | AC-16 | A repeated tree's size factor is the same every time for its place, within 0.92 to 1.08, and one acre's trees differ. | `TreeSizeTests.FactorIsSteadyWithinEightPercentAndMixed` |
-| AC-17 | Every person's map picture (11 kinds, front and back: standing and 4 walk frames; a work frame for the founder, hands, labourers and townspeople: 124) is rendered at 8×, and every one of the 13 portraits is there (US-276). | `PeopleArtTests.EveryPersonPictureIsRendered` (new, Sim.View.Tests) |
+| AC-17 | Every person's map picture (11 kinds, front and back: standing and 4 walk frames; a work frame for the founder, hands, labourers and townspeople: 124) is rendered at 8×, and every one of the 15 portraits is there (US-276). | `PeopleArtTests.EveryPersonPictureIsRendered` (new, Sim.View.Tests) |
+| AC-18 | Every person picture the UI asks for (a full-body name, `people` or the founder) resolves to a portrait that is there; any other picture name is unchanged. | `PeopleArtTests.EveryUiPersonPictureIsAPortrait` (new, Sim.View.Tests) |
 
 ## 9. Balancing hooks
 
