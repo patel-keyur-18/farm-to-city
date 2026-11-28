@@ -2,67 +2,76 @@
  "pixelsPerUnit": 528,
  "sprites": [
   {
-   "w": 152,
-   "h": 156,
-   "pivotX": 0.54953,
-   "pivotY": 0.33274,
-   "name": "animal_buffalo_eat"
+   "w": 306,
+   "h": 316,
+   "pivotX": 0.54921,
+   "pivotY": 0.33952,
+   "name": "animal_buffalo_eat",
+   "ppu": 1056
   },
   {
-   "w": 170,
-   "h": 138,
-   "pivotX": 0.49075,
-   "pivotY": 0.38753,
-   "name": "animal_buffalo_lie"
+   "w": 342,
+   "h": 286,
+   "pivotX": 0.49081,
+   "pivotY": 0.38817,
+   "name": "animal_buffalo_lie",
+   "ppu": 1056
   },
   {
-   "w": 152,
-   "h": 156,
-   "pivotX": 0.55041,
-   "pivotY": 0.33274,
-   "name": "animal_buffalo_stand"
+   "w": 306,
+   "h": 312,
+   "pivotX": 0.55007,
+   "pivotY": 0.33275,
+   "name": "animal_buffalo_stand",
+   "ppu": 1056
   },
   {
-   "w": 152,
-   "h": 162,
-   "pivotX": 0.5533,
-   "pivotY": 0.31791,
-   "name": "animal_bullock_eat"
+   "w": 306,
+   "h": 326,
+   "pivotX": 0.55294,
+   "pivotY": 0.31902,
+   "name": "animal_bullock_eat",
+   "ppu": 1056
   },
   {
-   "w": 170,
-   "h": 146,
-   "pivotX": 0.48946,
-   "pivotY": 0.41889,
-   "name": "animal_bullock_lie"
+   "w": 342,
+   "h": 298,
+   "pivotX": 0.48952,
+   "pivotY": 0.41253,
+   "name": "animal_bullock_lie",
+   "ppu": 1056
   },
   {
-   "w": 150,
-   "h": 162,
+   "w": 300,
+   "h": 326,
    "pivotX": 0.55278,
-   "pivotY": 0.31791,
-   "name": "animal_bullock_stand"
+   "pivotY": 0.31902,
+   "name": "animal_bullock_stand",
+   "ppu": 1056
   },
   {
-   "w": 150,
-   "h": 160,
+   "w": 300,
+   "h": 320,
    "pivotX": 0.55718,
-   "pivotY": 0.32325,
-   "name": "animal_cow_eat"
+   "pivotY": 0.32324,
+   "name": "animal_cow_eat",
+   "ppu": 1056
   },
   {
-   "w": 170,
-   "h": 138,
-   "pivotX": 0.48946,
-   "pivotY": 0.38795,
-   "name": "animal_cow_lie"
+   "w": 342,
+   "h": 284,
+   "pivotX": 0.48952,
+   "pivotY": 0.38623,
+   "name": "animal_cow_lie",
+   "ppu": 1056
   },
   {
-   "w": 150,
-   "h": 160,
+   "w": 300,
+   "h": 320,
    "pivotX": 0.55595,
-   "pivotY": 0.32325,
-   "name": "animal_cow_stand"
+   "pivotY": 0.32324,
+   "name": "animal_cow_stand",
+   "ppu": 1056
   },
   {
    "w": 400,
@@ -3573,11 +3582,12 @@
    "name": "place_watchman_plot"
   },
   {
-   "w": 208,
-   "h": 192,
-   "pivotX": 0.52673,
-   "pivotY": 0.30273,
-   "name": "plough_team"
+   "w": 418,
+   "h": 386,
+   "pivotX": 0.5266,
+   "pivotY": 0.30374,
+   "name": "plough_team",
+   "ppu": 1056
   },
   {
    "w": 256,
@@ -3976,32 +3986,36 @@
    "name": "tea_stall_s"
   },
   {
-   "w": 228,
-   "h": 160,
-   "pivotX": 0.46399,
-   "pivotY": 0.29246,
-   "name": "tempo"
+   "w": 460,
+   "h": 320,
+   "pivotX": 0.46212,
+   "pivotY": 0.29245,
+   "name": "tempo",
+   "ppu": 1056
   },
   {
-   "w": 224,
-   "h": 220,
-   "pivotX": 0.54199,
-   "pivotY": 0.26045,
-   "name": "tractor"
+   "w": 448,
+   "h": 442,
+   "pivotX": 0.542,
+   "pivotY": 0.26153,
+   "name": "tractor",
+   "ppu": 1056
   },
   {
-   "w": 238,
-   "h": 220,
-   "pivotX": 0.50891,
-   "pivotY": 0.26045,
-   "name": "tractor_cultivator"
+   "w": 478,
+   "h": 442,
+   "pivotX": 0.50771,
+   "pivotY": 0.26153,
+   "name": "tractor_cultivator",
+   "ppu": 1056
   },
   {
-   "w": 348,
-   "h": 220,
+   "w": 696,
+   "h": 442,
    "pivotX": 0.34827,
-   "pivotY": 0.26045,
-   "name": "tractor_trolley"
+   "pivotY": 0.26153,
+   "name": "tractor_trolley",
+   "ppu": 1056
   },
   {
    "w": 486,
@@ -4188,18 +4202,20 @@
    "ppu": 1056
   },
   {
-   "w": 310,
-   "h": 276,
+   "w": 620,
+   "h": 554,
    "pivotX": 0.5,
-   "pivotY": 0.28559,
-   "name": "truck_back"
+   "pivotY": 0.28637,
+   "name": "truck_back",
+   "ppu": 1056
   },
   {
-   "w": 310,
-   "h": 254,
+   "w": 620,
+   "h": 508,
    "pivotX": 0.5,
    "pivotY": 0.32803,
-   "name": "truck_front"
+   "name": "truck_front",
+   "ppu": 1056
   },
   {
    "w": 268,
@@ -4272,18 +4288,20 @@
    "name": "tulsi"
   },
   {
-   "w": 246,
-   "h": 228,
-   "pivotX": 0.52003,
-   "pivotY": 0.3134,
-   "name": "van_back"
+   "w": 494,
+   "h": 458,
+   "pivotX": 0.51995,
+   "pivotY": 0.31421,
+   "name": "van_back",
+   "ppu": 1056
   },
   {
-   "w": 246,
-   "h": 230,
-   "pivotX": 0.52003,
-   "pivotY": 0.31406,
-   "name": "van_front"
+   "w": 494,
+   "h": 462,
+   "pivotX": 0.51995,
+   "pivotY": 0.31487,
+   "name": "van_front",
+   "ppu": 1056
   },
   {
    "w": 244,
@@ -4322,11 +4340,12 @@
    "ppu": 1056
   },
   {
-   "w": 152,
-   "h": 180,
-   "pivotX": 0.54953,
-   "pivotY": 0.42287,
-   "name": "village_buffalo"
+   "w": 306,
+   "h": 362,
+   "pivotX": 0.54921,
+   "pivotY": 0.42329,
+   "name": "village_buffalo",
+   "ppu": 1056
   },
   {
    "w": 158,
@@ -4413,11 +4432,12 @@
    "name": "village_council_hall_w"
   },
   {
-   "w": 150,
-   "h": 184,
+   "w": 300,
+   "h": 368,
    "pivotX": 0.55595,
-   "pivotY": 0.41344,
-   "name": "village_cow"
+   "pivotY": 0.41345,
+   "name": "village_cow",
+   "ppu": 1056
   },
   {
    "w": 350,
