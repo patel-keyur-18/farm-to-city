@@ -149,7 +149,7 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | AC-12 | Every ground, edge and hill sprite has at most 24 triangles. | `Game.Editor.SpriteSizeCheck` (Editor) |
 | AC-13 | Every field crop and garden crop of `content/crops.json` at all four stages, the empty bed, the planting pit and the neighbours' sugarcane is rendered at 8×. | `CropArtTests.EveryCropStageAndBedIsRenderedAt8x` |
 | AC-14 | A fodder field is drawn tall once its first cut is due, half cut from a morning's cut until 12:00, then tall again. | `CattleViewTests.Fodder_LooksCut_TillNoon` (the two cut pictures: AC-13's test) |
-| AC-15 | Every fruit tree of `content/trees.json` at all four stages, the neem, babul, village tree, the banyan and its panel picture is rendered at 8×. | `TreeArtTests.EveryTreePictureIsRenderedAt8x` |
+| AC-15 | Every fruit tree of `content/trees.json` at all four stages, the neem, babul, village tree, the banyan, its panel picture and the temple's peepal is rendered at 8×. | `TreeArtTests.EveryTreePictureIsRenderedAt8x` |
 | AC-16 | A repeated tree's size factor is the same every time for its place, within 0.92 to 1.08, and one acre's trees differ. | `TreeSizeTests.FactorIsSteadyWithinEightPercentAndMixed` |
 
 ## 9. Balancing hooks

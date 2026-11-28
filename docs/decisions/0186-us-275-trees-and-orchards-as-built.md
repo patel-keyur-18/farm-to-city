@@ -1,7 +1,7 @@
 # 0186. US-275 the trees and orchards as built
 
 - **Date:** 2026-11-28
-- **Status:** Accepted (built; the owner's review pending)
+- **Status:** Accepted (built and approved by the owner, 2026-11-28)
 - **Spec:** 032 §3.8, AC-15 and AC-16
 
 ## Context
@@ -52,9 +52,13 @@ Draw calls are unchanged. The triangles come from ragged leaf outlines in the ti
 
 ## Flagged for the owner
 
-- **The temple's peepal was missed in the plan check** (`village_peepal`, a picture of its own beside the temple). It is drawn realistic (`real_trees.peepal`, within AC-1) and added to the preview, but **is not in the game** until the owner has seen it.
+- **The temple's peepal was missed in the plan check** (`village_peepal`, a picture of its own beside the temple). It was drawn, added to the preview, and put into the game only after the owner approved it (below).
 - **The triangle growth** above.
 - The art check's memory ballast still has to be recomputed before the phase's device build (ADR 0185).
+
+## The owner's review (2026-11-28)
+
+Approved ("Looks good, proceed"), with the peepal. The peepal then went into the game: `village_peepal` at 8×, pixel-identical to the approved preview, within AC-1; added to AC-15's test (26 pictures); `SpriteSizeCheck` 0 problems; captured beside the temple (`docs/art/s30-275-temple.png`), a scripted tap opened the temple's panel, saves restored identical. The render statistics above were read before it (one more tree sprite).
 
 ## Consequences
 
