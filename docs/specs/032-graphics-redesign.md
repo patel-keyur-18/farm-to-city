@@ -151,6 +151,7 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | AC-14 | A fodder field is drawn tall once its first cut is due, half cut from a morning's cut until 12:00, then tall again. | `CattleViewTests.Fodder_LooksCut_TillNoon` (the two cut pictures: AC-13's test) |
 | AC-15 | Every fruit tree of `content/trees.json` at all four stages, the neem, babul, village tree, the banyan, its panel picture and the temple's peepal is rendered at 8×. | `TreeArtTests.EveryTreePictureIsRenderedAt8x` |
 | AC-16 | A repeated tree's size factor is the same every time for its place, within 0.92 to 1.08, and one acre's trees differ. | `TreeSizeTests.FactorIsSteadyWithinEightPercentAndMixed` |
+| AC-17 | Every person's map picture (11 kinds, front and back: standing and 4 walk frames; a work frame for the founder, hands, labourers and townspeople: 124) is rendered at 8×, and every one of the 13 portraits is there (US-276). | `PeopleArtTests.EveryPersonPictureIsRendered` (new, Sim.View.Tests) |
 
 ## 9. Balancing hooks
 
