@@ -174,7 +174,7 @@ None: no rule or number of the game changes.
 | Sprint | Stories | Points |
 | --- | --- | --- |
 | 30 | US-283 the device check (2); US-273 ground, terrain and boundaries, with the river's banks (5); US-274 crops and the kitchen garden (5); US-275 trees and orchards (4) | 16 |
-| 31 | US-276 people and portraits: new 6-head bodies, walk and work frames, portraits (13); US-277 animals, vehicles and machines (3) | 16 |
+| 31 | US-276 people and portraits: new 6-head bodies, walk and work frames, portraits (13); US-277 animals, vehicles and machines, with the neighbours' tethered cow and buffalo (3) | 16 |
 | 32 | US-278 your farm (6); US-279 businesses and stalls (6); US-280 the village and town (6); spec 033 written | 18 |
 | 33 | US-281 the map's code-drawn pictures (contact shadow, ring, lit acre, arrow, overlays) (2); US-282 effects, markers and the weather's look (3); the phase's device build; spec 033 reviewed | 5 + review |
 | 34–35 | The UI restyle (spec 033) | Sized in spec 033 |

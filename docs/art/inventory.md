@@ -330,7 +330,7 @@ Everything the game draws, from the code at `main` (`5e5a4301`) and `sprint/28-b
 | US-274 | B. Crops and the kitchen garden | 5 |
 | US-275 | C. Trees and orchards | 3 |
 | US-276 | D. People and portraits (walk and work frames) | 8 |
-| US-277 | E. Animals, vehicles and machines | 3 |
+| US-277 | E. Animals, vehicles and machines, and from H the tethered `village_cow` and `village_buffalo` (the same models) | 3 |
 | US-278 | F. Your farm: houses, sheds, stores, water | 5 |
 | US-279 | G. Your businesses and stalls | 5 |
 | US-280 | H. The village and town | 5 |
