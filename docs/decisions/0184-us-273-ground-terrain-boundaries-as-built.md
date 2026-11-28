@@ -1,6 +1,6 @@
 # 0184. US-273 the ground, terrain, boundaries, sky and river banks as built
 
-- Status: Accepted (the owner approved the before/after preview, 2026-11-28; the story awaits the owner's review)
+- Status: Accepted (the owner approved the before/after preview and then the built story, 2026-11-28)
 - Date: 2026-11-28
 - Deciders: Keyur Patel
 - Related ADRs: 0180 (the direction), 0182 (the 8× pipeline, per-sprite `ppu`), 0183 (no baked shadows)
@@ -50,6 +50,10 @@ The farm's growth comes with 13 more visible sprites (231 against 218) and is no
 - The farm view's draw calls +10.1% and triangles +14.7% against the same town with the old art (the whole map and the village shrank slightly).
 - Memory: about 299 MB projected at the end of the redesign against 320 MB (the river's frames are 27.8 MB). If US-274 to US-282 push past it, the river can drop to 8 frames or the ground to ASTC 6×6 (spec 032 §10).
 - The Editor's numbers are not the phone's: the next Development build (the phase's last) reads the frame time again (ADR 0183's 2.03% of frames over 25 ms).
+
+## The owner's review (2026-11-28)
+
+The ground in the game is approved. The farm view's growth is accepted: it is counts only (nothing in that view looks different from the approved preview). **320 MB is a target, not a hard limit**: later stories report the memory figure and don't cut art to fit it unless the device check shows trouble.
 
 ## Consequences
 

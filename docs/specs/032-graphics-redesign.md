@@ -46,7 +46,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Render resolution | **8× the game's 1× density** (until every sprite is re-rendered the manifest keeps today's 528 and gives each realistic sprite its own `ppu` 1,056, ADR 0182) (`render.py` `SCALE` 8): 1,056 px an acre (today 528). The manifest's `pixelsPerUnit` becomes 1,056; `SpriteBank` reads it, so sprites keep their size on the map. | At the new default zoom an acre is 844 phone pixels on the iPhone 13: today's 528 would be stretched 1.6× and soft. |
 | Largest sprite | `hill_2`, 2,328 × 1,628 at 8×: the import's maximum size becomes 4,096 for the hills only; everything else fits 2,048. | Measured: only one of today's 605 sprites is over 1,024 px at 4×. |
 | Compression | iOS override on every rendered sprite: ASTC 4×4 (8 bits a pixel), mipmaps on. The default platform (the Editor) stays uncompressed. | 4× the pixels at a quarter of the bytes: about today's 195 MB (260 MB with mipmaps). |
-| Memory budget | Rendered sprites at most **320 MB** on the iPhone with mipmaps, read in Xcode's memory report at the device check. | Today about 260 MB; Option B estimated about 300. |
+| Memory budget | Rendered sprites aim at **320 MB** or less on the iPhone with mipmaps, read in Xcode's memory report at the device check. A target, not a hard limit (the owner, 2026-11-28, ADR 0184): each story reports its figure. | Today about 260 MB; Option B estimated about 300. |
 
 ### 3.3 Shadows (none baked: ADR 0183)
 
