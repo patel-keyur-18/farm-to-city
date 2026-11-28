@@ -3305,11 +3305,12 @@
    "name": "pitch_empty_3"
   },
   {
-   "w": 332,
-   "h": 380,
-   "pivotX": 0.4818,
-   "pivotY": 0.25775,
-   "name": "place_banyan"
+   "w": 666,
+   "h": 762,
+   "pivotX": 0.48185,
+   "pivotY": 0.25829,
+   "name": "place_banyan",
+   "ppu": 1056
   },
   {
    "w": 338,
@@ -3854,158 +3855,180 @@
    "name": "tractor_trolley"
   },
   {
-   "w": 240,
-   "h": 286,
-   "pivotX": 0.45255,
-   "pivotY": 0.14914,
-   "name": "tree_apple_mature"
+   "w": 486,
+   "h": 574,
+   "pivotX": 0.45834,
+   "pivotY": 0.15035,
+   "name": "tree_apple_mature",
+   "ppu": 1056
   },
   {
-   "w": 280,
-   "h": 286,
-   "pivotX": 0.48475,
-   "pivotY": 0.14914,
-   "name": "tree_apple_ripe"
+   "w": 560,
+   "h": 574,
+   "pivotX": 0.48474,
+   "pivotY": 0.15035,
+   "name": "tree_apple_ripe",
+   "ppu": 1056
   },
   {
-   "w": 180,
-   "h": 238,
-   "pivotX": 0.5,
-   "pivotY": 0.26494,
-   "name": "tree_apple_sapling"
+   "w": 362,
+   "h": 478,
+   "pivotX": 0.49836,
+   "pivotY": 0.26591,
+   "name": "tree_apple_sapling",
+   "ppu": 1056
   },
   {
-   "w": 190,
-   "h": 222,
-   "pivotX": 0.45769,
+   "w": 394,
+   "h": 444,
+   "pivotX": 0.46055,
    "pivotY": 0.18148,
-   "name": "tree_apple_young"
+   "name": "tree_apple_young",
+   "ppu": 1056
   },
   {
-   "w": 224,
-   "h": 212,
-   "pivotX": 0.44738,
-   "pivotY": 0.18501,
-   "name": "tree_babul"
+   "w": 448,
+   "h": 426,
+   "pivotX": 0.44739,
+   "pivotY": 0.18647,
+   "name": "tree_babul",
+   "ppu": 1056
   },
   {
-   "w": 342,
-   "h": 322,
-   "pivotX": 0.47231,
-   "pivotY": 0.14259,
-   "name": "tree_banana_mature"
+   "w": 692,
+   "h": 652,
+   "pivotX": 0.47769,
+   "pivotY": 0.1421,
+   "name": "tree_banana_mature",
+   "ppu": 1056
   },
   {
-   "w": 342,
-   "h": 322,
-   "pivotX": 0.47231,
-   "pivotY": 0.14259,
-   "name": "tree_banana_ripe"
+   "w": 692,
+   "h": 656,
+   "pivotX": 0.47769,
+   "pivotY": 0.14783,
+   "name": "tree_banana_ripe",
+   "ppu": 1056
   },
   {
-   "w": 148,
-   "h": 156,
-   "pivotX": 0.49174,
-   "pivotY": 0.25341,
-   "name": "tree_banana_sapling"
-  },
-  {
-   "w": 248,
-   "h": 234,
-   "pivotX": 0.47483,
-   "pivotY": 0.1809,
-   "name": "tree_banana_young"
-  },
-  {
-   "w": 252,
-   "h": 288,
-   "pivotX": 0.46772,
-   "pivotY": 0.14966,
-   "name": "tree_guava_mature"
-  },
-  {
-   "w": 288,
-   "h": 288,
-   "pivotX": 0.51249,
-   "pivotY": 0.14966,
-   "name": "tree_guava_ripe"
-  },
-  {
-   "w": 180,
-   "h": 238,
-   "pivotX": 0.5,
-   "pivotY": 0.26494,
-   "name": "tree_guava_sapling"
-  },
-  {
-   "w": 200,
-   "h": 224,
-   "pivotX": 0.47129,
-   "pivotY": 0.18265,
-   "name": "tree_guava_young"
-  },
-  {
-   "w": 354,
-   "h": 430,
-   "pivotX": 0.48919,
-   "pivotY": 0.11168,
-   "name": "tree_mango_mature"
-  },
-  {
-   "w": 366,
-   "h": 430,
-   "pivotX": 0.50623,
-   "pivotY": 0.11168,
-   "name": "tree_mango_ripe"
-  },
-  {
-   "w": 180,
-   "h": 248,
-   "pivotX": 0.5,
-   "pivotY": 0.25501,
-   "name": "tree_mango_sapling"
-  },
-  {
-   "w": 246,
-   "h": 294,
-   "pivotX": 0.49035,
-   "pivotY": 0.14837,
-   "name": "tree_mango_young"
-  },
-  {
-   "w": 232,
+   "w": 308,
    "h": 312,
-   "pivotX": 0.50478,
-   "pivotY": 0.26923,
-   "name": "tree_neem"
+   "pivotX": 0.49572,
+   "pivotY": 0.25341,
+   "name": "tree_banana_sapling",
+   "ppu": 1056
   },
   {
-   "w": 278,
-   "h": 384,
-   "pivotX": 0.50014,
+   "w": 498,
+   "h": 470,
+   "pivotX": 0.47636,
+   "pivotY": 0.18071,
+   "name": "tree_banana_young",
+   "ppu": 1056
+  },
+  {
+   "w": 524,
+   "h": 576,
+   "pivotX": 0.4592,
+   "pivotY": 0.14966,
+   "name": "tree_guava_mature",
+   "ppu": 1056
+  },
+  {
+   "w": 580,
+   "h": 576,
+   "pivotX": 0.5106,
+   "pivotY": 0.14966,
+   "name": "tree_guava_ripe",
+   "ppu": 1056
+  },
+  {
+   "w": 362,
+   "h": 478,
+   "pivotX": 0.49836,
+   "pivotY": 0.26591,
+   "name": "tree_guava_sapling",
+   "ppu": 1056
+  },
+  {
+   "w": 412,
+   "h": 448,
+   "pivotX": 0.46154,
+   "pivotY": 0.18266,
+   "name": "tree_guava_young",
+   "ppu": 1056
+  },
+  {
+   "w": 728,
+   "h": 860,
+   "pivotX": 0.47583,
+   "pivotY": 0.11168,
+   "name": "tree_mango_mature",
+   "ppu": 1056
+  },
+  {
+   "w": 754,
+   "h": 860,
+   "pivotX": 0.49272,
+   "pivotY": 0.11168,
+   "name": "tree_mango_ripe",
+   "ppu": 1056
+  },
+  {
+   "w": 362,
+   "h": 498,
+   "pivotX": 0.49836,
+   "pivotY": 0.256,
+   "name": "tree_mango_sapling",
+   "ppu": 1056
+  },
+  {
+   "w": 494,
+   "h": 590,
+   "pivotX": 0.49039,
+   "pivotY": 0.14957,
+   "name": "tree_mango_young",
+   "ppu": 1056
+  },
+  {
+   "w": 474,
+   "h": 626,
+   "pivotX": 0.50748,
+   "pivotY": 0.26997,
+   "name": "tree_neem",
+   "ppu": 1056
+  },
+  {
+   "w": 558,
+   "h": 768,
+   "pivotX": 0.50013,
    "pivotY": 0.11278,
-   "name": "tree_papaya_mature"
+   "name": "tree_papaya_mature",
+   "ppu": 1056
   },
   {
-   "w": 278,
-   "h": 384,
-   "pivotX": 0.50014,
+   "w": 558,
+   "h": 768,
+   "pivotX": 0.50013,
    "pivotY": 0.11278,
-   "name": "tree_papaya_ripe"
+   "name": "tree_papaya_ripe",
+   "ppu": 1056
   },
   {
-   "w": 148,
-   "h": 182,
-   "pivotX": 0.49934,
-   "pivotY": 0.21261,
-   "name": "tree_papaya_sapling"
+   "w": 296,
+   "h": 366,
+   "pivotX": 0.49936,
+   "pivotY": 0.21419,
+   "name": "tree_papaya_sapling",
+   "ppu": 1056
   },
   {
-   "w": 208,
-   "h": 274,
-   "pivotX": 0.49984,
-   "pivotY": 0.14674,
-   "name": "tree_papaya_young"
+   "w": 418,
+   "h": 550,
+   "pivotX": 0.49985,
+   "pivotY": 0.14803,
+   "name": "tree_papaya_young",
+   "ppu": 1056
   },
   {
    "w": 296,
@@ -4142,11 +4165,12 @@
    "name": "veg_stall_s"
   },
   {
-   "w": 292,
-   "h": 334,
-   "pivotX": 0.48241,
-   "pivotY": 0.26589,
-   "name": "village_banyan"
+   "w": 584,
+   "h": 670,
+   "pivotX": 0.48242,
+   "pivotY": 0.26659,
+   "name": "village_banyan",
+   "ppu": 1056
   },
   {
    "w": 152,
@@ -4576,11 +4600,12 @@
    "name": "village_tower_e"
   },
   {
-   "w": 182,
-   "h": 238,
-   "pivotX": 0.50632,
-   "pivotY": 0.28669,
-   "name": "village_tree"
+   "w": 370,
+   "h": 478,
+   "pivotX": 0.50671,
+   "pivotY": 0.28758,
+   "name": "village_tree",
+   "ppu": 1056
   },
   {
    "w": 426,
