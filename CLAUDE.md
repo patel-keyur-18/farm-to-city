@@ -296,6 +296,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0181 | Sprint 29 independent review (Opus 5.5): no blocker; a delivered note is never sent twice, the town's name on every rebuilt time card, the switch changes slot, log and sim together, spec 032's shadow frame and test places corrected, the triangle growth found to be the Editor town's state not code |
 | 0182 | US-283 the device check as built: stand-ins per category (Development-only *Art check*, off by default), the real shadow mechanism (day light × weather `shadow`, shadows as their own sprites, `ShadowLayer`), a 271 MB ASTC ballast, ASTC 4×4 on iOS, 8× sprites with a per-sprite `ppu`, camera 3 acres across (closest 2), AC-1 amended (anchor 0.01 units, frame 5%, people 15%); shadows cost +9.6% draw calls (removed, ADR 0183) |
 | 0183 | The device check read (GPU p95 7.94 ms, main 4.43 ms, 59.3 fps, 2.03% of frames over 25 ms): the owner drops baked shadows altogether (Option A; contact ovals stay), two houses on one acre get a gap (plots ±0.24), the redesign goes on |
+| 0184 | US-273 the ground, terrain, boundaries, sky and river banks as built: seamless procedural ground in 3 variants an acre picks by hash, the river as 12 frames at 10 fps (reduced motion holds frame 0), hills at 8× (4,096), tiles imported as sprites with a coarse mesh (8 triangles, not 190), render bugs fixed (coplanar black, deep furrows, corner stone size); about 153 MB of sprites on the phone, 299 MB projected at the end |
 
 ## Current status
 

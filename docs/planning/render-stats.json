@@ -515,5 +515,8 @@
   {"label":"US-283 Village bot town, art check off","view":"farm","date":"2026-11-27","drawCalls":207,"batches":207,"setPassCalls":8,"triangles":5041,"visibleSprites":218,"spritePixels":47588,"sprites":2328},
   {"label":"US-283 Village bot town, art check ON (stand-ins, shadows)","view":"all","date":"2026-11-27","drawCalls":1453,"batches":1453,"setPassCalls":13,"triangles":40819,"visibleSprites":1804,"spritePixels":34777,"sprites":2490},
   {"label":"US-283 Village bot town, art check ON (stand-ins, shadows)","view":"village","date":"2026-11-27","drawCalls":636,"batches":636,"setPassCalls":10,"triangles":17710,"visibleSprites":752,"spritePixels":41252,"sprites":2490},
-  {"label":"US-283 Village bot town, art check ON (stand-ins, shadows)","view":"farm","date":"2026-11-27","drawCalls":216,"batches":216,"setPassCalls":8,"triangles":6197,"visibleSprites":227,"spritePixels":48183,"sprites":2490}
+  {"label":"US-283 Village bot town, art check ON (stand-ins, shadows)","view":"farm","date":"2026-11-27","drawCalls":216,"batches":216,"setPassCalls":8,"triangles":6197,"visibleSprites":227,"spritePixels":48183,"sprites":2490},
+  {"label":"US-273 ground, Village bot town, art check off","view":"all","date":"2026-11-28","drawCalls":1365,"batches":1365,"setPassCalls":13,"triangles":31568,"visibleSprites":1708,"spritePixels":34355,"sprites":2359},
+  {"label":"US-273 ground, Village bot town, art check off","view":"village","date":"2026-11-28","drawCalls":619,"batches":619,"setPassCalls":10,"triangles":13650,"visibleSprites":727,"spritePixels":40746,"sprites":2359},
+  {"label":"US-273 ground, Village bot town, art check off","view":"farm","date":"2026-11-28","drawCalls":228,"batches":228,"setPassCalls":8,"triangles":5784,"visibleSprites":231,"spritePixels":47292,"sprites":2359}
 ]

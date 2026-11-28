@@ -74,6 +74,17 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Every story | `Game.Editor.RenderStats` at all three views, growth over 10% reported (sprite pixels count too: a new column, `spritePixels`, the sum of visible sprites' screen area). |
 | The phase's build | Both p95s read again on the iPhone before the last art pull request. |
 
+### 3.6 The ground and the river (US-273, ADR 0184)
+
+| Rule | Behaviour | Why |
+| --- | --- | --- |
+| Ground texture | Seamless and procedural (no image textures): grass, earth, soil and scrub from the palette's colours through the same sun and AgX as every sprite (per-channel gains calibrated). Never two coplanar overlapping tops (Cycles renders the overlap black): patches step 0.4 mm, a road acre is built from boxes that don't overlap. | A tile must join its neighbours; the palette keeps the valley's colours. |
+| Variants | Grass, earth, soil and scrub each have 3 variants (`ground_grass`, `_1`, `_2`), the same size and pivot; an acre's variant is `GroundVariants.Pick(x, y)`, a fixed hash of its place. | A field of acres doesn't repeat like wallpaper. No sim or save state. |
+| The river | `ground_water` and `edge_water` are 12 frames each (`_0` to `_11`) played at 10 a second (`WaterFlow`); each frame leads into the next and frame 11 into 0; reduced motion holds frame 0. Presentation only: the clock is the app's. | The owner: "flowing naturally, with animation, realistic", "12 frames, 10 fps". About 28 MB of the budget. |
+| Hills | Rendered at 8× with a 4,096 px import (`hill_2` 2,318 × 1,608). | §3.2. |
+| Tile mesh | Ground, edge and hill sprites are imported as Sprites with a coarse mesh (at most 24 triangles): the tight mesh of an 8× render is about 190. | Measured: +245% triangles otherwise. |
+| Sky | A soft haze: the map's background starts as the haze colour. No sprite, no shader. | The owner's answer to gap 3. |
+
 ## 4. Data
 
 **Changed definitions** (`content/ui.json`, the map's look; not balance):
@@ -112,6 +123,9 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | AC-7 | On the iPhone 13 the device check meets §3.5's bar, or the redesign switches to Option A. | Device: the US-283 test checklist (both p95s, memory, 20 minutes of play) |
 | AC-8 | Every category's before/after preview approved before its renders go in; each story's `RenderStats` reading recorded. | Review: the story's ADR |
 | AC-9 | Goldens unchanged. | The golden replay tests |
+| AC-10 | The ground's three variants: each has the base's size and pivot and an acre's pick is steady and not striped. | `GroundVariantTests.PickIsSteadyEvenAndNotStriped`, `WaterFlowTests.EveryGroundVariantIsRenderedAtTheBaseSizeAndPivot` |
+| AC-11 | The river is 12 frames at 10 a second that loop, all at one size and pivot; reduced motion holds frame 0. | `WaterFlowTests.TheLoopIsTwelveFramesAtTenAndComesBack`, `ReducedMotionHoldsFrameZero`, `EveryWaterFrameIsRenderedAtOneSizeAndPivot` |
+| AC-12 | Every ground, edge and hill sprite has at most 24 triangles. | `Game.Editor.SpriteSizeCheck` (Editor) |
 
 ## 9. Balancing hooks
 
