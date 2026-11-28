@@ -37,6 +37,10 @@ _cspec = importlib.util.spec_from_file_location("real_crops", os.path.join(HERE,
 C = importlib.util.module_from_spec(_cspec)
 sys.modules["real_crops"] = C
 _cspec.loader.exec_module(C)
+_tspec = importlib.util.spec_from_file_location("real_trees", os.path.join(HERE, "real_trees.py"))
+T = importlib.util.module_from_spec(_tspec)
+sys.modules["real_trees"] = T
+_tspec.loader.exec_module(T)
 
 OUT = os.environ.get("FTC_ART_OUT") or os.path.join(HERE, "..", "..", "unity", "FarmToCity", "Assets", "Resources", "Art", "Blender")
 R.OUT_DIR = OUT
@@ -294,6 +298,11 @@ for _base in ("ground_water", "edge_water"):                                    
 CROP_SPRITES = C.install(R, S, clump, wheat_mats)
 SPRITES.update(CROP_SPRITES)
 
+# ---------------------------------------------------------------- the trees (US-275)
+
+TREE_SPRITES = T.install(R, S, C)
+SPRITES.update(TREE_SPRITES)
+
 
 # ---------------------------------------------------------------- main
 
@@ -308,7 +317,7 @@ def main():
     for name in names:
         sc, cam = start()
         objs = smooth_plants(S.finish(SPRITES[name]()))
-        if name in CROP_SPRITES:
+        if name in CROP_SPRITES or name in TREE_SPRITES:
             objs = C.hold_frame(name, objs, cam)
         info = R.frame_and_render(sc, cam, name, objs)
         info.update({"name": name, "ppu": PPU})
