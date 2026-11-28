@@ -106,6 +106,14 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Shade | None (ADR 0183): fallen leaves under the neem and the village tree; the basin's and the banyan's floors barely take shade. | The owner wants no shadows. |
 | Frame | Each render is held to the recorded frame and anchor. | AC-1. |
 
+### 3.9 Animals, vehicles and machines (US-277)
+
+| Rule | Behaviour | Why |
+| --- | --- | --- |
+| Pictures | 20: buffalo, cow and bullock (standing, eating, lying), the plough team, the tempo, the tractor (plain, with cultivator, with trolley), the truck and the van (front and back), and the neighbours' tethered cow and buffalo. Each keeps its frame and anchor; the game's draw scales stay (young animals 70%, machines 70%, the plough team 75%, ADR 0088). | AC-1; the owner's "every sprite keeps its world size and anchor". |
+| Someone at work | The plough and the tractor at work have a man: a ploughman behind the plough team, drawn by the game from an existing person picture (he does not fit the plough's frame: 23% over its top at people's size), and a driver rendered into `tractor_cultivator` under its canopy (it fits only at about 80% of other people's size, worked from the model, to be proven by the render). Parked machines and the screens' equipment pictures have nobody. He is a picture only: not one of your people, not tappable. His clothes and the ploughman's size are chosen at the preview. | The owner, 2026-11-28: realistic work needs somebody at it. |
+| Not now | Hiring or assigning a person to a plough or tractor (and asking you to hire first when nobody is free) is a game rule: backlog until the whole redesign is done, then its own spec (amends spec 013). | The owner, 2026-11-28: art only for now. |
+
 ## 4. Data
 
 **Changed definitions** (`content/ui.json`, the map's look; not balance):
@@ -153,6 +161,8 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | AC-16 | A repeated tree's size factor is the same every time for its place, within 0.92 to 1.08, and one acre's trees differ. | `TreeSizeTests.FactorIsSteadyWithinEightPercentAndMixed` |
 | AC-17 | Every person's map picture (11 kinds, front and back: standing and 4 walk frames; a work frame for the founder, hands, labourers and townspeople: 124) is rendered at 8×, and every one of the 15 portraits is there (US-276). | `PeopleArtTests.EveryPersonPictureIsRendered` (new, Sim.View.Tests) |
 | AC-18 | Every person picture the UI asks for (a full-body name, `people` or the founder) resolves to a portrait that is there; any other picture name is unchanged. | `PeopleArtTests.EveryUiPersonPictureIsAPortrait` (new, Sim.View.Tests) |
+| AC-20 | Every animal, vehicle and machine picture of §3.9 (20) is rendered at 8×. | `AnimalArtTests.EveryAnimalAndVehiclePictureIsRendered` (new, Sim.View.Tests) |
+| AC-21 | The plough team and the tractor with its cultivator, at work, have a man; the parked tractor and tempo have none. The ploughman is on the map's view of the plough team only (the tractor's driver is in its render, so AC-20 and the preview cover him). | `EquipmentViewTests.Map` (extended: the plough team's ploughman picture, none on parked machines) |
 | AC-19 | The story toast asks only for a picture that is there: the person's portrait, or the Chronicle's scroll if the person is gone by then. | `ChronicleViewTests.Toast_PictureIsAlwaysThere` |
 
 ## 9. Balancing hooks
