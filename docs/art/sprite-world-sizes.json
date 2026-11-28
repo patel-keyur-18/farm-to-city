@@ -452,6 +452,8 @@
 {"name": "portrait_girl", "w": 0.48485, "h": 0.48485, "px": 0.24242, "py": 0.24242},
 {"name": "portrait_hand_f", "w": 0.48485, "h": 0.48485, "px": 0.24242, "py": 0.24242},
 {"name": "portrait_hand_m", "w": 0.48485, "h": 0.48485, "px": 0.24242, "py": 0.24242},
+{"name": "portrait_labourer_f", "w": 0.48485, "h": 0.48485, "px": 0.24242, "py": 0.24242},
+{"name": "portrait_labourer_m", "w": 0.48485, "h": 0.48485, "px": 0.24242, "py": 0.24242},
 {"name": "portrait_town_f", "w": 0.48485, "h": 0.48485, "px": 0.24242, "py": 0.24242},
 {"name": "portrait_town_m", "w": 0.48485, "h": 0.48485, "px": 0.24242, "py": 0.24242},
 {"name": "pucca_house_building_e", "w": 0.50758, "h": 0.46212, "px": 0.23276, "py": 0.17273},

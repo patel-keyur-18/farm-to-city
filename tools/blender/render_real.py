@@ -305,7 +305,7 @@ def main():
         sc, cam = start()
         if name in PORTRAITS:   # a card picture: its own framing, today's 256 px, no map scale
             info = P.render_portrait(sc, cam, name, PORTRAITS[name], OUT)
-            info.update({"name": name})
+            info.update({"name": name, "ppu": data["pixelsPerUnit"]})   # today's scale, said out loud: render.py skips whatever has its own ppu
         else:
             objs = smooth_plants(S.finish(SPRITES[name]()))
             if name in CROP_SPRITES or name in TREE_SPRITES or name in PEOPLE_SPRITES:
