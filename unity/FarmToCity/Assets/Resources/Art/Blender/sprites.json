@@ -121,95 +121,108 @@
    "name": "bakery_w"
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_empty"
+   "pivotY": 0.45508,
+   "name": "bed_empty",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_coriander_g1"
+   "pivotY": 0.45508,
+   "name": "bed_garden_coriander_g1",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_coriander_g2"
+   "pivotY": 0.45508,
+   "name": "bed_garden_coriander_g2",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_coriander_g3"
+   "pivotY": 0.45508,
+   "name": "bed_garden_coriander_g3",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_coriander_ready"
+   "pivotY": 0.45508,
+   "name": "bed_garden_coriander_ready",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_radish_g1"
+   "pivotY": 0.45508,
+   "name": "bed_garden_radish_g1",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_radish_g2"
+   "pivotY": 0.45508,
+   "name": "bed_garden_radish_g2",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_radish_g3"
+   "pivotY": 0.45508,
+   "name": "bed_garden_radish_g3",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_radish_ready"
+   "pivotY": 0.45508,
+   "name": "bed_garden_radish_ready",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_spinach_g1"
+   "pivotY": 0.45508,
+   "name": "bed_garden_spinach_g1",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_spinach_g2"
+   "pivotY": 0.45508,
+   "name": "bed_garden_spinach_g2",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_spinach_g3"
+   "pivotY": 0.45508,
+   "name": "bed_garden_spinach_g3",
+   "ppu": 1056
   },
   {
-   "w": 324,
-   "h": 216,
+   "w": 650,
+   "h": 432,
    "pivotX": 0.5,
-   "pivotY": 0.45509,
-   "name": "bed_garden_spinach_ready"
+   "pivotY": 0.45508,
+   "name": "bed_garden_spinach_ready",
+   "ppu": 1056
   },
   {
    "w": 380,
@@ -413,391 +426,442 @@
    "ppu": 1056
   },
   {
-   "w": 516,
-   "h": 300,
-   "pivotX": 0.49089,
-   "pivotY": 0.45925,
-   "name": "crop_amaranth_g1"
+   "w": 1036,
+   "h": 600,
+   "pivotX": 0.49225,
+   "pivotY": 0.45926,
+   "name": "crop_amaranth_g1",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 318,
+   "w": 1066,
+   "h": 636,
    "pivotX": 0.5,
-   "pivotY": 0.46933,
-   "name": "crop_amaranth_g2"
+   "pivotY": 0.46932,
+   "name": "crop_amaranth_g2",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 330,
+   "w": 1066,
+   "h": 660,
    "pivotX": 0.5,
    "pivotY": 0.46264,
-   "name": "crop_amaranth_g3"
+   "name": "crop_amaranth_g3",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 342,
+   "w": 1066,
+   "h": 690,
    "pivotX": 0.5,
-   "pivotY": 0.44701,
-   "name": "crop_amaranth_ready"
+   "pivotY": 0.44326,
+   "name": "crop_amaranth_ready",
+   "ppu": 1056
   },
   {
-   "w": 530,
-   "h": 314,
-   "pivotX": 0.49103,
-   "pivotY": 0.46094,
-   "name": "crop_berseem_cut"
+   "w": 1062,
+   "h": 630,
+   "pivotX": 0.49105,
+   "pivotY": 0.46106,
+   "name": "crop_berseem_cut",
+   "ppu": 1056
   },
   {
-   "w": 504,
-   "h": 288,
-   "pivotX": 0.4996,
-   "pivotY": 0.47008,
-   "name": "crop_berseem_g1"
+   "w": 1016,
+   "h": 582,
+   "pivotX": 0.49864,
+   "pivotY": 0.46567,
+   "name": "crop_berseem_g1",
+   "ppu": 1056
   },
   {
-   "w": 540,
-   "h": 308,
+   "w": 1082,
+   "h": 616,
    "pivotX": 0.5,
    "pivotY": 0.48295,
-   "name": "crop_berseem_g2"
+   "name": "crop_berseem_g2",
+   "ppu": 1056
   },
   {
-   "w": 540,
-   "h": 316,
+   "w": 1082,
+   "h": 632,
    "pivotX": 0.5,
    "pivotY": 0.47577,
-   "name": "crop_berseem_g3"
+   "name": "crop_berseem_g3",
+   "ppu": 1056
   },
   {
-   "w": 540,
-   "h": 322,
+   "w": 1082,
+   "h": 646,
    "pivotX": 0.5,
-   "pivotY": 0.46721,
-   "name": "crop_berseem_ready"
+   "pivotY": 0.46731,
+   "name": "crop_berseem_ready",
+   "ppu": 1056
   },
   {
-   "w": 510,
-   "h": 298,
-   "pivotX": 0.50265,
-   "pivotY": 0.45085,
-   "name": "crop_lentils_g1"
+   "w": 1022,
+   "h": 596,
+   "pivotX": 0.50264,
+   "pivotY": 0.45086,
+   "name": "crop_lentils_g1",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 316,
+   "w": 1066,
+   "h": 632,
    "pivotX": 0.5,
    "pivotY": 0.46631,
-   "name": "crop_lentils_g2"
+   "name": "crop_lentils_g2",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 330,
+   "w": 1066,
+   "h": 662,
    "pivotX": 0.5,
-   "pivotY": 0.44978,
-   "name": "crop_lentils_g3"
+   "pivotY": 0.44993,
+   "name": "crop_lentils_g3",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 322,
+   "w": 1066,
+   "h": 646,
    "pivotX": 0.5,
-   "pivotY": 0.46109,
-   "name": "crop_lentils_ready"
+   "pivotY": 0.46122,
+   "name": "crop_lentils_ready",
+   "ppu": 1056
   },
   {
-   "w": 512,
-   "h": 296,
-   "pivotX": 0.49354,
-   "pivotY": 0.45978,
-   "name": "crop_maize_g1"
+   "w": 1038,
+   "h": 596,
+   "pivotX": 0.5003,
+   "pivotY": 0.4581,
+   "name": "crop_maize_g1",
+   "ppu": 1056
   },
   {
-   "w": 552,
-   "h": 330,
-   "pivotX": 0.48881,
-   "pivotY": 0.45217,
-   "name": "crop_maize_g2"
+   "w": 1122,
+   "h": 660,
+   "pivotX": 0.48678,
+   "pivotY": 0.45218,
+   "name": "crop_maize_g2",
+   "ppu": 1056
   },
   {
-   "w": 558,
-   "h": 362,
-   "pivotX": 0.48769,
-   "pivotY": 0.42315,
-   "name": "crop_maize_g3"
+   "w": 1126,
+   "h": 734,
+   "pivotX": 0.49189,
+   "pivotY": 0.41815,
+   "name": "crop_maize_g3",
+   "ppu": 1056
   },
   {
-   "w": 560,
-   "h": 370,
-   "pivotX": 0.49095,
-   "pivotY": 0.41403,
-   "name": "crop_maize_ready"
+   "w": 1124,
+   "h": 742,
+   "pivotX": 0.49272,
+   "pivotY": 0.41425,
+   "name": "crop_maize_ready",
+   "ppu": 1056
   },
   {
-   "w": 504,
-   "h": 288,
-   "pivotX": 0.50389,
-   "pivotY": 0.46231,
-   "name": "crop_methi_g1"
+   "w": 1012,
+   "h": 580,
+   "pivotX": 0.50287,
+   "pivotY": 0.46473,
+   "name": "crop_methi_g1",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 304,
+   "w": 1066,
+   "h": 610,
    "pivotX": 0.5,
-   "pivotY": 0.48434,
-   "name": "crop_methi_g2"
+   "pivotY": 0.48439,
+   "name": "crop_methi_g2",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 318,
-   "pivotX": 0.5,
+   "w": 1066,
+   "h": 636,
+   "pivotX": 0.49941,
    "pivotY": 0.46936,
-   "name": "crop_methi_g3"
+   "name": "crop_methi_g3",
+   "ppu": 1056
   },
   {
-   "w": 538,
-   "h": 318,
-   "pivotX": 0.50315,
-   "pivotY": 0.46865,
-   "name": "crop_methi_ready"
+   "w": 1078,
+   "h": 646,
+   "pivotX": 0.50276,
+   "pivotY": 0.46177,
+   "name": "crop_methi_ready",
+   "ppu": 1056
   },
   {
-   "w": 520,
-   "h": 292,
-   "pivotX": 0.49882,
-   "pivotY": 0.46364,
-   "name": "crop_mustard_g1"
+   "w": 1050,
+   "h": 586,
+   "pivotX": 0.49614,
+   "pivotY": 0.46475,
+   "name": "crop_mustard_g1",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 338,
+   "w": 1066,
+   "h": 678,
    "pivotX": 0.5,
-   "pivotY": 0.44099,
-   "name": "crop_mustard_g2"
+   "pivotY": 0.44035,
+   "name": "crop_mustard_g2",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 356,
+   "w": 1066,
+   "h": 720,
    "pivotX": 0.5,
-   "pivotY": 0.43128,
-   "name": "crop_mustard_g3"
+   "pivotY": 0.42681,
+   "name": "crop_mustard_g3",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 362,
+   "w": 1066,
+   "h": 726,
    "pivotX": 0.5,
-   "pivotY": 0.42281,
-   "name": "crop_mustard_ready"
+   "pivotY": 0.42302,
+   "name": "crop_mustard_ready",
+   "ppu": 1056
   },
   {
-   "w": 508,
-   "h": 292,
-   "pivotX": 0.50252,
-   "pivotY": 0.46402,
-   "name": "crop_okra_g1"
+   "w": 1020,
+   "h": 590,
+   "pivotX": 0.50114,
+   "pivotY": 0.46896,
+   "name": "crop_okra_g1",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 324,
+   "w": 1066,
+   "h": 650,
    "pivotX": 0.5,
-   "pivotY": 0.46012,
-   "name": "crop_okra_g2"
+   "pivotY": 0.46025,
+   "name": "crop_okra_g2",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 340,
+   "w": 1066,
+   "h": 688,
    "pivotX": 0.5,
-   "pivotY": 0.44894,
-   "name": "crop_okra_g3"
+   "pivotY": 0.4448,
+   "name": "crop_okra_g3",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 356,
-   "pivotX": 0.49951,
+   "w": 1072,
+   "h": 712,
+   "pivotX": 0.49614,
    "pivotY": 0.43097,
-   "name": "crop_okra_ready"
+   "name": "crop_okra_ready",
+   "ppu": 1056
   },
   {
-   "w": 510,
-   "h": 296,
+   "w": 1022,
+   "h": 596,
    "pivotX": 0.50107,
-   "pivotY": 0.46458,
-   "name": "crop_peas_g1"
+   "pivotY": 0.46677,
+   "name": "crop_peas_g1",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 310,
+   "w": 1066,
+   "h": 620,
    "pivotX": 0.5,
-   "pivotY": 0.474,
-   "name": "crop_peas_g2"
+   "pivotY": 0.47401,
+   "name": "crop_peas_g2",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 318,
+   "w": 1066,
+   "h": 638,
    "pivotX": 0.5,
-   "pivotY": 0.46686,
-   "name": "crop_peas_g3"
+   "pivotY": 0.46664,
+   "name": "crop_peas_g3",
+   "ppu": 1056
   },
   {
-   "w": 532,
-   "h": 326,
-   "pivotX": 0.5,
+   "w": 1076,
+   "h": 652,
+   "pivotX": 0.505,
    "pivotY": 0.45514,
-   "name": "crop_peas_ready"
+   "name": "crop_peas_ready",
+   "ppu": 1056
   },
   {
-   "w": 534,
-   "h": 312,
+   "w": 1068,
+   "h": 634,
    "pivotX": 0.5,
-   "pivotY": 0.48522,
-   "name": "crop_potato_g1"
+   "pivotY": 0.47773,
+   "name": "crop_potato_g1",
+   "ppu": 1056
   },
   {
-   "w": 534,
-   "h": 318,
+   "w": 1068,
+   "h": 636,
    "pivotX": 0.5,
-   "pivotY": 0.47478,
-   "name": "crop_potato_g2"
+   "pivotY": 0.47479,
+   "name": "crop_potato_g2",
+   "ppu": 1056
   },
   {
-   "w": 534,
-   "h": 324,
+   "w": 1068,
+   "h": 650,
    "pivotX": 0.5,
-   "pivotY": 0.46639,
-   "name": "crop_potato_g3"
+   "pivotY": 0.46513,
+   "name": "crop_potato_g3",
+   "ppu": 1056
   },
   {
-   "w": 534,
-   "h": 320,
+   "w": 1068,
+   "h": 646,
    "pivotX": 0.5,
-   "pivotY": 0.47286,
-   "name": "crop_potato_ready"
+   "pivotY": 0.46997,
+   "name": "crop_potato_ready",
+   "ppu": 1056
   },
   {
-   "w": 510,
-   "h": 292,
-   "pivotX": 0.50374,
+   "w": 1024,
+   "h": 584,
+   "pivotX": 0.50226,
    "pivotY": 0.46225,
-   "name": "crop_radish_g1"
+   "name": "crop_radish_g1",
+   "ppu": 1056
   },
   {
-   "w": 522,
-   "h": 302,
-   "pivotX": 0.50321,
-   "pivotY": 0.44633,
-   "name": "crop_radish_g2"
+   "w": 1046,
+   "h": 606,
+   "pivotX": 0.50252,
+   "pivotY": 0.44651,
+   "name": "crop_radish_g2",
+   "ppu": 1056
   },
   {
-   "w": 530,
-   "h": 308,
-   "pivotX": 0.50261,
+   "w": 1070,
+   "h": 616,
+   "pivotX": 0.4995,
    "pivotY": 0.43665,
-   "name": "crop_radish_g3"
+   "name": "crop_radish_g3",
+   "ppu": 1056
   },
   {
-   "w": 540,
-   "h": 326,
+   "w": 1082,
+   "h": 652,
    "pivotX": 0.50277,
    "pivotY": 0.43,
-   "name": "crop_radish_ready"
+   "name": "crop_radish_ready",
+   "ppu": 1056
   },
   {
-   "w": 578,
-   "h": 324,
+   "w": 1158,
+   "h": 650,
    "pivotX": 0.5,
-   "pivotY": 0.49202,
-   "name": "crop_rice_g1"
+   "pivotY": 0.49157,
+   "name": "crop_rice_g1",
+   "ppu": 1056
   },
   {
-   "w": 578,
-   "h": 332,
+   "w": 1158,
+   "h": 684,
    "pivotX": 0.5,
-   "pivotY": 0.48156,
-   "name": "crop_rice_g2"
+   "pivotY": 0.46782,
+   "name": "crop_rice_g2",
+   "ppu": 1056
   },
   {
-   "w": 578,
-   "h": 352,
+   "w": 1158,
+   "h": 706,
    "pivotX": 0.5,
-   "pivotY": 0.45417,
-   "name": "crop_rice_g3"
+   "pivotY": 0.4543,
+   "name": "crop_rice_g3",
+   "ppu": 1056
   },
   {
-   "w": 578,
-   "h": 352,
+   "w": 1158,
+   "h": 706,
    "pivotX": 0.5,
-   "pivotY": 0.45439,
-   "name": "crop_rice_ready"
+   "pivotY": 0.45452,
+   "name": "crop_rice_ready",
+   "ppu": 1056
   },
   {
-   "w": 540,
-   "h": 356,
-   "pivotX": 0.48029,
+   "w": 1082,
+   "h": 712,
+   "pivotX": 0.48033,
    "pivotY": 0.40785,
-   "name": "crop_sorghum_cut"
+   "name": "crop_sorghum_cut",
+   "ppu": 1056
   },
   {
-   "w": 500,
-   "h": 298,
-   "pivotX": 0.49661,
-   "pivotY": 0.46289,
-   "name": "crop_sorghum_g1"
-  },
-  {
-   "w": 554,
-   "h": 334,
-   "pivotX": 0.48745,
-   "pivotY": 0.44762,
-   "name": "crop_sorghum_g2"
-  },
-  {
-   "w": 548,
-   "h": 358,
-   "pivotX": 0.50298,
-   "pivotY": 0.42816,
-   "name": "crop_sorghum_g3"
-  },
-  {
-   "w": 560,
-   "h": 366,
-   "pivotX": 0.48861,
-   "pivotY": 0.41934,
-   "name": "crop_sorghum_ready"
-  },
-  {
-   "w": 594,
-   "h": 400,
-   "pivotX": 0.49454,
-   "pivotY": 0.38389,
-   "name": "crop_sugarcane_g2"
-  },
-  {
-   "w": 1026,
+   "w": 1008,
    "h": 598,
-   "pivotX": 0.49992,
-   "pivotY": 0.46073,
+   "pivotX": 0.49497,
+   "pivotY": 0.46443,
+   "name": "crop_sorghum_g1",
+   "ppu": 1056
+  },
+  {
+   "w": 1112,
+   "h": 670,
+   "pivotX": 0.48855,
+   "pivotY": 0.44777,
+   "name": "crop_sorghum_g2",
+   "ppu": 1056
+  },
+  {
+   "w": 1122,
+   "h": 716,
+   "pivotX": 0.50495,
+   "pivotY": 0.42817,
+   "name": "crop_sorghum_g3",
+   "ppu": 1056
+  },
+  {
+   "w": 1136,
+   "h": 732,
+   "pivotX": 0.49551,
+   "pivotY": 0.41934,
+   "name": "crop_sorghum_ready",
+   "ppu": 1056
+  },
+  {
+   "w": 1194,
+   "h": 802,
+   "pivotX": 0.49578,
+   "pivotY": 0.38418,
+   "name": "crop_sugarcane_g2",
+   "ppu": 1056
+  },
+  {
+   "w": 1010,
+   "h": 604,
+   "pivotX": 0.50134,
+   "pivotY": 0.44944,
    "name": "crop_wheat_g1",
    "ppu": 1056
   },
   {
-   "w": 1090,
-   "h": 670,
+   "w": 1066,
+   "h": 656,
    "pivotX": 0.5,
-   "pivotY": 0.45173,
+   "pivotY": 0.45623,
    "name": "crop_wheat_g2",
    "ppu": 1056
   },
   {
-   "w": 1090,
-   "h": 704,
+   "w": 1066,
+   "h": 722,
    "pivotX": 0.5,
-   "pivotY": 0.43845,
+   "pivotY": 0.42551,
    "name": "crop_wheat_g3",
    "ppu": 1056
   },
   {
-   "w": 1096,
-   "h": 730,
-   "pivotX": 0.50271,
-   "pivotY": 0.42356,
+   "w": 1084,
+   "h": 732,
+   "pivotX": 0.50568,
+   "pivotY": 0.41851,
    "name": "crop_wheat_ready",
    "ppu": 1056
   },
@@ -3944,11 +4008,12 @@
    "name": "tree_papaya_young"
   },
   {
-   "w": 148,
-   "h": 112,
-   "pivotX": 0.50231,
-   "pivotY": 0.47538,
-   "name": "tree_pit"
+   "w": 296,
+   "h": 224,
+   "pivotX": 0.50232,
+   "pivotY": 0.47539,
+   "name": "tree_pit",
+   "ppu": 1056
   },
   {
    "w": 310,
