@@ -4,11 +4,11 @@ using UnityEngine;
 namespace Game.Presentation.Art
 {
     /// <summary>
-    /// The device check's stand-ins (US-283, spec 032 §3.5, ADR 0182). Only the family house, the wheat acre and the hand and his wife are rendered
-    /// realistic so far, so on the phone the check swaps them in for every sprite of their category, to read the frame time and memory the whole
-    /// redesign would cost: every house sprite draws the realistic family house, every crop the wheat of its stage, every person the hand or his wife. A load of dummy ASTC textures brings sprite
-    /// memory to the redesign's computed size. <b>Development builds and the Editor only; off unless the developer panel's switch is on</b> (it
-    /// takes effect on the next launch). Release builds compile it to nothing.
+    /// The device check's stand-ins (US-283, spec 032 §3.5, ADR 0182). While a category isn't re-rendered yet, the check on the phone swaps a realistic
+    /// sprite in for every one of its sprites, to read the frame time and memory the whole redesign would cost: every house sprite draws the realistic
+    /// family house and every person the hand or his wife (the crops are all rendered since US-274 and stand for themselves, ADR 0185). A load of dummy
+    /// ASTC textures brings sprite memory up to the redesign's computed size. <b>Development builds and the Editor only; off unless the developer panel's
+    /// switch is on</b> (it takes effect on the next launch). Release builds compile it to nothing.
     /// </summary>
     public static class ArtCheck
     {
@@ -37,12 +37,6 @@ namespace Game.Presentation.Art
                 int n = name.Length;
                 char f = name[n - 1];
                 return n > 2 && name[n - 2] == '_' && (f == 's' || f == 'e' || f == 'n' || f == 'w') ? "family_house_" + f : name; // every facing, the done house
-            }
-            if (name.StartsWith("crop_", System.StringComparison.Ordinal))
-            {
-                string stage = name.Substring(name.LastIndexOf('_') + 1);
-                if (stage == "g1" || stage == "g2" || stage == "g3" || stage == "ready") return "crop_wheat_" + stage;
-                return stage == "cut" ? "crop_wheat_ready" : name;
             }
             if (name.StartsWith("person_", System.StringComparison.Ordinal))
             {
