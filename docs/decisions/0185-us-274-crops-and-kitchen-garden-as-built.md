@@ -55,7 +55,11 @@ The triangles are the crops' tight sprite meshes following a leafier outline: cr
 
 ## The owner's review (2026-11-28)
 
-Approved, on the condition that the game matches the approved preview. The one difference is the fodder-cut state (flagged above): the preview showed it and the game does not draw it. It is to be drawn on the map, a presentation change only; its display rule is the owner's to choose.
+Approved, on the condition that the game matches the approved preview. The one difference is the fodder-cut state (flagged above): the preview showed it and the game does not draw it. The owner chose **half cut from the 6:00 cut until noon** (over two hours, all day, or leaving it out).
+
+- Built: `TileVm.FodderCut` and `MapView.FodderCutUntilHour` (12), `SpriteBank.Crop(…, fodderCut)`. Once the first cut is due the field is drawn tall (before this, its picture followed the whole stand's progress, which would have shown seedlings after a cut). No sim, save or content change.
+- A "real cut" is a morning pass after the first cut is due, in a cut season, today.
+- Tested: spec 032 AC-14; in the Editor a berseem field sown in the Village bot town and moved to the next day: half cut at 7:00 (`docs/art/s30-274-fodder-cut.png`), tall at 12:01, a scripted tap opened its panel, saves restored identical.
 
 ## Consequences
 

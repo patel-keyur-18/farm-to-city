@@ -451,7 +451,7 @@ namespace Game.Presentation.Map
                 _signs[tv.Id].color = _tint;
 
                 Spot crop = _crops[tv.Id];
-                Sprite cs = tv.CropId != null ? SpriteBank.Crop(tv.CropId, tv.Stage) : tv.NeighbourCrop != null ? SpriteBank.Crop(tv.NeighbourCrop, CropStage.Growing2) : null;
+                Sprite cs = tv.CropId != null ? SpriteBank.Crop(tv.CropId, tv.Stage, tv.FodderCut) : tv.NeighbourCrop != null ? SpriteBank.Crop(tv.NeighbourCrop, CropStage.Growing2) : null;
                 Apply(crop.Renderer, crop, cs, (tv.CropId ?? "n" + tv.NeighbourCrop) + ":" + tv.Stage, animate);
                 crop.Renderer.color = _tint;
                 Sprite ms = tv.Stage == CropStage.Ready ? SpriteBank.MarkerReady : tv.Stage == CropStage.Spoiling ? SpriteBank.MarkerSpoiling

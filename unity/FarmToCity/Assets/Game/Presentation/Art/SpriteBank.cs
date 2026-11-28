@@ -111,7 +111,10 @@ namespace Game.Presentation.Art
         }
 
         /// <summary>A field's crop across the whole acre.</summary>
-        public static Sprite Crop(string cropId, CropStage stage) { return Rendered("crop_" + cropId + "_" + StageName(stage)); }
+        public static Sprite Crop(string cropId, CropStage stage, bool fodderCut = false)
+        {
+            return Rendered("crop_" + cropId + "_" + (fodderCut ? "cut" : StageName(stage)));
+        }
 
         public static Sprite Bed(string gardenCropId, CropStage stage)
         {

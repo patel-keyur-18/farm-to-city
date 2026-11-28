@@ -34,6 +34,7 @@ namespace Sim.View.Tests
             Dictionary<string, double> ppu = PpuByName();
             var wanted = new List<string> { "bed_empty", "tree_pit", "crop_sugarcane_g2" };
             foreach (string id in Ids("crops")) wanted.AddRange(Stages.Select(s => "crop_" + id + "_" + s));
+            wanted.AddRange(new[] { "crop_berseem_cut", "crop_sorghum_cut" });
             foreach (string id in Ids("gardenCrops")) wanted.AddRange(Stages.Select(s => "bed_" + id + "_" + s));
             Assert.That(wanted.Count, Is.GreaterThan(60));
             Assert.That(wanted.Where(n => !ppu.ContainsKey(n)), Is.Empty, "rendered");

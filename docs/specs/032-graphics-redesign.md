@@ -94,6 +94,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Paddy | Still water. | The owner: real paddy water barely moves; no memory. |
 | Beds | The same plank bed, 5 × 5 plants. | The owner: easy to find and tap. |
 | Frame | Each render is held to the recorded frame and anchor. | AC-1. |
+| Fodder cut | Once a fodder field's first cut is due it is drawn tall, whatever its stand's progress. After a morning's real cut it is drawn half cut (`crop_berseem_cut`, `crop_sorghum_cut`) until 12:00. A picture only: nothing in the sim changes. | The owner, 2026-11-28: you see the morning's cut, and the field doesn't look half empty all day. |
 
 ## 4. Data
 
@@ -137,6 +138,7 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | AC-11 | The river is 12 frames at 10 a second that loop, all at one size and pivot; reduced motion holds frame 0. | `WaterFlowTests.TheLoopIsTwelveFramesAtTenAndComesBack`, `ReducedMotionHoldsFrameZero`, `EveryWaterFrameIsRenderedAtOneSizeAndPivot` |
 | AC-12 | Every ground, edge and hill sprite has at most 24 triangles. | `Game.Editor.SpriteSizeCheck` (Editor) |
 | AC-13 | Every field crop and garden crop of `content/crops.json` at all four stages, the empty bed, the planting pit and the neighbours' sugarcane is rendered at 8×. | `CropArtTests.EveryCropStageAndBedIsRenderedAt8x` |
+| AC-14 | A fodder field is drawn tall once its first cut is due, half cut from a morning's cut until 12:00, then tall again. | `CattleViewTests.Fodder_LooksCut_TillNoon` (the two cut pictures: AC-13's test) |
 
 ## 9. Balancing hooks
 

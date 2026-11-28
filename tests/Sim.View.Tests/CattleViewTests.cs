@@ -2,6 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using Sim.Core;
 using Sim.Core.Commands;
+using Sim.Core.Farm;
 using Sim.View.Views;
 
 namespace Sim.View.Tests
@@ -19,6 +20,32 @@ namespace Sim.View.Tests
                 new Sim.Core.Finance.Posting(Sim.Core.Finance.Account.OpeningEquity, -10_00_000_00));
             ctx = ViewKit2.Context(sim);
             return sim;
+        }
+
+        // Spec 032 §3.7 (AC-14): a fodder field looks cut from the 6:00 cut till noon, then stands tall again.
+        [Test]
+        public void Fodder_LooksCut_TillNoon()
+        {
+            Simulation sim = Hamlet(out ViewContext ctx);
+            long winter = 3 * sim.Clock.SecondsPerSeason;
+            sim.AdvanceTo(winter + 9 * 3600L);
+            sim.Execute(new Sow(sim.State.Clock.SimTime, 84, "berseem", SeedSource.Certified, "none"));
+            Assert.That(sim.State.Farm.CropOn(84), Is.Not.Null);
+
+            TileVm At(long time)
+            {
+                sim.AdvanceTo(time);
+                return MapView.Build(ctx).Tiles.Single(t => t.Id == 84);
+            }
+
+            Assert.That(At(winter + 14 * 3600L).FodderCut, Is.False, "before its first cut is due");
+            TileVm due = At(winter + 16 * 3600L);
+            Assert.That((due.FodderCut, due.Stage), Is.EqualTo((false, CropStage.Growing3)), "ready to cut, tall, not cut yet");
+            long morning = winter + 24 * 3600L;
+            Assert.That(At(morning + 6 * 3600L + 60).FodderCut, Is.True, "the morning's cut");
+            Assert.That(At(morning + 12 * 3600L - 60).FodderCut, Is.True);
+            TileVm noon = At(morning + 12 * 3600L);
+            Assert.That((noon.FodderCut, noon.Stage), Is.EqualTo((false, CropStage.Growing3)), "tall again from noon, never back to seedlings");
         }
 
         /// <summary>Every row with a number has a Why? that builds (ADR 0043 §2).</summary>
