@@ -78,7 +78,7 @@ namespace Sim.View.Views
         /// <summary>Zoomed in all the way: the closest zoom, 2 acres across the screen (spec 032 §3.4, <c>ui.json</c> camera).</summary>
         public float MinHalfHeight { get; private set; }
 
-        /// <summary>The view a town opens at and the home button returns to: 3 acres across the screen (spec 032 §3.4), within the zoom limits.</summary>
+        /// <summary>The view a new town (or one with no saved camera) opens at: 3 acres across the screen (spec 032 §3.4), within the zoom limits.</summary>
         public float DefaultHalfHeight { get { return Math.Max(MinHalfHeight, Math.Min(MaxHalfHeight, _defaultHalfHeight)); } }
 
         private readonly float _defaultHalfHeight;

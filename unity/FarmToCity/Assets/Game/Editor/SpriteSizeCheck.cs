@@ -7,11 +7,11 @@ using UnityEngine;
 namespace Game.Editor
 {
     /// <summary>
-    /// Spec 032 AC-1 (as amended by ADR 0182): every rendered sprite other than a shadow keeps its world size and its anchor. <c>docs/art/sprite-world-sizes.json</c>
+    /// Spec 032 AC-1 (as amended by ADR 0182): every rendered sprite keeps its world size and its anchor. <c>docs/art/sprite-world-sizes.json</c>
     /// records each sprite's frame (width, height) and its pivot's distance from the frame's left and bottom edges in world units, as of Sprint 29 (528 px a unit).
     /// The anchor is judged by where it stands against the frame's middle (across) and its bottom edge (up): within <see cref="AnchorUnits"/> world units. The frame is
     /// judged within <see cref="FrameTolerance"/> (<see cref="PeopleFrameTolerance"/> for people: new, slimmer bodies). <see cref="Report"/>
-    /// reads <c>sprites.json</c> (each sprite's own <c>ppu</c>, else the manifest's) and lists the sprites that moved more: it must be empty. Also, spec 032 AC-10: every tile's sprite has at most <see cref="MaxTileTriangles"/> triangles. Run from the Editor with <c>unity command eval "return Game.Editor.SpriteSizeCheck.Report();"</c>.
+    /// reads <c>sprites.json</c> (each sprite's own <c>ppu</c>, else the manifest's) and lists the sprites that moved more: it must be empty. Also, spec 032 AC-12: every tile's sprite has at most <see cref="MaxTileTriangles"/> triangles. Run from the Editor with <c>unity command eval "return Game.Editor.SpriteSizeCheck.Report();"</c>.
     /// </summary>
     public static class SpriteSizeCheck
     {
@@ -42,7 +42,6 @@ namespace Game.Editor
             var seen = new HashSet<string>();
             foreach (Info s in manifest.sprites)
             {
-                if (s.name.EndsWith("_shadow", StringComparison.Ordinal)) continue; // a shadow has its own frame (spec 032 §3.3)
                 seen.Add(s.name);
                 if (!recorded.TryGetValue(s.name, out Row rec) && !recorded.TryGetValue(BaseOf(s.name), out rec)) { problems.Add(s.name + ": not in the recorded table"); continue; } // a variant or a frame (ground_grass_1, ground_water_7) stands for its base
                 double ppu = s.ppu > 0 ? s.ppu : manifest.pixelsPerUnit;
@@ -53,7 +52,7 @@ namespace Game.Editor
                 if (d.Length > 0) problems.Add(s.name + ":" + d);
             }
             foreach (Row r in table.sprites) if (!seen.Contains(r.name)) problems.Add(r.name + ": in the table but not rendered");
-            foreach (Info s in manifest.sprites) // a tile's sprite has a coarse mesh (spec 032 AC-10: the tight mesh of an 8x render was about 190 triangles a tile)
+            foreach (Info s in manifest.sprites) // a tile's sprite has a coarse mesh (spec 032 AC-12: the tight mesh of an 8x render was about 190 triangles a tile)
             {
                 if (!BlenderSpriteImport.IsTile(s.name)) continue;
                 Sprite sprite = Resources.Load<Sprite>("Art/Blender/" + s.name);

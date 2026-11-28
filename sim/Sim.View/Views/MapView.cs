@@ -1206,10 +1206,10 @@ namespace Sim.View.Views
 
         private static float Clamp01(float v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
 
-        /// <summary>Under a third, under two thirds, beyond (spec 008 §3.4).</summary>
         /// <summary>The hour a cut fodder field looks tall again (owner, 2026-11-28).</summary>
         public const int FodderCutUntilHour = 12;
 
+        /// <summary>Under a third, under two thirds, beyond (spec 008 §3.4).</summary>
         public static CropStage GrowingStage(float progress)
         {
             return progress < 1f / 3f ? CropStage.Growing1 : progress < 2f / 3f ? CropStage.Growing2 : CropStage.Growing3;

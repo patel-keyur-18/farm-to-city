@@ -10,14 +10,15 @@ namespace Sim.View.Tests
     /// <summary>The flowing river and the ground's variants (US-273, ADR 0184): the loop, and that every rendered frame and variant exists at one size.</summary>
     public class WaterFlowTests
     {
-        private sealed record Entry(string Name, int W, int H, double PivotX, double PivotY);
+        private sealed record Entry(string Name, int W, int H, double PivotX, double PivotY, double Ppu);
 
         private static Entry[] Manifest()
         {
             string path = Path.Combine(ViewKit.RepoRoot, "unity", "FarmToCity", "Assets", "Resources", "Art", "Blender", "sprites.json");
             using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(path));
             return doc.RootElement.GetProperty("sprites").EnumerateArray()
-                .Select(e => new Entry(e.GetProperty("name").GetString(), e.GetProperty("w").GetInt32(), e.GetProperty("h").GetInt32(), e.GetProperty("pivotX").GetDouble(), e.GetProperty("pivotY").GetDouble()))
+                .Select(e => new Entry(e.GetProperty("name").GetString(), e.GetProperty("w").GetInt32(), e.GetProperty("h").GetInt32(), e.GetProperty("pivotX").GetDouble(), e.GetProperty("pivotY").GetDouble(),
+                    e.TryGetProperty("ppu", out JsonElement p) ? p.GetDouble() : 0))
                 .ToArray();
         }
 
@@ -55,7 +56,7 @@ namespace Sim.View.Tests
             {
                 Entry[] frames = Enumerable.Range(0, WaterFlow.Frames).Select(i => all.SingleOrDefault(e => e.Name == prefix + "_" + i)).ToArray();
                 Assert.That(frames, Has.None.Null, prefix + " has all " + WaterFlow.Frames + " frames");
-                Assert.That(frames.Select(f => (f.W, f.H)).Distinct().Count(), Is.EqualTo(1), prefix + " frames share one size");
+                Assert.That(frames.Select(f => (f.W, f.H, f.Ppu)).Distinct().Count(), Is.EqualTo(1), prefix + " frames share one size and scale");
                 Assert.That(frames.Select(f => (Math.Round(f.PivotX, 4), Math.Round(f.PivotY, 4))).Distinct().Count(), Is.EqualTo(1), prefix + " frames share one pivot");
             }
         }

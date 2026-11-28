@@ -22,7 +22,7 @@ namespace Game.Editor
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.wrapMode = UnityEngine.TextureWrapMode.Clamp;
             if (tile) SetTileSprite(importer);
-            int max = System.IO.Path.GetFileName(assetPath).StartsWith("hill_", System.StringComparison.Ordinal) ? 4096 : 2048; // hill_2 is 2,328 px wide at 8x (spec 032 §3.2)
+            int max = System.IO.Path.GetFileName(assetPath).StartsWith("hill_", System.StringComparison.Ordinal) ? 4096 : 2048; // hill_2 is 2,318 px wide at 8x (spec 032 §3.2)
             importer.maxTextureSize = max;
             importer.SetPlatformTextureSettings(new TextureImporterPlatformSettings
             {

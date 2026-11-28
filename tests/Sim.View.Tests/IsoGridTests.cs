@@ -14,7 +14,7 @@ namespace Sim.View.Tests
         /// <summary>The acres a view shows across the screen: its width in world units over one tile's width (one acre, 2 × the half width).</summary>
         private static float AcresAcross(IsoGrid g, float halfHeight, float aspect) { return halfHeight * 2f * aspect / (g.HalfWidth * 2f); }
 
-        // AC-4: the view opens 3 acres across (and so does the home button), the closest zoom is 2 acres across, the farthest is unchanged.
+        // AC-4: the default view is 3 acres across, the closest zoom is 2 acres across, the farthest is unchanged.
         [Test]
         public void DefaultAndClosestZoom()
         {
@@ -25,9 +25,10 @@ namespace Sim.View.Tests
             Assert.That(AcresAcross(g, cam.DefaultHalfHeight, Aspect), Is.EqualTo(3f).Within(1e-3f), "default: 3 acres across");
             Assert.That(AcresAcross(g, cam.MinHalfHeight, Aspect), Is.EqualTo(2f).Within(1e-3f), "closest: 2 acres across");
             float farthest = new MapCamera(g, Aspect).MaxHalfHeight;
-            Assert.That(cam.MaxHalfHeight, Is.EqualTo(farthest), "farthest: the whole map, as before");
+            Assert.That(cam.MaxHalfHeight, Is.EqualTo(farthest), "the closest and default views don't move the farthest");
+            Assert.That(farthest, Is.EqualTo(3.80625f).Within(1e-3f), "farthest: the whole map, as before");
             cam.Focus(4, 3, cam.DefaultHalfHeight);
-            Assert.That(cam.HalfHeight, Is.EqualTo(cam.DefaultHalfHeight).Within(1e-5f), "the home view opens at the default");
+            Assert.That(cam.HalfHeight, Is.EqualTo(cam.DefaultHalfHeight).Within(1e-5f), "a view focused on the yard opens at the default");
 
             cam.Zoom(0.001f, cam.CentreX, cam.CentreY);
             Assert.That(cam.HalfHeight, Is.EqualTo(cam.MinHalfHeight), "pinch in stops at 2 acres");
