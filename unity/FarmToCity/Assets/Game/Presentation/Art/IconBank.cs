@@ -23,6 +23,7 @@ namespace Game.Presentation.Art
         /// <summary>A good's icon: produce by its id, seeds and saplings by kind, the inputs by name.</summary>
         public static Sprite Good(string goodId)
         {
+            goodId = Sim.View.Views.PersonPictures.InUi(goodId); // a person is shown by their portrait (spec 032 §3.1)
             if (goodId.StartsWith("weather_", System.StringComparison.Ordinal)) return Weather(goodId.Substring(8));
             if (goodId == "coin") return Coin;
             if (goodId == "basket") return Basket;
@@ -46,7 +47,6 @@ namespace Game.Presentation.Art
             if (goodId == "place_halwai") return SpriteBank.Rendered("sweet_shop_s") ?? Basket; // the town's halwai, off the map (spec 017)
             if (goodId.StartsWith("place_", System.StringComparison.Ordinal)) return SpriteBank.Rendered(goodId) ?? Basket; // the village's grocer and tea stall
             if (goodId.StartsWith("portrait_", System.StringComparison.Ordinal)) return SpriteBank.Rendered(goodId) ?? Basket;
-            if (goodId.StartsWith("person_", System.StringComparison.Ordinal)) return SpriteBank.Rendered(goodId + "_front") ?? Basket;
             if (goodId.StartsWith("seed_", System.StringComparison.Ordinal)) return SpriteBank.Rendered("icon_seed");
             if (goodId.StartsWith("sapling_", System.StringComparison.Ordinal)) return SpriteBank.Rendered("icon_sapling");
             if (goodId == "fertiliser_chemical") return SpriteBank.Rendered("icon_fertiliser");

@@ -219,16 +219,17 @@ namespace Game.Presentation.Ui
             _people.style.borderBottomWidth = 10;
             _people.style.alignItems = Align.Center;
             _people.style.justifyContent = Justify.Center;
-            Sprite face = SpriteBank.Rendered("person_hand_m_front");
+            Sprite face = SpriteBank.Rendered(Sim.View.Views.PersonPictures.InUi("person_hand_m"));
             if (face != null)
             {
-                VisualElement pic = UiKit.Icon(face, 104);
+                VisualElement pic = UiKit.Icon(face, 96);
                 pic.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+                pic.style.marginTop = -18; // room for the word under the portrait, as the Orders bag has
                 _people.Add(pic);
             }
             Label word = UiKit.Text(strings.Get("hud.people"), 26, UiKit.Ink, UiKit.Heading);
             word.style.position = Position.Absolute;
-            word.style.bottom = -6;
+            word.style.bottom = -6; // on the same line as Orders and Menu; the lifted portrait leaves it clear (the owner, 2026-11-28)
             _people.Add(word);
             _badge = new VisualElement { pickingMode = PickingMode.Ignore };
             _badge.style.position = Position.Absolute;

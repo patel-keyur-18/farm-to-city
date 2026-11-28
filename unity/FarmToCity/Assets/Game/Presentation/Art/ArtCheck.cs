@@ -6,7 +6,7 @@ namespace Game.Presentation.Art
     /// <summary>
     /// The device check's stand-ins (US-283, spec 032 §3.5, ADR 0182). While a category isn't re-rendered yet, the check on the phone swaps a realistic
     /// sprite in for every one of its sprites, to read the frame time and memory the whole redesign would cost: every house sprite draws the realistic
-    /// family house and every person the hand or his wife (the crops since US-274 and the trees since US-275 are rendered and stand for themselves, ADR 0185 and 0186). A load of dummy
+    /// family house (the crops since US-274, the trees since US-275 and the people since US-276 are rendered and stand for themselves, ADR 0185, 0186 and 0188). A load of dummy
     /// ASTC textures brings sprite memory up to the redesign's computed size. <b>Development builds and the Editor only; off unless the developer panel's
     /// switch is on</b> (it takes effect on the next launch). Release builds compile it to nothing.
     /// </summary>
@@ -24,9 +24,6 @@ namespace Game.Presentation.Art
             set { _on = value ? 1 : 0; PlayerPrefs.SetInt(Pref, _on); PlayerPrefs.Save(); }
         }
 
-        private static readonly System.Collections.Generic.HashSet<string> Female = new System.Collections.Generic.HashSet<string>
-        { "hand_f", "labourer_f", "town_f", "girl", "elder_f", "advisor_bank", "advisor_planner" };
-
         /// <summary>The name of the render that stands in for <paramref name="name"/>, or the name itself.</summary>
         public static string StandIn(string name)
         {
@@ -37,14 +34,6 @@ namespace Game.Presentation.Art
                 int n = name.Length;
                 char f = name[n - 1];
                 return n > 2 && name[n - 2] == '_' && (f == 's' || f == 'e' || f == 'n' || f == 'w') ? "family_house_" + f : name; // every facing, the done house
-            }
-            if (name.StartsWith("person_", System.StringComparison.Ordinal))
-            {
-                int at = name.IndexOf("_front", System.StringComparison.Ordinal), facing = 0;
-                if (at < 0) { at = name.IndexOf("_back", System.StringComparison.Ordinal); facing = 1; }
-                if (at < 0) return name;
-                string kind = name.Substring(7, at - 7);
-                return "person_hand_" + (Female.Contains(kind) ? "f" : "m") + (facing == 0 ? "_front" : "_back");
             }
             return name;
         }

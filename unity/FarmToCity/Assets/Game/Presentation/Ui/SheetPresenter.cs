@@ -118,13 +118,12 @@ namespace Game.Presentation.Ui
 
         private static Sprite Thumbnail(string icon)
         {
+            icon = Sim.View.Views.PersonPictures.InUi(icon); // a person is shown by their portrait (spec 032 §3.1)
             switch (icon)
             {
                 case null: return null;
                 case "hut": return SpriteBank.Rendered("hut") ?? SpriteBank.Hut;
                 case "cattle_shed": return SpriteBank.Rendered("cattle_shed") ?? SpriteBank.Hut;
-                case "people": return SpriteBank.Rendered("person_founder_front");
-                case "person_hand_m": case "person_hand_f": case "person_labourer_m": case "person_labourer_f": return SpriteBank.Rendered(icon + "_front");
                 case "hand_hut": case "hand_hut_building": case "granary": case "cold_store": case "silage_pit": case "chaff_cutter": return SpriteBank.Rendered(icon) ?? SpriteBank.Hut;
                 case "solar_panel": return SpriteBank.Rendered("icon_solar_panel") ?? SpriteBank.Rendered(icon); // granary: your godown in town (ADR 0087)
                 case "family_house": case "family_house_building": case "flour_mill": case "flour_mill_building": case "bakery": case "bakery_building": case "dairy": case "dairy_building": case "brick_kiln": case "brick_kiln_building": case "tuition": case "tuition_building": case "restaurant": case "restaurant_building": case "kirana": case "kirana_building": return SpriteBank.Rendered(icon + "_s") ?? SpriteBank.Hut;
@@ -152,7 +151,6 @@ namespace Game.Presentation.Ui
                 case "orders": return IconBank.Orders;
                 case "letter": return IconBank.Letter;
                 case "codex": case "deed": return IconBank.Good(icon); // the Codex and its Assets group (spec 018 §7)
-                case "person_founder": return SpriteBank.Rendered("person_founder_front");
                 case "compost": case "fertiliser_chemical": case "milk": case "spray": case "spinach": case "coriander": case "atta": case "bran": case "pav": case "rusk": case "paneer": case "curd": case "ghee":
                 case "rasgulla": case "atta_laddoo":
                     return IconBank.Good(icon);
