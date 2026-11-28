@@ -2,8 +2,8 @@
 US-275: the trees and orchards, realistic and built leaf by leaf (the owner, 2026-11-28).
 
 Each tree keeps today's design (render.py's trunks, where its crown's clumps stand, its stages), so it keeps its size and anchor; each toon blob
-becomes a clump of sprays of real-shaped leaves with the branches showing through the gaps. Fruit is about one and a half times life size beside the
-tree, in bunches on the side the camera sees. No shadows (ADR 0183): the neem's flat shade disc becomes a scatter of fallen leaves.
+becomes a clump of sprays of real-shaped leaves with the branches showing through the gaps. Fruit is about half the length of the toon art's, still several
+times life size beside the tree (any smaller doesn't show at the game's zoom), in bunches on the side the camera sees. No shadows (ADR 0183): the neem's flat shade disc becomes a scatter of fallen leaves.
 An orchard has no picture of its own: the game repeats these.
 """
 import math
