@@ -53,6 +53,10 @@ The triangles are the crops' tight sprite meshes following a leafier outline: cr
 - **The triangle growth** above.
 - **For the phase's device build:** the art check's 271 MB memory ballast (US-283) was sized before the ground, the river and the crops were real; it must be recomputed from `sprites.json` before that build, or it counts them twice.
 
+## The owner's review (2026-11-28)
+
+Approved, on the condition that the game matches the approved preview. The one difference is the fodder-cut state (flagged above): the preview showed it and the game does not draw it. It is to be drawn on the map, a presentation change only; its display rule is the owner's to choose.
+
 ## Consequences
 
 - Spec 032 gains §3.7 and AC-13. US-275 (trees and orchards) follows the same rules.
