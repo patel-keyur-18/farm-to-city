@@ -4488,11 +4488,12 @@
    "name": "village_house_2_w"
   },
   {
-   "w": 264,
-   "h": 300,
-   "pivotX": 0.5136,
+   "w": 540,
+   "h": 600,
+   "pivotX": 0.50338,
    "pivotY": 0.18804,
-   "name": "village_peepal"
+   "name": "village_peepal",
+   "ppu": 1056
   },
   {
    "w": 426,
