@@ -2,7 +2,8 @@
 Spec 032 (the realistic valley): the game's sprites rendered realistic at 8x. No baked shadows (the owner, 2026-11-27, after the device check: ADR 0183).
 
 US-283 (the device check) rendered the family house (4 facings), here, and its wheat acre, now in real_crops.py with the other crops
-(US-274). The people and portraits are in real_people.py (US-276). Later stories add their categories to SPRITES below.
+(US-274). The people and portraits are in real_people.py (US-276), the animals, vehicles and machines in real_animals.py (US-277).
+Later stories add their categories to SPRITES below.
 
 Run headless from the repository root:
     /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P tools/blender/render_real.py -- [names]
@@ -41,6 +42,10 @@ _tspec = importlib.util.spec_from_file_location("real_trees", os.path.join(HERE,
 T = importlib.util.module_from_spec(_tspec)
 sys.modules["real_trees"] = T
 _tspec.loader.exec_module(T)
+_aspec = importlib.util.spec_from_file_location("real_animals", os.path.join(HERE, "real_animals.py"))
+A = importlib.util.module_from_spec(_aspec)
+sys.modules["real_animals"] = A
+_aspec.loader.exec_module(A)
 _pspec = importlib.util.spec_from_file_location("real_people", os.path.join(HERE, "real_people.py"))
 P = importlib.util.module_from_spec(_pspec)
 sys.modules["real_people"] = P
@@ -291,6 +296,12 @@ PEOPLE_SPRITES, PORTRAITS = P.install(R, S)
 SPRITES.update(PEOPLE_SPRITES)
 
 
+# ---------------------------------------------------------------- animals, vehicles and machines (US-277)
+
+ANIMAL_SPRITES = A.install(R, S, P)
+SPRITES.update(ANIMAL_SPRITES)
+
+
 # ---------------------------------------------------------------- main
 
 def main():
@@ -308,7 +319,7 @@ def main():
             info.update({"name": name, "ppu": data["pixelsPerUnit"]})   # today's scale, said out loud: render.py skips whatever has its own ppu
         else:
             objs = smooth_plants(S.finish(SPRITES[name]()))
-            if name in CROP_SPRITES or name in TREE_SPRITES or name in PEOPLE_SPRITES:
+            if name in CROP_SPRITES or name in TREE_SPRITES or name in PEOPLE_SPRITES or name in ANIMAL_SPRITES:
                 objs = C.hold_frame(name, objs, cam)
             info = R.frame_and_render(sc, cam, name, objs)
             info.update({"name": name, "ppu": PPU})

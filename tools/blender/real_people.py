@@ -264,6 +264,8 @@ def pose_of(kind, pose):
             if passing:   # the leg swinging through: knee forward, foot off the ground
                 knee += Vector((0, -0.007, 0.002))
                 ankle += Vector((0, 0.004, 0.009))
+        if pose == "drive":   # seated: thighs forward along the seat, shins down to the floor
+            knee, ankle = Vector((s * 0.0128, -0.0400, 0.0905 + lift)), Vector((s * 0.0132, -0.0455, 0.0520))
         legs[s] = (hip, knee, ankle)
 
         sh = Vector((s * 0.0172, 0.0002, 0.1322))
@@ -276,6 +278,9 @@ def pose_of(kind, pose):
         if pose == "work":   # both hands on the hoe's handle, ahead of the knees
             wr2 = Vector((s * 0.0045, -0.0475 - 0.006 * (s < 0), 0.0880 - 0.011 * (s < 0)))
             el2 = (sh2 + wr2) / 2 + Vector((s * 0.0105, 0.003, -0.004))
+        elif pose == "drive":   # both hands on the steering wheel
+            wr2 = Vector((s * 0.0105, -0.0390, 0.1105))
+            el2 = (sh2 + wr2) / 2 + Vector((s * 0.0080, 0.004, -0.009))
         else:
             el2, wr2 = sh2 + (el - sh), sh2 + (wr - sh)   # the arms hang straight down from a stooped shoulder
             tool = None if pose == "portrait" else p.get("tool")
@@ -616,7 +621,7 @@ def build(kind, pose="stand"):
             o.append(obj("dhoti%d" % s, [leg_wrap(*legs[s], end, 0.0093, 0.0066 if short else 0.0056, folds=0.13)], bottom, solid=0.0007))
             o.append(obj("dhotiBorder%d" % s, [leg_wrap(*legs[s], end, 0.0093, 0.0066 if short else 0.0056, folds=0.13, steps=2, band=(0.93, 0.985))],
                          m("accentBorder", 0x2E6FBA if p.get("head") == "pagdi" else shade(p["bottom"], 0.72)), solid=0.0005))
-        if wear != "kurta":   # the pleats tucked in at the front, falling between the legs
+        if wear != "kurta" and pose != "drive":   # the pleats tucked in at the front, falling between the legs
             fall = []
             for i in range(14):
                 t = i / 13
@@ -659,7 +664,7 @@ def build(kind, pose="stand"):
         wr = arms[-1][2]
         grip = wr + Vector((0, 0, -0.005))
         o.append(obj("stick", [tube([grip + Vector((0, 0, 0.010)), grip, Vector((grip.x - 0.003, grip.y - 0.008, 0.002))], [0.0018, 0.0017, 0.0015], n=10)], wood))
-    if tool == "basket" and pose != "work":
+    if tool == "basket" and pose not in ("work", "drive"):
         c = Vector((0.0315, -0.0040, 0.0930 + lift))
         n = 36
         rings = [[c + Vector(((0.0085 + 0.0055 * t + 0.0005 * math.sin(18 * k * math.tau / n + 9 * t)) * math.sin(k * math.tau / n),
