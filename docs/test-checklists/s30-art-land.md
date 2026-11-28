@@ -46,16 +46,16 @@
 | 20 | Play 20 minutes | No heat warning, no growing stutter, no crash | **Device only** | |
 | 21 | Developer panel → **Golden replays** | ALL PASS (no sim change) | **Device only** | |
 
-## Tests (at the sprint's end)
+## Tests (2026-11-28, after the independent review's fixes)
 
 | Project | Result |
 | --- | --- |
-| `Sim.Core.Tests` (not Balance, not Perf) | ____ |
-| `Sim.Core.Tests` Perf | ____ |
-| `Sim.Core.Tests` Balance | ____ |
-| `Sim.View.Tests` | ____ |
-| `Game.Services.Tests` | ____ |
-| Goldens | ____ |
+| `Sim.Core.Tests` (not Balance, not Perf) | 975 passed |
+| `Sim.Core.Tests` Perf | 6 passed |
+| `Sim.Core.Tests` Balance | 69 passed |
+| `Sim.View.Tests` | 473 passed |
+| `Game.Services.Tests` | 9 passed |
+| Goldens | unmoved (no golden file or `Sim.Core` change) |
 
 ## Render statistics (Editor, the Village bot town, art check off; `docs/planning/render-stats.json`)
 
