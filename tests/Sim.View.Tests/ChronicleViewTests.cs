@@ -195,6 +195,21 @@ namespace Sim.View.Tests
             Assert.That(toast.Portrait, Does.StartWith("portrait_"));
         }
 
+        // US-276 (spec 032 AC-19): the toast asks only for a picture that is there. A story's person can be gone by the time the toast is built
+        // (the same close moves a family away and then forgets them); the toast then shows the Chronicle's scroll.
+        [Test]
+        public void Toast_PictureIsAlwaysThere()
+        {
+            Simulation sim = Town(out ViewContext ctx);
+            sim.State.Citizens.Citizens.Add(new Sim.Core.People.Citizen { Id = 7, Name = 0, Female = true, Health = Sim.Core.Maths.Fixed.One });
+            Dictionary<string, double> art = CropArtTests.PpuByName();
+            StoryToastVm Toast(long citizen) => StoryToastVm.Build(ctx, new Sim.Core.Events.StoryStepped(10, (int)StoryArc.Migrant, 1, citizen, 0, ""));
+
+            Assert.That(art.Keys, Does.Contain(Toast(7).Portrait), "a living person's portrait");
+            Assert.That(Toast(999_999).Portrait, Is.EqualTo("scroll"), "gone: the Chronicle's scroll, no guessed face");
+            Assert.That(art.Keys, Does.Contain("icon_scroll"));
+        }
+
         // Review of Sprint 26 (spec 029 §5): a story step taken while you were away, a worker who left to start a stall among them, is a line on the away card.
         [Test]
         public void Away_Card_Says_A_Stall_Opened()

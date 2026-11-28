@@ -153,6 +153,7 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | AC-16 | A repeated tree's size factor is the same every time for its place, within 0.92 to 1.08, and one acre's trees differ. | `TreeSizeTests.FactorIsSteadyWithinEightPercentAndMixed` |
 | AC-17 | Every person's map picture (11 kinds, front and back: standing and 4 walk frames; a work frame for the founder, hands, labourers and townspeople: 124) is rendered at 8×, and every one of the 15 portraits is there (US-276). | `PeopleArtTests.EveryPersonPictureIsRendered` (new, Sim.View.Tests) |
 | AC-18 | Every person picture the UI asks for (a full-body name, `people` or the founder) resolves to a portrait that is there; any other picture name is unchanged. | `PeopleArtTests.EveryUiPersonPictureIsAPortrait` (new, Sim.View.Tests) |
+| AC-19 | The story toast asks only for a picture that is there: the person's portrait, or the Chronicle's scroll if the person is gone by then. | `ChronicleViewTests.Toast_PictureIsAlwaysThere` |
 
 ## 9. Balancing hooks
 

@@ -124,7 +124,7 @@ namespace Sim.View.Views
             bool leaving = e.Arc == (int)StoryArc.Stall && e.Step == 1;
             return new StoryToastVm
             {
-                Portrait = c == null ? "portrait_adult_m" : TownWords.Portrait(ctx, c),
+                Portrait = c == null ? "scroll" : TownWords.Portrait(ctx, c), // gone by now (moved away and forgotten at the same close): the Chronicle's scroll, no guessed face
                 Kicker = ctx.Strings.Get(leaving ? "story.toast.leaving" : "story.toast.kicker"),
                 Text = StoryWords.Line(ctx, e.CitizenId, code, e.Kind),
                 Opens = new SheetRequest(ChronicleSheet.Kind, 0),
