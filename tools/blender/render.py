@@ -5364,9 +5364,18 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     manifest_path = os.path.join(OUT_DIR, "sprites.json")
     manifest = {}
+    ppu = 132 * SCALE
     if os.path.exists(manifest_path):
         with open(manifest_path) as f:
-            manifest = {s["name"]: s for s in json.load(f)["sprites"]}
+            data = json.load(f)
+        manifest = {s["name"]: s for s in data["sprites"]}
+        if data["pixelsPerUnit"] != ppu:   # the manifest's one scale: writing another would resize every sprite without its own
+            raise SystemExit("this folder's sprites are at %s px a unit; run without FTC_SCALE" % data["pixelsPerUnit"])
+    # A sprite with its own ppu is realistic (render_real.py owns it, spec 032): never overwrite it with the toon art.
+    realistic = [n for n in names if "ppu" in manifest.get(n, {})]
+    if realistic and argv:
+        raise SystemExit("realistic sprites, render them with render_real.py: " + " ".join(realistic))
+    names = [n for n in names if n not in realistic]
     for name in names:
         sc, cam = reset()
         _materials.clear()
@@ -5376,7 +5385,7 @@ def main():
         manifest[name] = info
         print("rendered", name, info)
     with open(manifest_path, "w") as f:
-        json.dump({"pixelsPerUnit": 132 * SCALE, "sprites": [manifest[k] for k in sorted(manifest)]}, f, indent=1)
+        json.dump({"pixelsPerUnit": ppu, "sprites": [manifest[k] for k in sorted(manifest)]}, f, indent=1)
         f.write("\n")
 
 
