@@ -518,5 +518,8 @@
   {"label":"US-283 Village bot town, art check ON (stand-ins, shadows)","view":"farm","date":"2026-11-27","drawCalls":216,"batches":216,"setPassCalls":8,"triangles":6197,"visibleSprites":227,"spritePixels":48183,"sprites":2490},
   {"label":"US-273 ground, Village bot town, art check off","view":"all","date":"2026-11-28","drawCalls":1365,"batches":1365,"setPassCalls":13,"triangles":31568,"visibleSprites":1708,"spritePixels":34355,"sprites":2359},
   {"label":"US-273 ground, Village bot town, art check off","view":"village","date":"2026-11-28","drawCalls":619,"batches":619,"setPassCalls":10,"triangles":13650,"visibleSprites":727,"spritePixels":40746,"sprites":2359},
-  {"label":"US-273 ground, Village bot town, art check off","view":"farm","date":"2026-11-28","drawCalls":228,"batches":228,"setPassCalls":8,"triangles":5784,"visibleSprites":231,"spritePixels":47292,"sprites":2359}
+  {"label":"US-273 ground, Village bot town, art check off","view":"farm","date":"2026-11-28","drawCalls":228,"batches":228,"setPassCalls":8,"triangles":5784,"visibleSprites":231,"spritePixels":47292,"sprites":2359},
+  {"label":"US-274 crops, Village bot town, art check off","view":"all","date":"2026-11-28","drawCalls":1357,"batches":1357,"setPassCalls":13,"triangles":43432,"visibleSprites":1708,"spritePixels":34311,"sprites":2359},
+  {"label":"US-274 crops, Village bot town, art check off","view":"village","date":"2026-11-28","drawCalls":611,"batches":611,"setPassCalls":10,"triangles":19135,"visibleSprites":727,"spritePixels":40688,"sprites":2359},
+  {"label":"US-274 crops, Village bot town, art check off","view":"farm","date":"2026-11-28","drawCalls":220,"batches":220,"setPassCalls":8,"triangles":7182,"visibleSprites":231,"spritePixels":47241,"sprites":2359}
 ]

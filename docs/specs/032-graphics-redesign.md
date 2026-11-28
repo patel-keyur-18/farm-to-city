@@ -85,6 +85,16 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Tile mesh | Ground, edge and hill sprites are imported as Sprites with a coarse mesh (at most 24 triangles): the tight mesh of an 8× render is about 190. | Measured: +245% triangles otherwise. |
 | Sky | A soft haze: the map's background starts as the haze colour. No sprite, no shader. | The owner's answer to gap 3. |
 
+### 3.7 The crops and the kitchen garden (US-274, ADR 0185)
+
+| Rule | Behaviour | Why |
+| --- | --- | --- |
+| Canopy | A full dense canopy: about three times the toon art's plants and leaves, a second set between the ridges once grown. | The owner, 2026-11-28. |
+| Leaves and colour | Pointed folded blades; green materials take a per-channel gain and a matt surface so AgX renders the palette's own green; a few crops have their own gain; sarson's flowers have a faint light of their own in the render only. | Raw palette leaves render pale; reflected yellow renders cream. |
+| Paddy | Still water. | The owner: real paddy water barely moves; no memory. |
+| Beds | The same plank bed, 5 × 5 plants. | The owner: easy to find and tap. |
+| Frame | Each render is held to the recorded frame and anchor. | AC-1. |
+
 ## 4. Data
 
 **Changed definitions** (`content/ui.json`, the map's look; not balance):
@@ -126,6 +136,7 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | AC-10 | The ground's three variants: each has the base's size and pivot and an acre's pick is steady and not striped. | `GroundVariantTests.PickIsSteadyEvenAndNotStriped`, `WaterFlowTests.EveryGroundVariantIsRenderedAtTheBaseSizeAndPivot` |
 | AC-11 | The river is 12 frames at 10 a second that loop, all at one size and pivot; reduced motion holds frame 0. | `WaterFlowTests.TheLoopIsTwelveFramesAtTenAndComesBack`, `ReducedMotionHoldsFrameZero`, `EveryWaterFrameIsRenderedAtOneSizeAndPivot` |
 | AC-12 | Every ground, edge and hill sprite has at most 24 triangles. | `Game.Editor.SpriteSizeCheck` (Editor) |
+| AC-13 | Every field crop and garden crop of `content/crops.json` at all four stages, the empty bed, the planting pit and the neighbours' sugarcane is rendered at 8×. | `CropArtTests.EveryCropStageAndBedIsRenderedAt8x` |
 
 ## 9. Balancing hooks
 
