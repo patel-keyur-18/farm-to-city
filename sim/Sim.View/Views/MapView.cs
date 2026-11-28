@@ -342,6 +342,12 @@ namespace Sim.View.Views
         public int TileId { get; internal set; }
         public bool Parked { get; internal set; }
 
+        /// <summary>
+        /// The person picture drawn walking behind the machine (the ploughman, spec 032 §3.9), or null. A picture only: not one of your
+        /// people. The working tractor's driver is in its own sprite.
+        /// </summary>
+        public string Operator { get; internal set; }
+
         /// <summary>Where it stands on its acre when parked, from the middle (the tempo beside the tractor): a fraction of the acre's width.</summary>
         public float ParkX { get; internal set; }
         public float ParkY { get; internal set; }
@@ -718,7 +724,7 @@ namespace Sim.View.Views
                 }
                 if (day && fields.Count > 0)
                 {
-                    map.Machines.Add(new MachineVm { Sprite = d.Bullocks > 0 ? "plough_team" : "tractor_cultivator", TileId = fields[hour % fields.Count] });
+                    map.Machines.Add(new MachineVm { Sprite = d.Bullocks > 0 ? "plough_team" : "tractor_cultivator", TileId = fields[hour % fields.Count], Operator = d.Bullocks > 0 ? "person_hand_m" : null });
                     if (d.Bullocks > 0 && !hired) ploughing = true;
                 }
                 else if (m != null && d.Bullocks == 0) map.Machines.Add(new MachineVm { Sprite = "tractor_trolley", TileId = defs.ParkTile, Parked = true });

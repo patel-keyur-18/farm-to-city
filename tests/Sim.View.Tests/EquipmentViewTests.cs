@@ -83,7 +83,8 @@ namespace Sim.View.Tests
         }
     
         // ADR 0088: machines at work on a growing field by day, a field an hour; at night the tractor parks on lane acre 167 with its
-        // trolley and the bullocks rest in the second shed; out at the plough, they aren't in it.
+        // trolley and the bullocks rest in the second shed; out at the plough, they aren't in it. Spec 032 AC-21: a man walks behind the
+        // plough at work (the working tractor's driver is in its picture); nobody is on a parked machine.
         [Test]
         public void Map()
         {
@@ -93,6 +94,7 @@ namespace Sim.View.Tests
             MapVm night = MapView.Build(ViewKit2.Context(sim));
             Assert.That(night.Machines.Select(m => (m.Sprite, m.TileId, m.Parked)), Is.EqualTo(new[] { ("tractor_trolley", 167, true) }));
             Assert.That(night.SecondCattle.Animals.Select(a => a.Kind), Is.EqualTo(new[] { "bullock", "bullock" }));
+            Assert.That(night.Machines.Select(m => m.Operator), Has.All.Null, "parked, with nobody");
 
             // The tractor sold: the ox plough works the growing fields by day, and its pair leave the shed.
             Assert.That(sim.Execute(new SellMachine(sim.State.Clock.SimTime, sim.State.Equipment.Machines[1].Id)).Accepted, Is.True);
@@ -105,6 +107,8 @@ namespace Sim.View.Tests
             Assert.That((plough.Sprite, plough.Parked), Is.EqualTo(("plough_team", false)));
             Assert.That(sim.State.Farm.CropOn(plough.TileId).State, Is.EqualTo(Sim.Core.Farm.CropState.Growing));
             Assert.That(work.SecondCattle.Animals, Is.Empty);
+            Assert.That(plough.Operator, Is.EqualTo("person_hand_m"), "the ploughman");
+            Assert.That(CropArtTests.PpuByName().Keys, Does.Contain(plough.Operator + "_front"));
         }
     }
 }

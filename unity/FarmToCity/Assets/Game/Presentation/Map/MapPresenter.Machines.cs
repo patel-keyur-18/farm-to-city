@@ -7,16 +7,21 @@ namespace Game.Presentation.Map
 {
     /// <summary>
     /// Machines on the map (ADR 0088, art approved 2026-11-04): drawn at 70% of their modelled size (the ploughing pair at 75%) so
-    /// they sit inside an acre; at work on a growing field by day, the tractor parked with its trolley on the farm lane at night.
+    /// they sit inside an acre; at work on a growing field by day, the tractor parked with its trolley on the farm lane at night. A man
+    /// walks behind the plough at work, at people's size (spec 032 §3.9): a picture only, not tappable.
     /// </summary>
     public sealed partial class MapPresenter
     {
         private const float MachineScale = 0.7f, PloughScale = 0.75f;
+        // The ploughman's feet from the plough team's pivot, in world units: just behind the plough's handle (Preview 30).
+        private static readonly Vector3 PloughmanBehind = new Vector3(0.085f, 0.084f, 0f);
+        private SpriteRenderer _ploughman, _ploughmanShadow; // there is at most one ox plough
         private readonly List<SpriteRenderer> _machines = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _machineShadows = new List<SpriteRenderer>();
 
         private void RefreshMachines(MapVm map)
         {
+            if (_ploughman != null) { _ploughman.gameObject.SetActive(false); _ploughmanShadow.gameObject.SetActive(false); }
             while (_machines.Count < map.Machines.Count)
             {
                 SpriteRenderer shadow = NewRenderer("machineShadow" + _machines.Count, SpriteBank.ContactShadow, Vector3.zero, 0);
@@ -45,6 +50,22 @@ namespace Game.Presentation.Map
                 s.transform.position = pos;
                 s.transform.localScale = new Vector3(0.4f * scale, 0.4f * scale, 1f);
                 s.sortingOrder = r.sortingOrder - 1;
+                if (m.Operator == null) continue;
+                if (_ploughman == null)
+                {
+                    _ploughmanShadow = NewRenderer("ploughmanShadow", SpriteBank.ContactShadow, Vector3.zero, 0);
+                    _ploughmanShadow.transform.localScale = new Vector3(0.11f, 0.11f, 1f);
+                    _ploughman = NewRenderer("ploughman", null, Vector3.zero, 0);
+                }
+                _ploughman.gameObject.SetActive(true);
+                _ploughmanShadow.gameObject.SetActive(true);
+                _ploughman.sprite = SpriteBank.Rendered(m.Operator + "_front");
+                _ploughman.transform.position = _ploughmanShadow.transform.position = pos + PloughmanBehind;
+                _ploughman.color = _tint;
+                // He stands further back than the team, so the handle is drawn in front of him; the team's shadow goes under both.
+                _ploughman.sortingOrder = r.sortingOrder - 1;
+                _ploughmanShadow.sortingOrder = r.sortingOrder - 2;
+                s.sortingOrder = r.sortingOrder - 3;
             }
         }
     }
