@@ -11,7 +11,7 @@ namespace Sim.View.Tests
     {
         private static readonly string[] Stages = { "g1", "g2", "g3", "ready" };
 
-        private static Dictionary<string, double> PpuByName()
+        internal static Dictionary<string, double> PpuByName()
         {
             string path = Path.Combine(ViewKit.RepoRoot, "unity", "FarmToCity", "Assets", "Resources", "Art", "Blender", "sprites.json");
             using JsonDocument doc = JsonDocument.Parse(File.ReadAllText(path));

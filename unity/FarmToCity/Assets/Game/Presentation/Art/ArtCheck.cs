@@ -6,7 +6,7 @@ namespace Game.Presentation.Art
     /// <summary>
     /// The device check's stand-ins (US-283, spec 032 §3.5, ADR 0182). While a category isn't re-rendered yet, the check on the phone swaps a realistic
     /// sprite in for every one of its sprites, to read the frame time and memory the whole redesign would cost: every house sprite draws the realistic
-    /// family house and every person the hand or his wife (the crops are all rendered since US-274 and stand for themselves, ADR 0185). A load of dummy
+    /// family house and every person the hand or his wife (the crops since US-274 and the trees since US-275 are rendered and stand for themselves, ADR 0185 and 0186). A load of dummy
     /// ASTC textures brings sprite memory up to the redesign's computed size. <b>Development builds and the Editor only; off unless the developer panel's
     /// switch is on</b> (it takes effect on the next launch). Release builds compile it to nothing.
     /// </summary>
