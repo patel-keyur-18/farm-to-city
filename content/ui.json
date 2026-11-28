@@ -253,5 +253,10 @@
         "saturation": 0.68, "brightness": 1.0, "rime": 0.55 }
     }
   },
-  "confirmHoldMillis": 1000
+  "confirmHoldMillis": 1000,
+  "camera": {
+    "_note": "The map camera (spec 032 §3.4): how many acres across the screen the default view and the closest zoom show. Art, not balance.",
+    "defaultAcresAcross": 3,
+    "closestAcresAcross": 2
+  }
 }

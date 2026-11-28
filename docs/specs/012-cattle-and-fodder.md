@@ -355,7 +355,7 @@ Shed sheet                                                            [×]
 - **The map:** buffalo and cows in their stalls (grazing on the commons in the day, ADR art style), the straw stack's height following its stock, the berseem and sorghum fields green, a milk can by the lane at 6:00 (cut first).
 - **The away card** gets the milk, feed bought, calves and vet visits.
 - **The Care *Why?*** (spec 008) gets a row for the animals ("4 animals: 6.0 h a day"), so the player sees why Care fell after buying one.
-- **A fodder field's sheet** shows "Cut every morning for your animals: 3,200 kg today · 2,400 eaten, 800 sold to neighbours", the factors' *Why?*, when it ends ("Cut till the end of Spring"), and Clear. No ready marker: the map shows it green and growing.
+- **A fodder field's sheet** shows "Cut every morning for your animals: 3,200 kg today · 2,400 eaten, 800 sold to neighbours", the factors' *Why?*, when it ends ("Cut till the end of Spring"), and Clear. No ready marker: the map shows it green and growing (from its first cut due it stands tall, and looks half cut from the morning's cut till noon: spec 032 §3.7).
 - **Buy inputs** lists cattle feed and straw (with the shed), and says where each goes ("to the feed room", "to the straw stack", "to the compost pit"); the Store sheet's Seed and inputs section stops listing compost, which the shed sheet and the compost pit show.
 - **Net worth's *Why?*** gets a Livestock row; Money gets the dairy loan like any bank loan.
 - **The HUD** alerts (!) when feed is low.

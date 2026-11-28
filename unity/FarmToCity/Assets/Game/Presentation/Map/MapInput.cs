@@ -14,7 +14,6 @@ namespace Game.Presentation.Map
     public sealed class MapInput : MonoBehaviour
     {
         private const float DragStartPixels = 14f, TapSeconds = 0.4f;
-        private const float OpeningHalfHeight = 1.4f; // world units: about 4 × 3 acres on the phone
 
         private Camera _camera;
         private MapPresenter _map;
@@ -55,7 +54,7 @@ namespace Game.Presentation.Map
         /// </summary>
         public Action<Vector2> Placing { get; set; }
 
-        public static MapInput Create(GameObject host, Camera camera, MapPresenter map, UIDocument document, Action<Vector2> onTap)
+        public static MapInput Create(GameObject host, Camera camera, MapPresenter map, UIDocument document, Action<Vector2> onTap, Sim.View.Content.CameraDef zoom = null)
         {
             MapInput i = host.AddComponent<MapInput>();
             i._camera = camera;
@@ -63,7 +62,8 @@ namespace Game.Presentation.Map
             i._document = document;
             i._onTap = onTap;
             camera.orthographic = true;
-            i._view = new MapCamera(map.Grid, camera.aspect);
+            zoom = zoom ?? new Sim.View.Content.CameraDef();
+            i._view = new MapCamera(map.Grid, camera.aspect, zoom.DefaultAcresAcross, zoom.ClosestAcresAcross); // 3 acres across by default, 2 at the closest (spec 032 §3.4)
             i.Apply();
             return i;
         }
@@ -76,12 +76,12 @@ namespace Game.Presentation.Map
         }
 
         /// <summary>
-        /// Centres a tile (the yard at the start) at the zoom Phase 1 opened at: the farm and the yard fill the view (spec 010 §3.5).
+        /// Centres a tile (the yard at the start) at the default zoom, 3 acres across (spec 032 §3.4; spec 010 §3.5 opened wider).
         /// </summary>
         public void Focus(float tileX, float tileY)
         {
             Vector2 c = new Vector2((tileX - tileY) * _map.Grid.HalfWidth, -(tileX + tileY) * _map.Grid.HalfHeight);
-            _view.FocusWorld(c.x, c.y, OpeningHalfHeight);
+            _view.FocusWorld(c.x, c.y, _view.DefaultHalfHeight);
             Apply();
         }
 

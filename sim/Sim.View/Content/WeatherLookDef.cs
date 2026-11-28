@@ -42,6 +42,7 @@ namespace Sim.View.Content
         public float MultiplyAlpha { get; internal set; }
         public Rgb Overlay { get; internal set; } = new Rgb(1, 1, 1);
         public float OverlayAlpha { get; internal set; }
+
         public float Saturation { get; internal set; } = 1f;
         public float Brightness { get; internal set; } = 1f;
         public CloudsDef Clouds { get; internal set; }

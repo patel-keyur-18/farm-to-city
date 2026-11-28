@@ -56,17 +56,17 @@ namespace Game.Presentation.Map
             {
                 case NeighbourLand.Field:
                 case NeighbourLand.Ploughed:
-                    ground.sprite = SpriteBank.SoilTile;
+                    ground.sprite = SpriteBank.GroundVariant("ground_soil", tv.X, tv.Y);
                     ground.color = _tint * SoilColour(tv);
                     break;
                 case NeighbourLand.Scrub:
-                    ground.sprite = SpriteBank.Rendered("ground_scrub") ?? SpriteBank.Grass;
+                    ground.sprite = SpriteBank.GroundVariant("ground_scrub", tv.X, tv.Y) ?? SpriteBank.Grass;
                     break;
                 case NeighbourLand.Farmstead:
                     ground.sprite = SpriteBank.Rendered("ground_village_" + (tv.Draw % 2)) ?? SpriteBank.Grass;
                     break;
                 default:
-                    ground.sprite = SpriteBank.Grass;
+                    ground.sprite = SpriteBank.GroundVariant("ground_grass", tv.X, tv.Y);
                     detail.sprite = SpriteBank.GrassDetail(tv.Id);
                     detail.color = _tint;
                     break;
@@ -102,7 +102,7 @@ namespace Game.Presentation.Map
             {
                 pieces.Add(new Piece("scrub", 0.2f, -0.12f));
                 if (tv.Draw % 2 == 0 || tv.Kind == TileKind.Scrub) pieces.Add(new Piece("tree_babul", -0.12f, -0.18f));
-                foreach (Piece q in pieces) list.Add(PieceOn(tv.Id, q));
+                foreach (Piece q in pieces) list.Add(PieceOn(tv.Id, q, list.Count));
                 return list;
             }
             if (tv.Kind != TileKind.Unowned) return list;
@@ -119,16 +119,18 @@ namespace Game.Presentation.Map
             }
             if (tv.TubeWell) pieces.Add(new Piece("tubewell", 0.3f, 0.3f, 0.8f));
             if (tv.Haystack) pieces.Add(new Piece("village_haystack", -0.3f, 0.3f));
-            foreach (Piece p in pieces) list.Add(PieceOn(tv.Id, p));
+            foreach (Piece p in pieces) list.Add(PieceOn(tv.Id, p, list.Count));
             return list;
         }
 
-        private SpriteRenderer PieceOn(int tile, Piece p)
+        /// <summary>Groves of mango and the babul on scrub repeat across the valley, so each is drawn a little bigger or smaller (ADR 0186).</summary>
+        private SpriteRenderer PieceOn(int tile, Piece p, int n = 0)
         {
             Vector3 pos = OnTile(tile, p.At);
             SpriteRenderer r = NewRenderer(p.Sprite, SpriteBank.Rendered(p.Sprite), pos, Order(tile, _width, 45, pos.y - TileCentre(tile).y));
             if (p.Sprite.Contains("tree")) _swayers.Add(r.transform);
-            r.transform.localScale = Vector3.one * p.Scale;
+            bool repeated = p.Sprite == "tree_babul" || p.Sprite == "tree_mango_mature";
+            r.transform.localScale = Vector3.one * (repeated ? p.Scale * TreeSizes.Factor(tile, n) : p.Scale);
             r.color = _tint;
             return r;
         }

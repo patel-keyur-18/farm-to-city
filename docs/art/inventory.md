@@ -313,7 +313,7 @@ Everything the game draws, from the code at `main` (`5e5a4301`) and `sprint/28-b
 
 ## K. Drawn in code (not Blender)
 
-- **The sky beyond the map:** a flat colour (`GameRoot`, `0x86CDD8`).
+- **The sky beyond the map:** a flat colour (at the inventory `GameRoot`'s `0x86CDD8`; what is seen past the map is the meadow colour `MapPresenter` sets, ADR 0187).
 - **The weather:** rain streaks and splashes (Unity particles), the rain and rime textures, the frost's white crystals (`WeatherPresenter`).
 - **The contact shadow** under people, animals and props (`SpriteBank.ContactShadow`).
 - **The selection ring** and the **lit acre** for placing (`SpriteBank.SelectionRing`, `TileFill`).

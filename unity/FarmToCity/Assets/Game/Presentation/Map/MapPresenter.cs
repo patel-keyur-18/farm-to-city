@@ -329,7 +329,7 @@ namespace Game.Presentation.Map
                 if (e.Kind == EdgeKind.Hill && e.X <= -2 && ((e.Y - e.X * 2) % 4 + 4) % 4 == 0) decor = "hill_" + ((e.Y + 30) % 3);
                 if (e.Kind == EdgeKind.Scrub) decor = "scrub";
                 if (e.Kind == EdgeKind.Farmstead) EdgeFarmstead(e, c);
-                if (e.Kind == EdgeKind.FarBank && (e.X + e.Y) % 3 == 0) { decor = "tree_mango_mature"; scale = 0.55f; }
+                if (e.Kind == EdgeKind.FarBank && (e.X + e.Y) % 3 == 0) { decor = "tree_mango_mature"; scale = 0.55f * Sim.View.Views.TreeSizes.Factor(e.X, e.Y); }
                 if (decor != null)
                 {
                     v.Decor = NewRenderer("edgeDecor", SpriteBank.Rendered(decor), c, EdgeOrder(e.X, e.Y, 50));
@@ -418,7 +418,7 @@ namespace Game.Presentation.Map
                         break;
                     case TileKind.Quarters:
                         // Beaten earth: the hands' compound.
-                        ground.sprite = SpriteBank.Sand;
+                        ground.sprite = SpriteBank.GroundVariant("ground_earth", tv.X, tv.Y);
                         ground.color = _tint * new Color(0.95f, 0.86f, 0.70f, 1f);
                         detail.sprite = null;
                         break;
@@ -429,7 +429,7 @@ namespace Game.Presentation.Map
                         detail.sprite = null;
                         break;
                     case TileKind.Yard:
-                        ground.sprite = SpriteBank.Grass;
+                        ground.sprite = SpriteBank.GroundVariant("ground_grass", tv.X, tv.Y);
                         ground.color = _tint * new Color(1.02f, 1.0f, 0.9f, 1f);
                         detail.sprite = SpriteBank.GrassDetail(tv.Id);
                         detail.color = _tint;
@@ -441,7 +441,7 @@ namespace Game.Presentation.Map
                         detail.sprite = null;
                         break;
                     default:
-                        ground.sprite = SpriteBank.SoilTile;
+                        ground.sprite = SpriteBank.GroundVariant("ground_soil", tv.X, tv.Y);
                         ground.color = _tint * SoilColour(tv);
                         detail.sprite = null; // the furrows are modelled on the Blender soil
                         detail.color = _tint;
@@ -451,7 +451,7 @@ namespace Game.Presentation.Map
                 _signs[tv.Id].color = _tint;
 
                 Spot crop = _crops[tv.Id];
-                Sprite cs = tv.CropId != null ? SpriteBank.Crop(tv.CropId, tv.Stage) : tv.NeighbourCrop != null ? SpriteBank.Crop(tv.NeighbourCrop, CropStage.Growing2) : null;
+                Sprite cs = tv.CropId != null ? SpriteBank.Crop(tv.CropId, tv.Stage, tv.FodderCut) : tv.NeighbourCrop != null ? SpriteBank.Crop(tv.NeighbourCrop, CropStage.Growing2) : null;
                 Apply(crop.Renderer, crop, cs, (tv.CropId ?? "n" + tv.NeighbourCrop) + ":" + tv.Stage, animate);
                 crop.Renderer.color = _tint;
                 Sprite ms = tv.Stage == CropStage.Ready ? SpriteBank.MarkerReady : tv.Stage == CropStage.Spoiling ? SpriteBank.MarkerSpoiling
@@ -998,6 +998,7 @@ namespace Game.Presentation.Map
             AnimateFires();
             AnimateVehicles();
             Sway();
+            AnimateWater();
             if (_ghost != null && _ghost.gameObject.activeSelf)
                 _ghost.transform.localScale = Vector3.one * (1f + 0.03f * Mathf.Sin(Time.unscaledTime * 6f));
         }

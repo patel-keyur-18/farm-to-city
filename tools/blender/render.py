@@ -21,7 +21,7 @@ import os
 import sys
 from mathutils import Matrix, Vector
 
-SCALE = 4                                      # supersampling: the game shows sprites at 1/SCALE
+SCALE = int(os.environ.get("FTC_SCALE", "4"))  # supersampling: the game shows sprites at 1/SCALE (8 for the realistic redesign, spec 032 §3.2)
 PX_PER_UNIT = 132.0 / math.sqrt(2.0) * SCALE   # px per world unit in the camera plane
 MARGIN_PX = 8 * SCALE
 OUTLINE = 0.0065                               # world units after scaling; about 2 px at 1x
@@ -5364,9 +5364,18 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     manifest_path = os.path.join(OUT_DIR, "sprites.json")
     manifest = {}
+    ppu = 132 * SCALE
     if os.path.exists(manifest_path):
         with open(manifest_path) as f:
-            manifest = {s["name"]: s for s in json.load(f)["sprites"]}
+            data = json.load(f)
+        manifest = {s["name"]: s for s in data["sprites"]}
+        if data["pixelsPerUnit"] != ppu:   # the manifest's one scale: writing another would resize every sprite without its own
+            raise SystemExit("this folder's sprites are at %s px a unit; run without FTC_SCALE" % data["pixelsPerUnit"])
+    # A sprite with its own ppu is realistic (render_real.py owns it, spec 032): never overwrite it with the toon art.
+    realistic = [n for n in names if "ppu" in manifest.get(n, {})]
+    if realistic and argv:
+        raise SystemExit("realistic sprites, render them with render_real.py: " + " ".join(realistic))
+    names = [n for n in names if n not in realistic]
     for name in names:
         sc, cam = reset()
         _materials.clear()
@@ -5376,7 +5385,7 @@ def main():
         manifest[name] = info
         print("rendered", name, info)
     with open(manifest_path, "w") as f:
-        json.dump({"pixelsPerUnit": 132 * SCALE, "sprites": [manifest[k] for k in sorted(manifest)]}, f, indent=1)
+        json.dump({"pixelsPerUnit": ppu, "sprites": [manifest[k] for k in sorted(manifest)]}, f, indent=1)
         f.write("\n")
 
 

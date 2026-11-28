@@ -25,7 +25,8 @@ namespace Game.Presentation.Art
 
         // ---- Blender renders ----
 
-        [System.Serializable] private class RenderedInfo { public string name; public int w, h; public float pivotX, pivotY; }
+        /// <summary>One manifest entry. <c>ppu</c> (when set) is this sprite's own pixels per world unit: the realistic redesign renders at 8x (1,056) while the rest is still 4x (528).</summary>
+        [System.Serializable] private class RenderedInfo { public string name; public int w, h; public float pivotX, pivotY, ppu; }
         [System.Serializable] private class RenderedManifest { public float pixelsPerUnit; public RenderedInfo[] sprites; }
 
         private static Dictionary<string, RenderedInfo> _rendered;
@@ -34,6 +35,7 @@ namespace Game.Presentation.Art
         /// <summary>A sprite rendered by the Blender rig at its true map scale, or null if there is no such render.</summary>
         public static Sprite Rendered(string name)
         {
+            name = ArtCheck.StandIn(name);
             if (_rendered == null)
             {
                 _rendered = new Dictionary<string, RenderedInfo>();
@@ -45,12 +47,40 @@ namespace Game.Presentation.Art
                     foreach (RenderedInfo i in m.sprites) _rendered[i.name] = i;
                 }
             }
+            if ((name == "ground_water" || name == "edge_water") && _rendered.ContainsKey(name + "_" + WaterFrame)) name += "_" + WaterFrame; // the river flows: 12 frames (US-273, ADR 0184)
             if (!_rendered.TryGetValue(name, out RenderedInfo info)) return null;
             return Get("blender:" + name, () =>
             {
+                if (IsTile(name))
+                {
+                    Sprite tile = Resources.Load<Sprite>("Art/Blender/" + name); // imported with a coarse mesh (BlenderSpriteImport)
+                    if (tile != null) return tile;
+                }
                 var tex = Resources.Load<Texture2D>("Art/Blender/" + name);
-                return tex == null ? null : Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(info.pivotX, info.pivotY), _renderedPpu);
+                if (tex == null) return null;
+                Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(info.pivotX, info.pivotY), info.ppu > 0f ? info.ppu : _renderedPpu);
+                sprite.name = name;
+                return sprite;
             });
+        }
+
+        /// <summary>The ground, its edges and the hills are whole tiles: they are imported as sprites with a coarse mesh (US-273, ADR 0184).</summary>
+        private static bool IsTile(string name) => name.StartsWith("ground_", System.StringComparison.Ordinal) || name.StartsWith("edge_", System.StringComparison.Ordinal) || name.StartsWith("hill_", System.StringComparison.Ordinal);
+
+        /// <summary>The river's frames in one loop, and how many a second they play (spec 032 §3.6, ADR 0184); reduced motion holds frame 0.</summary>
+        public const int WaterFrames = Sim.View.Views.WaterFlow.Frames, WaterFps = Sim.View.Views.WaterFlow.Fps;
+
+        /// <summary>The frame the river's sprites show now (the map presenter advances it).</summary>
+        public static int WaterFrame { get; set; }
+
+        /// <summary>
+        /// A ground kind's variant for an acre: three variants of the big kinds (grass, earth, soil, scrub) are rendered and one is picked by a fixed hash of
+        /// the acre's place, so the same acre always shows the same one and a field of acres doesn't repeat like wallpaper. No sim or save state.
+        /// </summary>
+        public static Sprite GroundVariant(string baseName, int x, int y)
+        {
+            int v = Sim.View.Views.GroundVariants.Pick(x, y);
+            return (v == 0 ? null : Rendered(baseName + "_" + v)) ?? Rendered(baseName);
         }
 
         /// <summary>Every rendered sprite's name (the Editor check that each state has its render).</summary>
@@ -81,7 +111,10 @@ namespace Game.Presentation.Art
         }
 
         /// <summary>A field's crop across the whole acre.</summary>
-        public static Sprite Crop(string cropId, CropStage stage) { return Rendered("crop_" + cropId + "_" + StageName(stage)); }
+        public static Sprite Crop(string cropId, CropStage stage, bool fodderCut = false)
+        {
+            return Rendered("crop_" + cropId + "_" + (fodderCut ? "cut" : StageName(stage)));
+        }
 
         public static Sprite Bed(string gardenCropId, CropStage stage)
         {

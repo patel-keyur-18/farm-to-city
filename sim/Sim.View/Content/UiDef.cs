@@ -48,6 +48,22 @@ namespace Sim.View.Content
         }
     }
 
+    /// <summary>The map camera's two zoom stops (spec 032 §3.4), as acres across the screen.</summary>
+    public sealed class CameraDef
+    {
+        /// <summary>The view at launch, when a town opens and on the home button.</summary>
+        public float DefaultAcresAcross { get; }
+
+        /// <summary>The closest zoom.</summary>
+        public float ClosestAcresAcross { get; }
+
+        public CameraDef(float defaultAcresAcross = 3f, float closestAcresAcross = 2f)
+        {
+            DefaultAcresAcross = defaultAcresAcross;
+            ClosestAcresAcross = closestAcresAcross;
+        }
+    }
+
     /// <summary>The look and feel data of <c>content/ui.json</c> (spec 008 §4). All of it can be tuned without re-approval.</summary>
     public sealed class UiDef
     {
@@ -105,6 +121,9 @@ namespace Sim.View.Content
         /// <summary>How long a hold card's button is held before it acts (spec 008 §3.15).</summary>
         public int ConfirmHoldMillis { get; }
 
+        /// <summary>The map camera's default and closest zoom (spec 032 §3.4).</summary>
+        public CameraDef Camera { get; }
+
         public int ComeBackQuickMinMinutes { get; }
         public int ComeBackQuickMaxMinutes { get; }
 
@@ -112,8 +131,9 @@ namespace Sim.View.Content
             int maxFlyingPerEvent, int maxFlyingTotal, int spoilWarningHours, int storeNearlyFullPercent, int awayRowsMax,
             int ratingGoodPercent = 95, int ratingFairPercent = 80, IReadOnlyList<int> skillBands = null, int skillStarPoints = 20, int referenceAcreHours = 3, int awayCardMinHours = 8, int happyAbove = 60,
             IReadOnlyList<int> outputBands = null, WeatherLookDef weatherLook = null, Fixed? hintKeepsSpoilagePerDay = null,
-            int comeBackQuickMinMinutes = 181, int comeBackQuickMaxMinutes = 540, IReadOnlyList<int> calendarRungMinutes = null, int confirmHoldMillis = 1000)
+            int comeBackQuickMinMinutes = 181, int comeBackQuickMaxMinutes = 540, IReadOnlyList<int> calendarRungMinutes = null, int confirmHoldMillis = 1000, CameraDef camera = null)
         {
+            Camera = camera ?? new CameraDef();
             ConfirmHoldMillis = confirmHoldMillis;
             CalendarRungMinutes = new List<int>(calendarRungMinutes ?? new[] { 60, 180, 300, 540 }).AsReadOnly();
             ComeBackQuickMinMinutes = comeBackQuickMinMinutes;

@@ -76,6 +76,9 @@ namespace Sim.View.Views
         public string CropId { get; internal set; }
         public CropStage Stage { get; internal set; }
 
+        /// <summary>A fodder field cut this morning, drawn half cut till <see cref="MapView.FodderCutUntilHour"/> (spec 032 §3.7).</summary>
+        public bool FodderCut { get; internal set; }
+
         /// <summary>0..1 through the growth; 1 once ready.</summary>
         public float Progress { get; internal set; }
 
@@ -549,6 +552,15 @@ namespace Sim.View.Views
                     long span = crop.ReadyAt - crop.SownAt;
                     vm.Progress = crop.State == CropState.Ready || span <= 0 ? 1f : Clamp01((now - crop.SownAt) / (float)span);
                     vm.Stage = crop.State == CropState.Ready ? (now > crop.ReadyAt + grace ? CropStage.Spoiling : CropStage.Ready) : GrowingStage(vm.Progress);
+                    CropDef cropDef = defs.Farm.Crops[crop.Def];
+                    long firstCut = crop.SownAt + cropDef.GrowthSeconds;
+                    if (cropDef.Fodder && crop.State == CropState.Growing && now >= firstCut)
+                    {
+                        vm.Stage = CropStage.Growing3; // once cutting starts it stands tall, whatever its stand's progress
+                        // LastCut moves at every morning pass, so it is a real cut only after the first is due and in a cut season.
+                        vm.FodderCut = crop.LastCut > firstCut && crop.LastCut / 86400 == now / 86400 && now % 86400 < FodderCutUntilHour * 3600L
+                            && cropDef.CutSeasons[(int)Sim.Core.Time.Calendar.SeasonAt(crop.LastCut - 1, sim.Clock)];
+                    }
                 }
                 map.Tiles.Add(vm);
             }
@@ -1193,6 +1205,9 @@ namespace Sim.View.Views
         }
 
         private static float Clamp01(float v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+
+        /// <summary>The hour a cut fodder field looks tall again (owner, 2026-11-28).</summary>
+        public const int FodderCutUntilHour = 12;
 
         /// <summary>Under a third, under two thirds, beyond (spec 008 §3.4).</summary>
         public static CropStage GrowingStage(float progress)

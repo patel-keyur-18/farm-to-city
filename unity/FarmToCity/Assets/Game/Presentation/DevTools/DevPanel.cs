@@ -81,6 +81,10 @@ namespace Game.Presentation.DevTools
             scroll.Add(ButtonRow(Btn("Golden replays", RunGoldens)));
             scroll.Add(Section("Weather look (ADR 0083: look only, no command, reset on leaving play)"));
             scroll.Add(ButtonRow(Btn("Weather look ▸", NextWeatherLook)));
+            scroll.Add(Section("Art check (US-283: realistic stand-ins and memory ballast; takes effect on the next launch)"));
+            Button artCheck = null;
+            artCheck = Btn("Art check: " + (Art.ArtCheck.On ? "ON" : "off"), () => { ToggleArtCheck(); artCheck.text = "Art check: " + (Art.ArtCheck.On ? "ON" : "off"); });
+            scroll.Add(ButtonRow(artCheck));
             scroll.Add(Section("Performance (ADR 0047)"));
             scroll.Add(ButtonRow(Btn("Measure frame time (20 s)", MeasureFrames)));
 
@@ -110,6 +114,13 @@ namespace Game.Presentation.DevTools
             _result.text = Map.WeatherPresenter.DevOverride == null
                 ? "Weather look: the sim's own (" + _host.Sim().CurrentWeather.Id + ")"
                 : "Weather look: " + Map.WeatherPresenter.DevOverride + " (look only; the sim's weather is " + _host.Sim().CurrentWeather.Id + ")";
+        }
+
+        /// <summary>Flips the device check's stand-ins for the next launch (a restart reloads the sprites and the ballast).</summary>
+        private void ToggleArtCheck()
+        {
+            Art.ArtCheck.On = !Art.ArtCheck.On;
+            _result.text = "Art check " + (Art.ArtCheck.On ? "ON" : "off") + ": quit the app and open it again for it to take effect.";
         }
 
         private static Label Section(string text)

@@ -103,6 +103,7 @@ namespace Game.Presentation
 
             CardVm first = LoadTown(); // the saved town, a backup after a crash, or a new town (spec 007 §3.3)
             BuildScene();
+            if (Art.ArtCheck.On) StartCoroutine(Art.ArtCheck.LoadBallast()); // the device check's memory ballast (US-283; Development builds only)
             RestoreCamera();
             Refresh(false);
             if (first != null) ShowCard(first, _ => AskWhichToRun());
@@ -121,7 +122,7 @@ namespace Game.Presentation
         {
             _camera = Camera.main;
             _camera.orthographic = true;
-            _camera.backgroundColor = Art.Painter.Hex(0x86CDD8);
+            _camera.backgroundColor = Art.Painter.Hex(0xC9DCD6); // a pale horizon haze for the instant before the map draws; past the map's edge the meadow's colour takes over (spec 010 §3.6, ADR 0184)
 
             _tweens = Tweens.Create(transform);
 
@@ -145,7 +146,7 @@ namespace Game.Presentation
             _mapVm = MapView.Build(_ctx);
             _map = MapPresenter.Create(transform, _tweens, _ui);
             _map.Refresh(_mapVm, false);
-            _input = MapInput.Create(gameObject, _camera, _map, _document, OnTap);
+            _input = MapInput.Create(gameObject, _camera, _map, _document, OnTap, _ui.Camera);
             _input.ApplyRing(_mapVm);
             _input.Focus(_mapVm.HomeX, _mapVm.HomeY); // the yard (spec 010 §3.5)
 

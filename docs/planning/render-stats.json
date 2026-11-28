@@ -509,5 +509,20 @@
   {"label":"US-272","view":"farm","date":"2026-11-27","drawCalls":364,"batches":353,"setPassCalls":8,"triangles":10634,"visibleSprites":398,"sprites":2293},
   {"label":"Sprint 29 end (review)","view":"farm","date":"2026-11-27","drawCalls":349,"batches":349,"setPassCalls":9,"triangles":9297,"visibleSprites":396,"sprites":2291},
   {"label":"Sprint 29 end (review)","view":"village","date":"2026-11-27","drawCalls":561,"batches":561,"setPassCalls":10,"triangles":14909,"visibleSprites":673,"sprites":2291},
-  {"label":"Sprint 29 end (review)","view":"all","date":"2026-11-27","drawCalls":1283,"batches":1283,"setPassCalls":12,"triangles":35729,"visibleSprites":1639,"sprites":2291}
+  {"label":"Sprint 29 end (review)","view":"all","date":"2026-11-27","drawCalls":1283,"batches":1283,"setPassCalls":12,"triangles":35729,"visibleSprites":1639,"sprites":2291},
+  {"label":"US-283 Village bot town, art check off","view":"all","date":"2026-11-27","drawCalls":1326,"batches":1326,"setPassCalls":13,"triangles":31957,"visibleSprites":1677,"spritePixels":34517,"sprites":2328},
+  {"label":"US-283 Village bot town, art check off","view":"village","date":"2026-11-27","drawCalls":594,"batches":594,"setPassCalls":10,"triangles":13899,"visibleSprites":710,"spritePixels":41004,"sprites":2328},
+  {"label":"US-283 Village bot town, art check off","view":"farm","date":"2026-11-27","drawCalls":207,"batches":207,"setPassCalls":8,"triangles":5041,"visibleSprites":218,"spritePixels":47588,"sprites":2328},
+  {"label":"US-283 Village bot town, art check ON (stand-ins, shadows)","view":"all","date":"2026-11-27","drawCalls":1453,"batches":1453,"setPassCalls":13,"triangles":40819,"visibleSprites":1804,"spritePixels":34777,"sprites":2490},
+  {"label":"US-283 Village bot town, art check ON (stand-ins, shadows)","view":"village","date":"2026-11-27","drawCalls":636,"batches":636,"setPassCalls":10,"triangles":17710,"visibleSprites":752,"spritePixels":41252,"sprites":2490},
+  {"label":"US-283 Village bot town, art check ON (stand-ins, shadows)","view":"farm","date":"2026-11-27","drawCalls":216,"batches":216,"setPassCalls":8,"triangles":6197,"visibleSprites":227,"spritePixels":48183,"sprites":2490},
+  {"label":"US-273 ground, Village bot town, art check off","view":"all","date":"2026-11-28","drawCalls":1365,"batches":1365,"setPassCalls":13,"triangles":31568,"visibleSprites":1708,"spritePixels":34355,"sprites":2359},
+  {"label":"US-273 ground, Village bot town, art check off","view":"village","date":"2026-11-28","drawCalls":619,"batches":619,"setPassCalls":10,"triangles":13650,"visibleSprites":727,"spritePixels":40746,"sprites":2359},
+  {"label":"US-273 ground, Village bot town, art check off","view":"farm","date":"2026-11-28","drawCalls":228,"batches":228,"setPassCalls":8,"triangles":5784,"visibleSprites":231,"spritePixels":47292,"sprites":2359},
+  {"label":"US-274 crops, Village bot town, art check off","view":"all","date":"2026-11-28","drawCalls":1357,"batches":1357,"setPassCalls":13,"triangles":43432,"visibleSprites":1708,"spritePixels":34311,"sprites":2359},
+  {"label":"US-274 crops, Village bot town, art check off","view":"village","date":"2026-11-28","drawCalls":611,"batches":611,"setPassCalls":10,"triangles":19135,"visibleSprites":727,"spritePixels":40688,"sprites":2359},
+  {"label":"US-274 crops, Village bot town, art check off","view":"farm","date":"2026-11-28","drawCalls":220,"batches":220,"setPassCalls":8,"triangles":7182,"visibleSprites":231,"spritePixels":47241,"sprites":2359},
+  {"label":"US-275 trees, Village bot town, art check off","view":"all","date":"2026-11-28","drawCalls":1357,"batches":1357,"setPassCalls":13,"triangles":49589,"visibleSprites":1708,"spritePixels":34310,"sprites":2359},
+  {"label":"US-275 trees, Village bot town, art check off","view":"village","date":"2026-11-28","drawCalls":611,"batches":611,"setPassCalls":10,"triangles":21132,"visibleSprites":727,"spritePixels":40693,"sprites":2359},
+  {"label":"US-275 trees, Village bot town, art check off","view":"farm","date":"2026-11-28","drawCalls":220,"batches":220,"setPassCalls":8,"triangles":7536,"visibleSprites":231,"spritePixels":47261,"sprites":2359}
 ]
