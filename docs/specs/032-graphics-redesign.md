@@ -84,7 +84,6 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | The river | `ground_water` and `edge_water` are 12 frames each (`_0` to `_11`) played at 10 a second (`WaterFlow`); each frame leads into the next and frame 11 into 0; reduced motion holds frame 0. Presentation only: the clock is the app's. | The owner: "flowing naturally, with animation, realistic", "12 frames, 10 fps". About 28 MB of the budget. |
 | Hills | Rendered at 8× with a 4,096 px import (`hill_2` 2,318 × 1,608). | §3.2. |
 | Tile mesh | Ground, edge and hill sprites are imported as Sprites with a coarse mesh (at most 24 triangles): the tight mesh of an 8× render is about 190. | Measured: +245% triangles otherwise. |
-| Sky | A soft haze: the map's background starts as the haze colour. No sprite, no shader. **As built it is never seen:** the meadow colour past the map's edge (spec 010 §3.6) replaces it before the first frame (Sprint 30 review). | The owner's answer to gap 3. |
 
 ### 3.7 The crops and the kitchen garden (US-274, ADR 0185)
 
@@ -172,7 +171,7 @@ None: no rule or number of the game changes.
 
 | Sprint | Stories | Points |
 | --- | --- | --- |
-| 30 | US-283 the device check (2); US-273 ground, terrain and boundaries, with the sky and the river's banks (5); US-274 crops and the kitchen garden (5); US-275 trees and orchards (4) | 16 |
+| 30 | US-283 the device check (2); US-273 ground, terrain and boundaries, with the river's banks (5); US-274 crops and the kitchen garden (5); US-275 trees and orchards (4) | 16 |
 | 31 | US-276 people and portraits: new 6-head bodies, walk and work frames, portraits (13); US-277 animals, vehicles and machines (3) | 16 |
 | 32 | US-278 your farm (6); US-279 businesses and stalls (6); US-280 the village and town (6); spec 033 written | 18 |
 | 33 | US-281 the map's code-drawn pictures (contact shadow, ring, lit acre, arrow, overlays) (2); US-282 effects, markers and the weather's look (3); the phase's device build; spec 033 reviewed | 5 + review |

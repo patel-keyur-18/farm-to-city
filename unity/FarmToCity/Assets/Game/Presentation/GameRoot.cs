@@ -122,7 +122,6 @@ namespace Game.Presentation
         {
             _camera = Camera.main;
             _camera.orthographic = true;
-            _camera.backgroundColor = Art.Painter.Hex(0xC9DCD6); // a pale horizon haze for the instant before the map draws; past the map's edge the meadow's colour takes over (spec 010 §3.6, ADR 0184)
 
             _tweens = Tweens.Create(transform);
 

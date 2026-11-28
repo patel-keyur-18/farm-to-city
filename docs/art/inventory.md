@@ -313,7 +313,7 @@ Everything the game draws, from the code at `main` (`5e5a4301`) and `sprint/28-b
 
 ## K. Drawn in code (not Blender)
 
-- **The sky beyond the map:** a flat colour (at the inventory `GameRoot`'s `0x86CDD8`; what is seen past the map is the meadow colour `MapPresenter` sets, ADR 0187).
+- **Past the map's edge:** the camera's flat meadow colour, set by `MapPresenter` (spec 010 §3.6). The view looks down on the map, so no sky is drawn.
 - **The weather:** rain streaks and splashes (Unity particles), the rain and rime textures, the frost's white crystals (`WeatherPresenter`).
 - **The contact shadow** under people, animals and props (`SpriteBank.ContactShadow`).
 - **The selection ring** and the **lit acre** for placing (`SpriteBank.SelectionRing`, `TileFill`).
@@ -326,7 +326,7 @@ Everything the game draws, from the code at `main` (`5e5a4301`) and `sprint/28-b
 
 | Story | Category | Points |
 | --- | --- | --- |
-| US-273 | A. Ground, terrain and boundaries, with the sky and the river's banks | 5 |
+| US-273 | A. Ground, terrain and boundaries, with the river's banks | 5 |
 | US-274 | B. Crops and the kitchen garden | 5 |
 | US-275 | C. Trees and orchards | 3 |
 | US-276 | D. People and portraits (walk and work frames) | 8 |
