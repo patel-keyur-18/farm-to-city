@@ -1,8 +1,8 @@
 """
 Spec 032 (the realistic valley): the game's sprites rendered realistic at 8x. No baked shadows (the owner, 2026-11-27, after the device check: ADR 0183).
 
-US-283 (the device check) renders two subjects here: the family house (4 facings) and the farm hand and his wife (front and back,
-standing); its wheat acre is in real_crops.py with the other crops (US-274). Later stories add their categories to SPRITES below.
+US-283 (the device check) rendered the family house (4 facings), here, and its wheat acre, now in real_crops.py with the other crops
+(US-274). The people and portraits are in real_people.py (US-276). Later stories add their categories to SPRITES below.
 
 Run headless from the repository root:
     /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P tools/blender/render_real.py -- [names]
@@ -41,13 +41,16 @@ _tspec = importlib.util.spec_from_file_location("real_trees", os.path.join(HERE,
 T = importlib.util.module_from_spec(_tspec)
 sys.modules["real_trees"] = T
 _tspec.loader.exec_module(T)
+_pspec = importlib.util.spec_from_file_location("real_people", os.path.join(HERE, "real_people.py"))
+P = importlib.util.module_from_spec(_pspec)
+sys.modules["real_people"] = P
+_pspec.loader.exec_module(P)
 
 OUT = os.environ.get("FTC_ART_OUT") or os.path.join(HERE, "..", "..", "unity", "FarmToCity", "Assets", "Resources", "Art", "Blender")
 R.OUT_DIR = OUT
 S.OUT = OUT
 PPU = 132 * R.SCALE
 SUN_ELEVATION = 60.0     # degrees (spec 032 §3.1); azimuth as the game's other art
-PEOPLE_HEADS = 6         # spec 032 §3.1
 
 
 # ---------------------------------------------------------------- the scene
@@ -143,31 +146,9 @@ def wheat_mats(toon):
     }
 
 
-def foot_pad(depth=0.0197):
-    """An invisible point just under the feet: today's figure has an outline below them, so its frame reaches a hair lower than a realistic one's.
-    The point only widens the frame (a mesh of one vertex, never drawn), so the pivot keeps today's distance from the frame's bottom (spec 032 AC-1)."""
-    me = bpy.data.meshes.new("footPad")
-    me.from_pydata([(0.0, 0.0, -depth)], [], [])
-    o = bpy.data.objects.new("footPad", me)
-    bpy.context.scene.collection.objects.link(o)
-    o.visible_camera = False
-    return o
-
-
-def person(kind, facing):
-    """The farm hand or his wife, 6 heads tall at today's height, standing; 'back' turns away as the game's walking-away frames do."""
-    objs = S.person_real(kind, heads=PEOPLE_HEADS)
-    if facing == "back":
-        R.refit(objs, math.degrees(math.radians(-115) - S.FRONT))
-    return objs + [foot_pad()]
-
-
 SPRITES = {}
 for _f in R.FACINGS:
     SPRITES["family_house_" + _f] = lambda f=_f: house(f)
-for _k in ("hand_m", "hand_f"):
-    for _f in ("front", "back"):
-        SPRITES["person_%s_%s" % (_k, _f)] = lambda k=_k, f=_f: person(k, f)
 
 
 # ---------------------------------------------------------------- the ground and boundaries (US-273): today's models, realistic
@@ -304,11 +285,17 @@ TREE_SPRITES = T.install(R, S, C)
 SPRITES.update(TREE_SPRITES)
 
 
+# ---------------------------------------------------------------- people and portraits (US-276)
+
+PEOPLE_SPRITES, PORTRAITS = P.install(R, S)
+SPRITES.update(PEOPLE_SPRITES)
+
+
 # ---------------------------------------------------------------- main
 
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-    names = argv or list(SPRITES)
+    names = argv or list(SPRITES) + list(PORTRAITS)
     os.makedirs(OUT, exist_ok=True)
     manifest_path = os.path.join(OUT, "sprites.json")
     with open(manifest_path) as f:
@@ -316,11 +303,15 @@ def main():
     manifest = {s["name"]: s for s in data["sprites"]}
     for name in names:
         sc, cam = start()
-        objs = smooth_plants(S.finish(SPRITES[name]()))
-        if name in CROP_SPRITES or name in TREE_SPRITES:
-            objs = C.hold_frame(name, objs, cam)
-        info = R.frame_and_render(sc, cam, name, objs)
-        info.update({"name": name, "ppu": PPU})
+        if name in PORTRAITS:   # a card picture: its own framing, today's 256 px, no map scale
+            info = P.render_portrait(sc, cam, name, PORTRAITS[name], OUT)
+            info.update({"name": name})
+        else:
+            objs = smooth_plants(S.finish(SPRITES[name]()))
+            if name in CROP_SPRITES or name in TREE_SPRITES or name in PEOPLE_SPRITES:
+                objs = C.hold_frame(name, objs, cam)
+            info = R.frame_and_render(sc, cam, name, objs)
+            info.update({"name": name, "ppu": PPU})
         manifest[name] = info
         print("rendered", name, info)
     data["sprites"] = [manifest[k] for k in sorted(manifest)]
