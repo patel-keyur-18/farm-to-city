@@ -1290,7 +1290,7 @@ The owner takes these up once Sprint 15 is done. **Owner, 2026-10-29: they're bu
 | Sprint | Branch | Stories | Points | Spec |
 | --- | --- | --- | --- | --- |
 | 29 | `sprint/29-two-towns` | US-270 two towns (5); US-272 notifications from both, a play log each (3); US-271 the three samples and spec 032 (3) | 11 | 031, 032 (both approved) |
-| 30 | `sprint/30-art-land` | **US-283 the device check (2, first; built 2026-11-27, ADR 0182, device reading pending)**; US-273 ground and terrain (5; done and approved 2026-11-28, ADR 0184), US-274 crops and garden (5; done and approved 2026-11-28, ADR 0185), US-275 trees and orchards (4) | 16 | 032 |
+| 30 | `sprint/30-art-land` | **US-283 the device check (2, first; built 2026-11-27, ADR 0182, device reading pending)**; US-273 ground and terrain (5; done and approved 2026-11-28, ADR 0184), US-274 crops and garden (5; done and approved 2026-11-28, ADR 0185), US-275 trees and orchards (4; built 2026-11-28, ADR 0186, awaiting review) | 16 | 032 |
 | 31 | `sprint/31-art-people` | US-276 people and portraits, new 6-head bodies (13), US-277 animals and machines (3) | 16 | 032 |
 | 32 | `sprint/32-art-town` | US-278 your farm (6), US-279 businesses and stalls (6), US-280 the village and town (6); spec 033 (the UI restyle) written | 18 | 032, 033 |
 | 33 | `sprint/33-art-finish` | US-281 the map's code-drawn pictures (2), US-282 effects and the weather's look (3); the phase's Development build; spec 033 reviewed | 5 + review | 032, 033 |

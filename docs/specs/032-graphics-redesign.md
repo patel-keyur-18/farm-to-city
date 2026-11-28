@@ -96,6 +96,16 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Frame | Each render is held to the recorded frame and anchor. | AC-1. |
 | Fodder cut | Once a fodder field's first cut is due it is drawn tall, whatever its stand's progress. After a morning's real cut it is drawn half cut (`crop_berseem_cut`, `crop_sorghum_cut`) until 12:00. A picture only: nothing in the sim changes. | The owner, 2026-11-28: you see the morning's cut, and the field doesn't look half empty all day. |
 
+### 3.8 Trees and orchards (US-275, ADR 0186)
+
+| Rule | Behaviour | Why |
+| --- | --- | --- |
+| Crowns | Built leaf by leaf, each kind with its own leaf shape, limbs showing through the gaps. | The owner, 2026-11-28: matches the dense crops; the kinds can be told apart. |
+| Fruit | In bunches on the side the camera sees, about half as long as the toon art's; about 2.5 to 4 times life size beside the tree. | A ripe tree must read at the game's zoom; closer to life size does not show. |
+| Repeated trees | Orchards, neighbours' groves, the scrub's babul and the far bank's mango are each drawn 92% to 108% of size, fixed by their place. Single trees are not scaled. | The owner: break up identical copies at no memory cost. |
+| Shade | None (ADR 0183): fallen leaves under the neem and the village tree; the basin's and the banyan's floors barely take shade. | The owner wants no shadows. |
+| Frame | Each render is held to the recorded frame and anchor. | AC-1. |
+
 ## 4. Data
 
 **Changed definitions** (`content/ui.json`, the map's look; not balance):
@@ -139,6 +149,8 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | AC-12 | Every ground, edge and hill sprite has at most 24 triangles. | `Game.Editor.SpriteSizeCheck` (Editor) |
 | AC-13 | Every field crop and garden crop of `content/crops.json` at all four stages, the empty bed, the planting pit and the neighbours' sugarcane is rendered at 8×. | `CropArtTests.EveryCropStageAndBedIsRenderedAt8x` |
 | AC-14 | A fodder field is drawn tall once its first cut is due, half cut from a morning's cut until 12:00, then tall again. | `CattleViewTests.Fodder_LooksCut_TillNoon` (the two cut pictures: AC-13's test) |
+| AC-15 | Every fruit tree of `content/trees.json` at all four stages, the neem, babul, village tree, the banyan and its panel picture is rendered at 8×. | `TreeArtTests.EveryTreePictureIsRenderedAt8x` |
+| AC-16 | A repeated tree's size factor is the same every time for its place, within 0.92 to 1.08, and one acre's trees differ. | `TreeSizeTests.FactorIsSteadyWithinEightPercentAndMixed` |
 
 ## 9. Balancing hooks
 
