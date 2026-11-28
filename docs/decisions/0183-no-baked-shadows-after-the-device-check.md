@@ -25,6 +25,10 @@ Both p95s pass with room, so the realistic art itself is affordable (the memory 
 3. **Everything else of US-283 is approved**: the realistic house, wheat and hands, the camera (3 acres across, closest 2), ASTC on iOS, the per-sprite `ppu`, the art check and ballast for the later device builds. "Everything looks good and I am satisfied."
 4. **A gap between two houses on one acre.** They were attached (ADR 0067 had them sharing a wall). The two plots now stand ±0.24 of an acre from its middle instead of ±0.168, so about 0.12 of an acre of open ground shows between the courtyard walls, and the outer walls stay inside the acre (`MapPresenter.Houses.cs` `HousePlots`). Presentation only; no sim, content or save change.
 
+## Not recorded at this check (Sprint 30 review)
+
+Only one reading is on record: art check on, the whole map. The default view's reading, the reading with the art check off, the 20-minute heat check (part of spec 032 §3.5's bar) and the look at ASTC softness (§10) are not recorded; the owner approved with "everything else looks good". All four are on the phase build's list (F21.4).
+
 ## Not decided here
 
 - **The 2.03% of frames over 25 ms** is not a GPU problem (p95 7.94 ms) and removing shadows is not known to fix it: the max main-thread frame was 27 ms, so single hitches (the ballast and the realistic textures loading, the garbage collector, the 20-second window's first seconds) are likelier than sustained load. It is read again at the phase's last Development build (spec 032 §3.5, ADR 0172 §8) with the art check on and off; if it stays over 1% there, finding the hitches is a task before that build's pull request.

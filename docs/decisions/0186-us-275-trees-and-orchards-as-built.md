@@ -26,7 +26,7 @@ US-275 is the third category of the redesign (spec 032 §12, 4 points): the five
 
 ## Fruit size
 
-The question offered "about 1.5 times life size". That could not be met: at 1.5× a mango, guava or apple is a few pixels and does not show at the game's zoom. As drawn, they are **about half as long as the toon art's** and **about 2.5 to 4 times life size** beside their tree. The owner was told this with the preview and approved it. Banana and papaya fruit were not measured against real fruit.
+The question offered "about 1.5 times life size". That could not be met: at 1.5× a mango, guava or apple is a few pixels and does not show at the game's zoom. As drawn, they are **about half as long as the toon art's** and **about 2.5 to 4 times life size** beside their tree. The owner was told this with the preview and approved it. Banana and papaya fruit were not measured against real fruit. Some apples hang under or in front of the crown with no stalk to be seen (`tree_apple_ripe`); no apple tree has been seen in the Editor.
 
 ## Measured (the Editor, the Village bot town, art check off; `docs/planning/render-stats.json` "US-275 trees…")
 

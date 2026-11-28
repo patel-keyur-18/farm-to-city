@@ -13,7 +13,7 @@ US-273 is the first category of the redesign (spec 032 §12, 5 points): every gr
 
 1. **Three variants** of each big ground kind (grass, earth, soil, scrub), picked per acre by a fixed hash of its place (`GroundVariants.Pick`), so a field of acres doesn't repeat like wallpaper. No sim, content or save state.
 2. **The river flows**: "make water flowing naturally, with animation, realistic", then "12 frames, 10 fps (smoother)". 12 rendered frames of `ground_water` and of `edge_water`, one loop 1.2 s; reduced motion holds frame 0.
-3. **The sky**: a soft haze, no new sprite and no shader. The map's background starts as the haze colour (`0xC9DCD6`); the meadow colour past the map's edge is unchanged.
+3. **The sky**: a soft haze, no new sprite and no shader. The map's background starts as the haze colour (`0xC9DCD6`); the meadow colour past the map's edge is unchanged. *Sprint 30 review: the haze is never seen; the map sets the meadow colour before the first frame is drawn. Whether to show a sky is with the owner.*
 4. **The hills at 8×** with a 4,096 px import limit (`hill_2` is 2,318 × 1,608).
 5. **Boundaries** (hedge, fence, bund, worn bund, gates, corner stones, street edges): the same designs, realistic detail.
 6. The approved preview's look: the grass, earth, soil and scrub from palette colours through the same sun and AgX as the sprites, a seamless procedural texture, soil furrows, a rippled river with paler crests, banks with reeds and the washing steps.

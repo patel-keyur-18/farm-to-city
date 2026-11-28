@@ -16,7 +16,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 **In:**
 - **The pick (US-271, Preview 27):** the realistic style: physically lit materials, no outline. Option B (short baked shadows on buildings) was the first pick; **after the device check the owner dropped baked shadows altogether (ADR 0183, 2026-11-27): Option A.** The code-drawn contact oval under moving things stays.
 - **The device check first (US-283, Sprint 30):** the realistic house, wheat acre and the hand and his wife in the game at the new zoom, read on the iPhone before the other sprites are re-rendered.
-- **The redesign, one category a story (US-273 to US-282, Sprints 30 to 33):** every Blender sprite on the map re-rendered realistic at twice today's resolution; building shadows as their own sprites; the map's code-drawn pictures to match.
+- **The redesign, one category a story (US-273 to US-282, Sprints 30 to 33):** every Blender sprite on the map re-rendered realistic at twice today's resolution; the map's code-drawn pictures to match.
 - **The camera:** the default view 3 acres across; the closest zoom 2 acres across.
 
 **Out:**
@@ -44,7 +44,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | Rule | Behaviour | Why |
 | --- | --- | --- |
 | Render resolution | **8× the game's 1× density** (until every sprite is re-rendered the manifest keeps today's 528 and gives each realistic sprite its own `ppu` 1,056, ADR 0182) (`render.py` `SCALE` 8): 1,056 px an acre (today 528). The manifest's `pixelsPerUnit` becomes 1,056; `SpriteBank` reads it, so sprites keep their size on the map. | At the new default zoom an acre is 844 phone pixels on the iPhone 13: today's 528 would be stretched 1.6× and soft. |
-| Largest sprite | `hill_2`, 2,328 × 1,628 at 8×: the import's maximum size becomes 4,096 for the hills only; everything else fits 2,048. | Measured: only one of today's 605 sprites is over 1,024 px at 4×. |
+| Largest sprite | `hill_2`, 2,318 × 1,608 at 8×: the import's maximum size becomes 4,096 for the hills only; everything else fits 2,048. | Measured: only one of today's 605 sprites is over 1,024 px at 4×. |
 | Compression | iOS override on every rendered sprite: ASTC 4×4 (8 bits a pixel), mipmaps on. The default platform (the Editor) stays uncompressed. | 4× the pixels at a quarter of the bytes: about today's 195 MB (260 MB with mipmaps). |
 | Memory budget | Rendered sprites aim at **320 MB** or less on the iPhone with mipmaps, read in Xcode's memory report at the device check. A target, not a hard limit (the owner, 2026-11-28, ADR 0184): each story reports its figure. | Today about 260 MB; Option B estimated about 300. |
 
@@ -60,7 +60,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 
 | Rule | Behaviour | Why |
 | --- | --- | --- |
-| Default view | **3 acres across the screen** at launch, when a town opens, and on the home button (today `MapInput.OpeningHalfHeight` 1.4, about 6 acres across the iPhone; it becomes the content value). | The owner, 2026-11-27. |
+| Default view | **3 acres across the screen** at launch, when a town opens, and on the home button (today `MapInput.OpeningHalfHeight` 1.4, about 6 acres across the iPhone; it becomes the content value). | The owner, 2026-11-27. **As built:** this is the view of a new town, a reset, and a town with no saved camera. A saved camera reopens as saved, kept within the new limits (so since Sprint 6), and there is no home button. Whether every launch should open 3 across is with the owner (Sprint 30 review). |
 | Closest zoom | **2 acres across** (`MapCamera.MinHalfHeight`, in `IsoGrid.cs`, from 3 to 2 acre widths). | The owner, 2026-11-27: room to look closer. At 2 across an acre is 1,266 phone pixels against 1,056 rendered: 1.2× stretched, still sharp enough. |
 | Farthest zoom | Unchanged (the whole map). | The crowded view stays the worst case the frame-time guard reads. |
 | Saved camera | A town saved with a zoom outside the new bounds opens clamped into them (already the rule, `IsoGrid.Clamp`). | No migration needed. |
@@ -83,7 +83,7 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 | The river | `ground_water` and `edge_water` are 12 frames each (`_0` to `_11`) played at 10 a second (`WaterFlow`); each frame leads into the next and frame 11 into 0; reduced motion holds frame 0. Presentation only: the clock is the app's. | The owner: "flowing naturally, with animation, realistic", "12 frames, 10 fps". About 28 MB of the budget. |
 | Hills | Rendered at 8× with a 4,096 px import (`hill_2` 2,318 × 1,608). | §3.2. |
 | Tile mesh | Ground, edge and hill sprites are imported as Sprites with a coarse mesh (at most 24 triangles): the tight mesh of an 8× render is about 190. | Measured: +245% triangles otherwise. |
-| Sky | A soft haze: the map's background starts as the haze colour. No sprite, no shader. | The owner's answer to gap 3. |
+| Sky | A soft haze: the map's background starts as the haze colour. No sprite, no shader. **As built it is never seen:** the meadow colour past the map's edge (spec 010 §3.6) replaces it before the first frame (Sprint 30 review). | The owner's answer to gap 3. |
 
 ### 3.7 The crops and the kitchen garden (US-274, ADR 0185)
 
@@ -135,10 +135,10 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 
 | ID | Given / When / Then | Test |
 | --- | --- | --- |
-| AC-1 | Given the manifest at 1,056 px a unit, when any rendered sprite is placed, then its anchor stays within 0.01 world units of today's (its pivot's distance from the frame's middle across and from its bottom up) and its frame within 5% (people 15%: new bodies). *Amended by ADR 0182 §7: 1% was not reachable for a realistic silhouette (no outline, real stalks, slimmer figures).* | `Game.Editor.SpriteSizeCheck` (new, Editor: every sprite's world size and anchor against `docs/art/sprite-world-sizes.json`, the table of today's recorded before any new art) |
+| AC-1 | Given each realistic sprite at 1,056 px a unit (its own `ppu`), when any rendered sprite is placed, then its anchor stays within 0.01 world units of today's (its pivot's distance from the frame's middle across and from its bottom up) and its frame within 5% (people 15%: new bodies). *Amended by ADR 0182 §7: 1% was not reachable for a realistic silhouette (no outline, real stalks, slimmer figures).* | `Game.Editor.SpriteSizeCheck` (new, Editor: every sprite's world size and anchor against `docs/art/sprite-world-sizes.json`, the table of today's recorded before any new art) |
 | AC-2 | Every map sprite in `SpriteBank` has its realistic render. | `Game.Editor.RenderedArtCheck` (new, Editor: every name `SpriteBank` asks for has its file). Added with the last art category (Sprint 33). |
 | AC-3 | *Withdrawn (ADR 0183): no baked shadows.* | |
-| AC-4 | At launch (the default half-height moves from `MapInput.OpeningHalfHeight` into `MapCamera`, read from `content/ui.json`) the view is 3 acres across; the closest zoom is 2 acres across; the farthest is unchanged. | `IsoGridTests.DefaultAndClosestZoom` (new, Sim.View) |
+| AC-4 | For a new town, a reset or a town with no saved camera (the default half-height moves from `MapInput.OpeningHalfHeight` into `MapCamera`, read from `content/ui.json`) the view is 3 acres across; the closest zoom is 2 acres across; the farthest is unchanged. | `IsoGridTests.DefaultAndClosestZoom` (new, Sim.View) |
 | AC-5 | A saved camera outside the new bounds opens clamped. | `IsoGridTests.SavedZoomClamped` (new, Sim.View) |
 | AC-6 | `content/ui.json` validates the camera fields and their bounds. | `UiContentTests.Camera` (new, Sim.View.Tests: `ui.json` is loaded by `Sim.View`'s `UiLoader`) |
 | AC-7 | On the iPhone 13 the device check meets §3.5's bar, or the redesign switches to Option A. | Device: the US-283 test checklist (both p95s, memory, 20 minutes of play) |
@@ -171,7 +171,7 @@ None: no rule or number of the game changes.
 
 | Sprint | Stories | Points |
 | --- | --- | --- |
-| 30 | US-283 the device check (2); US-273 ground, terrain and boundaries, with the sky and the river's banks (5); US-274 crops and the kitchen garden (5); US-275 trees and orchards, with their shadows (4) | 16 |
+| 30 | US-283 the device check (2); US-273 ground, terrain and boundaries, with the sky and the river's banks (5); US-274 crops and the kitchen garden (5); US-275 trees and orchards (4) | 16 |
 | 31 | US-276 people and portraits: new 6-head bodies, walk and work frames, portraits (13); US-277 animals, vehicles and machines (3) | 16 |
 | 32 | US-278 your farm (6); US-279 businesses and stalls (6); US-280 the village and town (6); spec 033 written | 18 |
 | 33 | US-281 the map's code-drawn pictures (contact shadow, ring, lit acre, arrow, overlays) (2); US-282 effects, markers and the weather's look (3); the phase's device build; spec 033 reviewed | 5 + review |

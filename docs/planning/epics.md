@@ -131,9 +131,9 @@
 | [F19.4](features/F19.4-scenarios-and-difficulty.md) | Scenarios and difficulty | E19 | 5 | To write at the start of Phase 5 | Backlog | US-174–US-175 | 8 |
 | [F19.5](features/F19.5-store-readiness-deferred.md) | Store readiness (deferred) | E19 | 5 | To write at the start of Phase 5 | Backlog | US-176–US-176 | 8 |
 | [F21.1](features/F21.1-ui-fixes-and-businesses-hub.md) | UI fixes and the businesses hub | E21 | 3.5 | Spec 030 | In progress | US-265–US-267 | 11 |
-| [F21.2](features/F21.2-supply-between-businesses.md) | Supply between your businesses | E21 | 3.5 | Spec 030 | Backlog | US-268–US-269 | 10 |
-| [F21.3](features/F21.3-two-towns.md) | Two towns | E21 | 3.5 | Spec 031 | Backlog | US-270, US-272 | 8 |
-| [F21.4](features/F21.4-graphics-redesign.md) | Graphics redesign | E21 | 3.5 | Spec 032 | In progress | US-271, US-273–US-282 | 48 |
+| [F21.2](features/F21.2-supply-between-businesses.md) | Supply between your businesses | E21 | 3.5 | Spec 030 | Built | US-268–US-269 | 10 |
+| [F21.3](features/F21.3-two-towns.md) | Two towns | E21 | 3.5 | Spec 031 | Done | US-270, US-272 | 8 |
+| [F21.4](features/F21.4-graphics-redesign.md) | Graphics redesign | E21 | 3.5 | Spec 032 | In progress | US-271, US-273–US-283 | 58 |
 
 ## Conventions (ADR 0025)
 

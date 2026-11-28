@@ -36,7 +36,7 @@ The check should be read in a Village town (the most crowded view). **Import** `
 | # | What to try | What to expect | Device only | Result |
 | --- | --- | --- | --- | --- |
 | 1 | Open the app, art check **off** | The valley as today, except: the camera opens **3 acres across** (closer than before), your family houses (if the town has any) are realistic with a soft shadow behind, the hand and his wife realistic, wheat fields realistic. The rest is today's art | | Editor ✓ (`s30-283-off-farm.png`) |
-| 2 | Tap the home button / Menu → a place | The view returns to the same 3 acres across | | Editor ✓ |
+| 2 | *Withdrawn (Sprint 30 review): there is no home button, and this row's "Editor ✓" was wrong* | | | Not built |
 | 3 | Pinch all the way in | The closest zoom is **2 acres across**; sprites stay sharp (the 8× ones look crisp, today's softer) | **Device only** | |
 | 4 | Pinch all the way out | The whole map: the farthest zoom is as before | | Editor ✓ |
 | 5 | Developer panel (hold the time card for 3 seconds) → scroll to **Art check** → tap it (it says ON) → **quit the app and open it again** | After the relaunch the town loads; every house is the realistic one, every field is realistic wheat, every person is the hand or his wife, buildings and trees have a soft shadow under them | **Device only** | Editor ✓ (`s30-283-on-farm.png`, `s30-283-on-village.png`, `s30-283-on-all.png`) |

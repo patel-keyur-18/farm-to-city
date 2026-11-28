@@ -1,6 +1,6 @@
 # 0185. US-274 the crops, the kitchen garden's beds and the planting pit as built
 
-- Status: Accepted (the owner approved the before/after preview, 2026-11-28; the story awaits the owner's review)
+- Status: Accepted (the owner approved the before/after preview and the built story, 2026-11-28)
 - Date: 2026-11-28
 - Deciders: Keyur Patel
 - Related ADRs: 0180 (the direction), 0182 (the 8× pipeline, the art check), 0183 (no baked shadows), 0184 (the ground)
