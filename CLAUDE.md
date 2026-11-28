@@ -301,6 +301,7 @@ Build output goes to `/artifacts/` (never committed). CI (GitHub Actions) runs `
 | 0186 | US-275 trees and orchards as built: leaf-by-leaf crowns, fruit in bunches (about half the toon art's length, 2.5–4× life size beside the tree), no shade, repeated trees drawn 92–108% by place, 25 pictures within AC-1, draw calls flat and triangles +5–14%, about 200 MB of sprites; the temple's peepal, missed in the plan check, added after its own approval |
 | 0187 | Sprint 30 independent review (Opus 5.5): no blocker; 8 important and 9 minor findings, docs and weak tests fixed, the old renderer guarded; three questions with the owner (a played town reopens at its saved zoom, not 3 acres across; the sky haze is never seen; hands walk in the old art until US-276) |
 | 0188 | US-276 people and portraits as built: one rebuilt body for 11 kinds (no ball joints, cloth that wraps and folds), 124 map pictures at 8× and 15 portraits (two new labourer ones), the UI shows portraits wherever it names a person (`PersonPictures`), the People button's word reads clearly, the story toast shows the scroll when its person is gone, about 209 MB of sprites |
+| 0189 | US-277 animals, vehicles and machines as built: 20 realistic pictures (cattle as one fused coat, machines on treaded tyres); somebody works the plough (a ploughman drawn behind it at people's size) and the tractor (a driver in its picture; the tractor is now open), as art only; hiring or assigning them is backlog until all the art is done; about 212 MB of sprites |
 
 ## Current status
 
