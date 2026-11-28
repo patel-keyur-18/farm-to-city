@@ -1,8 +1,8 @@
 """
 Spec 032 (the realistic valley): the game's sprites rendered realistic at 8x. No baked shadows (the owner, 2026-11-27, after the device check: ADR 0183).
 
-US-283 (the device check) renders three subjects: the family house (4 facings), the wheat acre (4 stages) and the
-farm hand and his wife (front and back, standing). Later stories add their categories to SPRITES below.
+US-283 (the device check) renders two subjects here: the family house (4 facings) and the farm hand and his wife (front and back,
+standing); its wheat acre is in real_crops.py with the other crops (US-274). Later stories add their categories to SPRITES below.
 
 Run headless from the repository root:
     /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P tools/blender/render_real.py -- [names]
@@ -33,6 +33,10 @@ _gspec = importlib.util.spec_from_file_location("real_ground", os.path.join(HERE
 G = importlib.util.module_from_spec(_gspec)
 sys.modules["real_ground"] = G
 _gspec.loader.exec_module(G)
+_cspec = importlib.util.spec_from_file_location("real_crops", os.path.join(HERE, "real_crops.py"))
+C = importlib.util.module_from_spec(_cspec)
+sys.modules["real_crops"] = C
+_cspec.loader.exec_module(C)
 
 OUT = os.environ.get("FTC_ART_OUT") or os.path.join(HERE, "..", "..", "unity", "FarmToCity", "Assets", "Resources", "Art", "Blender")
 R.OUT_DIR = OUT
@@ -123,14 +127,9 @@ def clump(b, rnd, x, y, stage, mats):
         R.leaf(b, deep[k % 2], x, y, 0.03 + rnd.uniform(0, 0.04), rnd.uniform(0.05, 0.07), 0.007, a, rnd.uniform(-0.2, 0.35))
 
 
-def wheat(stage):
-    """A wheat acre at a stage, as the game's crop sprite (the crop alone: the ground tile is drawn under it)."""
-    toon = R.toon
-    rnd = random.Random(2711 + sum(ord(c) for c in stage))
-    b = R.Batch("wheat")
-    young, ripe = 0x6FB03E, 0xD2A23C
-    R.crop_mat(b, stage, toon("wheatCanopyG", young), toon("wheatCanopy", ripe), width=0.07)
-    mats = {
+def wheat_mats(toon):
+    """The wheat's materials, in the colours approved at the device check."""
+    return {
         "ripe": ([toon("wheatStalkA", 0xD9B25A), toon("wheatStalkB", 0xE6C266), toon("wheatStalkC", 0xC99A3E)],
                  [toon("wheatEarA", 0xE0A12E), toon("wheatEarB", 0xF0BE48), toon("wheatEarC", 0xCC8A22)],
                  [toon("wheatLeafA", 0xBFA35C), toon("wheatLeafB", 0xA88E48)], toon("wheatAwn", 0xE2B455)),
@@ -138,12 +137,6 @@ def wheat(stage):
         "deep": [toon("wheatDeepA", 0x5FA238), toon("wheatDeepB", 0x4C8C2E)],
         "ear_green": toon("wheatEarGreen", 0xA8CF5A),
     }
-    per_row = 17 if stage in ("g3", "ready") else 14
-    for x in R.RIDGE_X:
-        for j in range(per_row):
-            y = -0.43 + j * (0.86 / (per_row - 1)) + rnd.uniform(-0.01, 0.01)
-            clump(b, rnd, x + rnd.uniform(-0.012, 0.012), y, stage, mats)
-    return b.objects()
 
 
 def foot_pad(depth=0.0197):
@@ -168,8 +161,6 @@ def person(kind, facing):
 SPRITES = {}
 for _f in R.FACINGS:
     SPRITES["family_house_" + _f] = lambda f=_f: house(f)
-for _st in R.STAGES:
-    SPRITES["crop_wheat_" + _st] = lambda st=_st: wheat(st)
 for _k in ("hand_m", "hand_f"):
     for _f in ("front", "back"):
         SPRITES["person_%s_%s" % (_k, _f)] = lambda k=_k, f=_f: person(k, f)
@@ -298,6 +289,11 @@ for _base in ("ground_water", "edge_water"):                                    
     for _f in range(G.WATER_FRAMES):
         SPRITES["%s_%d" % (_base, _f)] = _frame(_base, _f)
 
+# ---------------------------------------------------------------- the crops, the kitchen garden and the planting pit (US-274)
+
+CROP_SPRITES = C.install(R, S, clump, wheat_mats)
+SPRITES.update(CROP_SPRITES)
+
 
 # ---------------------------------------------------------------- main
 
@@ -312,6 +308,8 @@ def main():
     for name in names:
         sc, cam = start()
         objs = smooth_plants(S.finish(SPRITES[name]()))
+        if name in CROP_SPRITES:
+            objs = C.hold_frame(name, objs, cam)
         info = R.frame_and_render(sc, cam, name, objs)
         info.update({"name": name, "ppu": PPU})
         manifest[name] = info
