@@ -56,17 +56,17 @@ namespace Game.Presentation.Map
             {
                 case NeighbourLand.Field:
                 case NeighbourLand.Ploughed:
-                    ground.sprite = SpriteBank.SoilTile;
+                    ground.sprite = SpriteBank.GroundVariant("ground_soil", tv.X, tv.Y);
                     ground.color = _tint * SoilColour(tv);
                     break;
                 case NeighbourLand.Scrub:
-                    ground.sprite = SpriteBank.Rendered("ground_scrub") ?? SpriteBank.Grass;
+                    ground.sprite = SpriteBank.GroundVariant("ground_scrub", tv.X, tv.Y) ?? SpriteBank.Grass;
                     break;
                 case NeighbourLand.Farmstead:
                     ground.sprite = SpriteBank.Rendered("ground_village_" + (tv.Draw % 2)) ?? SpriteBank.Grass;
                     break;
                 default:
-                    ground.sprite = SpriteBank.Grass;
+                    ground.sprite = SpriteBank.GroundVariant("ground_grass", tv.X, tv.Y);
                     detail.sprite = SpriteBank.GrassDetail(tv.Id);
                     detail.color = _tint;
                     break;

@@ -418,7 +418,7 @@ namespace Game.Presentation.Map
                         break;
                     case TileKind.Quarters:
                         // Beaten earth: the hands' compound.
-                        ground.sprite = SpriteBank.Sand;
+                        ground.sprite = SpriteBank.GroundVariant("ground_earth", tv.X, tv.Y);
                         ground.color = _tint * new Color(0.95f, 0.86f, 0.70f, 1f);
                         detail.sprite = null;
                         break;
@@ -429,7 +429,7 @@ namespace Game.Presentation.Map
                         detail.sprite = null;
                         break;
                     case TileKind.Yard:
-                        ground.sprite = SpriteBank.Grass;
+                        ground.sprite = SpriteBank.GroundVariant("ground_grass", tv.X, tv.Y);
                         ground.color = _tint * new Color(1.02f, 1.0f, 0.9f, 1f);
                         detail.sprite = SpriteBank.GrassDetail(tv.Id);
                         detail.color = _tint;
@@ -441,7 +441,7 @@ namespace Game.Presentation.Map
                         detail.sprite = null;
                         break;
                     default:
-                        ground.sprite = SpriteBank.SoilTile;
+                        ground.sprite = SpriteBank.GroundVariant("ground_soil", tv.X, tv.Y);
                         ground.color = _tint * SoilColour(tv);
                         detail.sprite = null; // the furrows are modelled on the Blender soil
                         detail.color = _tint;
@@ -998,6 +998,7 @@ namespace Game.Presentation.Map
             AnimateFires();
             AnimateVehicles();
             Sway();
+            AnimateWater();
             if (_ghost != null && _ghost.gameObject.activeSelf)
                 _ghost.transform.localScale = Vector3.one * (1f + 0.03f * Mathf.Sin(Time.unscaledTime * 6f));
         }
