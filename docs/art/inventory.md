@@ -81,7 +81,7 @@ Everything the game draws, from the code at `main` (`5e5a4301`) and `sprint/28-b
 - **tree_neem** (1): `tree_neem`
 - **tree_papaya** (4): `tree_papaya_mature`, `tree_papaya_ripe`, `tree_papaya_sapling`, `tree_papaya_young`
 
-## D. People and portraits (137)
+## D. People and portraits (139)
 
 - **person_boy** (10): `person_boy_back`, `person_boy_back_walk0`, `person_boy_back_walk1`, `person_boy_back_walk2`, `person_boy_back_walk3`, `person_boy_front`, `person_boy_front_walk0`, `person_boy_front_walk1`, `person_boy_front_walk2`, `person_boy_front_walk3`
 - **person_elder_f** (10): `person_elder_f_back`, `person_elder_f_back_walk0`, `person_elder_f_back_walk1`, `person_elder_f_back_walk2`, `person_elder_f_back_walk3`, `person_elder_f_front`, `person_elder_f_front_walk0`, `person_elder_f_front_walk1`, `person_elder_f_front_walk2`, `person_elder_f_front_walk3`
@@ -103,6 +103,7 @@ Everything the game draws, from the code at `main` (`5e5a4301`) and `sprint/28-b
 - **portrait_elder_m** (1): `portrait_elder_m`
 - **portrait_founder** (1): `portrait_founder`
 - **portrait_girl** (1): `portrait_girl`
+- **portrait_labourer** (2, added by US-276): `portrait_labourer_f`, `portrait_labourer_m`
 - **portrait_hand_f** (1): `portrait_hand_f`
 - **portrait_hand_m** (1): `portrait_hand_m`
 - **portrait_town_f** (1): `portrait_town_f`

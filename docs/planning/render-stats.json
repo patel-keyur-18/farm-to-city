@@ -524,5 +524,8 @@
   {"label":"US-274 crops, Village bot town, art check off","view":"farm","date":"2026-11-28","drawCalls":220,"batches":220,"setPassCalls":8,"triangles":7182,"visibleSprites":231,"spritePixels":47241,"sprites":2359},
   {"label":"US-275 trees, Village bot town, art check off","view":"all","date":"2026-11-28","drawCalls":1357,"batches":1357,"setPassCalls":13,"triangles":49589,"visibleSprites":1708,"spritePixels":34310,"sprites":2359},
   {"label":"US-275 trees, Village bot town, art check off","view":"village","date":"2026-11-28","drawCalls":611,"batches":611,"setPassCalls":10,"triangles":21132,"visibleSprites":727,"spritePixels":40693,"sprites":2359},
-  {"label":"US-275 trees, Village bot town, art check off","view":"farm","date":"2026-11-28","drawCalls":220,"batches":220,"setPassCalls":8,"triangles":7536,"visibleSprites":231,"spritePixels":47261,"sprites":2359}
+  {"label":"US-275 trees, Village bot town, art check off","view":"farm","date":"2026-11-28","drawCalls":220,"batches":220,"setPassCalls":8,"triangles":7536,"visibleSprites":231,"spritePixels":47261,"sprites":2359},
+  {"label":"US-276 people and portraits (Village bot town)","view":"all","date":"2026-11-28","drawCalls":1254,"batches":1254,"setPassCalls":12,"triangles":47410,"visibleSprites":1558,"spritePixels":32879,"sprites":2348},
+  {"label":"US-276 people and portraits (Village bot town)","view":"village","date":"2026-11-28","drawCalls":614,"batches":614,"setPassCalls":10,"triangles":21197,"visibleSprites":730,"spritePixels":40688,"sprites":2348},
+  {"label":"US-276 people and portraits (Village bot town)","view":"farm","date":"2026-11-28","drawCalls":221,"batches":221,"setPassCalls":8,"triangles":7585,"visibleSprites":232,"spritePixels":47189,"sprites":2348}
 ]
