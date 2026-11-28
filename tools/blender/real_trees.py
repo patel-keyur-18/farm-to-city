@@ -450,6 +450,44 @@ def village_tree():
     return R.refit(neem(), 0, 0.7)
 
 
+def peepal():
+    """The peepal by the temple: a pale twisting trunk on a stone platform with a red thread round it, and an airy crown of heart-shaped leaves,
+    each drawn out to a long tip."""
+    toon = R.toon
+    rnd = random.Random(17)
+    bark, ridge = toon("peepalBark", 0x9C8A70), toon("peepalRidgeBark", 0xAE9C80)
+    thread, stone = toon("thread", 0xC0262D), unshaded(toon("stone", R.STONE_DARK))
+    mats = (toon("peepalLeafDark", 0x468C34), toon("peepalLeafMid", 0x60A842), toon("peepalLeafLight", 0x82BE54))
+    o = [R.cylinder("platform", 0.09, 0.09, 0.03, (0, 0, 0.015), stone, segs=32, outline=False)]
+    for i in range(3):                        # the thread, wound a few times round the trunk
+        o.append(R.cylinder("thread%d" % i, 0.0372 - i * 0.0004, 0.037 - i * 0.0004, 0.004, (0, 0, 0.064 + i * 0.007), thread, segs=24, outline=False))
+    b = R.Batch("peepal")
+    stick(b, bark, (0, 0, 0.02), (0, 0, 0.25), 0.035, 0.025, segs=14)
+    for i in range(5):                        # fused stems twisting up the trunk
+        a = i * math.tau / 5 + 0.4
+        for j in range(6):                    # each follows the trunk's face as it turns
+            ta, tb = j / 6.0, (j + 1) / 6.0
+            at = lambda t: (math.cos(a + 1.5 * t) * (0.031 - 0.010 * t), math.sin(a + 1.5 * t) * (0.031 - 0.010 * t), 0.03 + 0.22 * t)
+            stick(b, ridge, at(ta), at(tb), 0.0085 - 0.0030 * ta, 0.0085 - 0.0030 * tb, segs=7)
+    clumps = [(0.0, 0.0, 0.405, 0.085)]
+    for i in range(8):
+        a, r = i * math.tau / 8 + 0.2, rnd.uniform(0.102, 0.138)
+        clumps.append((math.cos(a) * r, math.sin(a) * r, 0.33 + rnd.uniform(-0.02, 0.035), 0.064))
+    for x, y, z, r in clumps:
+        limb(b, bark, (0, 0, 0.22), (x * 0.9, y * 0.9, z - r * 0.25), 0.014, 0.004, rnd, bend=0.2)
+
+    def heart(mat, p, out):
+        for i in range(4):
+            a = out + (i - 1.5) * 1.15 + rnd.uniform(-0.3, 0.3)
+            tilt, length = rnd.uniform(-0.75, 0.2), 0.030 * rnd.uniform(0.85, 1.15)
+            d = Vector((math.cos(a) * math.cos(tilt), math.sin(a) * math.cos(tilt), math.sin(tilt)))
+            blade(b, mat, p, length, length * 0.82, a, tilt, rnd)
+            blade(b, mat, Vector(p) + d * length * 0.82, length * 0.55, length * 0.13, a, tilt - 0.35, rnd)
+
+    crown(b, rnd, clumps, mats, bark, 3000, None, squash=0.78, hollow=0.6, make=heart)
+    return R.group(o + b.objects(), scale=1.25)
+
+
 def babul():
     toon = R.toon
     rnd = random.Random(12)
@@ -543,6 +581,6 @@ def install(render, samples, crops):
     for tree, fn in (("mango", mango), ("guava", guava), ("apple", apple), ("banana", banana), ("papaya", papaya)):
         for stage in ("sapling", "young", "mature", "ripe"):
             sprites["tree_%s_%s" % (tree, stage)] = with_patterns(lambda f=fn, s=stage: f(s))
-    for name, fn in (("tree_neem", neem), ("village_tree", village_tree), ("tree_babul", babul), ("village_banyan", village_banyan), ("place_banyan", banyan)):
+    for name, fn in (("tree_neem", neem), ("village_tree", village_tree), ("tree_babul", babul), ("village_banyan", village_banyan), ("place_banyan", banyan), ("village_peepal", peepal)):
         sprites[name] = with_patterns(fn)
     return sprites
