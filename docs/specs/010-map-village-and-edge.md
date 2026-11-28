@@ -108,10 +108,12 @@ row 11  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D  D   ← the district road
 
 ### 3.5 The camera (amends spec 008 §3.4)
 
+*The two zoom rows were amended by spec 032 §3.4.*
+
 | Rule | Behaviour |
 | --- | --- |
-| Opening | The camera opens centred on the yard, at the zoom Phase 1 opened at (about 3 × 3 acres more than the closest zoom) |
-| Zoom | From about 3 acres across (unchanged) out to the whole 16 × 12 map |
+| Opening | A new town's camera opens centred on the yard, 3 acres across; a played town reopens where it was left (spec 032 §3.4) |
+| Zoom | From 2 acres across (spec 032 §3.4) out to the whole map |
 | Pan | Clamped so the camera's centre stays within the map's diamond. The edge terrain fills the rest of the screen (§3.6) |
 
 ### 3.6 The edge (presentation only)

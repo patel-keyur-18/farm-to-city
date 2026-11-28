@@ -51,7 +51,7 @@ namespace Sim.View.Content
     /// <summary>The map camera's two zoom stops (spec 032 §3.4), as acres across the screen.</summary>
     public sealed class CameraDef
     {
-        /// <summary>The view at launch, when a town opens and on the home button.</summary>
+        /// <summary>The view a new town, a reset or a town with no saved camera opens at.</summary>
         public float DefaultAcresAcross { get; }
 
         /// <summary>The closest zoom.</summary>

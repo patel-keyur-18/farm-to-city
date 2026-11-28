@@ -60,7 +60,8 @@ The valley looks real: lime-washed houses with their brick showing through, a wh
 
 | Rule | Behaviour | Why |
 | --- | --- | --- |
-| Default view | **3 acres across the screen** at launch, when a town opens, and on the home button (today `MapInput.OpeningHalfHeight` 1.4, about 6 acres across the iPhone; it becomes the content value). | The owner, 2026-11-27. **As built:** this is the view of a new town, a reset, and a town with no saved camera. A saved camera reopens as saved, kept within the new limits (so since Sprint 6), and there is no home button. Whether every launch should open 3 across is with the owner (Sprint 30 review). |
+| Default view | **3 acres across the screen** for a new town, a reset and a town with no saved camera (the content value; it replaces `MapInput.OpeningHalfHeight` 1.4, about 6 acres across the iPhone). | The owner, 2026-11-27. |
+| Played town | A town with a saved camera reopens where it was left, zoom included, at launch and on a town switch; each town keeps its own (so since Sprint 6, spec 031). There is no home button. | The owner, 2026-11-28 (Sprint 30 review, question 1): the player's own zoom is not reset at every launch. A home button would be new UI. |
 | Closest zoom | **2 acres across** (`MapCamera.MinHalfHeight`, in `IsoGrid.cs`, from 3 to 2 acre widths). | The owner, 2026-11-27: room to look closer. At 2 across an acre is 1,266 phone pixels against 1,056 rendered: 1.2× stretched, still sharp enough. |
 | Farthest zoom | Unchanged (the whole map). | The crowded view stays the worst case the frame-time guard reads. |
 | Saved camera | A town saved with a zoom outside the new bounds opens clamped into them (already the rule, `IsoGrid.Clamp`). | No migration needed. |
@@ -138,8 +139,8 @@ The map only, as in Preview 27's realistic column; every story shows a before an
 | AC-1 | Given each realistic sprite at 1,056 px a unit (its own `ppu`), when any rendered sprite is placed, then its anchor stays within 0.01 world units of today's (its pivot's distance from the frame's middle across and from its bottom up) and its frame within 5% (people 15%: new bodies). *Amended by ADR 0182 §7: 1% was not reachable for a realistic silhouette (no outline, real stalks, slimmer figures).* | `Game.Editor.SpriteSizeCheck` (new, Editor: every sprite's world size and anchor against `docs/art/sprite-world-sizes.json`, the table of today's recorded before any new art) |
 | AC-2 | Every map sprite in `SpriteBank` has its realistic render. | `Game.Editor.RenderedArtCheck` (new, Editor: every name `SpriteBank` asks for has its file). Added with the last art category (Sprint 33). |
 | AC-3 | *Withdrawn (ADR 0183): no baked shadows.* | |
-| AC-4 | For a new town, a reset or a town with no saved camera (the default half-height moves from `MapInput.OpeningHalfHeight` into `MapCamera`, read from `content/ui.json`) the view is 3 acres across; the closest zoom is 2 acres across; the farthest is unchanged. | `IsoGridTests.DefaultAndClosestZoom` (new, Sim.View) |
-| AC-5 | A saved camera outside the new bounds opens clamped. | `IsoGridTests.SavedZoomClamped` (new, Sim.View) |
+| AC-4 | For a new town, a reset or a town with no saved camera (the default half-height moves from `MapInput.OpeningHalfHeight` into `MapCamera`, read from `content/ui.json`) the view is 3 acres across; the closest zoom is 2 acres across; the farthest is unchanged. A town with a saved camera reopens as saved (AC-5). | `IsoGridTests.DefaultAndClosestZoom` (new, Sim.View) |
+| AC-5 | A saved camera inside the bounds opens as saved; one outside them opens clamped. | `IsoGridTests.SavedZoomClamped` (new, Sim.View) |
 | AC-6 | `content/ui.json` validates the camera fields and their bounds. | `UiContentTests.Camera` (new, Sim.View.Tests: `ui.json` is loaded by `Sim.View`'s `UiLoader`) |
 | AC-7 | On the iPhone 13 the device check meets §3.5's bar, or the redesign switches to Option A. | Device: the US-283 test checklist (both p95s, memory, 20 minutes of play) |
 | AC-8 | Every category's before/after preview approved before its renders go in; each story's `RenderStats` reading recorded. | Review: the story's ADR |
