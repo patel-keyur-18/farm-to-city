@@ -329,7 +329,7 @@ namespace Game.Presentation.Map
                 if (e.Kind == EdgeKind.Hill && e.X <= -2 && ((e.Y - e.X * 2) % 4 + 4) % 4 == 0) decor = "hill_" + ((e.Y + 30) % 3);
                 if (e.Kind == EdgeKind.Scrub) decor = "scrub";
                 if (e.Kind == EdgeKind.Farmstead) EdgeFarmstead(e, c);
-                if (e.Kind == EdgeKind.FarBank && (e.X + e.Y) % 3 == 0) { decor = "tree_mango_mature"; scale = 0.55f; }
+                if (e.Kind == EdgeKind.FarBank && (e.X + e.Y) % 3 == 0) { decor = "tree_mango_mature"; scale = 0.55f * Sim.View.Views.TreeSizes.Factor(e.X, e.Y); }
                 if (decor != null)
                 {
                     v.Decor = NewRenderer("edgeDecor", SpriteBank.Rendered(decor), c, EdgeOrder(e.X, e.Y, 50));

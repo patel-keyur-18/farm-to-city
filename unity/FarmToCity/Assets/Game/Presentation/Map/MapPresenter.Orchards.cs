@@ -68,9 +68,10 @@ namespace Game.Presentation.Map
                             SpriteRenderer r = spot.Trees[n];
                             r.sprite = s;
                             r.transform.position = OnAcre(o.TileId, at);
-                            r.transform.localScale = Vector3.one * scale;
+                            float size = scale * TreeSizes.Factor(o.TileId, n);
+                            r.transform.localScale = Vector3.one * size;
                             r.sortingOrder = AcreOrder(o.TileId, at);
-                            if (animate && planted) Pop(r.transform, scale);
+                            if (animate && planted) Pop(r.transform, size);
                         }
                     while (spot.Trees.Count > n)
                     {
